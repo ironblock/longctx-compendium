@@ -101,11 +101,11 @@ ul.notes b{color:var(--text)}
 </header>
 
 <div class="cbanner">
-  <b>Data honesty notice.</b> Confidence is encoded per cell: <b style="color:var(--m)">green</b> = measured primary source · <b style="color:var(--e)">amber/italic</b> = extrapolated from measured points · <b style="color:var(--i)">pink/italic</b> = modeled from specs only. Multi-point prefill curves are measured for B70, R9700, and RTX 5090 (MoE); M3 Ultra (dense). Most other platforms have 1–2 measured anchors with interpolation. Engine and exact model noted per row in tables.
+  <b>Data honesty notice.</b> Confidence is encoded per cell: <b style="color:var(--m)">green</b> = measured primary source · <b style="color:var(--e)">amber/italic</b> = extrapolated from measured points · <b style="color:var(--i)">pink/italic</b> = modeled from specs only · <b style="color:var(--m)">green~</b> = secondary/anecdotal source (measured but not primary). Multi-point prefill curves are measured for B70, R9700, and RTX 5090 (MoE); M3 Ultra (dense). Most other platforms have 1–2 measured anchors with interpolation. Engine and exact model noted per row in tables.
   <div class="cinv">
-    <div class="cm"><span class="v">~34</span><span class="l">measured pp/tg datapoints</span></div>
-    <div class="ce"><span class="v">~42</span><span class="l">interpolated/extrapolated</span></div>
-    <div class="ci"><span class="v">~22</span><span class="l">spec-modeled (V100, PG199, A100, M3 MoE pp)</span></div>
+    <div class="cm"><span class="v">~60</span><span class="l">measured pp/tg datapoints</span></div>
+    <div class="ce"><span class="v">~58</span><span class="l">interpolated/extrapolated</span></div>
+    <div class="ci"><span class="v">~54</span><span class="l">spec-modeled (V100, PG199, A100, M3 MoE pp)</span></div>
     <div class=""><span class="v" style="color:var(--text)">3</span><span class="l">archetypes · 3 views + build-value</span></div>
   </div>
 </div>
@@ -150,6 +150,7 @@ ul.notes b{color:var(--text)}
 <div class="pleg" id="pleg"></div>
 <div class="conf-leg">
   <span><span class="cline" style="border-top:2px solid var(--m)"></span>measured</span>
+  <span><span class="cline" style="border-top:2px solid var(--m)"></span><span style="font-size:11px">measured~</span><span class="cline" style="border-top:2px solid var(--m);margin-left:2px"></span></span>
   <span><span class="cline" style="border-top:2px dashed var(--e)"></span>interpolated</span>
   <span><span class="cline" style="border-top:2px dotted var(--i)"></span>spec-modeled</span>
   <span style="color:var(--dim);font-size:11px">Click a platform to show/hide it in the prefill chart</span>
