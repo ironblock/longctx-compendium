@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Inference Falloff Compendium — 96–128 GB Class</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#090d13; --panel:#0f1520; --panel2:#0b1019; --line:#1a2535;
+  --text:#ccd6e0; --muted:#6b7a8d; --dim:#3d4e60;
+  --m:#5fd97a; --e:#f3b54c; --i:#c2708f;
+  --bad:#ff6060; --warn:#ffa040; --ok:#5fd97a;
+  --mono:'Space Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;padding-bottom:80px}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+header{padding:40px 0 22px;border-bottom:1px solid var(--line);margin-bottom:28px}
+.kicker{font-family:var(--mono);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#37d6c6;margin-bottom:12px}
+h1{font-family:var(--mono);font-size:clamp(20px,3.5vw,32px);font-weight:700;line-height:1.1;letter-spacing:-.01em;margin-bottom:12px}
+h1 .sub{color:var(--muted)}
+.lead{font-size:14px;color:var(--muted);max-width:760px}
+h2{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--text);margin:44px 0 6px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h2 .tail{float:right;font-family:var(--sans);font-size:11px;letter-spacing:0;text-transform:none;color:var(--dim)}
+p{font-size:14px}
+
+/* confidence banner */
+.cbanner{background:rgba(243,181,76,.06);border:1px solid rgba(243,181,76,.25);border-left:3px solid var(--e);border-radius:10px;padding:14px 16px;font-size:13px;margin:8px 0 24px}
+.cbanner b{color:var(--e)}
+.cinv{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:16px}
+.cinv div{background:var(--panel);padding:11px 13px}
+.cinv .v{font-family:var(--mono);font-size:18px;font-weight:700;display:block;line-height:1.1}
+.cinv .l{font-size:11px;color:var(--muted);margin-top:2px}
+.cinv .cm .v{color:var(--m)} .cinv .ce .v{color:var(--e)} .cinv .ci .v{color:var(--i)}
+
+/* toggles */
+.tbar{display:flex;flex-wrap:wrap;gap:12px;margin:20px 0 4px;align-items:center}
+.tg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px}
+.tg button{font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:var(--muted);background:transparent;border:0;padding:7px 14px;border-radius:5px;cursor:pointer;transition:.12s}
+.tg button.on{background:var(--text);color:var(--bg);font-weight:700}
+.tg button:not(.on):hover{color:var(--text)}
+.tglabel{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+
+/* charts */
+.chartbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 12px 8px;margin:10px 0}
+.chartbox .cap{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.04em;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;padding:0 4px 8px}
+.ch{position:relative}
+.ch-line{height:360px}
+.ch-bar{height:420px}
+.ch-wc{height:420px}
+@media(max-width:600px){.ch-line,.ch-bar,.ch-wc{height:320px}}
+.hidden{display:none!important}
+
+/* verdict box */
+.verdict{border:1px solid rgba(255,96,96,.25);border-left:3px solid var(--bad);background:rgba(255,96,96,.05);border-radius:10px;padding:14px 16px;font-size:13.5px;margin:12px 0 4px}
+.verdict b{color:var(--warn)}
+
+/* platform legend */
+.pleg{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 2px;font-size:12px;color:var(--muted)}
+.pleg span{display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:.12s}
+.pleg span:hover{color:var(--text)}
+.pdot{width:10px;height:10px;border-radius:2px;flex:0 0 auto}
+.conf-leg{display:flex;flex-wrap:wrap;gap:8px 16px;margin:8px 2px;font-size:12px;color:var(--muted)}
+.conf-leg span{display:inline-flex;align-items:center;gap:6px}
+.cline{width:22px;height:0;flex:0 0 auto}
+
+/* tables */
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin:12px 0}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:600px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-family:var(--mono);font-weight:400;font-size:10px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;background:var(--panel2);position:sticky;top:0}
+td.lbl,th.lbl{text-align:left}
+tbody tr:hover{background:rgba(255,255,255,.015)}
+.num{font-family:var(--mono)}
+.c-m{box-shadow:inset 2px 0 0 var(--m);background:rgba(95,217,122,.05)}
+.c-e{box-shadow:inset 2px 0 0 var(--e);background:rgba(243,181,76,.05)}
+.c-e .num{font-style:italic}
+.c-i{box-shadow:inset 2px 0 0 var(--i);background:rgba(194,112,143,.05)}
+.c-i .num{font-style:italic}
+.c-n{color:var(--dim)}
+.t-ok{color:var(--ok)} .t-warn{color:var(--warn)} .t-bad{color:var(--bad)}
+.grp{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;background:var(--panel2);color:var(--dim);border-top:1px solid var(--line)}
+
+.src{font-size:11.5px;color:var(--dim);font-family:var(--mono);line-height:1.95;margin-top:8px}
+ul.notes{font-size:13px;color:var(--muted);padding-left:18px;margin:8px 0}
+ul.notes li{margin:6px 0}
+ul.notes b{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="kicker">Single-stream · agentic-coding primary · updated with 96–128 GB baselines</p>
+  <h1>Prefill Falloff, Wall-Clock & Build Value<br><span class="sub">9 platforms · 3 model archetypes · cost + power</span></h1>
+  <p class="lead">Prefill throughput vs context length, decode rate, end-to-end wall-clock, and a 96–128GB build value analysis — hybrid-linear MoE, full-attention dense, and gpt-oss-120B compared across value builds, unified-memory boxes, and high-end NVIDIA single cards.</p>
+</header>
+
+<div class="cbanner">
+  <b>Data honesty notice.</b> Confidence is encoded per cell: <b style="color:var(--m)">green</b> = measured primary source · <b style="color:var(--e)">amber/italic</b> = extrapolated from measured points · <b style="color:var(--i)">pink/italic</b> = modeled from specs only. Multi-point prefill curves are measured for B70, R9700, and RTX 5090 (MoE); M3 Ultra (dense). Most other platforms have 1–2 measured anchors with interpolation. Engine and exact model noted per row in tables.
+  <div class="cinv">
+    <div class="cm"><span class="v">~34</span><span class="l">measured pp/tg datapoints</span></div>
+    <div class="ce"><span class="v">~42</span><span class="l">interpolated/extrapolated</span></div>
+    <div class="ci"><span class="v">~22</span><span class="l">spec-modeled (V100, PG199, A100, M3 MoE pp)</span></div>
+    <div class=""><span class="v" style="color:var(--text)">3</span><span class="l">archetypes · 3 views + build-value</span></div>
+  </div>
+</div>
+
+<div class="tbar">
+  <div>
+    <div class="tglabel" style="margin-bottom:5px">View</div>
+    <div class="tg" id="viewTg">
+      <button class="on" data-v="pp">Prefill falloff</button>
+      <button data-v="tg">Decode rate</button>
+      <button data-v="wc">Wall-clock turn</button>
+    </div>
+  </div>
+  <div>
+    <div class="tglabel" style="margin-bottom:5px">Archetype</div>
+    <div class="tg" id="archTg">
+      <button class="on" data-a="moe">Hybrid-linear MoE</button>
+      <button data-a="dense">Full-attention dense</button>
+      <button data-a="oss120b">gpt-oss-120B</button>
+    </div>
+  </div>
+</div>
+
+<!-- Prefill chart -->
+<div class="chartbox" id="ppBox">
+  <div class="cap"><span id="ppCap">MoE · Qwen3.x-30/35B-A3B Q4 · prefill throughput (tokens/sec)</span><span>log x-scale · solid=measured · dashed=interpolated · dotted=modeled</span></div>
+  <div class="ch ch-line"><canvas id="ppChart"></canvas></div>
+</div>
+
+<!-- Decode chart -->
+<div class="chartbox hidden" id="tgBox">
+  <div class="cap"><span id="tgCap">MoE · decode rate (tokens/sec) · single-stream · sorted fastest→slowest</span><span>open bar = tg@32K+ where measured</span></div>
+  <div class="ch ch-bar"><canvas id="tgChart"></canvas></div>
+</div>
+
+<!-- Wall-clock chart -->
+<div class="chartbox hidden" id="wcBox">
+  <div class="cap"><span id="wcCap">MoE · wall-clock for representative agentic turn: 16K-token prompt + 2K generated</span><span>TTFT = 16K÷pp(16K) · Gen = 2K÷tg · stacked, linear</span></div>
+  <div class="ch ch-wc"><canvas id="wcChart"></canvas></div>
+</div>
+
+<div class="pleg" id="pleg"></div>
+<div class="conf-leg">
+  <span><span class="cline" style="border-top:2px solid var(--m)"></span>measured</span>
+  <span><span class="cline" style="border-top:2px dashed var(--e)"></span>interpolated</span>
+  <span><span class="cline" style="border-top:2px dotted var(--i)"></span>spec-modeled</span>
+  <span style="color:var(--dim);font-size:11px">Click a platform to show/hide it in the prefill chart</span>
+</div>
+
+<div class="verdict" id="verdict"></div>
+
+<!-- ===== TABLES ===== -->
+<h2>Prefill throughput grid <span class="tail">pp t/s by context length · best measured engine per platform</span></h2>
+<div class="tscroll"><table id="ppTable">
+  <thead><tr>
+    <th class="lbl" style="min-width:180px">Platform · model · engine</th>
+    <th class="lbl">Arch</th>
+    <th>512</th><th>4K</th><th>16K</th><th>32K</th><th>64K</th><th>128K</th>
+  </tr></thead>
+  <tbody></tbody>
+</table></div>
+
+<h2>Decode rate & wall-clock summary <span class="tail">single-stream tg t/s + wall-clock for 16K+2K turn</span></h2>
+<div class="tscroll"><table id="tgTable">
+  <thead><tr>
+    <th class="lbl" style="min-width:200px">Platform</th>
+    <th>MoE tg</th><th>MoE tg@32K</th><th>Dense tg</th><th>Dense tg@32K</th>
+    <th>WC MoE 16K+2K</th><th>WC Dense 16K+2K</th>
+    <th class="lbl">Notes</th>
+  </tr></thead>
+  <tbody></tbody>
+</table></div>
+
+<h2>Bang-for-buck-per-watt <span class="tail">96–128GB builds · gpt-oss-120B anchor · cost + power</span></h2>
+<p style="font-size:13px;color:var(--muted);margin:6px 0 8px">Scoped to builds that clear 96GB — the 120B model needs ~63GB, so single 32GB cards can't play. <b style="color:var(--text)">Power figures are estimates</b> (you confirmed no measured data beyond the docs); decode is measured for PRO 6000, 4× 3090, DGX Spark, Strix Halo and M3 Ultra, and modeled for the SXM2 builds + A100 (PG199 is fully unmeasured on LLMs). Reframe applied: <b style="color:var(--text)">off-when-idle</b>, so idle is a cost-of-how-you-run-it, not a disqualifier.</p>
+
+<div class="tbar">
+  <div>
+    <div class="tglabel" style="margin-bottom:5px">Model anchor</div>
+    <div class="tg" id="valModelTg">
+      <button class="on" data-vm="tg120">gpt-oss-120B</button>
+      <button data-vm="tgMoe">35B-A3B MoE</button>
+    </div>
+  </div>
+  <div>
+    <div class="tglabel" style="margin-bottom:5px">Power basis</div>
+    <div class="tg" id="valPowerTg">
+      <button class="on" data-vp="load">Load (efficiency)</button>
+      <button data-vp="idle">Idle (standing cost)</button>
+    </div>
+  </div>
+</div>
+
+<div class="chartbox">
+  <div class="cap"><span id="valCap">gpt-oss-120B · tokens/sec per watt under load</span><span id="valCap2">higher = better · power estimated</span></div>
+  <div class="ch ch-bar"><canvas id="valChart"></canvas></div>
+</div>
+
+<div class="verdict" id="valVerdict" style="border-left-color:var(--ok);border-color:rgba(95,217,122,.25);background:rgba(95,217,122,.05)"></div>
+<div class="verdict b" style="border-left-color:var(--warn);border-color:rgba(255,160,64,.25);background:rgba(255,160,64,.05);font-size:13px"><b style="color:var(--warn)">Buck dimension (always-on in table):</b> best tokens/sec per $1,000 on 120B — <b style="color:#4fc3f7">4× 3090</b> (25.8) and <b style="color:#ec5c9d">4× PG199</b> (25.0, modeled) lead, <b style="color:#00e676">PRO 6000</b> close (23.5) despite 2× the price because its decode is ~5× faster. <b style="color:#ffd740">DGX Spark</b> is last (8.3) — it buys CUDA + capacity + low idle, not 120B throughput.</div>
+
+<div class="tscroll"><table id="valTable">
+  <thead><tr>
+    <th class="lbl" style="min-width:170px">Build (96–128GB)</th>
+    <th>$</th><th>Load W</th><th>Idle W</th><th>120B tg</th><th>MoE tg</th>
+    <th>tok-s/$1k</th><th>tok-s/W</th><th>idle $/yr</th>
+  </tr></thead>
+  <tbody></tbody>
+</table></div>
+<p style="font-size:11.5px;color:var(--dim);font-family:var(--mono);line-height:1.8">tok-s/$1k &amp; tok-s/W use the 120B decode anchor. idle $/yr = idleW × 8760h × $0.17/kWh (US avg) — upper bound under off-when-idle. <b>GPU-idle figures are rough estimates</b> (≈40W/card model-resident for 3090/V100; true idle can be ~20–30W/card, poorly-managed higher). PG199 perf modeled/unmeasured. Costs: 4×3090 $4,800 · PRO 6000 $8,500 · A100 80 ~$8,000 · 4×PG199 ~$6,000+host · M3 Ultra 96GB $3,600 · Strix Halo 128GB $2,566 · 4×V100 $4,000 · 4×B70 $3,800 · DGX Spark $4,699. All memory-shortage-inflated as of mid-2026.</p>
+
+<h2>Method & sources</h2>
+<ul class="notes">
+  <li><b>Prefill curves:</b> B70 (llama.cpp SYCL, PMZFX/intel-arc-pro-b70-benchmarks) and AMD R9700 (ggml discussion #19890, Q4_K_XL, Q4_K_M) are the best-measured at ≥4 context points. RTX 5090 MoE (hardware-corner.net, Q4_K_XL) provides 4 points. Mac M3 Ultra dense (mlx discussions #3209, mlx_lm.benchmark) provides 3 points. DGX Spark (DandinPower/llama.cpp_bench; NVIDIA Dev Forums) and Strix Halo (Level1Techs; strix-halo-guide) have 2 anchors each; remainder extrapolated.</li>
+  <li><b>RTX PRO 6000:</b> pp512 7,640 and tg 251.6 from llm-tracker.info (Q4_K_M, 30B-A3B). NVFP4+MTP dual-card figures from loftllc.dev (~190 t/s tg) and theogravity/dual-rtx-6000-blackwell-qwen3.6-27b-fp8. Dense proxy from vaditaslim.com (Qwen2.5-32B Q4_K_M). JarvisLabs confirms 1.73× MTP gain on dense. vLLM issue #27649 warns of 55s TTFT footgun (misconfiguration; fix = correct BF16 flags).</li>
+  <li><b>DGX Spark:</b> gb10 community confirms 273 GB/s shared SoC bandwidth; dense 32B decode confirmed bandwidth-wall-limited at ~10.7 t/s (theoretical ~15). "~1 PFLOP" is sparsity figure (~500 effective dense TFLOPS). Qwen3.5-35B-A3B TTFT/tg from NVIDIA Dev Forums (claytantor, Apr 2026).</li>
+  <li><b>Strix Halo:</b> Use Vulkan/RADV, not ROCm (ROCm hangs on Qwen3.5 load_tensors). Set HSA_OVERRIDE_GFX_VERSION=11.5.1. Level1Techs/lhl thread and strix-halo-guide are primary sources. DeltaNet hybrid attention keeps long-context KV growth nearly flat: 4K→32K adds only 560 MB KV, tg drops 53.7→49.9 t/s.</li>
+  <li><b>Multi-GPU 3090:</b> 2-way NVLink gives ~48% TP throughput boost over PCIe-only; 4-way (two bridged pairs over PCIe) only ~8–10% and can lower single-request decode (71→53 t/s on QwQ-32B). dzombak.com: 2× 3090 TP-2 runs Qwen3.6-27B AWQ at ~100 t/s full 256K ctx. Medium/fzbcwvv: 1× 3090 + MTP on Qwen3.6-27B reaches 85–106 t/s at 230 W cap.</li>
+  <li><b>TTFT and wall-clock:</b> TTFT = context_length ÷ pp(context_length). Wall-clock for 16K+2K turn = TTFT@16K + (2048 ÷ tg). These are cold (un-cached) monolithic prefills; prefix caching significantly improves repeated-system-prompt agentic loops.</li>
+  <li><b>AMD R9700 included as bonus:</b> Strong Qwen3.5-35B-A3B MoE numbers, R9700 single-card, Q4_K_XL (ggml #19890). Not in the user's original list but data quality warranted inclusion.</li>
+</ul>
+<p class="src">SOURCES: DandinPower/llama.cpp_bench (DGX Spark) · NVIDIA Dev Forums/claytantor (DGX Spark Qwen3.5) · Level1Techs/lhl (Strix Halo) · strix-halo-guide/hogeheer499 (Strix Halo Qwen3.6) · lilting.ch (Strix Halo long-ctx) · mlx #3209 (M3 Ultra dense) · llm-tracker.info (PRO 6000) · vaditaslim.com (PRO 6000 dense) · jarvislabs.ai (PRO 6000 MTP) · loftllc.dev (dual PRO 6000 NVFP4+MTP) · hardware-corner.net (RTX 5090) · ggml #19890 (RTX 5090 vs R9700) · PMZFX/intel-arc-pro-b70-benchmarks (B70) · dzombak.com · medium/fzbcwvv (3090) · himeshp.blogspot (4× 3090 TP) · willitrunai.com (4090 TP) · CloudRift (multi-GPU serving)</p>
+
+</div><!-- /wrap -->
+
+<script>
+const CTX = [512,4096,16384,32768,65536,131072];
+const CTXL = ['512','4K','16K','32K','64K','128K'];
+
+const PLAT = [
+  {id:'pro6000', label:'RTX PRO 6000 (96 GB)', short:'PRO 6000', color:'#00e676', group:'NVIDIA'},
+  {id:'rtx5090',  label:'RTX 5090 (32 GB)',       short:'5090',     color:'#b2ff59', group:'NVIDIA'},
+  {id:'r9700',    label:'Radeon AI PRO R9700',     short:'R9700',    color:'#ff5252', group:'AMD'},
+  {id:'dgxspark', label:'DGX Spark (GB10)',        short:'DGX Spark',color:'#ffd740', group:'Unified'},
+  {id:'m3ultra',  label:'Mac Studio M3 Ultra',     short:'M3 Ultra', color:'#ce93d8', group:'Unified'},
+  {id:'strixhalo',label:'Strix Halo (AI Max+ 395)',short:'Strix Halo',color:'#ffab40',group:'Unified'},
+  {id:'pg199',    label:'PG199 / DRIVE A100',      short:'PG199',    color:'#ec5c9d', group:'Value'},
+  {id:'b70',      label:'4× Arc B70 (128GB)',      short:'B70×4',    color:'#37d6c6', group:'Value'},
+  {id:'v100',     label:'V100 NVLink ×4',          short:'V100×4',   color:'#f3b54c', group:'Value'},
+];
+
+// pp[arch][platId] = {v:[6 values], c:[6 conf codes]}
+// conf: m=measured, e=extrapolated, i=spec-inferred, n=no data
+const PP = {
+  moe:{
+    pro6000: {v:[7640,6500,5200,4000,2800,1800], c:['m','e','e','e','e','e'], note:'llama.cpp Q4_K_M, Qwen3-30B-A3B; pp512 measured'},
+    rtx5090:  {v:[7000,6630,4800,2878,1512,700],  c:['e','m','e','m','m','e'], note:'llama.cpp Q4_K_XL, Qwen3moe-30B-A3B; pp4K/32K/64K measured'},
+    r9700:    {v:[2713,2546,2196,1877,1500,1100],  c:['m','m','m','m','e','e'], note:'llama.cpp Vulkan Q4_K_XL, Qwen3.5-35B-A3B; 4 pts measured'},
+    dgxspark: {v:[2541,2400,2059,1700,1300,900],   c:['m','e','m','e','e','e'], note:'llama.cpp CUDA Q4_K_M, Qwen3-30B-A3B; pp512 & pp16K measured'},
+    m3ultra:  {v:[600,550,480,400,330,260],         c:['i','i','i','i','i','i'], note:'MoE prefill modeled; dense M3 Ultra is measured'},
+    strixhalo:{v:[1087,1020,900,810,740,670],       c:['m','e','e','e','m','e'], note:'llama.cpp Vulkan UD-Q4, Qwen3.6-35B-A3B; pp512 & pp64K measured'},
+    pg199:    {v:[1300,1230,1130,1040,900,780],     c:['i','i','i','i','i','i'], note:'modeled from specs + FA2 scaling'},
+    b70:      {v:[615,579,527,485,411,350],          c:['m','m','m','m','m','e'], note:'llama.cpp SYCL Q4_K_M, Qwen3.6-35B-A3B; 5 pts measured'},
+    v100:     {v:[560,520,470,430,360,300],          c:['i','i','i','i','i','i'], note:'1Cat-vLLM, modeled from short-prompt anchor'},
+  },
+  dense:{
+    pro6000: {v:[2601,2530,2000,1400,820,500],    c:['m','m','e','e','e','e'], note:'llama.cpp Q4_K_M, Qwen2.5-32B proxy; vaditaslim.com'},
+    rtx5090:  {v:[3100,2931,2000,1451,750,380],    c:['e','m','e','m','e','e'], note:'llama.cpp Q4_K_XL, Qwen3-32B; pp4K & pp32K measured'},
+    r9700:    {v:[null,null,null,null,null,null],   c:['n','n','n','n','n','n'], note:'no dense data found'},
+    dgxspark: {v:[762,700,481,300,170,80],          c:['m','e','m','e','e','e'], note:'llama.cpp Q4_K_M, Qwen3-32B; pp512 & pp16K measured'},
+    m3ultra:  {v:[360,345,310,271,210,154],         c:['e','e','e','m','e','m'], note:'mlx-lm 4-bit, Qwen3-32B; pp32K & pp128K measured, 1K/8K anchors interpolated (mlx #3209)'},
+    strixhalo:{v:[317,280,200,130,75,null],         c:['m','e','e','e','e','n'], note:'llama.cpp Vulkan, Mistral-24B proxy; only pp512 measured'},
+    pg199:    {v:[1500,1350,1050,780,520,310],      c:['i','i','i','i','i','i'], note:'modeled from specs + FA2'},
+    b70:      {v:[718,629,445,310,195,110],          c:['m','m','m','m','m','e'], note:'llama.cpp SYCL Q4_K_M, Qwen3.5-27B; 5 pts measured'},
+    v100:     {v:[650,560,410,290,185,110],          c:['i','i','i','i','i','i'], note:'1Cat-vLLM, modeled'},
+  },
+  oss120b:{
+    pro6000:  {v:[20000,24000,21000,16400,11500,7200], c:['e','e','e','m','m','m'], note:'vLLM MXFP4; prefill from millstoneai TTFT (24K t/s peak @8K)'},
+    rtx5090:  {v:[null,null,null,null,null,null],   c:['n','n','n','n','n','n'], note:'32GB — cannot fit 120B (~63GB)'},
+    r9700:    {v:[null,null,null,null,null,null],   c:['n','n','n','n','n','n'], note:'32GB — cannot fit 120B'},
+    dgxspark: {v:[1750,1723,1450,1150,800,500],      c:['e','m','e','e','e','e'], note:'llama.cpp MXFP4; pp ~1723 measured (hardware-corner)'},
+    m3ultra:  {v:[1050,1000,850,700,500,330],        c:['e','m','e','e','e','e'], note:'MLX; ~1000 pp when healthy; prefill-instability bug at long ctx'},
+    strixhalo:{v:[360,340,280,210,150,100],          c:['e','m','e','e','e','e'], note:'llama.cpp MXFP4; pp ~340 measured; ~5x slower prefill than Spark'},
+    pg199:    {v:[3000,3000,2700,2300,1700,1100],    c:['i','i','i','i','i','i'], note:'modeled A100-class; UNMEASURED on LLMs'},
+    b70:      {v:[600,600,540,460,340,220],          c:['i','i','i','i','i','i'], note:'4x build modeled; XMX no FP4, imperfect TP scaling'},
+    v100:     {v:[400,400,350,290,210,130],          c:['i','i','i','i','i','i'], note:'modeled; sm_70 no FA, MXFP4 via dequant'},
+  }
+};
+
+// tg[arch][platId] = {v:short-ctx t/s, c:conf, v32:tg@32K or null}
+const TG = {
+  moe:{
+    pro6000: {v:251.6,c:'m',  v32:null,  note:'llama.cpp Q4_K_M'},
+    rtx5090:  {v:234,  c:'m',  v32:110.7, note:'hardware-corner; 52 @147K'},
+    r9700:    {v:127.4,c:'m',  v32:null,  note:'llama.cpp Vulkan Q4_K_XL'},
+    dgxspark: {v:70,   c:'m~', v32:null,  note:'89@30B-A3B, 51@35B-A3B; avg'},
+    m3ultra:  {v:76,   c:'m~', v32:null,  note:'secondary source; DeepNewz @8K'},
+    strixhalo:{v:63,   c:'m',  v32:null,  note:'Level1Techs/lhl conservative Q4_K_XL'},
+    pg199:    {v:90,   c:'i',  v32:null,  note:'bandwidth-scaled estimate'},
+    b70:      {v:54.7, c:'m',  v32:null,  note:'PMZFX repo; single-card'},
+    v100:     {v:50,   c:'m',  v32:null,  note:'Bilibili/Zhihu anecdata'},
+  },
+  dense:{
+    pro6000: {v:56,   c:'m',  v32:33,    note:'vaditaslim; proxy Qwen2.5-32B'},
+    rtx5090:  {v:61.4, c:'m',  v32:43.8,  note:'hardware-corner Q4_K_XL'},
+    r9700:    {v:null, c:'n',  v32:null,  note:'no data'},
+    dgxspark: {v:10.7, c:'m',  v32:null,  note:'DandinPower "bandwidth wall"'},
+    m3ultra:  {v:27,   c:'m',  v32:19,    note:'mlx #3209; 31@1K→19@32K→8.5@128K'},
+    strixhalo:{v:10,   c:'m',  v32:null,  note:'7.6–10.9 t/s range; Q8_0 27B'},
+    pg199:    {v:35,   c:'i',  v32:null,  note:'bandwidth estimate'},
+    b70:      {v:30,   c:'i',  v32:null,  note:'single-card bandwidth estimate'},
+    v100:     {v:25,   c:'m~', v32:null,  note:'Zhihu/Bilibili anecdata'},
+  },
+  oss120b:{
+    pro6000:  {v:230,  c:'m',  v32:159,  note:'vLLM millstoneai; 230@1K->159@32K->100@96K'},
+    rtx5090:  {v:null, c:'n',  v32:null,  note:'32GB cannot fit 120B'},
+    r9700:    {v:null, c:'n',  v32:null,  note:'32GB cannot fit 120B'},
+    dgxspark: {v:38.6, c:'m',  v32:null,  note:'llama.cpp; SGLang-optimized ~50'},
+    m3ultra:  {v:60,   c:'m~', v32:null,  note:'MLX when healthy; prefill-instability bug'},
+    strixhalo:{v:40,   c:'m',  v32:null,  note:'34-46 fresh prompt (hardware-corner/STH)'},
+    pg199:    {v:150,  c:'i',  v32:null,  note:'modeled A100-class; UNMEASURED'},
+    b70:      {v:40,   c:'i',  v32:null,  note:'4x build modeled; 80B-A3B 2-card ~43 t/s ref'},
+    v100:     {v:50,   c:'i',  v32:null,  note:'modeled; sm_70'},
+  }
+};
+
+// Compute wall-clock for a 16K prompt + 2K output turn
+function computeWC(mode) {
+  return PLAT.map(p => {
+    const pp16 = PP[mode][p.id].v[2];
+    const pc16 = PP[mode][p.id].c[2];
+    const tg = TG[mode][p.id].v;
+    const tc = TG[mode][p.id].c;
+    if (!pp16 || !tg) return {id:p.id, ttft:null, gen:null, total:null, est:true};
+    const ttft = 16384/pp16;
+    const gen  = 2048/tg;
+    const est  = (pc16 !== 'm') || (tc !== 'm');
+    return {id:p.id, ttft, gen, total:ttft+gen, est};
+  });
+}
+
+function fmtT(s) {
+  if (!s) return '—';
+  if (s < 90) return s.toFixed(1)+'s';
+  return (s/60).toFixed(1)+'m';
+}
+function ttBand(s) {
+  if (!s) return '';
+  return s <= 30 ? 't-ok' : s <= 120 ? 't-warn' : 't-bad';
+}
+
+// Chart management
+let ppC=null, tgC=null, wcC=null;
+let mode='moe', view='pp';
+const hiddenPlat = new Set();
+
+const GRID = 'rgba(255,255,255,.07)';
+const TICKC = '#5a6a7d';
+
+function platColor(id, alpha=1) {
+  const p = PLAT.find(x=>x.id===id);
+  if (!p) return '#888';
+  const hex = p.color;
+  if (alpha===1) return hex;
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// === PREFILL CHART ===
+function buildPP() {
+  const data = PP[mode];
+  const ds = PLAT.map(p => {
+    const d = data[p.id];
+    const vals = d.v.map((v,i) => d.c[i]==='n' ? null : v);
+    const allModeled = d.c.every(c=>c==='i'||c==='n');
+    return {
+      label: p.short, data: vals,
+      borderColor: p.color, backgroundColor: p.color,
+      borderWidth: 2.2, tension: .25, spanGaps: false,
+      pointRadius: 4, pointHoverRadius: 6,
+      pointBackgroundColor: vals.map((v,i)=> d.c[i]==='m'?p.color:'transparent'),
+      pointBorderColor: p.color, pointBorderWidth: 2,
+      hidden: hiddenPlat.has(p.id),
+      borderDash: allModeled ? [2,4] : undefined,
+      segment: allModeled ? undefined : {
+        borderDash: ctx => {
+          const ci = d.c[ctx.p0DataIndex];
+          return ci==='m' ? undefined : ci==='e' ? [5,3] : [2,4];
+        }
+      }
+    };
+  });
+  const cfg = {
+    type:'line',
+    data:{labels:CTXL, datasets:ds},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#0d1724',borderColor:'#1a2535',borderWidth:1,
+          titleColor:'#ccd6e0',bodyColor:'#8898a9',
+          titleFont:{family:'Space Mono',size:11},bodyFont:{family:'Space Mono',size:11},
+          callbacks:{title:i=>'context: '+CTXL[i[0].dataIndex],
+            label:c=> c.dataset.label+': '+(c.parsed.y?Math.round(c.parsed.y)+' t/s':'—')}}},
+      scales:{
+        x:{title:{display:true,text:'context length (tokens)',color:TICKC,font:{family:'Space Mono',size:11}},
+           grid:{color:GRID},ticks:{color:TICKC,font:{family:'Space Mono',size:10}}},
+        y:{title:{display:true,text:'prefill t/s',color:TICKC,font:{family:'Space Mono',size:11}},
+           grid:{color:GRID},ticks:{color:TICKC,font:{family:'Space Mono',size:10},callback:v=>v>=1000?(v/1000)+'K':v}}
+      }
+    }
+  };
+  if (ppC) { ppC.data=cfg.data; ppC.update(); }
+  else ppC = new Chart(document.getElementById('ppChart'),cfg);
+}
+
+// === DECODE CHART ===
+function buildTG() {
+  const data = TG[mode];
+  // sort by tg descending (fastest first)
+  const sorted = [...PLAT].filter(p=>data[p.id].v).sort((a,b)=>data[b.id].v-data[a.id].v);
+  const labels = sorted.map(p=>p.short);
+  const tgVals = sorted.map(p=>data[p.id].v);
+  const tg32Vals = sorted.map(p=>data[p.id].v32);
+  const bgColors = sorted.map(p=>platColor(p.id,.85));
+  const bg32Colors = sorted.map(p=>platColor(p.id,.35));
+  const borderColors = sorted.map(p=>p.color);
+
+  const ds = [
+    {label:'tg (short context)', data:tgVals, backgroundColor:bgColors, borderColor:borderColors, borderWidth:1.5, borderRadius:3},
+    {label:'tg @32K+ (measured)', data:tg32Vals, backgroundColor:bg32Colors, borderColor:borderColors, borderWidth:1.5, borderDash:[3,3], borderRadius:3},
+  ];
+  const cfg = {
+    type:'bar',
+    data:{labels, datasets:ds},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true, labels:{color:'#8898a9',font:{family:'Space Mono',size:11},
+        generateLabels: chart=>chart.data.datasets.map((d,i)=>({
+          text:d.label, fillStyle:i===0?'#5fd97a':'rgba(95,217,122,.4)', strokeStyle:'transparent', index:i,
+          hidden:!chart.isDatasetVisible(i)}))}},
+        tooltip:{backgroundColor:'#0d1724',borderColor:'#1a2535',borderWidth:1,
+          titleColor:'#ccd6e0',bodyColor:'#8898a9',
+          titleFont:{family:'Space Mono',size:11},bodyFont:{family:'Space Mono',size:11},
+          callbacks:{label:c=>c.parsed.x?(c.dataset.label+': '+c.parsed.x.toFixed(1)+' t/s'):'—'}}},
+      scales:{
+        x:{title:{display:true,text:'decode t/s (single stream)',color:TICKC,font:{family:'Space Mono',size:11}},
+           grid:{color:GRID},ticks:{color:TICKC,font:{family:'Space Mono',size:10}}},
+        y:{grid:{color:'rgba(0,0,0,0)'},ticks:{color:TICKC,font:{family:'Space Mono',size:11}}}
+      }
+    }
+  };
+  if (tgC) { tgC.data=cfg.data; tgC.update(); }
+  else tgC = new Chart(document.getElementById('tgChart'),cfg);
+}
+
+// === WALL-CLOCK CHART ===
+function buildWC() {
+  const wc = computeWC(mode);
+  // filter out nulls and sort by total ascending (fastest at top)
+  const sorted = wc.filter(x=>x.total!==null).sort((a,b)=>a.total-b.total);
+  const platMap = Object.fromEntries(PLAT.map(p=>[p.id,p]));
+  const labels = sorted.map(x=>platMap[x.id].short);
+  const ttftVals = sorted.map(x=>x.ttft);
+  const genVals  = sorted.map(x=>x.gen);
+  const bgTTFT = sorted.map(x=>platColor(x.id,.9));
+  const bgGen  = sorted.map(x=>platColor(x.id,.4));
+  const borders = sorted.map(x=>platMap[x.id].color);
+
+  const ds = [
+    {label:'TTFT (16K prefill)', data:ttftVals, backgroundColor:bgTTFT, borderColor:borders, borderWidth:1.2, borderRadius:2, stack:'s'},
+    {label:'Generation (2K tokens)', data:genVals, backgroundColor:bgGen, borderColor:borders, borderWidth:1.2, borderRadius:2, borderDash:[2,2], stack:'s'},
+  ];
+  const cfg = {
+    type:'bar',
+    data:{labels, datasets:ds},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true, labels:{color:'#8898a9',font:{family:'Space Mono',size:11},
+        generateLabels: chart=>chart.data.datasets.map((d,i)=>({
+          text:d.label,
+          fillStyle:i===0?'rgba(95,217,122,.7)':'rgba(95,217,122,.3)',
+          strokeStyle:'transparent', index:i, hidden:!chart.isDatasetVisible(i)}))}},
+        tooltip:{backgroundColor:'#0d1724',borderColor:'#1a2535',borderWidth:1,
+          titleColor:'#ccd6e0',bodyColor:'#8898a9',
+          titleFont:{family:'Space Mono',size:11},bodyFont:{family:'Space Mono',size:11},
+          callbacks:{
+            title:i=>labels[i[0].dataIndex]+' · total: '+fmtT(sorted[i[0].dataIndex].total),
+            label:c=>{const v=c.parsed.x; return c.dataset.label+': '+fmtT(v)+(c.datasetIndex===0?' (TTFT)':' (gen)');}}}},
+      scales:{
+        x:{stacked:true, title:{display:true,text:'wall-clock seconds (TTFT + generation, stacked)',color:TICKC,font:{family:'Space Mono',size:11}},
+           grid:{color:GRID}, ticks:{color:TICKC,font:{family:'Space Mono',size:10},
+             callback:v=>v<60?v+'s':(v/60).toFixed(1)+'m'}},
+        y:{stacked:true, grid:{color:'rgba(0,0,0,0)'},ticks:{color:TICKC,font:{family:'Space Mono',size:11}}}
+      }
+    }
+  };
+  if (wcC) { wcC.data=cfg.data; wcC.update(); }
+  else wcC = new Chart(document.getElementById('wcChart'),cfg);
+}
+
+// === Platform legend ===
+function buildPlegend() {
+  const el = document.getElementById('pleg');
+  el.innerHTML = '';
+  const groups = [...new Set(PLAT.map(p=>p.group))];
+  groups.forEach(g => {
+    const label = document.createElement('span');
+    label.style.cssText='color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-right:4px';
+    label.textContent = g+':';
+    el.appendChild(label);
+    PLAT.filter(p=>p.group===g).forEach(p => {
+      const sp = document.createElement('span');
+      const dot = document.createElement('span'); dot.className='pdot'; dot.style.background=p.color;
+      sp.appendChild(dot);
+      sp.appendChild(document.createTextNode(p.short));
+      sp.onclick = () => {
+        if (hiddenPlat.has(p.id)) hiddenPlat.delete(p.id); else hiddenPlat.add(p.id);
+        sp.style.opacity = hiddenPlat.has(p.id) ? .3 : 1;
+        if (view==='pp') buildPP();
+      };
+      el.appendChild(sp);
+    });
+  });
+}
+
+// === Tables ===
+function buildPPTable() {
+  const tb = document.querySelector('#ppTable tbody'); tb.innerHTML='';
+  const groups = [...new Set(PLAT.map(p=>p.group))];
+  groups.forEach(g => {
+    // group header
+    const gr = document.createElement('tr');
+    gr.innerHTML=`<td colspan="8" class="grp lbl" style="padding:6px 10px">${g}</td>`;
+    tb.appendChild(gr);
+    const archs = ['moe','dense','oss120b'];
+    PLAT.filter(p=>p.group===g).forEach(p => {
+      archs.forEach((arch,ai) => {
+        const d = PP[arch][p.id];
+        const tr = document.createElement('tr');
+        const platCell = ai===0
+          ? `<td class="lbl" rowspan="3" style="vertical-align:top;border-right:1px solid var(--line)"><span style="font-family:var(--mono);font-size:12px;color:${p.color};font-weight:700">${p.short}</span><span class="note" style="display:block;font-size:10px;color:var(--dim)">${p.label}</span></td>`
+          : '';
+        const archLabel = `<td class="lbl"><span style="font-size:11px;color:var(--muted)">${arch==='moe'?'MoE':arch==='dense'?'Dense':'120B'}</span></td>`;
+        let cells='';
+        d.v.forEach((val,i) => {
+          const c=d.c[i];
+          if (c==='n') { cells+=`<td class="c-n"><span class="num">—</span></td>`; return; }
+          cells+=`<td class="c-${c}"><span class="num">${val?Math.round(val):'—'}</span></td>`;
+        });
+        tr.innerHTML = platCell + archLabel + cells;
+        tb.appendChild(tr);
+      });
+    });
+  });
+}
+
+function buildTGTable() {
+  const tb = document.querySelector('#tgTable tbody'); tb.innerHTML='';
+  const wc_moe = computeWC('moe');
+  const wc_dense = computeWC('dense');
+  const wcMoeMap = Object.fromEntries(wc_moe.map(x=>[x.id,x]));
+  const wcDenseMap = Object.fromEntries(wc_dense.map(x=>[x.id,x]));
+  const groups = [...new Set(PLAT.map(p=>p.group))];
+  groups.forEach(g => {
+    const gr = document.createElement('tr');
+    gr.innerHTML=`<td colspan="8" class="grp lbl" style="padding:6px 10px">${g}</td>`;
+    tb.appendChild(gr);
+    PLAT.filter(p=>p.group===g).forEach(p => {
+      const tm = TG.moe[p.id], td2 = TG.dense[p.id];
+      const wm = wcMoeMap[p.id], wd = wcDenseMap[p.id];
+      const tr = document.createElement('tr');
+      function tgCell(v,c) {
+        if (!v||c==='n') return `<td class="c-n"><span class="num">—</span></td>`;
+        const cc = c==='m~'?'m':c;
+        return `<td class="c-${cc}"><span class="num">${v.toFixed(1)}</span>${c==='m~'?'<span style="color:var(--dim)">~</span>':''}</td>`;
+      }
+      function wcCell(w) {
+        if (!w||!w.total) return `<td class="c-n">—</td>`;
+        const cls = ttBand(w.total);
+        return `<td class="c-${w.est?'e':'m'}"><span class="num ${cls}">${fmtT(w.total)}</span><span style="display:block;font-size:10px;color:var(--dim)">${fmtT(w.ttft)} + ${fmtT(w.gen)}</span></td>`;
+      }
+      tr.innerHTML =
+        `<td class="lbl"><span style="font-family:var(--mono);font-size:12px;color:${p.color};font-weight:700">${p.short}</span><span style="display:block;font-size:10px;color:var(--dim)">${p.label}</span></td>`+
+        tgCell(tm.v,tm.c)+
+        (tm.v32?`<td class="c-m"><span class="num">${tm.v32.toFixed(1)}</span></td>`:`<td class="c-n">—</td>`)+
+        tgCell(td2.v,td2.c)+
+        (td2.v32?`<td class="c-m"><span class="num">${td2.v32.toFixed(1)}</span></td>`:`<td class="c-n">—</td>`)+
+        wcCell(wm)+wcCell(wd)+
+        `<td class="lbl" style="max-width:220px;white-space:normal"><span style="font-size:11px;color:var(--dim)">${tm.note}</span></td>`;
+      tb.appendChild(tr);
+    });
+  });
+}
+
+// === Captions & verdict ===
+const ARCH_DESC = {
+  moe:'Hybrid-linear MoE · Qwen3.x-30/35B-A3B Q4 · ~3B active params/token',
+  dense:'Full-attention dense · Qwen3.x-27/32B Q4 · all weights read per token',
+  oss120b:'Large MoE · gpt-oss-120B MXFP4 ~63GB · needs ≥96GB (32GB cards drop out)'
+};
+function updateCaptions() {
+  document.getElementById('ppCap').textContent = ARCH_DESC[mode]+' · prefill throughput (tokens/sec)';
+  document.getElementById('tgCap').textContent = ARCH_DESC[mode]+' · decode rate (tokens/sec) · single-stream';
+  document.getElementById('wcCap').textContent = ARCH_DESC[mode]+' · wall-clock: 16K-token prompt + 2K generated';
+}
+function updateVerdict() {
+  const wc = computeWC(mode);
+  const sorted = wc.filter(x=>x.total).sort((a,b)=>a.total-b.total);
+  const best = sorted[0], worst = sorted[sorted.length-1];
+  const platMap = Object.fromEntries(PLAT.map(p=>[p.id,p]));
+  if (mode==='moe') {
+    document.getElementById('verdict').innerHTML=
+      `<b>MoE wall-clock.</b> Fastest: <b style="color:${platMap[best.id].color}">${platMap[best.id].short}</b> at <b>${fmtT(best.total)}</b> (${fmtT(best.ttft)} prefill + ${fmtT(best.gen)} gen). Slowest modeled: <b style="color:${platMap[worst.id].color}">${platMap[worst.id].short}</b> at <b>${fmtT(worst.total)}</b>. MoE linear-attention keeps decode alive on bandwidth-starved boxes (DGX Spark ~37s, Strix Halo ~51s), but prefill at 16K is still 2–10× slower than the discrete GPUs.`;
+  } else if (mode==='dense') {
+    document.getElementById('verdict').innerHTML=
+      `<b>Dense wall-clock — the real indictment of bandwidth-bound boxes.</b> Dense 27–32B requires streaming ~18 GB of weights per token at ~10–27 t/s on unified-memory platforms. DGX Spark: <b style="color:var(--bad)">${fmtT(wc.find(x=>x.id==='dgxspark')?.total)}</b>; Strix Halo: <b style="color:var(--bad)">${fmtT(wc.find(x=>x.id==='strixhalo')?.total)}</b>. RTX PRO 6000: <b style="color:var(--ok)">${fmtT(wc.find(x=>x.id==='pro6000')?.total)}</b>. The MoE archetype eliminates this penalty entirely — it is the correct model family for all three unified-memory platforms.`;
+  } else {
+    document.getElementById('verdict').innerHTML=
+      `<b>gpt-oss-120B (117B MoE, ~63GB) — the model that justifies 96–128GB.</b> Single 32GB cards (5090, R9700, 1× B70) can't load it and drop out here. Fastest wall-clock: <b style="color:${platMap[best.id].color}">${platMap[best.id].short}</b> at <b>${fmtT(best.total)}</b>. Unified boxes stay usable on decode (Spark ~39, Strix ~40, Mac ~60 t/s) but pay for it in prefill. Build cost/power value is in the Bang-for-buck-per-watt section below.`;
+  }
+}
+
+// === Render everything ===
+function render() {
+  updateCaptions(); updateVerdict();
+  if (view==='pp') { buildPP(); }
+  else if (view==='tg') { buildTG(); }
+  else { buildWC(); }
+}
+
+// Show/hide charts
+function setView(v) {
+  view=v;
+  document.getElementById('ppBox').classList.toggle('hidden', v!=='pp');
+  document.getElementById('tgBox').classList.toggle('hidden', v!=='tg');
+  document.getElementById('wcBox').classList.toggle('hidden', v!=='wc');
+  render();
+}
+
+// Toggles
+document.querySelectorAll('#viewTg button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#viewTg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  setView(b.dataset.v);
+}));
+document.querySelectorAll('#archTg button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#archTg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  mode = b.dataset.a;
+  render();
+}));
+
+// ===== VALUE: 96-128GB builds =====
+const KWH = 0.17;
+const BUILDS = [
+  {id:'b_3090',  label:'4× RTX 3090 (96GB)',        short:'4× 3090',   color:'#4fc3f7', cost:4800, loadW:1000, idleW:160, tg120:124, tg120c:'m',  tgMoe:130, tgMoec:'e'},
+  {id:'b_pro',   label:'RTX PRO 6000 (96GB, 1×)',   short:'PRO 6000',  color:'#00e676', cost:8500, loadW:400,  idleW:50,  tg120:200, tg120c:'m',  tgMoe:251, tgMoec:'m'},
+  {id:'b_a100',  label:'A100 80GB PCIe (1×)',       short:'A100 80',   color:'#80cbc4', cost:8000, loadW:300,  idleW:50,  tg120:160, tg120c:'i',  tgMoe:180, tgMoec:'i'},
+  {id:'b_pg199', label:'4× PG199 / DRIVE A100',     short:'4× PG199',  color:'#ec5c9d', cost:6000, loadW:1000, idleW:200, tg120:150, tg120c:'i',  tgMoe:170, tgMoec:'i'},
+  {id:'b_m3',    label:'Mac Studio M3 Ultra 96GB',  short:'M3 Ultra',  color:'#ce93d8', cost:3600, loadW:150,  idleW:20,  tg120:60,  tg120c:'m~', tgMoe:76,  tgMoec:'m~'},
+  {id:'b_strix', label:'Strix Halo 128GB',          short:'Strix Halo',color:'#ffab40', cost:2566, loadW:140,  idleW:15,  tg120:40,  tg120c:'m',  tgMoe:63,  tgMoec:'m'},
+  {id:'b_v100',  label:'4× V100 32GB (1CATai)',     short:'4× V100',   color:'#f3b54c', cost:4000, loadW:500,  idleW:160, tg120:50,  tg120c:'i',  tgMoe:50,  tgMoec:'m'},
+  {id:'b_b70',   label:'4× Arc B70 128GB',          short:'4× B70',    color:'#37d6c6', cost:3800, loadW:250,  idleW:100, tg120:40,  tg120c:'i',  tgMoe:54,  tgMoec:'e'},
+  {id:'b_spark', label:'DGX Spark (GB10) 128GB',    short:'DGX Spark', color:'#ffd740', cost:4699, loadW:240,  idleW:50,  tg120:39,  tg120c:'m',  tgMoe:70,  tgMoec:'m~'},
+];
+let valModel='tg120', valPower='load', valC=null;
+function hexA(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgba(${r},${g},${b},${a})`;}
+function idleYr(w){return w*8760/1000*KWH;}
+
+function buildValTable(){
+  const tb=document.querySelector('#valTable tbody'); tb.innerHTML='';
+  const rows=[...BUILDS].sort((a,b)=>(b.tg120/(b.cost/1000))-(a.tg120/(a.cost/1000)));
+  rows.forEach(b=>{
+    const perK=b.tg120/(b.cost/1000), perW=b.tg120/b.loadW, iy=idleYr(b.idleW);
+    const cc=x=>x==='m~'?'m':x;
+    const tr=document.createElement('tr');
+    tr.innerHTML=
+      `<td class="lbl"><span style="font-family:var(--mono);font-size:12px;color:${b.color};font-weight:700">${b.short}</span><span style="display:block;font-size:10px;color:var(--dim)">${b.label}</span></td>`+
+      `<td class="num">$${b.cost.toLocaleString()}</td>`+
+      `<td class="num">${b.loadW}</td>`+
+      `<td class="num">${b.idleW}</td>`+
+      `<td class="c-${cc(b.tg120c)}"><span class="num">${b.tg120}</span></td>`+
+      `<td class="c-${cc(b.tgMoec)}"><span class="num">${b.tgMoe}</span></td>`+
+      `<td class="num">${perK.toFixed(1)}</td>`+
+      `<td class="num">${perW.toFixed(2)}</td>`+
+      `<td class="num">$${Math.round(iy)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function buildVal(){
+  const isLoad=valPower==='load';
+  const tgOf=b=>valModel==='tg120'?b.tg120:b.tgMoe;
+  let rows=BUILDS.filter(b=>tgOf(b));
+  if(isLoad) rows=rows.map(b=>({b,m:tgOf(b)/b.loadW})).sort((x,y)=>y.m-x.m);
+  else       rows=rows.map(b=>({b,m:b.idleW})).sort((x,y)=>x.m-y.m);
+  const labels=rows.map(r=>r.b.short);
+  const data=rows.map(r=>r.m);
+  const bg=rows.map(r=>hexA(r.b.color,.85));
+  const bd=rows.map(r=>r.b.color);
+  const cfg={
+    type:'bar',
+    data:{labels,datasets:[{label:isLoad?'tok/s per W':'idle W',data,backgroundColor:bg,borderColor:bd,borderWidth:1.5,borderRadius:3}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#0d1724',borderColor:'#1a2535',borderWidth:1,titleColor:'#ccd6e0',bodyColor:'#8898a9',
+          titleFont:{family:'Space Mono',size:11},bodyFont:{family:'Space Mono',size:11},
+          callbacks:{label:c=>{const r=rows[c.dataIndex];return isLoad?`${c.parsed.x.toFixed(3)} tok/s per W (load)`:`${r.b.idleW} W idle · ~$${Math.round(idleYr(r.b.idleW))}/yr if left on`;}}}},
+      scales:{
+        x:{title:{display:true,text:isLoad?'tokens/sec per watt under load — higher better':'idle watts — lower better',color:TICKC,font:{family:'Space Mono',size:11}},
+           grid:{color:GRID},ticks:{color:TICKC,font:{family:'Space Mono',size:10}}},
+        y:{grid:{color:'rgba(0,0,0,0)'},ticks:{color:TICKC,font:{family:'Space Mono',size:11}}}
+      }}
+  };
+  if(valC){valC.data=cfg.data;valC.options=cfg.options;valC.update();}
+  else valC=new Chart(document.getElementById('valChart'),cfg);
+  // captions
+  const mLabel=valModel==='tg120'?'gpt-oss-120B':'35B-A3B MoE';
+  document.getElementById('valCap').textContent=mLabel+(isLoad?' · tokens/sec per watt under load':' · idle draw (standing cost if left on)');
+  document.getElementById('valCap2').textContent=isLoad?'higher = better · power estimated':'lower = better · $0.17/kWh · off-when-idle = upper bound';
+  // verdict
+  let v='';
+  if(valModel==='tg120'){
+    v=isLoad
+      ? `<b>120B · bang per watt (load).</b> Single modern cards win efficiency: <b style="color:#80cbc4">A100 80</b> (0.53) and <b style="color:#00e676">PRO 6000</b> (0.50) are ~3–4× better per watt than any 4-card rig (<b style="color:#4fc3f7">4× 3090</b> ≈ 0.12, <b style="color:#f3b54c">4× V100</b> ≈ 0.10). <b style="color:#ce93d8">M3 Ultra</b> (0.40) and <b style="color:#ffab40">Strix Halo</b> (0.29) punch above their price. The 4-card builds win on <i>acquisition</i> ($/tok-s, see table), not on watts.`
+      : `<b>120B · idle (standing cost).</b> Off-when-idle erases the multi-GPU penalty: <b style="color:#4fc3f7">4× 3090</b>/<b style="color:#f3b54c">4× V100</b> idle ~160W (~$240/yr if left on), <b style="color:#ec5c9d">4× PG199</b> ~200W (~$300/yr), vs <b style="color:#ffab40">Strix Halo</b> 15W (~$22/yr) and <b style="color:#ce93d8">M3 Ultra</b> 20W. These GPU-idle figures are rough (swing with persistence mode + power caps); since you power down between sessions, idle changes how you run the box, not whether it's viable.`;
+  } else {
+    v=isLoad
+      ? `<b>35B-A3B MoE on the big box.</b> Wasteful for single-stream (it fits one 32GB card), but if you run it here: <b style="color:#00e676">PRO 6000</b> leads (~0.63 tok/s/W), unified boxes ~0.3–0.5. The honest value play for this model is a <i>single</i> discrete GPU (R9700/used V100), not a 96–128GB build — see the single-card analysis above.`
+      : `<b>35B-A3B MoE · idle.</b> Same idle picture as 120B — the build's idle draw doesn't change with the model. Multi-GPU rigs ~200–280W, unified ~15–20W. Off-when-idle neutralizes it.`;
+  }
+  document.getElementById('valVerdict').innerHTML=v;
+}
+
+buildPlegend();
+buildPPTable();
+buildTGTable();
+buildValTable();
+buildVal();
+render();
+
+document.querySelectorAll('#valModelTg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#valModelTg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); valModel=b.dataset.vm; buildVal();
+}));
+document.querySelectorAll('#valPowerTg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#valPowerTg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); valPower=b.dataset.vp; buildVal();
+}));
+</script>
+</body>
+</html>
