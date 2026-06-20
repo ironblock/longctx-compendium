@@ -544,8 +544,9 @@ function buildPPTable() {
         let cells='';
         d.v.forEach((val,i) => {
           const c=d.c[i];
+          const cc=c==='m~'?'m':c;
           if (c==='n') { cells+=`<td class="c-n"><span class="num">—</span></td>`; return; }
-          cells+=`<td class="c-${c}"><span class="num">${val?Math.round(val):'—'}</span></td>`;
+          cells+=`<td class="c-${cc}"><span class="num">${val?Math.round(val):'—'}</span>${c==='m~'?'<span style="color:var(--dim)">~</span>':''}</td>`;
         });
         tr.innerHTML = platCell + archLabel + cells;
         tb.appendChild(tr);
