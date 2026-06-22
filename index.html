@@ -137,7 +137,7 @@ ul.notes b{color:var(--text)}
 
 <!-- Decode chart -->
 <div class="chartbox hidden" id="tgBox">
-  <div class="cap"><span id="tgCap">MoE · decode rate (tokens/sec) · single-stream · sorted fastest→slowest</span><span>open bar = tg@32K+ where measured</span></div>
+  <div class="cap"><span id="tgCap">MoE · decode rate (tokens/sec) · single-stream</span><span>sorted fastest→slowest · open bar = tg@32K+ where measured</span></div>
   <div class="ch ch-bar"><canvas id="tgChart"></canvas></div>
 </div>
 
@@ -206,7 +206,7 @@ ul.notes b{color:var(--text)}
 </div>
 
 <div class="verdict" id="valVerdict" style="border-left-color:var(--ok);border-color:rgba(95,217,122,.25);background:rgba(95,217,122,.05)"></div>
-<div class="verdict b" style="border-left-color:var(--warn);border-color:rgba(255,160,64,.25);background:rgba(255,160,64,.05);font-size:13px"><b style="color:var(--warn)">Buck dimension (always-on in table):</b> best tokens/sec per $1,000 on 120B — <b style="color:#4fc3f7">4× 3090</b> (25.8) and <b style="color:#ec5c9d">4× PG199</b> (25.0, modeled) lead, <b style="color:#00e676">PRO 6000</b> close (23.5) despite 2× the price because its decode is ~5× faster. <b style="color:#ffd740">DGX Spark</b> is last (8.3) — it buys CUDA + capacity + low idle, not 120B throughput.</div>
+<div class="verdict b" style="border-left-color:var(--warn);border-color:rgba(255,160,64,.25);background:rgba(255,160,64,.05);font-size:13px"><b style="color:var(--warn)">Buck dimension (always-on in table):</b> best tokens/sec per $1,000 on 120B — <b style="color:#00e676">PRO 6000</b> now leads at <b>27.1</b> (230 t/s measured decode, up from previously understated 200). <b style="color:#4fc3f7">4× 3090</b> (25.8) and <b style="color:#ec5c9d">4× PG199</b> (25.0, modeled) follow. <b style="color:#ffd740">DGX Spark</b> is last (8.3) — it buys CUDA + capacity + low idle, not 120B throughput.</div>
 
 <div class="tscroll"><table id="valTable">
   <thead><tr>
@@ -297,7 +297,7 @@ const TG = {
     strixhalo:{v:63,   c:'m',  v32:null,  note:'Level1Techs/lhl conservative Q4_K_XL'},
     pg199:    {v:90,   c:'i',  v32:null,  note:'bandwidth-scaled estimate'},
     b70:      {v:54.7, c:'m',  v32:null,  note:'PMZFX repo; single-card'},
-    v100:     {v:50,   c:'m',  v32:null,  note:'Bilibili/Zhihu anecdata'},
+    v100:     {v:50,   c:'m~', v32:null,  note:'Bilibili/Zhihu anecdata'},
   },
   dense:{
     pro6000: {v:56,   c:'m',  v32:33,    note:'vaditaslim; proxy Qwen2.5-32B'},
@@ -654,34 +654,54 @@ document.querySelectorAll('#archTg button').forEach(b => b.addEventListener('cli
 // ===== VALUE: 96-128GB builds =====
 const KWH = 0.17;
 const BUILDS = [
+  // Multi-card builds without a 1:1 TG platform — keep explicit decode values
   {id:'b_3090',  label:'4× RTX 3090 (96GB)',        short:'4× 3090',   color:'#4fc3f7', cost:4800, loadW:1000, idleW:160, tg120:124, tg120c:'m',  tgMoe:130, tgMoec:'e'},
-  {id:'b_pro',   label:'RTX PRO 6000 (96GB, 1×)',   short:'PRO 6000',  color:'#00e676', cost:8500, loadW:400,  idleW:50,  tg120:200, tg120c:'m',  tgMoe:251, tgMoec:'m'},
   {id:'b_a100',  label:'A100 80GB PCIe (1×)',       short:'A100 80',   color:'#80cbc4', cost:8000, loadW:300,  idleW:50,  tg120:160, tg120c:'i',  tgMoe:180, tgMoec:'i'},
   {id:'b_pg199', label:'4× PG199 / DRIVE A100',     short:'4× PG199',  color:'#ec5c9d', cost:6000, loadW:1000, idleW:200, tg120:150, tg120c:'i',  tgMoe:170, tgMoec:'i'},
-  {id:'b_m3',    label:'Mac Studio M3 Ultra 96GB',  short:'M3 Ultra',  color:'#ce93d8', cost:3600, loadW:150,  idleW:20,  tg120:60,  tg120c:'m~', tgMoe:76,  tgMoec:'m~'},
-  {id:'b_strix', label:'Strix Halo 128GB',          short:'Strix Halo',color:'#ffab40', cost:2566, loadW:140,  idleW:15,  tg120:40,  tg120c:'m',  tgMoe:63,  tgMoec:'m'},
-  {id:'b_v100',  label:'4× V100 32GB (1CATai)',     short:'4× V100',   color:'#f3b54c', cost:4000, loadW:500,  idleW:160, tg120:50,  tg120c:'i',  tgMoe:50,  tgMoec:'m'},
-  {id:'b_b70',   label:'4× Arc B70 128GB',          short:'4× B70',    color:'#37d6c6', cost:3800, loadW:250,  idleW:100, tg120:40,  tg120c:'i',  tgMoe:54,  tgMoec:'e'},
-  {id:'b_spark', label:'DGX Spark (GB10) 128GB',    short:'DGX Spark', color:'#ffd740', cost:4699, loadW:240,  idleW:50,  tg120:39,  tg120c:'m',  tgMoe:70,  tgMoec:'m~'},
+  {id:'b_b70',   label:'4× Arc B70 128GB',          short:'B70×4',     color:'#37d6c6', cost:3800, loadW:250,  idleW:100, tg120:40,  tg120c:'i',  tgMoe:54,  tgMoec:'e'},
+  // Single-card builds that map 1:1 to a TG platform — derive decode from TG
+  {id:'b_pro',   label:'RTX PRO 6000 (96GB, 1×)',   short:'PRO 6000',  color:'#00e676', cost:8500, loadW:400,  idleW:50,  deriveFrom:'pro6000'},
+  {id:'b_m3',    label:'Mac Studio M3 Ultra 96GB',  short:'M3 Ultra',  color:'#ce93d8', cost:3600, loadW:150,  idleW:20,  deriveFrom:'m3ultra'},
+  {id:'b_strix', label:'Strix Halo 128GB',          short:'Strix Halo',color:'#ffab40', cost:2566, loadW:140,  idleW:15,  deriveFrom:'strixhalo'},
+  {id:'b_v100',  label:'4× V100 32GB (1CATai)',     short:'4× V100',   color:'#f3b54c', cost:4000, loadW:500,  idleW:160, deriveFrom:'v100'},
+  {id:'b_spark', label:'DGX Spark (GB10) 128GB',    short:'DGX Spark', color:'#ffd740', cost:4699, loadW:240,  idleW:50,  deriveFrom:'dgxspark'},
 ];
+// Derive a build's decode value+confidence from TG where possible,
+// falling back to explicit tg120/tgMoe fields for multi-card builds.
+function getBuildDecode(b, arch) {
+  if (b.deriveFrom) {
+    const src = TG[arch]?.[b.deriveFrom];
+    if (src && src.v != null && src.c !== 'n') return src;
+  }
+  const key = arch === 'oss120b' ? 'tg120' : 'tgMoe';
+  const ckey = key + 'c';
+  return {v: b[key], c: b[ckey]};
+}
 let valModel='tg120', valPower='load', valC=null;
 function hexA(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgba(${r},${g},${b},${a})`;}
 function idleYr(w){return w*8760/1000*KWH;}
 
 function buildValTable(){
   const tb=document.querySelector('#valTable tbody'); tb.innerHTML='';
-  const rows=[...BUILDS].sort((a,b)=>(b.tg120/(b.cost/1000))-(a.tg120/(a.cost/1000)));
+  const arch = valModel === 'tg120' ? 'oss120b' : 'moe';
+  const rows=[...BUILDS].filter(b => getBuildDecode(b, arch).v).sort((a,b)=>{
+    const da = getBuildDecode(a, arch).v, db = getBuildDecode(b, arch).v;
+    return (db/(b.cost/1000)) - (da/(a.cost/1000));
+  });
+  const cc=x=>x==='m~'?'m':x;
   rows.forEach(b=>{
-    const perK=b.tg120/(b.cost/1000), perW=b.tg120/b.loadW, iy=idleYr(b.idleW);
-    const cc=x=>x==='m~'?'m':x;
+    const dec   = getBuildDecode(b, arch);
+    const dec120 = getBuildDecode(b, 'oss120b');
+    const decMoe = getBuildDecode(b, 'moe');
+    const perK = dec.v / (b.cost/1000), perW = dec.v / b.loadW, iy = idleYr(b.idleW);
     const tr=document.createElement('tr');
     tr.innerHTML=
       `<td class="lbl"><span style="font-family:var(--mono);font-size:12px;color:${b.color};font-weight:700">${b.short}</span><span style="display:block;font-size:10px;color:var(--dim)">${b.label}</span></td>`+
       `<td class="num">$${b.cost.toLocaleString()}</td>`+
       `<td class="num">${b.loadW}</td>`+
       `<td class="num">${b.idleW}</td>`+
-      `<td class="c-${cc(b.tg120c)}"><span class="num">${b.tg120}</span></td>`+
-      `<td class="c-${cc(b.tgMoec)}"><span class="num">${b.tgMoe}</span></td>`+
+      `<td class="c-${cc(dec120.c)}"><span class="num">${dec120.v != null ? dec120.v : '—'}</span></td>`+
+      `<td class="c-${cc(decMoe.c)}"><span class="num">${decMoe.v != null ? decMoe.v : '—'}</span></td>`+
       `<td class="num">${perK.toFixed(1)}</td>`+
       `<td class="num">${perW.toFixed(2)}</td>`+
       `<td class="num">$${Math.round(iy)}</td>`;
@@ -690,10 +710,11 @@ function buildValTable(){
 }
 
 function buildVal(){
+  buildValTable();
   const isLoad=valPower==='load';
-  const tgOf=b=>valModel==='tg120'?b.tg120:b.tgMoe;
-  let rows=BUILDS.filter(b=>tgOf(b));
-  if(isLoad) rows=rows.map(b=>({b,m:tgOf(b)/b.loadW})).sort((x,y)=>y.m-x.m);
+  const arch = valModel === 'tg120' ? 'oss120b' : 'moe';
+  let rows=BUILDS.filter(b => getBuildDecode(b, arch).v);
+  if(isLoad) rows=rows.map(b => ({b, m: getBuildDecode(b, arch).v / b.loadW})).sort((x,y)=>y.m-x.m);
   else       rows=rows.map(b=>({b,m:b.idleW})).sort((x,y)=>x.m-y.m);
   const labels=rows.map(r=>r.b.short);
   const data=rows.map(r=>r.m);
@@ -723,7 +744,7 @@ function buildVal(){
   let v='';
   if(valModel==='tg120'){
     v=isLoad
-      ? `<b>120B · bang per watt (load).</b> Single modern cards win efficiency: <b style="color:#80cbc4">A100 80</b> (0.53) and <b style="color:#00e676">PRO 6000</b> (0.50) are ~3–4× better per watt than any 4-card rig (<b style="color:#4fc3f7">4× 3090</b> ≈ 0.12, <b style="color:#f3b54c">4× V100</b> ≈ 0.10). <b style="color:#ce93d8">M3 Ultra</b> (0.40) and <b style="color:#ffab40">Strix Halo</b> (0.29) punch above their price. The 4-card builds win on <i>acquisition</i> ($/tok-s, see table), not on watts.`
+      ? `<b>120B · bang per watt (load).</b> Single modern cards win efficiency: <b style="color:#00e676">PRO 6000</b> (0.58) and <b style="color:#80cbc4">A100 80</b> (0.53) are ~4–5× better per watt than any 4-card rig (<b style="color:#4fc3f7">4× 3090</b> ≈ 0.12, <b style="color:#f3b54c">4× V100</b> ≈ 0.10). <b style="color:#ce93d8">M3 Ultra</b> (0.40) and <b style="color:#ffab40">Strix Halo</b> (0.29) punch above their price. The 4-card builds win on <i>acquisition</i> ($/tok-s, see table), not on watts.`
       : `<b>120B · idle (standing cost).</b> Off-when-idle erases the multi-GPU penalty: <b style="color:#4fc3f7">4× 3090</b>/<b style="color:#f3b54c">4× V100</b> idle ~160W (~$240/yr if left on), <b style="color:#ec5c9d">4× PG199</b> ~200W (~$300/yr), vs <b style="color:#ffab40">Strix Halo</b> 15W (~$22/yr) and <b style="color:#ce93d8">M3 Ultra</b> 20W. These GPU-idle figures are rough (swing with persistence mode + power caps); since you power down between sessions, idle changes how you run the box, not whether it's viable.`;
   } else {
     v=isLoad
@@ -736,7 +757,6 @@ function buildVal(){
 buildPlegend();
 buildPPTable();
 buildTGTable();
-buildValTable();
 buildVal();
 render();
 
