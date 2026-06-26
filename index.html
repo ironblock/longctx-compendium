@@ -181,7 +181,7 @@ ul.notes b{color:var(--text)}
 </table></div>
 
 <h2>Bang-for-buck-per-watt <span class="tail">96–128GB builds · gpt-oss-120B anchor · cost + power</span></h2>
-<p style="font-size:13px;color:var(--muted);margin:6px 0 8px">Scoped to builds that clear 96GB — the 120B model needs ~63GB, so single 32GB cards can't play. <b style="color:var(--text)">Power figures are estimates</b> (you confirmed no measured data beyond the docs); decode is measured for PRO 6000, 4× 3090, DGX Spark, Strix Halo and M3 Ultra, and modeled for the SXM2 builds + A100 (PG199 is fully unmeasured on LLMs). Reframe applied: <b style="color:var(--text)">off-when-idle</b>, so idle is a cost-of-how-you-run-it, not a disqualifier.</p>
+<p style="font-size:13px;color:var(--muted);margin:6px 0 8px">Scoped to builds that clear 96GB — the 120B model needs ~63GB, so single 32GB cards can't play. <b style="color:var(--text)">Power figures are estimates</b> (you confirmed no measured data beyond the docs); decode is measured for PRO 6000, 4× 3090, DGX Spark, Strix Halo and M3 Ultra, power is now also measured for 4× B70 (Puget), and the SXM2 builds + A100 remain modeled (PG199 is fully unmeasured on LLMs). Reframe applied: <b style="color:var(--text)">off-when-idle</b>, so idle is a cost-of-how-you-run-it, not a disqualifier.</p>
 
 <div class="tbar">
   <div>
@@ -216,7 +216,7 @@ ul.notes b{color:var(--text)}
   </tr></thead>
   <tbody></tbody>
 </table></div>
-<p style="font-size:11.5px;color:var(--dim);font-family:var(--mono);line-height:1.8">tok-s/$1k &amp; tok-s/W use the 120B decode anchor. idle $/yr = idleW × 8760h × $0.17/kWh (US avg) — upper bound under off-when-idle. <b>GPU-idle figures are rough estimates</b> (≈40W/card model-resident for 3090/V100; true idle can be ~20–30W/card, poorly-managed higher). PG199 perf modeled/unmeasured. Costs: 4×3090 $4,800 · PRO 6000 $8,500 · A100 80 ~$8,000 · 4×PG199 ~$6,000+host · M3 Ultra 96GB $3,600 · Strix Halo 128GB $2,566 · 4×V100 $4,000 · 4×B70 $3,800 · DGX Spark $4,699. All memory-shortage-inflated as of mid-2026.</p>
+<p style="font-size:11.5px;color:var(--dim);font-family:var(--mono);line-height:1.8">tok-s/$1k &amp; tok-s/W use the 120B decode anchor. idle $/yr = idleW × 8760h × $0.17/kWh (US avg) — upper bound under off-when-idle. <b>GPU-idle figures are rough estimates</b> (≈40W/card model-resident for 3090/V100; true idle can be ~20–30W/card, poorly-managed higher). PG199 perf modeled/unmeasured. Costs: 4×3090 $4,800 · PRO 6000 $8,500 · A100 80 ~$8,000 · 4×PG199 ~$6,000+host · M3 Ultra 96GB $3,600 · Strix Halo 128GB $2,566 · 4×V100 $4,000 · 4×B70 $3,800 · DGX Spark $4,699. All memory-shortage-inflated as of mid-2026. <b style="color:var(--text)">4× B70 power is now measured (Puget):</b> 420 W (35B MoE) to 563 W (8B) GPU-only under load, ~632 W peak, ~250 W idle (4 cards) — the previous 250 W load estimate was far too low.</p>
 
 <h2>Addendum · V100 32GB single-card — long-context architecture falloff <span class="tail">anecdata · r/localLLaMA · Tesla V100-SXM2-32GB on SXM2→PCIe adapter</span></h2>
 <p style="font-size:13px;color:var(--muted);margin:6px 0 8px">A redditor dropped a single <b style="color:var(--text)">Tesla V100-SXM2-32GB</b> (Volta, 900 GB/s HBM2, no FlashAttention on sm_70) into a cheap SXM2→PCIe adapter and ran <span class="num">llama-bench</span> across a spread of architectures at 512 and 32K context. <b style="color:var(--text)">This is one card, not the 4× NVLink build modeled in the grids above</b> — and unlike that modeled row, these are measured. Everything here is <b style="color:var(--m)">measured~</b> (anecdotal: single user, screenshots only, exact figures may carry transcription error). The headline result is that <b style="color:var(--text)">long-context prefill falloff tracks attention architecture, not vendor</b> — the same thesis as the rest of this page, observed on a 2017 GPU.</p>
@@ -303,6 +303,49 @@ ul.notes b{color:var(--text)}
 </table></div>
 <p style="font-size:11.5px;color:var(--dim);font-family:var(--mono);line-height:1.8"><b style="color:var(--m)">Green</b> = measured (V100 anecdata; M3 Ultra anchors Qwen3.5-35B-A3B 80.4 t/s &amp; Qwen3.5-27B 21.3 t/s are measured~, MLX 4-bit). <b style="color:var(--e)">Amber ~</b> = estimate: V100 measured decode × (bandwidth ÷ 900) × ~0.92 runtime factor, calibrated so the M3 Ultra MoE anchor lands at its measured 80.4. Real MLX/Metal numbers vary ±15–20% with runtime, KV dtype and context — these set the <i>standing</i>, not a leaderboard. M5 Max column = 40-core/614 GB/s bin; the 32-core/460 bin is ~25% lower (below M4 Max). Dense decode on Apple compresses harder than bandwidth alone predicts (MLX dense efficiency), so dense estimates are conservative. M5 Ultra not yet shipping as of this writing.</p>
 
+<h2>Puget Systems · 4× Arc Pro B70 "Battlematrix" — measured multi-GPU <span class="tail">primary lab data · FP16 · vLLM (Intel LLM Scaler) · TP=4 · power-instrumented</span></h2>
+<p style="font-size:13px;color:var(--muted);margin:6px 0 8px">Finally a rigorous multi-GPU B70 dataset. Puget Systems (Dustin Moore, Jun 2026) put four Arc Pro B70s (32 GB each, 128 GB total, ~$3,800 in cards) in one workstation and benchmarked FP16 inference with Intel's LLM Scaler vLLM container, tensor-parallel across all four cards, sampling GPU power throughout via the <span class="num">xe</span> driver's energy counters. It's the most instrumented source on this page — but mind the operating point: <b style="color:var(--text)">FP16, not Q4</b>. Upstream vLLM's XPU backend serves FP16 only (AWQ/GPTQ kernels are CUDA-only; LLM Scaler adds INT4/FP8/GPTQ but Puget left it untested). So these run ~2× heavier than the Q4 llama.cpp B70 figures elsewhere on this page (54.7 tg single-card) — a different operating point, <i>not</i> a contradiction. Caveat for this page's thesis: Puget tested only short context (500-in / 500-out), so there is <b style="color:var(--text)">no long-context falloff curve here</b> — this fills the value/throughput hole, not the falloff one.</p>
+
+<div class="verdict" style="border-left-color:var(--ok);border-color:rgba(95,217,122,.25);background:rgba(95,217,122,.05)">
+  <b style="color:var(--ok)">A capacity-and-throughput play, not a speed play.</b> 27B–35B <i>FP16</i> models don't fit on one 32 GB card — the 128 GB pool is the entire point. Single-user decode is modest (13–16 tok/s on 27–35B) because each card has only 608 GB/s and TP routes over host RAM (P2P disabled for stability), but aggregate throughput scales hard: <b>7×+ from 1→8 concurrent users</b>. MoE pays off here too — Qwen3.6-35B-A3B (16.3 tg) beats dense Qwen3.6-27B (13.1 tg) despite more total params, because only ~3B activate per token. Measured: zero crashes across the suite once configured.
+</div>
+
+<div class="tscroll"><table>
+  <thead><tr>
+    <th class="lbl" style="min-width:210px">Model · params</th>
+    <th class="lbl">Arch</th>
+    <th>1× B70<br><span style="font-weight:400;color:var(--dim)">TP=1, 1 user</span></th>
+    <th>4× B70<br><span style="font-weight:400;color:var(--dim)">TP=4, 1 user</span></th>
+    <th>4× B70<br><span style="font-weight:400;color:var(--dim)">TP=4, 8 users</span></th>
+    <th class="lbl">Scaling / note</th>
+  </tr></thead>
+  <tbody>
+    <tr><td colspan="6" class="grp lbl">Fits one card — shard only for concurrency</td></tr>
+    <tr><td class="lbl">Qwen2.5-3B Instruct</td><td class="lbl"><span style="font-size:11px;color:var(--muted)">dense</span></td><td class="c-m"><span class="num">72.9</span></td><td class="c-m"><span class="num">62.6</span></td><td class="c-m"><span class="num">410</span></td><td class="lbl"><span style="font-size:11px;color:var(--dim)">0.86× — sharding <i>hurts</i>; run on 1 card</span></td></tr>
+    <tr><td class="lbl">Llama 3.1 8B Instruct</td><td class="lbl"><span style="font-size:11px;color:var(--muted)">dense</span></td><td class="c-m"><span class="num">35.4</span></td><td class="c-m"><span class="num">70.3</span></td><td class="c-m"><span class="num">472</span></td><td class="lbl"><span style="font-size:11px;color:var(--dim)">1.99× single-user; 86 ms TTFT</span></td></tr>
+    <tr><td class="lbl">DeepSeek R1 Distill 8B</td><td class="lbl"><span style="font-size:11px;color:var(--muted)">dense</span></td><td class="c-m"><span class="num">66.9</span></td><td class="c-m"><span class="num">136</span></td><td class="c-m"><span class="num">905</span></td><td class="lbl"><span style="font-size:11px;color:var(--dim)">2.03×; lowest ITL in suite (7–9 ms)</span></td></tr>
+    <tr><td colspan="6" class="grp lbl">Needs all four cards — too big for 32 GB at FP16</td></tr>
+    <tr><td class="lbl">Qwen3.6-27B</td><td class="lbl"><span style="font-size:11px;color:var(--muted)">dense (54 GB)</span></td><td class="c-n"><span class="num">—</span></td><td class="c-m"><span class="num">13.1</span></td><td class="c-m"><span class="num">95.9</span></td><td class="lbl"><span style="font-size:11px;color:var(--dim)">7.3× at 8 users; 265 ms TTFT</span></td></tr>
+    <tr><td class="lbl">Qwen3.6-35B-A3B</td><td class="lbl"><span style="font-size:11px;color:var(--muted)">MoE (70 GB)</span></td><td class="c-n"><span class="num">—</span></td><td class="c-m"><span class="num">16.3</span></td><td class="c-m"><span class="num">122</span></td><td class="lbl"><span style="font-size:11px;color:var(--dim)">7.5×; beats dense 27B (sparse ~3B active)</span></td></tr>
+  </tbody>
+</table></div>
+<p style="font-size:11.5px;color:var(--dim);font-family:var(--mono);line-height:1.8">All <b style="color:var(--m)">measured</b> (Puget Systems, primary). t/s = tok/s. FP16, enforce-eager, vLLM Intel LLM Scaler 0.14.0, max-model-len 32768, GenAI-Perf 500-in/500-out. TP=4 over host-RAM USM (CCL_TOPO_P2P_ACCESS=0). 8-user column is aggregate throughput across concurrent requests.</p>
+
+<div class="tscroll"><table>
+  <thead><tr>
+    <th class="lbl" style="min-width:180px">Model · config</th>
+    <th>GPU power avg</th><th>GPU peak</th><th>$/1M out tok</th><th class="lbl">vs frontier cloud (output)</th>
+  </tr></thead>
+  <tbody>
+    <tr><td class="lbl">Qwen2.5-3B · TP=1</td><td class="c-m"><span class="num">328 W</span></td><td class="c-m"><span class="num">343 W</span></td><td class="c-m"><span class="num">$0.43</span></td><td class="lbl"><span style="font-size:11px;color:var(--ok)">28× cheaper than Gemini 3.1 Pro</span></td></tr>
+    <tr><td class="lbl">DeepSeek R1 8B · TP=1</td><td class="c-m"><span class="num">350 W</span></td><td class="c-m"><span class="num">366 W</span></td><td class="c-m"><span class="num">$0.49</span></td><td class="lbl"><span style="font-size:11px;color:var(--ok)">25× / 51× / 62× vs Gemini / Opus / GPT-5.5</span></td></tr>
+    <tr><td class="lbl">Llama 3.1 8B · TP=1</td><td class="c-m"><span class="num">350 W</span></td><td class="c-m"><span class="num">367 W</span></td><td class="c-m"><span class="num">$0.92</span></td><td class="lbl"><span style="font-size:11px;color:var(--muted)">13× cheaper than Gemini 3.1 Pro</span></td></tr>
+    <tr><td class="lbl">Qwen3.6-35B-A3B · TP=4</td><td class="c-m"><span class="num">420 W</span></td><td class="c-m"><span class="num">492 W</span></td><td class="c-m"><span class="num">$2.21</span></td><td class="lbl"><span style="font-size:11px;color:var(--muted)">5.4× / 11× / 14× vs Gemini / Opus / GPT-5.5</span></td></tr>
+    <tr><td class="lbl">Qwen3.6-27B · TP=4</td><td class="c-m"><span class="num">532 W</span></td><td class="c-m"><span class="num">632 W</span></td><td class="c-m"><span class="num">$3.18</span></td><td class="lbl"><span style="font-size:11px;color:var(--warn)">3.8× cheaper than Gemini — costliest local config</span></td></tr>
+  </tbody>
+</table></div>
+<p style="font-size:11.5px;color:var(--dim);font-family:var(--mono);line-height:1.8">Power = sum across all four cards via xe energy counters. <b>TP=1 rows include ~190 W idle from the three unused cards</b> (the honest draw for a 4-card box). Heaviest 4-card load peaks 632 W, under the 920 W theoretical (4× 230 W TBP); MoE (420 W) draws less than dense (532 W) — sparse activation. $/1M = electricity only at $0.18/kWh, GPU avg + ~300 W host. At 8 concurrent users every 8B-class model falls below $0.13/1M (~100× cheaper than frontier APIs). Cloud reference (Jun 2026): Gemini 3.1 Pro $12, Claude Opus 4.8 $25, GPT-5.5 $30 per 1M output. Per-card: 608 GB/s, 230 W TBP, 367 TOPS Int8, $949. vs RTX 5090 (1,792 GB/s): the 5090 is ~4–5× faster per GPU on decode, but 4× B70 = 128 GB for &lt;$4k vs 2× 5090 = 64 GB for ~$4k — capacity over per-card speed.</p>
+
 <h2>Method & sources</h2>
 <ul class="notes">
   <li><b>Prefill curves:</b> B70 (llama.cpp SYCL, PMZFX/intel-arc-pro-b70-benchmarks) and AMD R9700 (ggml discussion #19890, Q4_K_XL, Q4_K_M) are the best-measured at ≥4 context points. RTX 5090 MoE (hardware-corner.net, Q4_K_XL) provides 4 points. Mac M3 Ultra dense (mlx discussions #3209, mlx_lm.benchmark) provides 3 points. DGX Spark (DandinPower/llama.cpp_bench; NVIDIA Dev Forums) and Strix Halo (Level1Techs; strix-halo-guide) have 2 anchors each; remainder extrapolated.</li>
@@ -313,9 +356,10 @@ ul.notes b{color:var(--text)}
   <li><b>TTFT and wall-clock:</b> TTFT = context_length ÷ pp(context_length). Wall-clock for 16K+2K turn = TTFT@16K + (2048 ÷ tg). These are cold (un-cached) monolithic prefills; prefix caching significantly improves repeated-system-prompt agentic loops.</li>
   <li><b>AMD R9700 included as bonus:</b> Strong Qwen3.5-35B-A3B MoE numbers, R9700 single-card, Q4_K_XL (ggml #19890). Not in the user's original list but data quality warranted inclusion.</li>
   <li><b>V100 32GB single-card addendum:</b> r/localLLaMA anecdata — one Tesla V100-SXM2-32GB on a cheap SXM2→PCIe adapter, llama-bench, 900 GB/s HBM2, all layers on GPU. Distinct from the modeled 4× NVLink build in the grids: this single card is measured, and at <i>much</i> higher prefill/decode than the conservative 4-card model (≈911 pp512 / 98 tg on Qwen3.5-35B-A3B Q4 vs the modeled 560/50), which suggests the 4× row is understated — left as-is pending a measured multi-card anchor. The architecture-falloff result is the takeaway: Mamba2 −7–8% and Gated DeltaNet −9–11% from 512→32K, vs −18 to −28% for full-attention MoE/dense and −64% for GLM-4.7-Flash. Single source, screenshots only — treat as <span style="color:var(--m)">measured~</span>.</li>
+  <li><b>4× Arc Pro B70 (Puget Systems):</b> Primary lab benchmark (Dustin Moore, Jun 18 2026) — four B70s, FP16, Intel LLM Scaler vLLM 0.14.0, TP=4 over host-RAM USM, GenAI-Perf 500/500, GPU power instrumented. Operating point differs from this page's Q4 llama.cpp B70 anchors: FP16 is ~2× heavier, so single-user decode is 13.1 t/s (27B dense) / 16.3 t/s (35B-A3B MoE) vs the Q4 single-card 54.7 t/s — both real, different configs. Throughput scales 7×+ from 1→8 users. Used to correct the build-value power estimate (measured 420–563 W load / ~250 W idle, not the prior 250 W). No long-context sweep (500-token prompts only), so it doesn't feed the prefill-falloff curves.</li>
   <li><b>Apple Silicon decode baseline:</b> Memory bandwidths are vendor spec: M3 Ultra ~800 GB/s, M5 Max 614 GB/s (40-core GPU) / 460 GB/s (32-core), M4 Max 546 GB/s, V100-SXM2 900 GB/s HBM2. Single-stream decode is bandwidth-bound, so these rank the field directly. Per-model Apple tg is <i>estimated</i> by scaling the measured V100 decode by the bandwidth ratio (×~0.92 runtime factor), calibrated to the one solid cross-platform anchor — M3 Ultra running Qwen3.5-35B-A3B at 80.4 t/s (MLX 4-bit). The M5's headline gain is prefill: Apple's Neural Accelerators (one per GPU core) drive a claimed ~4× prompt-processing speedup over M4 (Qwen3-14B TTFT 4.06×), while decode improves only ~12% (the M4→M5 bandwidth bump). Net: M5 Max is a TTFT story, M3 Ultra remains Apple's decode leader, and neither out-decodes the V100's raw HBM2 bandwidth.</li>
 </ul>
-<p class="src">SOURCES: DandinPower/llama.cpp_bench (DGX Spark) · NVIDIA Dev Forums/claytantor (DGX Spark Qwen3.5) · Level1Techs/lhl (Strix Halo) · strix-halo-guide/hogeheer499 (Strix Halo Qwen3.6) · lilting.ch (Strix Halo long-ctx) · mlx #3209 (M3 Ultra dense) · llm-tracker.info (PRO 6000) · vaditaslim.com (PRO 6000 dense) · jarvislabs.ai (PRO 6000 MTP) · loftllc.dev (dual PRO 6000 NVFP4+MTP) · hardware-corner.net (RTX 5090) · ggml #19890 (RTX 5090 vs R9700) · PMZFX/intel-arc-pro-b70-benchmarks (B70) · dzombak.com · medium/fzbcwvv (3090) · himeshp.blogspot (4× 3090 TP) · willitrunai.com (4090 TP) · CloudRift (multi-GPU serving) · r/localLLaMA (V100-SXM2-32GB single-card 512/32K anecdata, screenshots — Nemotron-3-Nano, Qwen3-Next-80B, GLM-4.7-Flash, Qwen3.5 dense) · Apple Newsroom (M5 Pro/Max debut, Mar 2026) · Apple Machine Learning Research (Exploring LLMs with MLX + M5 Neural Accelerators) · notebookcheck.net (M5 Max specs/bandwidth) · yage.ai (MLX vs llama.cpp Apple Silicon, M5 accelerators) · llmcheck.net (Apple Silicon tok/s)</p>
+<p class="src">SOURCES: DandinPower/llama.cpp_bench (DGX Spark) · NVIDIA Dev Forums/claytantor (DGX Spark Qwen3.5) · Level1Techs/lhl (Strix Halo) · strix-halo-guide/hogeheer499 (Strix Halo Qwen3.6) · lilting.ch (Strix Halo long-ctx) · mlx #3209 (M3 Ultra dense) · llm-tracker.info (PRO 6000) · vaditaslim.com (PRO 6000 dense) · jarvislabs.ai (PRO 6000 MTP) · loftllc.dev (dual PRO 6000 NVFP4+MTP) · hardware-corner.net (RTX 5090) · ggml #19890 (RTX 5090 vs R9700) · PMZFX/intel-arc-pro-b70-benchmarks (B70) · dzombak.com · medium/fzbcwvv (3090) · himeshp.blogspot (4× 3090 TP) · willitrunai.com (4090 TP) · CloudRift (multi-GPU serving) · r/localLLaMA (V100-SXM2-32GB single-card 512/32K anecdata, screenshots — Nemotron-3-Nano, Qwen3-Next-80B, GLM-4.7-Flash, Qwen3.5 dense) · Apple Newsroom (M5 Pro/Max debut, Mar 2026) · Apple Machine Learning Research (Exploring LLMs with MLX + M5 Neural Accelerators) · notebookcheck.net (M5 Max specs/bandwidth) · yage.ai (MLX vs llama.cpp Apple Silicon, M5 accelerators) · llmcheck.net (Apple Silicon tok/s) · pugetsystems.com/labs (Dustin Moore — Intel Arc Pro B70 Multi-GPU AI Inference Performance, Jun 2026; FP16 vLLM TP=4, power-instrumented)</p>
 
 </div><!-- /wrap -->
 
@@ -383,7 +427,7 @@ const TG = {
     m3ultra:  {v:76,   c:'m~', v32:null,  note:'secondary source; DeepNewz @8K'},
     strixhalo:{v:63,   c:'m',  v32:null,  note:'Level1Techs/lhl conservative Q4_K_XL'},
     pg199:    {v:90,   c:'i',  v32:null,  note:'bandwidth-scaled estimate'},
-    b70:      {v:54.7, c:'m',  v32:null,  note:'PMZFX repo; single-card'},
+    b70:      {v:54.7, c:'m',  v32:null,  note:'Q4 single-card (PMZFX); FP16 4-card TP=4 = 16.3 (Puget)'},
     v100:     {v:50,   c:'m~', v32:null,  note:'Bilibili/Zhihu anecdata'},
   },
   dense:{
@@ -394,7 +438,7 @@ const TG = {
     m3ultra:  {v:27,   c:'m',  v32:19,    note:'mlx #3209; 31@1K→19@32K→8.5@128K'},
     strixhalo:{v:10,   c:'m',  v32:null,  note:'7.6–10.9 t/s range; Q8_0 27B'},
     pg199:    {v:35,   c:'i',  v32:null,  note:'bandwidth estimate'},
-    b70:      {v:30,   c:'i',  v32:null,  note:'single-card bandwidth estimate'},
+    b70:      {v:30,   c:'i',  v32:null,  note:'Q4 single-card estimate; FP16 27B 4-card = 13.1 (Puget)'},
     v100:     {v:25,   c:'m~', v32:null,  note:'Zhihu/Bilibili anecdata'},
   },
   oss120b:{
@@ -745,7 +789,7 @@ const BUILDS = [
   {id:'b_3090',  label:'4× RTX 3090 (96GB)',        short:'4× 3090',   color:'#4fc3f7', cost:4800, loadW:1000, idleW:160, tg120:124, tg120c:'m',  tgMoe:130, tgMoec:'e'},
   {id:'b_a100',  label:'A100 80GB PCIe (1×)',       short:'A100 80',   color:'#80cbc4', cost:8000, loadW:300,  idleW:50,  tg120:160, tg120c:'i',  tgMoe:180, tgMoec:'i'},
   {id:'b_pg199', label:'4× PG199 / DRIVE A100',     short:'4× PG199',  color:'#ec5c9d', cost:6000, loadW:1000, idleW:200, tg120:150, tg120c:'i',  tgMoe:170, tgMoec:'i'},
-  {id:'b_b70',   label:'4× Arc B70 128GB',          short:'B70×4',     color:'#37d6c6', cost:3800, loadW:250,  idleW:100, tg120:40,  tg120c:'i',  tgMoe:54,  tgMoec:'e'},
+  {id:'b_b70',   label:'4× Arc B70 128GB',          short:'B70×4',     color:'#37d6c6', cost:3800, loadW:450,  idleW:250, tg120:40,  tg120c:'i',  tgMoe:54,  tgMoec:'e'},
   // Single-card builds that map 1:1 to a TG platform — derive decode from TG
   {id:'b_pro',   label:'RTX PRO 6000 (96GB, 1×)',   short:'PRO 6000',  color:'#00e676', cost:8500, loadW:400,  idleW:50,  deriveFrom:'pro6000'},
   {id:'b_m3',    label:'Mac Studio M3 Ultra 96GB',  short:'M3 Ultra',  color:'#ce93d8', cost:3600, loadW:150,  idleW:20,  deriveFrom:'m3ultra'},
