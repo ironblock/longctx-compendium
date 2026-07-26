@@ -41,8 +41,8 @@ const CASES = [
   ['misspelled field name', 'unknown property', d => {
     platform(d, 'pro6000').hardware.memoryGb = 96;
   }],
-  ['street price disagreeing with build cost', 'disagrees with', d => {
-    platform(d, 'pro6000').pricing.street.usd = 9999;
+  ['rig costing less than one of its own cards', 'less than the street price', d => {
+    platform(d, 'v100').pricing.street = { usd: 9000, asOf: '2026-07' };
   }],
   ['archetype entry with no data and no reason', 'neither data nor unsupported', d => {
     platform(d, 'pro6000').perf.moe = { note: 'todo' };

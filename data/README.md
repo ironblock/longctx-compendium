@@ -59,7 +59,7 @@ Then fill in whatever you have:
     "street": { "usd": 6200, "asOf": "2026-07", "note": "memory-shortage inflated" }
   },
 
-  "system": { "buildCostUsd": 6200, "loadW": 300, "idleW": 25 },
+  "system": { "buildCostUsd": 25400, "loadW": 1200, "idleW": 100 },
 
   "perf": {
     "moe": {
@@ -70,6 +70,28 @@ Then fill in whatever you have:
   }
 }
 ```
+
+## `pricing` versus `system.buildCostUsd`
+
+These look redundant and are not. `pricing` is what **one unit** costs — the
+card, or the whole machine for something like a Mac Studio. It is where
+MSRP-versus-street lives, and it is a fact about the device.
+`system.buildCostUsd` is what the **assembled box** cost, and it is the number
+the value tables divide by.
+
+For a single-card build the two coincide. For a four-card rig they do not: in
+the example above, one card streets at $6,200 and the four-card build totals
+$25,400 including the host. Writing the rig total into `pricing.street` would
+claim a single card costs $25,400.
+
+Neither is derived from the other, because rig cost does not scale linearly —
+hosts, cooling, and NVLink bridges are real money, and the four-card PG199 entry
+is explicitly "~$6,000 + host". The only rule enforced is the one that is always
+true: a rig cannot cost less than one of the units inside it.
+
+`system` is present only on platforms that are themselves purchasable boxes.
+Multi-card rigs with no single-platform equivalent live in `builds`, where the
+build cost *is* the price, so they carry no `pricing` block at all.
 
 ## Measurements and confidence
 

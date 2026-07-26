@@ -47,9 +47,7 @@
           "values": {}
         }
       },
-      "pricing": {
-        "street": {"usd":8500,"asOf":"2026-07"}
-      },
+      "pricing": {},
       "system": {"buildLabel":"RTX PRO 6000 (96GB, 1×)","buildCostUsd":8500,"loadW":400,"idleW":50},
       "perf": {
         "moe": {
@@ -196,9 +194,7 @@
           "values": {}
         }
       },
-      "pricing": {
-        "street": {"usd":4699,"asOf":"2026-07"}
-      },
+      "pricing": {},
       "system": {"buildLabel":"DGX Spark (GB10) 128GB","buildCostUsd":4699,"loadW":240,"idleW":50},
       "perf": {
         "moe": {
@@ -260,9 +256,7 @@
           "values": {}
         }
       },
-      "pricing": {
-        "street": {"usd":3600,"asOf":"2026-07"}
-      },
+      "pricing": {},
       "system": {"buildLabel":"Mac Studio M3 Ultra 96GB","buildCostUsd":3600,"loadW":150,"idleW":20},
       "perf": {
         "moe": {
@@ -325,9 +319,7 @@
           "values": {}
         }
       },
-      "pricing": {
-        "street": {"usd":2566,"asOf":"2026-07"}
-      },
+      "pricing": {},
       "system": {"buildLabel":"Strix Halo 128GB","buildCostUsd":2566,"loadW":140,"idleW":15},
       "perf": {
         "moe": {
@@ -509,9 +501,7 @@
           "values": {}
         }
       },
-      "pricing": {
-        "street": {"usd":4000,"asOf":"2026-07"}
-      },
+      "pricing": {},
       "system": {
         "buildLabel": "4× V100 32GB (1CATai)",
         "buildShort": "4× V100",
@@ -573,9 +563,6 @@
       "id": "b_3090",
       "display": {"label":"4× RTX 3090 (96GB)","short":"4× 3090","color":"#4fc3f7"},
       "system": {"buildCostUsd":4800,"loadW":1000,"idleW":160},
-      "pricing": {
-        "street": {"usd":4800,"asOf":"2026-07"}
-      },
       "decode": {
         "oss120b": [124,"m"],
         "moe": [130,"e"]
@@ -585,9 +572,6 @@
       "id": "b_a100",
       "display": {"label":"A100 80GB PCIe (1×)","short":"A100 80","color":"#80cbc4"},
       "system": {"buildCostUsd":8000,"loadW":300,"idleW":50},
-      "pricing": {
-        "street": {"usd":8000,"asOf":"2026-07"}
-      },
       "decode": {
         "oss120b": [160,"i"],
         "moe": [180,"i"]
@@ -597,9 +581,6 @@
       "id": "b_pg199",
       "display": {"label":"4× PG199 / DRIVE A100","short":"4× PG199","color":"#ec5c9d"},
       "system": {"buildCostUsd":6000,"loadW":1000,"idleW":200},
-      "pricing": {
-        "street": {"usd":6000,"asOf":"2026-07"}
-      },
       "decode": {
         "oss120b": [150,"i"],
         "moe": [170,"i"]
@@ -609,9 +590,6 @@
       "id": "b_b70",
       "display": {"label":"4× Arc B70 128GB","short":"B70×4","color":"#37d6c6"},
       "system": {"buildCostUsd":3800,"loadW":250,"idleW":100},
-      "pricing": {
-        "street": {"usd":3800,"asOf":"2026-07"}
-      },
       "decode": {
         "oss120b": [40,"i"],
         "moe": [54,"e"]

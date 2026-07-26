@@ -157,10 +157,17 @@ for (const rec of [...doc.platforms, ...(doc.builds ?? [])]) {
 
 for (const p of doc.platforms) {
   if (!p.display.group) fail(`id "${p.id}"`, 'platforms need display.group for table sectioning');
+  // pricing is what one unit costs; system.buildCostUsd is what the assembled
+  // box cost. They coincide for single-card builds and diverge for multi-card
+  // rigs, so they are not the same field -- but a rig can never cost less than
+  // one of the units inside it.
   const street = p.pricing?.street?.usd;
   const cost = p.system?.buildCostUsd;
-  if (street != null && cost != null && street !== cost) {
-    fail(`id "${p.id}"`, `pricing.street ($${street}) disagrees with system.buildCostUsd ($${cost})`);
+  if (street != null && cost != null && cost < street) {
+    fail(
+      `id "${p.id}"`,
+      `system.buildCostUsd ($${cost}) is less than the street price of one unit ($${street})`
+    );
   }
   const msrp = p.pricing?.msrp?.usd;
   if (msrp != null && street != null && msrp === street && p.pricing.msrp.asOf === p.pricing.street?.asOf) {
