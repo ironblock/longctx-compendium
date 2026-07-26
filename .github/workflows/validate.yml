@@ -1,0 +1,40 @@
+name: validate
+
+# Guards the data file and the rendered page. Deployment is untouched -- Pages
+# still serves the branch directly, so a failure here blocks nothing; it just
+# tells you the page is broken before someone else finds out.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  data:
+    name: data file
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # No install step: the validator deliberately has no dependencies.
+      - name: Validate data/compendium.json
+        run: node tools/validate.mjs
+      - name: Check the validator still rejects bad data
+        run: node tools/test-validate.mjs
+
+  render:
+    name: rendered page
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Render the page and assert it drew
+        run: node tools/smoke.mjs

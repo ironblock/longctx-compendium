@@ -1,0 +1,621 @@
+{
+  "$schema": "./schema.json",
+  "meta": {
+    "contexts": [
+      {"tokens":512,"label":"512"},
+      {"tokens":4096,"label":"4K"},
+      {"tokens":16384,"label":"16K"},
+      {"tokens":32768,"label":"32K"},
+      {"tokens":65536,"label":"64K"},
+      {"tokens":131072,"label":"128K"}
+    ],
+    "archetypes": [
+      {
+        "id": "moe",
+        "label": "Hybrid-linear MoE",
+        "desc": "Hybrid-linear MoE · Qwen3.x-30/35B-A3B Q4 · ~3B active params/token"
+      },
+      {
+        "id": "dense",
+        "label": "Full-attention dense",
+        "desc": "Full-attention dense · Qwen3.x-27/32B Q4 · all weights read per token"
+      },
+      {
+        "id": "oss120b",
+        "label": "gpt-oss-120B",
+        "desc": "Large MoE · gpt-oss-120B MXFP4 ~63GB · needs ≥96GB (32GB cards drop out)"
+      }
+    ],
+    "confidence": {
+      "m": "measured, primary source",
+      "m~": "measured, secondary or anecdotal source",
+      "e": "extrapolated from measured points",
+      "i": "modeled from specifications only"
+    },
+    "electricityUsdPerKwh": 0.17
+  },
+  "platforms": [
+    {
+      "id": "pro6000",
+      "display": {"label":"RTX PRO 6000 (96 GB)","short":"PRO 6000","color":"#00e676","group":"NVIDIA"},
+      "hardware": {
+        "vendor": "NVIDIA",
+        "memoryGB": 96,
+        "compute": {
+          "unit": "Tops",
+          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+          "values": {}
+        }
+      },
+      "pricing": {
+        "street": {"usd":8500,"asOf":"2026-07"}
+      },
+      "system": {"buildLabel":"RTX PRO 6000 (96GB, 1×)","buildCostUsd":8500,"loadW":400,"idleW":50},
+      "perf": {
+        "moe": {
+          "note": "llama.cpp Q4_K_M, Qwen3-30B-A3B; pp512 measured",
+          "decodeNote": "llama.cpp Q4_K_M",
+          "prefill": {
+            "512": [7640,"m"],
+            "4096": [6500,"e"],
+            "16384": [5200,"e"],
+            "32768": [4000,"e"],
+            "65536": [2800,"e"],
+            "131072": [1800,"e"]
+          },
+          "decode": {
+            "short": [251.6,"m"]
+          }
+        },
+        "dense": {
+          "note": "llama.cpp Q4_K_M, Qwen2.5-32B proxy; vaditaslim.com",
+          "decodeNote": "vaditaslim; proxy Qwen2.5-32B",
+          "prefill": {
+            "512": [2601,"m"],
+            "4096": [2530,"m"],
+            "16384": [2000,"e"],
+            "32768": [1400,"e"],
+            "65536": [820,"e"],
+            "131072": [500,"e"]
+          },
+          "decode": {
+            "short": [56,"m"],
+            "at32k": [33,"m"]
+          }
+        },
+        "oss120b": {
+          "note": "vLLM MXFP4; prefill from millstoneai TTFT (24K t/s peak @8K)",
+          "decodeNote": "vLLM millstoneai; 230@1K->159@32K->100@96K",
+          "prefill": {
+            "512": [20000,"e"],
+            "4096": [24000,"e"],
+            "16384": [21000,"e"],
+            "32768": [16400,"m"],
+            "65536": [11500,"m"],
+            "131072": [7200,"m"]
+          },
+          "decode": {
+            "short": [230,"m"],
+            "at32k": [159,"m"]
+          }
+        }
+      }
+    },
+    {
+      "id": "rtx5090",
+      "display": {"label":"RTX 5090 (32 GB)","short":"5090","color":"#b2ff59","group":"NVIDIA"},
+      "hardware": {
+        "vendor": "NVIDIA",
+        "memoryGB": 32,
+        "compute": {
+          "unit": "Tops",
+          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+          "values": {}
+        }
+      },
+      "pricing": {},
+      "perf": {
+        "moe": {
+          "note": "llama.cpp Q4_K_XL, Qwen3moe-30B-A3B; pp4K/32K/64K measured",
+          "decodeNote": "hardware-corner; 52 @147K",
+          "prefill": {
+            "512": [7000,"e"],
+            "4096": [6630,"m"],
+            "16384": [4800,"e"],
+            "32768": [2878,"m"],
+            "65536": [1512,"m"],
+            "131072": [700,"e"]
+          },
+          "decode": {
+            "short": [234,"m"],
+            "at32k": [110.7,"m"]
+          }
+        },
+        "dense": {
+          "note": "llama.cpp Q4_K_XL, Qwen3-32B; pp4K & pp32K measured",
+          "decodeNote": "hardware-corner Q4_K_XL",
+          "prefill": {
+            "512": [3100,"e"],
+            "4096": [2931,"m"],
+            "16384": [2000,"e"],
+            "32768": [1451,"m"],
+            "65536": [750,"e"],
+            "131072": [380,"e"]
+          },
+          "decode": {
+            "short": [61.4,"m"],
+            "at32k": [43.8,"m"]
+          }
+        },
+        "oss120b": {"note":"32GB — cannot fit 120B (~63GB)","decodeNote":"32GB cannot fit 120B","unsupported":true}
+      }
+    },
+    {
+      "id": "r9700",
+      "display": {"label":"Radeon AI PRO R9700","short":"R9700","color":"#ff5252","group":"AMD"},
+      "hardware": {
+        "vendor": "AMD",
+        "memoryGB": 32,
+        "compute": {
+          "unit": "Tops",
+          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+          "values": {}
+        }
+      },
+      "pricing": {},
+      "perf": {
+        "moe": {
+          "note": "llama.cpp Vulkan Q4_K_XL, Qwen3.5-35B-A3B; 4 pts measured",
+          "decodeNote": "llama.cpp Vulkan Q4_K_XL",
+          "prefill": {
+            "512": [2713,"m"],
+            "4096": [2546,"m"],
+            "16384": [2196,"m"],
+            "32768": [1877,"m"],
+            "65536": [1500,"e"],
+            "131072": [1100,"e"]
+          },
+          "decode": {
+            "short": [127.4,"m"]
+          }
+        },
+        "dense": {"note":"no dense data found","decodeNote":"no data","unsupported":true},
+        "oss120b": {"note":"32GB — cannot fit 120B","decodeNote":"32GB cannot fit 120B","unsupported":true}
+      }
+    },
+    {
+      "id": "dgxspark",
+      "display": {"label":"DGX Spark (GB10)","short":"DGX Spark","color":"#ffd740","group":"Unified"},
+      "hardware": {
+        "vendor": "NVIDIA",
+        "memoryGB": 128,
+        "memoryBandwidthGBs": 273,
+        "compute": {
+          "unit": "Tops",
+          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+          "values": {}
+        }
+      },
+      "pricing": {
+        "street": {"usd":4699,"asOf":"2026-07"}
+      },
+      "system": {"buildLabel":"DGX Spark (GB10) 128GB","buildCostUsd":4699,"loadW":240,"idleW":50},
+      "perf": {
+        "moe": {
+          "note": "llama.cpp CUDA Q4_K_M, Qwen3-30B-A3B; pp512 & pp16K measured",
+          "decodeNote": "89@30B-A3B, 51@35B-A3B; avg",
+          "prefill": {
+            "512": [2541,"m"],
+            "4096": [2400,"e"],
+            "16384": [2059,"m"],
+            "32768": [1700,"e"],
+            "65536": [1300,"e"],
+            "131072": [900,"e"]
+          },
+          "decode": {
+            "short": [70,"m~"]
+          }
+        },
+        "dense": {
+          "note": "llama.cpp Q4_K_M, Qwen3-32B; pp512 & pp16K measured",
+          "decodeNote": "DandinPower \"bandwidth wall\"",
+          "prefill": {
+            "512": [762,"m"],
+            "4096": [700,"e"],
+            "16384": [481,"m"],
+            "32768": [300,"e"],
+            "65536": [170,"e"],
+            "131072": [80,"e"]
+          },
+          "decode": {
+            "short": [10.7,"m"]
+          }
+        },
+        "oss120b": {
+          "note": "llama.cpp MXFP4; pp ~1723 measured (hardware-corner)",
+          "decodeNote": "llama.cpp; SGLang-optimized ~50",
+          "prefill": {
+            "512": [1750,"e"],
+            "4096": [1723,"m"],
+            "16384": [1450,"e"],
+            "32768": [1150,"e"],
+            "65536": [800,"e"],
+            "131072": [500,"e"]
+          },
+          "decode": {
+            "short": [38.6,"m"]
+          }
+        }
+      }
+    },
+    {
+      "id": "m3ultra",
+      "display": {"label":"Mac Studio M3 Ultra","short":"M3 Ultra","color":"#ce93d8","group":"Unified"},
+      "hardware": {
+        "vendor": "Apple",
+        "memoryGB": 96,
+        "compute": {
+          "unit": "Tops",
+          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+          "values": {}
+        }
+      },
+      "pricing": {
+        "street": {"usd":3600,"asOf":"2026-07"}
+      },
+      "system": {"buildLabel":"Mac Studio M3 Ultra 96GB","buildCostUsd":3600,"loadW":150,"idleW":20},
+      "perf": {
+        "moe": {
+          "note": "MoE prefill modeled; dense M3 Ultra is measured",
+          "decodeNote": "secondary source; DeepNewz @8K",
+          "prefill": {
+            "512": [600,"i"],
+            "4096": [550,"i"],
+            "16384": [480,"i"],
+            "32768": [400,"i"],
+            "65536": [330,"i"],
+            "131072": [260,"i"]
+          },
+          "decode": {
+            "short": [76,"m~"]
+          }
+        },
+        "dense": {
+          "note": "mlx-lm 4-bit, Qwen3-32B; pp32K & pp128K measured, 1K/8K anchors interpolated (mlx #3209)",
+          "decodeNote": "mlx #3209; 31@1K→19@32K→8.5@128K",
+          "prefill": {
+            "512": [360,"e"],
+            "4096": [345,"e"],
+            "16384": [310,"e"],
+            "32768": [271,"m"],
+            "65536": [210,"e"],
+            "131072": [154,"m"]
+          },
+          "decode": {
+            "short": [27,"m"],
+            "at32k": [19,"m"]
+          }
+        },
+        "oss120b": {
+          "note": "MLX; ~1000 pp when healthy; prefill-instability bug at long ctx",
+          "decodeNote": "MLX when healthy; prefill-instability bug",
+          "prefill": {
+            "512": [1050,"e"],
+            "4096": [1000,"m"],
+            "16384": [850,"e"],
+            "32768": [700,"e"],
+            "65536": [500,"e"],
+            "131072": [330,"e"]
+          },
+          "decode": {
+            "short": [60,"m~"]
+          }
+        }
+      }
+    },
+    {
+      "id": "strixhalo",
+      "display": {"label":"Strix Halo (AI Max+ 395)","short":"Strix Halo","color":"#ffab40","group":"Unified"},
+      "hardware": {
+        "vendor": "AMD",
+        "memoryGB": 128,
+        "compute": {
+          "unit": "Tops",
+          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+          "values": {}
+        }
+      },
+      "pricing": {
+        "street": {"usd":2566,"asOf":"2026-07"}
+      },
+      "system": {"buildLabel":"Strix Halo 128GB","buildCostUsd":2566,"loadW":140,"idleW":15},
+      "perf": {
+        "moe": {
+          "note": "llama.cpp Vulkan UD-Q4, Qwen3.6-35B-A3B; pp512 & pp64K measured",
+          "decodeNote": "Level1Techs/lhl conservative Q4_K_XL",
+          "prefill": {
+            "512": [1087,"m"],
+            "4096": [1020,"e"],
+            "16384": [900,"e"],
+            "32768": [810,"e"],
+            "65536": [740,"m"],
+            "131072": [670,"e"]
+          },
+          "decode": {
+            "short": [63,"m"]
+          }
+        },
+        "dense": {
+          "note": "llama.cpp Vulkan, Mistral-24B proxy; only pp512 measured",
+          "decodeNote": "7.6–10.9 t/s range; Q8_0 27B",
+          "prefill": {
+            "512": [317,"m"],
+            "4096": [280,"e"],
+            "16384": [200,"e"],
+            "32768": [130,"e"],
+            "65536": [75,"e"]
+          },
+          "decode": {
+            "short": [10,"m"]
+          }
+        },
+        "oss120b": {
+          "note": "llama.cpp MXFP4; pp ~340 measured; ~5x slower prefill than Spark",
+          "decodeNote": "34-46 fresh prompt (hardware-corner/STH)",
+          "prefill": {
+            "512": [360,"e"],
+            "4096": [340,"m"],
+            "16384": [280,"e"],
+            "32768": [210,"e"],
+            "65536": [150,"e"],
+            "131072": [100,"e"]
+          },
+          "decode": {
+            "short": [40,"m"]
+          }
+        }
+      }
+    },
+    {
+      "id": "pg199",
+      "display": {"label":"PG199 / DRIVE A100","short":"PG199","color":"#ec5c9d","group":"Value"},
+      "hardware": {
+        "vendor": "NVIDIA",
+        "compute": {
+          "unit": "Tops",
+          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+          "values": {}
+        }
+      },
+      "pricing": {},
+      "perf": {
+        "moe": {
+          "note": "modeled from specs + FA2 scaling",
+          "decodeNote": "bandwidth-scaled estimate",
+          "prefill": {
+            "512": [1300,"i"],
+            "4096": [1230,"i"],
+            "16384": [1130,"i"],
+            "32768": [1040,"i"],
+            "65536": [900,"i"],
+            "131072": [780,"i"]
+          },
+          "decode": {
+            "short": [90,"i"]
+          }
+        },
+        "dense": {
+          "note": "modeled from specs + FA2",
+          "decodeNote": "bandwidth estimate",
+          "prefill": {
+            "512": [1500,"i"],
+            "4096": [1350,"i"],
+            "16384": [1050,"i"],
+            "32768": [780,"i"],
+            "65536": [520,"i"],
+            "131072": [310,"i"]
+          },
+          "decode": {
+            "short": [35,"i"]
+          }
+        },
+        "oss120b": {
+          "note": "modeled A100-class; UNMEASURED on LLMs",
+          "decodeNote": "modeled A100-class; UNMEASURED",
+          "prefill": {
+            "512": [3000,"i"],
+            "4096": [3000,"i"],
+            "16384": [2700,"i"],
+            "32768": [2300,"i"],
+            "65536": [1700,"i"],
+            "131072": [1100,"i"]
+          },
+          "decode": {
+            "short": [150,"i"]
+          }
+        }
+      }
+    },
+    {
+      "id": "b70",
+      "display": {"label":"4× Arc B70 (128GB)","short":"B70×4","color":"#37d6c6","group":"Value"},
+      "hardware": {
+        "vendor": "Intel",
+        "memoryGB": 128,
+        "compute": {
+          "unit": "Tops",
+          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+          "values": {}
+        }
+      },
+      "pricing": {},
+      "perf": {
+        "moe": {
+          "note": "llama.cpp SYCL Q4_K_M, Qwen3.6-35B-A3B; 5 pts measured",
+          "decodeNote": "PMZFX repo; single-card",
+          "prefill": {
+            "512": [615,"m"],
+            "4096": [579,"m"],
+            "16384": [527,"m"],
+            "32768": [485,"m"],
+            "65536": [411,"m"],
+            "131072": [350,"e"]
+          },
+          "decode": {
+            "short": [54.7,"m"]
+          }
+        },
+        "dense": {
+          "note": "llama.cpp SYCL Q4_K_M, Qwen3.5-27B; 5 pts measured",
+          "decodeNote": "single-card bandwidth estimate",
+          "prefill": {
+            "512": [718,"m"],
+            "4096": [629,"m"],
+            "16384": [445,"m"],
+            "32768": [310,"m"],
+            "65536": [195,"m"],
+            "131072": [110,"e"]
+          },
+          "decode": {
+            "short": [30,"i"]
+          }
+        },
+        "oss120b": {
+          "note": "4x build modeled; XMX no FP4, imperfect TP scaling",
+          "decodeNote": "4x build modeled; 80B-A3B 2-card ~43 t/s ref",
+          "prefill": {
+            "512": [600,"i"],
+            "4096": [600,"i"],
+            "16384": [540,"i"],
+            "32768": [460,"i"],
+            "65536": [340,"i"],
+            "131072": [220,"i"]
+          },
+          "decode": {
+            "short": [40,"i"]
+          }
+        }
+      }
+    },
+    {
+      "id": "v100",
+      "display": {"label":"V100 NVLink ×4","short":"V100×4","color":"#f3b54c","group":"Value"},
+      "hardware": {
+        "vendor": "NVIDIA",
+        "memoryGB": 128,
+        "compute": {
+          "unit": "Tops",
+          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+          "values": {}
+        }
+      },
+      "pricing": {
+        "street": {"usd":4000,"asOf":"2026-07"}
+      },
+      "system": {
+        "buildLabel": "4× V100 32GB (1CATai)",
+        "buildShort": "4× V100",
+        "buildCostUsd": 4000,
+        "loadW": 500,
+        "idleW": 160
+      },
+      "perf": {
+        "moe": {
+          "note": "1Cat-vLLM, modeled from short-prompt anchor",
+          "decodeNote": "Bilibili/Zhihu anecdata",
+          "prefill": {
+            "512": [560,"i"],
+            "4096": [520,"i"],
+            "16384": [470,"i"],
+            "32768": [430,"i"],
+            "65536": [360,"i"],
+            "131072": [300,"i"]
+          },
+          "decode": {
+            "short": [50,"m~"]
+          }
+        },
+        "dense": {
+          "note": "1Cat-vLLM, modeled",
+          "decodeNote": "Zhihu/Bilibili anecdata",
+          "prefill": {
+            "512": [650,"i"],
+            "4096": [560,"i"],
+            "16384": [410,"i"],
+            "32768": [290,"i"],
+            "65536": [185,"i"],
+            "131072": [110,"i"]
+          },
+          "decode": {
+            "short": [25,"m~"]
+          }
+        },
+        "oss120b": {
+          "note": "modeled; sm_70 no FA, MXFP4 via dequant",
+          "decodeNote": "modeled; sm_70",
+          "prefill": {
+            "512": [400,"i"],
+            "4096": [400,"i"],
+            "16384": [350,"i"],
+            "32768": [290,"i"],
+            "65536": [210,"i"],
+            "131072": [130,"i"]
+          },
+          "decode": {
+            "short": [50,"i"]
+          }
+        }
+      }
+    }
+  ],
+  "builds": [
+    {
+      "id": "b_3090",
+      "display": {"label":"4× RTX 3090 (96GB)","short":"4× 3090","color":"#4fc3f7"},
+      "system": {"buildCostUsd":4800,"loadW":1000,"idleW":160},
+      "pricing": {
+        "street": {"usd":4800,"asOf":"2026-07"}
+      },
+      "decode": {
+        "oss120b": [124,"m"],
+        "moe": [130,"e"]
+      }
+    },
+    {
+      "id": "b_a100",
+      "display": {"label":"A100 80GB PCIe (1×)","short":"A100 80","color":"#80cbc4"},
+      "system": {"buildCostUsd":8000,"loadW":300,"idleW":50},
+      "pricing": {
+        "street": {"usd":8000,"asOf":"2026-07"}
+      },
+      "decode": {
+        "oss120b": [160,"i"],
+        "moe": [180,"i"]
+      }
+    },
+    {
+      "id": "b_pg199",
+      "display": {"label":"4× PG199 / DRIVE A100","short":"4× PG199","color":"#ec5c9d"},
+      "system": {"buildCostUsd":6000,"loadW":1000,"idleW":200},
+      "pricing": {
+        "street": {"usd":6000,"asOf":"2026-07"}
+      },
+      "decode": {
+        "oss120b": [150,"i"],
+        "moe": [170,"i"]
+      }
+    },
+    {
+      "id": "b_b70",
+      "display": {"label":"4× Arc B70 128GB","short":"B70×4","color":"#37d6c6"},
+      "system": {"buildCostUsd":3800,"loadW":250,"idleW":100},
+      "pricing": {
+        "street": {"usd":3800,"asOf":"2026-07"}
+      },
+      "decode": {
+        "oss120b": [40,"i"],
+        "moe": [54,"e"]
+      }
+    }
+  ]
+}

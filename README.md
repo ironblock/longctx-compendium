@@ -18,3 +18,55 @@ any claim, benchmark, or cost figure.
 
 Built for no reason other than seeing what four chat models could
 produce in a collaborative loop.
+
+## Layout
+
+```
+index.html              markup only
+assets/styles.css
+assets/app.js           entry point: load, wire toggles, own view state
+assets/data.js          fetch + normalize + load-time audit
+assets/derive.js        everything computed rather than stored
+assets/charts.js        Chart.js configuration
+assets/tables.js        table and legend rendering
+assets/verdicts.js      editorial copy
+assets/chart.umd.js     vendored Chart.js 4.4.1 (MIT)
+data/compendium.json    ← every number on the page
+data/schema.json
+data/README.md          ← how to add a device or a datapoint
+tools/validate.mjs      schema + cross-record checks, no dependencies
+tools/test-validate.mjs proves the validator rejects bad data
+tools/smoke.mjs         renders the page in Chromium and asserts it drew
+```
+
+To add a device or a data point, see [`data/README.md`](./data/README.md).
+
+## Running it locally
+
+The page fetches its data, so it needs to be served over HTTP —
+opening `index.html` from the filesystem will not work.
+
+```sh
+python3 -m http.server 8000    # then open http://localhost:8000
+```
+
+## Checks
+
+```sh
+node tools/validate.mjs        # data file: schema + semantic checks
+node tools/test-validate.mjs   # the validator's own tests
+node tools/smoke.mjs           # renders in Chromium (needs playwright)
+```
+
+The first two have no dependencies. CI runs all three on every push.
+
+## Deployment
+
+GitHub Pages serves the branch directly — there is no build step and no
+bundler. Every path is relative so the site works under the
+`/longctx-compendium/` project-page prefix, and `.nojekyll` keeps Pages from
+running the files through Jekyll.
+
+Chart.js is vendored rather than loaded from a CDN, so the page keeps working
+when a CDN is blocked or a version is pulled, and CI renders the same bytes
+visitors get.
