@@ -187,6 +187,39 @@ async function withPatchedData(patch) {
   await p.close();
 }
 
+// Correcting one card's street price must move every rig containing it, by
+// exactly the unit count. This is the whole point of composing builds.
+{
+  const costOf = async (p, short) => {
+    const row = p.locator('#valTable tbody tr', { hasText: short }).first();
+    return (await row.locator('td').nth(1).textContent()).trim();
+  };
+  const { p: before } = await withPatchedData(() => {});
+  const base3090 = await costOf(before, '4× 3090');
+  const basePro = await costOf(before, 'PRO 6000');
+  await before.close();
+
+  const { p: after, errs } = await withPatchedData(doc => {
+    // +$300 on a card that four rigs' worth of one build contains.
+    doc.builds.find(b => b.id === 'b_3090').units[0].pricing.street.usd += 300;
+  });
+  check('four-card rig tracks its card price ×4', (await costOf(after, '4× 3090')) === '$6,000', `${base3090} → ${await costOf(after, '4× 3090')}`);
+  check('unrelated build is unaffected', (await costOf(after, 'PRO 6000')) === basePro);
+  check('price change caused no errors', errs.length === 0, errs.join(' | '));
+  await after.close();
+}
+
+// A platform price change must flow into the rigs that reference it.
+{
+  const { p } = await withPatchedData(doc => {
+    doc.platforms.find(x => x.id === 'pg199').pricing.street.usd = 2000;
+  });
+  const row = p.locator('#valTable tbody tr', { hasText: '4× PG199' }).first();
+  const cost = (await row.locator('td').nth(1).textContent()).trim();
+  check('referenced platform price flows into its rig', cost === '$8,000', `got ${cost}`);
+  await p.close();
+}
+
 // An unknown confidence code should surface a readable message, not a blank page.
 {
   const { p } = await withPatchedData(doc => {

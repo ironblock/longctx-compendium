@@ -123,15 +123,16 @@ for (const rec of [...doc.platforms, ...(doc.builds ?? [])]) {
   if (seenIds.has(rec.id)) fail(at, 'duplicate id');
   seenIds.set(rec.id, rec);
 
-  // A build reuses the colour of the platform it is built from -- b_pg199 and
-  // pg199 are the same silicon. Any other collision is a copy-paste slip that
-  // makes two unrelated series indistinguishable in the charts.
+  // A build reuses the colour of the platform it contains -- b_pg199 and pg199
+  // are the same silicon. Any other collision is a copy-paste slip that makes
+  // two unrelated series indistinguishable in the charts.
+  const silicon = new Set([rec.id, ...(rec.units ?? []).map(u => u.platform).filter(Boolean)]);
   const prev = seenColors.get(rec.display.color);
-  const related = prev && (prev.id === `b_${rec.id}` || rec.id === `b_${prev.id}`);
-  if (prev && !related) {
+  const shares = prev && [...silicon].some(s => prev.silicon.has(s));
+  if (prev && !shares) {
     fail(at, `colour ${rec.display.color} already used by "${prev.id}" (${prev.display.short})`);
   }
-  seenColors.set(rec.display.color, rec);
+  seenColors.set(rec.display.color, { ...rec, silicon });
 
   for (const arch of Object.keys(rec.perf ?? {})) {
     if (!archIds.has(arch)) fail(at, `perf archetype "${arch}" is not in meta.archetypes`);
@@ -157,22 +158,41 @@ for (const rec of [...doc.platforms, ...(doc.builds ?? [])]) {
 
 for (const p of doc.platforms) {
   if (!p.display.group) fail(`id "${p.id}"`, 'platforms need display.group for table sectioning');
-  // pricing is what one unit costs; system.buildCostUsd is what the assembled
-  // box cost. They coincide for single-card builds and diverge for multi-card
-  // rigs, so they are not the same field -- but a rig can never cost less than
-  // one of the units inside it.
   const street = p.pricing?.street?.usd;
-  const cost = p.system?.buildCostUsd;
-  if (street != null && cost != null && cost < street) {
-    fail(
-      `id "${p.id}"`,
-      `system.buildCostUsd ($${cost}) is less than the street price of one unit ($${street})`
-    );
-  }
   const msrp = p.pricing?.msrp?.usd;
   if (msrp != null && street != null && msrp === street && p.pricing.msrp.asOf === p.pricing.street?.asOf) {
     fail(`id "${p.id}"`, 'msrp and street are identical including date — one of them is probably a copy-paste');
   }
+}
+
+// Build cost and power are summed from units. A unit that cannot supply them
+// does not error -- it contributes zero, which silently makes a rig look free
+// and infinitely efficient. Catch it here instead.
+const platformById = Object.fromEntries(doc.platforms.map(p => [p.id, p]));
+for (const b of doc.builds ?? []) {
+  (b.units ?? []).forEach((u, i) => {
+    const at = `build "${b.id}" units[${i}]`;
+    if (u.platform && u.label) {
+      fail(at, 'has both platform and label — reference a platform or describe a unit, not both');
+    }
+    if (!u.platform && !u.label) fail(at, 'needs either a platform reference or a label');
+
+    const src = u.platform ? platformById[u.platform] : u;
+    if (u.platform && !src) {
+      fail(at, `references unknown platform "${u.platform}"`);
+      return;
+    }
+    const who = u.platform ?? `"${u.label}"`;
+    if (src.pricing?.street?.usd == null) {
+      fail(at, `${who} has no pricing.street.usd, so this build's cost cannot be derived`);
+    }
+    if (src.power?.loadW == null) {
+      fail(at, `${who} has no power.loadW, so this build's efficiency cannot be derived`);
+    }
+    if (src.power?.idleW == null) {
+      fail(at, `${who} has no power.idleW, so this build's standing cost cannot be derived`);
+    }
+  });
 }
 
 // --- Report ----------------------------------------------------------------

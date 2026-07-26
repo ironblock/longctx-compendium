@@ -84,38 +84,53 @@ export function normalize(doc) {
     }
   }
 
-  // A build is a purchasable box. Most map 1:1 onto a platform and inherit its
-  // decode numbers via deriveFrom; the multi-card rigs that have no single
-  // platform equivalent carry their own.
-  const derived = doc.platforms
-    .filter(p => p.system)
-    .map(p => ({
-      id: `b_${p.id}`,
-      // A rig can be named differently from the bare card it is built around
-      // ("4× V100" the build vs "V100×4" the platform series).
-      label: p.system.buildLabel ?? p.display.label,
-      short: p.system.buildShort ?? p.display.short,
-      color: p.display.color,
-      cost: p.system.buildCostUsd,
-      loadW: p.system.loadW,
-      idleW: p.system.idleW,
-      deriveFrom: p.id,
-    }));
+  // A build is a purchasable box, expressed as the units it is made of. Its
+  // cost and power draw are summed from those units rather than stored, so
+  // correcting a card's street price corrects every rig containing it.
+  const platformById = Object.fromEntries(doc.platforms.map(p => [p.id, p]));
 
-  const explicit = (doc.builds ?? []).map(b => {
+  const resolveUnit = (u, buildId) => {
+    const src = u.platform ? platformById[u.platform] : u;
+    if (u.platform && !src) {
+      throw new Error(`build "${buildId}" references unknown platform "${u.platform}"`);
+    }
+    return {
+      count: u.count ?? 1,
+      costUsd: src.pricing?.street?.usd,
+      loadW: src.power?.loadW,
+      idleW: src.power?.idleW,
+    };
+  };
+
+  const BUILDS = (doc.builds ?? []).map(b => {
+    const units = (b.units ?? []).map(u => resolveUnit(u, b.id));
+    // Anything the units do not account for -- chassis, CPU, cooling -- goes in
+    // host, so the residual is visible instead of smuggled into a card price.
+    const total = key =>
+      units.reduce((n, u) => n + (u[key] == null ? 0 : u.count * u[key]), 0) + (b.host?.[key] ?? 0);
+
     const rec = {
       id: b.id,
       label: b.display.label,
       short: b.display.short,
       color: b.display.color,
-      cost: b.system.buildCostUsd,
-      loadW: b.system.loadW,
-      idleW: b.system.idleW,
+      cost: total('costUsd'),
+      loadW: total('loadW'),
+      idleW: total('idleW'),
     };
-    for (const [arch, key] of [['oss120b', 'tg120'], ['moe', 'tgMoe']]) {
-      const m = measurement(b.decode?.[arch]);
-      rec[key] = m.v;
-      rec[`${key}c`] = m.c;
+
+    // One unit of one platform performs exactly like that platform, so its
+    // decode rate is inherited. Anything else -- more units, or a rig that
+    // scales differently -- states its own.
+    const solo = b.units?.length === 1 && b.units[0].platform && (b.units[0].count ?? 1) === 1;
+    if (!b.decode && solo) {
+      rec.deriveFrom = b.units[0].platform;
+    } else {
+      for (const [arch, key] of [['oss120b', 'tg120'], ['moe', 'tgMoe']]) {
+        const m = measurement(b.decode?.[arch]);
+        rec[key] = m.v;
+        rec[`${key}c`] = m.c;
+      }
     }
     return rec;
   });
@@ -126,7 +141,7 @@ export function normalize(doc) {
     PLAT,
     PP,
     TG,
-    BUILDS: [...explicit, ...derived],
+    BUILDS,
     ARCHETYPES: doc.meta.archetypes,
     ARCH_DESC: Object.fromEntries(doc.meta.archetypes.map(a => [a.id, a.desc])),
     KWH: doc.meta.electricityUsdPerKwh,

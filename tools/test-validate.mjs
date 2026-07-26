@@ -16,6 +16,7 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'compendium-test-'));
 
 const clone = () => JSON.parse(JSON.stringify(good));
 const platform = (doc, id) => doc.platforms.find(p => p.id === id);
+const build = (doc, id) => doc.builds.find(b => b.id === id);
 
 // Each case breaks the data one way and names the substring the failure must
 // mention, so a check that starts passing for the wrong reason still fails.
@@ -41,8 +42,20 @@ const CASES = [
   ['misspelled field name', 'unknown property', d => {
     platform(d, 'pro6000').hardware.memoryGb = 96;
   }],
-  ['rig costing less than one of its own cards', 'less than the street price', d => {
-    platform(d, 'v100').pricing.street = { usd: 9000, asOf: '2026-07' };
+  ['build unit pointing at a platform that does not exist', 'unknown platform', d => {
+    build(d, 'b_pro').units[0].platform = 'nosuchcard';
+  }],
+  ['unit whose platform has no street price', 'cost cannot be derived', d => {
+    delete platform(d, 'pro6000').pricing.street;
+  }],
+  ['unit whose platform has no power figures', 'efficiency cannot be derived', d => {
+    delete platform(d, 'pro6000').power;
+  }],
+  ['unit that both references and describes hardware', 'not both', d => {
+    build(d, 'b_pro').units[0].label = 'RTX PRO 6000';
+  }],
+  ['build cost stored instead of derived', 'unknown property', d => {
+    build(d, 'b_pro').buildCostUsd = 8500;
   }],
   ['archetype entry with no data and no reason', 'neither data nor unsupported', d => {
     platform(d, 'pro6000').perf.moe = { note: 'todo' };
@@ -51,7 +64,10 @@ const CASES = [
     platform(d, 'rtx5090').perf.oss120b.decode = { short: [10, 'm'] };
   }],
   ['negative power draw', 'must be > 0', d => {
-    platform(d, 'pro6000').system.loadW = -5;
+    platform(d, 'pro6000').power.loadW = -5;
+  }],
+  ['fractional card count', 'expected integer', d => {
+    build(d, 'b_3090').units[0].count = 3.5;
   }],
   ['malformed colour', 'does not match', d => {
     platform(d, 'pro6000').display.color = 'green';

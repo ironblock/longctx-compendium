@@ -144,20 +144,32 @@
       }
     },
 
-    "system": {
-      "description": "Present only when this platform is also a purchasable box with known cost and power.",
+    "power": {
+      "description": "Draw for ONE unit, observed under LLM inference. Deliberately not hardware.tdpW: inference is bandwidth-bound and does not reach the datasheet ceiling, and cards are commonly power-capped. Build totals are summed from this, never stored.",
       "type": "object",
-      "required": ["buildCostUsd", "loadW", "idleW"],
+      "required": ["loadW", "idleW"],
       "additionalProperties": false,
       "properties": {
-        "buildLabel": { "type": "string" },
-        "buildShort": {
-          "description": "Only when the assembled rig is named differently from the bare card.",
-          "type": "string"
-        },
-        "buildCostUsd": { "type": "number", "exclusiveMinimum": 0 },
         "loadW": { "type": "number", "exclusiveMinimum": 0 },
-        "idleW": { "type": "number", "minimum": 0 }
+        "idleW": { "type": "number", "minimum": 0 },
+        "confidence": { "$ref": "#/definitions/confidence" },
+        "source": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+
+    "unit": {
+      "description": "A quantity of one purchasable thing. Reference a platform when one exists, otherwise carry the pricing and power inline.",
+      "type": "object",
+      "required": ["count"],
+      "additionalProperties": false,
+      "properties": {
+        "platform": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "label": { "type": "string" },
+        "count": { "type": "integer", "minimum": 1 },
+        "pricing": { "$ref": "#/definitions/pricing" },
+        "power": { "$ref": "#/definitions/power" },
+        "hardware": { "$ref": "#/definitions/hardware" }
       }
     },
 
@@ -197,7 +209,7 @@
         "display": { "$ref": "#/definitions/display" },
         "hardware": { "$ref": "#/definitions/hardware" },
         "pricing": { "$ref": "#/definitions/pricing" },
-        "system": { "$ref": "#/definitions/system" },
+        "power": { "$ref": "#/definitions/power" },
         "perf": {
           "description": "Keyed by archetype id from meta.archetypes. Absent archetypes render as em dashes.",
           "type": "object",
@@ -212,16 +224,25 @@
     },
 
     "build": {
-      "description": "A multi-card rig with no single-platform equivalent, so its decode numbers are its own.",
+      "description": "A purchasable box, expressed as the units it contains. Cost and power are summed from those units and never stored here.",
       "type": "object",
-      "required": ["id", "display", "system", "decode"],
+      "required": ["id", "display", "units"],
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
         "display": { "$ref": "#/definitions/display" },
-        "system": { "$ref": "#/definitions/system" },
-        "pricing": { "$ref": "#/definitions/pricing" },
-        "hardware": { "$ref": "#/definitions/hardware" },
+        "units": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/unit" } },
+        "host": {
+          "description": "Whatever the units do not account for: chassis, CPU, PSU, cooling. Keeps the residual visible instead of hidden inside a card price.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "costUsd": { "type": "number", "minimum": 0 },
+            "loadW": { "type": "number", "minimum": 0 },
+            "idleW": { "type": "number", "minimum": 0 },
+            "note": { "type": "string" }
+          }
+        },
         "decode": {
           "type": "object",
           "propertyNames": { "pattern": "^[a-z0-9_]+$" },

@@ -47,8 +47,10 @@
           "values": {}
         }
       },
-      "pricing": {},
-      "system": {"buildLabel":"RTX PRO 6000 (96GB, 1×)","buildCostUsd":8500,"loadW":400,"idleW":50},
+      "pricing": {
+        "street": {"usd":8500,"asOf":"2026-07"}
+      },
+      "power": {"loadW":400,"idleW":50,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "llama.cpp Q4_K_M, Qwen3-30B-A3B; pp512 measured",
@@ -194,8 +196,10 @@
           "values": {}
         }
       },
-      "pricing": {},
-      "system": {"buildLabel":"DGX Spark (GB10) 128GB","buildCostUsd":4699,"loadW":240,"idleW":50},
+      "pricing": {
+        "street": {"usd":4699,"asOf":"2026-07"}
+      },
+      "power": {"loadW":240,"idleW":50,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "llama.cpp CUDA Q4_K_M, Qwen3-30B-A3B; pp512 & pp16K measured",
@@ -256,8 +260,10 @@
           "values": {}
         }
       },
-      "pricing": {},
-      "system": {"buildLabel":"Mac Studio M3 Ultra 96GB","buildCostUsd":3600,"loadW":150,"idleW":20},
+      "pricing": {
+        "street": {"usd":3600,"asOf":"2026-07"}
+      },
+      "power": {"loadW":150,"idleW":20,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "MoE prefill modeled; dense M3 Ultra is measured",
@@ -319,8 +325,10 @@
           "values": {}
         }
       },
-      "pricing": {},
-      "system": {"buildLabel":"Strix Halo 128GB","buildCostUsd":2566,"loadW":140,"idleW":15},
+      "pricing": {
+        "street": {"usd":2566,"asOf":"2026-07"}
+      },
+      "power": {"loadW":140,"idleW":15,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "llama.cpp Vulkan UD-Q4, Qwen3.6-35B-A3B; pp512 & pp64K measured",
@@ -379,7 +387,10 @@
           "values": {}
         }
       },
-      "pricing": {},
+      "pricing": {
+        "street": {"usd":1500,"asOf":"2026-07"}
+      },
+      "power": {"loadW":250,"idleW":50,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "modeled from specs + FA2 scaling",
@@ -440,7 +451,10 @@
           "values": {}
         }
       },
-      "pricing": {},
+      "pricing": {
+        "street": {"usd":3800,"asOf":"2026-07"}
+      },
+      "power": {"loadW":250,"idleW":100,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "llama.cpp SYCL Q4_K_M, Qwen3.6-35B-A3B; 5 pts measured",
@@ -501,14 +515,10 @@
           "values": {}
         }
       },
-      "pricing": {},
-      "system": {
-        "buildLabel": "4× V100 32GB (1CATai)",
-        "buildShort": "4× V100",
-        "buildCostUsd": 4000,
-        "loadW": 500,
-        "idleW": 160
+      "pricing": {
+        "street": {"usd":4000,"asOf":"2026-07"}
       },
+      "power": {"loadW":500,"idleW":160,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "1Cat-vLLM, modeled from short-prompt anchor",
@@ -562,7 +572,16 @@
     {
       "id": "b_3090",
       "display": {"label":"4× RTX 3090 (96GB)","short":"4× 3090","color":"#4fc3f7"},
-      "system": {"buildCostUsd":4800,"loadW":1000,"idleW":160},
+      "units": [
+        {
+          "label": "RTX 3090 24GB",
+          "count": 4,
+          "pricing": {
+            "street": {"usd":1200,"asOf":"2026-07"}
+          },
+          "power": {"loadW":250,"idleW":40,"confidence":"i"}
+        }
+      ],
       "decode": {
         "oss120b": [124,"m"],
         "moe": [130,"e"]
@@ -571,7 +590,16 @@
     {
       "id": "b_a100",
       "display": {"label":"A100 80GB PCIe (1×)","short":"A100 80","color":"#80cbc4"},
-      "system": {"buildCostUsd":8000,"loadW":300,"idleW":50},
+      "units": [
+        {
+          "label": "A100 80GB PCIe",
+          "count": 1,
+          "pricing": {
+            "street": {"usd":8000,"asOf":"2026-07"}
+          },
+          "power": {"loadW":300,"idleW":50,"confidence":"i"}
+        }
+      ],
       "decode": {
         "oss120b": [160,"i"],
         "moe": [180,"i"]
@@ -580,7 +608,9 @@
     {
       "id": "b_pg199",
       "display": {"label":"4× PG199 / DRIVE A100","short":"4× PG199","color":"#ec5c9d"},
-      "system": {"buildCostUsd":6000,"loadW":1000,"idleW":200},
+      "units": [
+        {"platform":"pg199","count":4}
+      ],
       "decode": {
         "oss120b": [150,"i"],
         "moe": [170,"i"]
@@ -589,11 +619,48 @@
     {
       "id": "b_b70",
       "display": {"label":"4× Arc B70 128GB","short":"B70×4","color":"#37d6c6"},
-      "system": {"buildCostUsd":3800,"loadW":250,"idleW":100},
+      "units": [
+        {"platform":"b70","count":1}
+      ],
       "decode": {
         "oss120b": [40,"i"],
         "moe": [54,"e"]
       }
+    },
+    {
+      "id": "b_pro",
+      "display": {"label":"RTX PRO 6000 (96GB, 1×)","short":"PRO 6000","color":"#00e676"},
+      "units": [
+        {"platform":"pro6000","count":1}
+      ]
+    },
+    {
+      "id": "b_m3",
+      "display": {"label":"Mac Studio M3 Ultra 96GB","short":"M3 Ultra","color":"#ce93d8"},
+      "units": [
+        {"platform":"m3ultra","count":1}
+      ]
+    },
+    {
+      "id": "b_strix",
+      "display": {"label":"Strix Halo 128GB","short":"Strix Halo","color":"#ffab40"},
+      "units": [
+        {"platform":"strixhalo","count":1}
+      ]
+    },
+    {
+      "id": "b_v100",
+      "display": {"label":"4× V100 32GB (1CATai)","short":"4× V100","color":"#f3b54c"},
+      "units": [
+        {"platform":"v100","count":1}
+      ]
+    },
+    {
+      "id": "b_spark",
+      "display": {"label":"DGX Spark (GB10) 128GB","short":"DGX Spark","color":"#ffd740"},
+      "units": [
+        {"platform":"dgxspark","count":1}
+      ]
     }
   ]
 }
