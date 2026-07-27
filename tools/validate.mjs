@@ -19,7 +19,9 @@ const doc = JSON.parse(fs.readFileSync(docPath, 'utf8'));
 const rel = path.relative(root, docPath) || docPath;
 
 const errors = [];
+const warnings = [];
 const fail = (at, msg) => errors.push(`${at || '(root)'}: ${msg}`);
+const warn = (at, msg) => warnings.push(`${at || '(root)'}: ${msg}`);
 
 function deref(node) {
   if (!node || !node.$ref) return node;
@@ -228,7 +230,20 @@ const referenced = new Set([
   ...(doc.builds ?? []).flatMap(b => (b.units ?? []).map(u => u.unit).filter(Boolean)),
 ]);
 for (const u of doc.units ?? []) {
-  if (!referenced.has(u.id)) fail(`unit "${u.id}"`, 'is in the catalog but no platform or build uses it');
+  if (!referenced.has(u.id)) {
+    warn(`unit "${u.id}"`, 'is in the catalog but no platform or build uses it — fine for a reference entry, a mistake if you meant to wire it up');
+  }
+}
+
+// A specification without a source is exactly the kind of confidently-wrong
+// number this page exists to warn about. One citation per record is the floor.
+const SPEC_FIELDS = ['released', 'memoryBandwidthGBs', 'tdpW', 'process'];
+for (const u of doc.units ?? []) {
+  const hasSpecs =
+    SPEC_FIELDS.some(f => u[f] != null) || Object.keys(u.compute?.values ?? {}).length > 0;
+  if (hasSpecs && !(u.sources?.length || u.compute?.source)) {
+    fail(`unit "${u.id}"`, 'has specification values but no sources[] — say where they came from');
+  }
 }
 
 // --- Report ----------------------------------------------------------------
@@ -253,6 +268,7 @@ const points = doc.platforms.reduce(
     ),
   0
 );
+for (const w of warnings) console.warn(`  ! ${w}`);
 console.log(
   `✓ ${rel} — ${(doc.units ?? []).length} catalog units, ${doc.platforms.length} platforms, ${(doc.builds ?? []).length} builds, ` +
     `${doc.meta.archetypes.length} archetypes, ${points} datapoints`

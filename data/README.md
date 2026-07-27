@@ -11,6 +11,7 @@ After any edit:
 
 ```sh
 node tools/validate.mjs        # schema + cross-record checks
+node tools/coverage.mjs        # what the catalog is still missing
 ```
 
 ## The three collections
@@ -154,6 +155,27 @@ single card, and the builds that contain them are `count: 1` of the platform.
 Both spellings give the same totals. What matters is that the card is the thing
 with a price, and the multiplication happens in exactly one place.
 
+## Specifications need a source
+
+A unit carrying `released`, `memoryBandwidthGBs`, `tdpW`, `process` or any
+`compute.values` must also carry `sources` — at least one entry saying where
+those numbers came from:
+
+```json
+"sources": ["https://en.wikipedia.org/wiki/Nvidia_Tesla"]
+```
+
+This is the one rule that exists because of what this page *is*. Every number
+here was originally produced by a language model, and a plausible-looking
+specification with a real-looking citation is worse than a blank cell: it
+launders a guess into a fact. If you cannot say where a figure came from, leave
+it out. `tools/coverage.mjs` will keep reminding you it is missing.
+
+An entry may name something other than a URL when that is the truth —
+`dgx_spark` currently reads "inherited from this page's own Method note … not
+independently sourced", which is honest in a way that citing NVIDIA would not
+have been.
+
 ## Measurements and confidence
 
 Any number that came from a benchmark is written as `[value, confidence]`:
@@ -245,3 +267,11 @@ each one is caught, so the validator cannot quietly stop working.
 `tools/smoke.mjs` loads the real page in Chromium, clicks every toggle, and
 asserts the charts actually painted — the one check that catches data which
 validates cleanly but throws during render.
+
+`tools/coverage.mjs` prints a grid of what each catalog unit has and is missing.
+It never fails; blanks are a legitimate state, and this just makes them visible.
+
+Not everything is an error. A catalog unit that nothing references produces a
+*warning*, because a reference entry — a card recorded for comparison with no
+benchmarks of its own — is a perfectly good reason to have one. Dangling
+references in the other direction stay hard errors, since those are typos.

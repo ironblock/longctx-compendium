@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -61,8 +61,8 @@ const CASES = [
   ['build entry naming both a platform and a unit', 'pick one', d => {
     build(d, 'b_pro').units[0].unit = 'rtx_pro_6000';
   }],
-  ['catalog unit nothing uses', 'no platform or build uses it', d => {
-    d.units.push({ ...clone().units[0], id: 'orphan_card' });
+  ['specs with no source', 'no sources[]', d => {
+    unit(d, 'rtx_5090').tdpW = 575;
   }],
   ['build cost stored instead of derived', 'unknown property', d => {
     build(d, 'b_pro').buildCostUsd = 8500;
@@ -90,6 +90,27 @@ const CASES = [
   }],
   ['unknown precision key shape', 'does not match', d => {
     unit(d, 'rtx_pro_6000').compute.values['FP 16'] = 250;
+  }],
+];
+
+// Edits that must be ACCEPTED. A validator that rejects legitimate data is as
+// obstructive as one that lets bad data through, and these are the cases most
+// likely to get over-tightened by accident.
+const ACCEPTED = [
+  ['a reference unit nothing uses', 'no platform or build uses it', d => {
+    d.units.push({ ...clone().units.find(u => u.id === 'a100_80'), id: 'reference_card' });
+  }],
+  ['a benchmark-only platform with no price', null, d => {
+    // rtx5090 and r9700 never clear 96GB, so they never reach a build.
+    delete unit(d, 'rtx_5090').pricing;
+  }],
+  ['a device carrying only a name', null, d => {
+    d.units.push({ id: 'blank_card', label: 'Unknown Accelerator' });
+    d.platforms.push({
+      id: 'blank_platform',
+      display: { label: 'Unknown', short: 'Unknown', color: '#123456', group: 'Value' },
+      composition: [{ unit: 'blank_card', count: 1 }],
+    });
   }],
 ];
 
@@ -125,6 +146,23 @@ for (const [name, expect, mutate] of CASES) {
   } else passed++;
 }
 
+for (const [name, expectWarning, mutate] of ACCEPTED) {
+  const doc = clone();
+  mutate(doc);
+  const file = path.join(tmp, `ok-${name.replace(/\W+/g, '-')}.json`);
+  fs.writeFileSync(file, JSON.stringify(doc, null, 2));
+
+  // spawnSync rather than execFileSync: warnings go to stderr on an otherwise
+  // successful run, and we need both streams from one invocation.
+  const run = spawnSync('node', [path.join(root, 'tools/validate.mjs'), file], { encoding: 'utf8' });
+
+  if (run.status !== 0) {
+    failures.push(`"${name}" should have been accepted but was rejected:\n${run.stderr}`);
+  } else if (expectWarning && !run.stderr.includes(expectWarning)) {
+    failures.push(`"${name}" was accepted but did not warn about "${expectWarning}"`);
+  } else passed++;
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 
 if (failures.length) {
@@ -132,4 +170,7 @@ if (failures.length) {
   for (const f of failures) console.error(`  ${f}\n`);
   process.exit(1);
 }
-console.log(`✓ validator tests — ${passed} passed (1 baseline + ${CASES.length} rejections)`);
+console.log(
+  `✓ validator tests — ${passed} passed ` +
+    `(1 baseline + ${CASES.length} rejections + ${ACCEPTED.length} acceptances)`
+);

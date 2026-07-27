@@ -37,6 +37,7 @@ data/README.md          ← how to add a device or a datapoint
 tools/validate.mjs      schema + cross-record checks, no dependencies
 tools/test-validate.mjs proves the validator rejects bad data
 tools/smoke.mjs         renders the page in Chromium and asserts it drew
+tools/coverage.mjs      reports what the hardware catalog is still missing
 ```
 
 Hardware facts — price, power, capacity, release date, rated throughput — live
@@ -61,6 +62,7 @@ python3 -m http.server 8000    # then open http://localhost:8000
 node tools/validate.mjs        # data file: schema + semantic checks
 node tools/test-validate.mjs   # the validator's own tests
 node tools/smoke.mjs           # renders in Chromium (needs playwright)
+node tools/coverage.mjs        # what the catalog is still missing (never fails)
 ```
 
 The first two have no dependencies. CI runs all three on every push.

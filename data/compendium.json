@@ -80,6 +80,7 @@
       "vendor": "NVIDIA",
       "memoryGB": 128,
       "memoryBandwidthGBs": 273,
+      "sources": ["inherited from this page's own Method note (gb10 community, 273 GB/s shared SoC bandwidth) — not independently sourced"],
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
