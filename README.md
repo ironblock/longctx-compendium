@@ -31,13 +31,18 @@ assets/charts.js        Chart.js configuration
 assets/tables.js        table and legend rendering
 assets/verdicts.js      editorial copy
 assets/chart.umd.js     vendored Chart.js 4.4.1 (MIT)
-data/compendium.json    ← every number on the page
+data/compendium.json    ← every number on the page (units · platforms · builds)
 data/schema.json
 data/README.md          ← how to add a device or a datapoint
 tools/validate.mjs      schema + cross-record checks, no dependencies
 tools/test-validate.mjs proves the validator rejects bad data
 tools/smoke.mjs         renders the page in Chromium and asserts it drew
 ```
+
+Hardware facts — price, power, capacity, release date, rated throughput — live
+once in the `units` catalog. Platforms and builds declare how many of what they
+contain, and their totals are summed at render time, so nothing on the page can
+disagree with the data behind it.
 
 To add a device or a data point, see [`data/README.md`](./data/README.md).
 

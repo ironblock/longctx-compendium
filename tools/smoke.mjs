@@ -97,7 +97,8 @@ for (const id of ['cMeasured', 'cExtrap', 'cModeled', 'cArch']) {
 // 9 platforms x 3 archetypes + 4 group header rows.
 check('prefill table rows', (await count('#ppTable tbody tr')) === 31, `got ${await count('#ppTable tbody tr')}`);
 check('decode table rows', (await count('#tgTable tbody tr')) === 13, `got ${await count('#tgTable tbody tr')}`);
-check('spec table rows', (await count('#specTable tbody tr')) === 13, `got ${await count('#specTable tbody tr')}`);
+// 11 catalog units + 4 vendor group headers
+check('spec table rows', (await count('#specTable tbody tr')) === 15, `got ${await count('#specTable tbody tr')}`);
 check('value table rows', (await count('#valTable tbody tr')) === 9, `got ${await count('#valTable tbody tr')}`);
 check('legend entries', (await count('#pleg span')) >= 9);
 check('verdict rendered', (await text('#verdict')).length > 80);
@@ -159,9 +160,9 @@ async function withPatchedData(patch) {
 // A precision nobody has used before should grow its own column.
 {
   const { p, errs } = await withPatchedData(doc => {
-    const t = doc.platforms.find(x => x.id === 'pro6000');
-    t.hardware.compute.values.fp4 = 1234;
-    t.hardware.released = '2025-04';
+    const t = doc.units.find(x => x.id === 'rtx_pro_6000');
+    t.compute.values.fp4 = 1234;
+    t.released = '2025-04';
     t.pricing.msrp = { usd: 8565, asOf: '2025-04' };
   });
   const heads = await p.locator('#specTable thead th').allTextContents();
@@ -200,8 +201,8 @@ async function withPatchedData(patch) {
   await before.close();
 
   const { p: after, errs } = await withPatchedData(doc => {
-    // +$300 on a card that four rigs' worth of one build contains.
-    doc.builds.find(b => b.id === 'b_3090').units[0].pricing.street.usd += 300;
+    // +$300 on a card the 4x 3090 rig contains four of.
+    doc.units.find(u => u.id === 'rtx_3090').pricing.street.usd += 300;
   });
   check('four-card rig tracks its card price ×4', (await costOf(after, '4× 3090')) === '$6,000', `${base3090} → ${await costOf(after, '4× 3090')}`);
   check('unrelated build is unaffected', (await costOf(after, 'PRO 6000')) === basePro);
@@ -209,14 +210,36 @@ async function withPatchedData(patch) {
   await after.close();
 }
 
-// A platform price change must flow into the rigs that reference it.
+// A single-card price must flow through the platform that composes it and into
+// the build that references that platform -- two levels of derivation.
 {
   const { p } = await withPatchedData(doc => {
-    doc.platforms.find(x => x.id === 'pg199').pricing.street.usd = 2000;
+    doc.units.find(u => u.id === 'pg199_card').pricing.street.usd = 2000;
   });
   const row = p.locator('#valTable tbody tr', { hasText: '4× PG199' }).first();
   const cost = (await row.locator('td').nth(1).textContent()).trim();
-  check('referenced platform price flows into its rig', cost === '$8,000', `got ${cost}`);
+  check('card price flows through platform into build', cost === '$8,000', `got ${cost}`);
+  await p.close();
+}
+
+// The whole point of splitting v100 and b70 into single-card origins: the
+// four-card rig must track the card, not a stored total.
+{
+  const { p } = await withPatchedData(doc => {
+    doc.units.find(u => u.id === 'v100_sxm2').pricing.street.usd = 1500;
+  });
+  const row = p.locator('#valTable tbody tr', { hasText: '4× V100' }).first();
+  const cost = (await row.locator('td').nth(1).textContent()).trim();
+  check('four-card V100 platform tracks its card price', cost === '$6,000', `got ${cost}`);
+  await p.close();
+}
+{
+  const { p } = await withPatchedData(doc => {
+    doc.units.find(u => u.id === 'arc_b70').power.idleW = 30;
+  });
+  const row = p.locator('#valTable tbody tr', { hasText: 'B70×4' }).first();
+  const idle = (await row.locator('td').nth(3).textContent()).trim();
+  check('four-card B70 platform tracks its card idle draw', idle === '120', `got ${idle}`);
   await p.close();
 }
 

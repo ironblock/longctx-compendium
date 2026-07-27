@@ -153,20 +153,23 @@ export function renderValueTable(model, state) {
   }
 }
 
-// === Hardware specifications ===
+// === Hardware catalog ===
+// One row per purchasable unit, which is what a datasheet or a Wikipedia table
+// actually describes. Platforms and builds are quantities of these, so a price
+// or spec corrected here corrects everything containing it.
+//
 // Columns for rated throughput are discovered from the data: add a precision
-// key to any platform's hardware.compute.values and a column appears here with
-// no code change.
+// key to any unit's compute.values and a column appears with no code change.
 export function renderSpecTable(model) {
-  const platforms = model.raw.platforms;
-  const precisions = [...new Set(platforms.flatMap(p => Object.keys(p.hardware?.compute?.values ?? {})))];
+  const units = model.UNITS;
+  const precisions = [...new Set(units.flatMap(u => Object.keys(u.compute?.values ?? {})))];
 
-  const head = document.querySelector('#specTable thead tr');
-  head.innerHTML =
-    '<th class="lbl" style="min-width:170px">Platform</th>' +
-    '<th class="lbl">Vendor</th><th>Released</th><th>Mem GB</th><th>BW GB/s</th><th>TDP W</th>' +
+  document.querySelector('#specTable thead tr').innerHTML =
+    '<th class="lbl" style="min-width:190px">Unit</th>' +
+    '<th>Released</th><th>Mem GB</th><th>BW GB/s</th><th>TDP W</th><th>Load W</th><th>Idle W</th>' +
     precisions.map(x => `<th>${x.toUpperCase()}</th>`).join('') +
-    '<th>MSRP</th><th>Street</th>';
+    '<th>MSRP</th><th>Street</th>' +
+    '<th class="lbl">Used in</th>';
 
   const tb = tbody('#specTable');
   tb.innerHTML = '';
@@ -174,33 +177,45 @@ export function renderSpecTable(model) {
   const num = v => (v == null ? dash : `<td class="num">${v}</td>`);
   const usd = m => (m?.usd == null ? dash : `<td class="num">$${m.usd.toLocaleString()}</td>`);
 
-  const platMap = Object.fromEntries(model.PLAT.map(p => [p.id, p]));
-  for (const g of groupsOf(model)) {
+  // Where each unit is used, so the catalog explains itself.
+  const usage = {};
+  for (const p of model.raw.platforms) {
+    for (const c of p.composition ?? []) {
+      (usage[c.unit] ??= []).push(`${c.count}× ${p.display.short}`);
+    }
+  }
+  for (const b of model.raw.builds ?? []) {
+    for (const u of b.units ?? []) {
+      if (u.unit) (usage[u.unit] ??= []).push(`${u.count ?? 1}× ${b.display.short}`);
+    }
+  }
+
+  const colspan = 11 + precisions.length;
+  for (const vendor of [...new Set(units.map(u => u.vendor ?? 'Other'))]) {
     const gr = document.createElement('tr');
-    gr.innerHTML = groupRow(8 + precisions.length, g);
+    gr.innerHTML = groupRow(colspan, vendor);
     tb.appendChild(gr);
 
-    for (const p of model.PLAT.filter(x => x.group === g)) {
-      const src = platforms.find(x => x.id === p.id);
-      const hw = src.hardware ?? {};
-      const values = hw.compute?.values ?? {};
+    for (const u of units.filter(x => (x.vendor ?? 'Other') === vendor)) {
       const tr = document.createElement('tr');
       tr.innerHTML =
-        nameCell(platMap[p.id]) +
-        `<td class="lbl"><span style="font-size:11px;color:var(--muted)">${hw.vendor ?? '—'}</span></td>` +
-        num(hw.released) +
-        num(hw.memoryGB) +
-        num(hw.memoryBandwidthGBs) +
-        num(hw.tdpW) +
-        precisions.map(x => num(values[x])).join('') +
-        usd(src.pricing?.msrp) +
-        usd(src.pricing?.street);
+        `<td class="lbl"><span style="font-family:var(--mono);font-size:12px">${u.label}</span>` +
+        `<span style="display:block;font-size:10px;color:var(--dim)">${u.id}</span></td>` +
+        num(u.released) +
+        num(u.memoryGB) +
+        num(u.memoryBandwidthGBs) +
+        num(u.tdpW) +
+        num(u.power?.loadW) +
+        num(u.power?.idleW) +
+        precisions.map(x => num(u.compute?.values?.[x])).join('') +
+        usd(u.pricing?.msrp) +
+        usd(u.pricing?.street) +
+        `<td class="lbl" style="white-space:normal;max-width:200px"><span style="font-size:11px;color:var(--dim)">${(usage[u.id] ?? []).join(' · ') || '—'}</span></td>`;
       tb.appendChild(tr);
     }
   }
 
-  // Only advertise the unit line once real figures exist.
   el('specUnits').textContent = precisions.length
-    ? `Rated throughput in ${platforms.find(p => p.hardware?.compute?.unit)?.hardware.compute.unit ?? 'Tops'} (10¹² ops/sec), dense unless noted. Blank cells are untranscribed, not zero.`
-    : 'No rated-throughput figures transcribed yet — add hardware.compute.values to any platform in data/compendium.json and a column appears here automatically.';
+    ? `Rated throughput in ${units.find(u => u.compute?.unit)?.compute.unit ?? 'Tops'} (10¹² ops/sec), dense unless the key says :sparse. Load and idle watts are per unit, observed under inference — not datasheet TDP. Blank cells are untranscribed, not zero.`
+    : 'No rated-throughput figures transcribed yet — add compute.values to any unit in data/compendium.json and a column appears here automatically. Load and idle watts are per unit, observed under inference, not datasheet TDP.';
 }

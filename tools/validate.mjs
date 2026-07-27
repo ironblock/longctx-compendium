@@ -118,15 +118,21 @@ const ctxTokens = new Set(doc.meta.contexts.map(c => c.tokens));
 const seenIds = new Map();
 const seenColors = new Map();
 
-for (const rec of [...doc.platforms, ...(doc.builds ?? [])]) {
+for (const rec of [...(doc.units ?? []), ...doc.platforms, ...(doc.builds ?? [])]) {
   const at = `id "${rec.id}"`;
   if (seenIds.has(rec.id)) fail(at, 'duplicate id');
   seenIds.set(rec.id, rec);
 
+  if (!rec.display) continue; // catalog units are not drawn, so no colour
+
   // A build reuses the colour of the platform it contains -- b_pg199 and pg199
   // are the same silicon. Any other collision is a copy-paste slip that makes
   // two unrelated series indistinguishable in the charts.
-  const silicon = new Set([rec.id, ...(rec.units ?? []).map(u => u.platform).filter(Boolean)]);
+  const silicon = new Set([
+    rec.id,
+    ...(rec.units ?? []).map(u => u.platform).filter(Boolean),
+    ...(rec.composition ?? []).map(c => c.unit),
+  ]);
   const prev = seenColors.get(rec.display.color);
   const shares = prev && [...silicon].some(s => prev.silicon.has(s));
   if (prev && !shares) {
@@ -165,37 +171,73 @@ for (const p of doc.platforms) {
   }
 }
 
-// Build cost and power are summed from units. A unit that cannot supply them
-// does not error -- it contributes zero, which silently makes a rig look free
-// and infinitely efficient. Catch it here instead.
+// Cost, power and capacity are summed from the catalog. A unit that cannot
+// supply them makes the total unknown, which blanks a row in the value table --
+// so say which unit is short of what, rather than letting it disappear.
+const unitById = Object.fromEntries((doc.units ?? []).map(u => [u.id, u]));
 const platformById = Object.fromEntries(doc.platforms.map(p => [p.id, p]));
+
+const REQUIRED_OF_A_UNIT = [
+  ['pricing.street.usd', u => u.pricing?.street?.usd, 'cost'],
+  ['power.loadW', u => u.power?.loadW, 'efficiency'],
+  ['power.idleW', u => u.power?.idleW, 'standing cost'],
+];
+
+const exists = (id, at) => {
+  if (!unitById[id]) fail(at, `references unknown unit "${id}" — add it to the units catalog`);
+  return !!unitById[id];
+};
+
+for (const p of doc.platforms) {
+  (p.composition ?? []).forEach((c, i) => exists(c.unit, `platform "${p.id}" composition[${i}]`));
+}
+
+// Only units that a BUILD reaches need a price and a power figure. A platform
+// that exists purely to be benchmarked -- a 32GB card that never clears the
+// 96GB bar and so never appears in the value tables -- is legitimately unpriced.
+const costed = new Set();
 for (const b of doc.builds ?? []) {
   (b.units ?? []).forEach((u, i) => {
     const at = `build "${b.id}" units[${i}]`;
-    if (u.platform && u.label) {
-      fail(at, 'has both platform and label — reference a platform or describe a unit, not both');
-    }
-    if (!u.platform && !u.label) fail(at, 'needs either a platform reference or a label');
-
-    const src = u.platform ? platformById[u.platform] : u;
-    if (u.platform && !src) {
-      fail(at, `references unknown platform "${u.platform}"`);
+    if (u.platform && u.unit) return fail(at, 'gives both platform and unit — pick one');
+    if (!u.platform && !u.unit) return fail(at, 'needs either a platform or a unit reference');
+    if (u.unit) {
+      if (exists(u.unit, at)) costed.add(u.unit);
       return;
     }
-    const who = u.platform ?? `"${u.label}"`;
-    if (src.pricing?.street?.usd == null) {
-      fail(at, `${who} has no pricing.street.usd, so this build's cost cannot be derived`);
-    }
-    if (src.power?.loadW == null) {
-      fail(at, `${who} has no power.loadW, so this build's efficiency cannot be derived`);
-    }
-    if (src.power?.idleW == null) {
-      fail(at, `${who} has no power.idleW, so this build's standing cost cannot be derived`);
-    }
+    const p = platformById[u.platform];
+    if (!p) return fail(at, `references unknown platform "${u.platform}"`);
+    for (const c of p.composition ?? []) costed.add(c.unit);
   });
 }
 
+for (const id of costed) {
+  const u = unitById[id];
+  if (!u) continue; // the dangling reference is already reported above
+  for (const [field, get, what] of REQUIRED_OF_A_UNIT) {
+    if (get(u) == null) {
+      fail(`unit "${id}"`, `is used by a build but has no ${field}, so ${what} cannot be derived`);
+    }
+  }
+}
+
+// A catalog entry nothing refers to is either a typo in a reference or dead
+// weight; either way it will silently never render in a total.
+const referenced = new Set([
+  ...doc.platforms.flatMap(p => (p.composition ?? []).map(c => c.unit)),
+  ...(doc.builds ?? []).flatMap(b => (b.units ?? []).map(u => u.unit).filter(Boolean)),
+]);
+for (const u of doc.units ?? []) {
+  if (!referenced.has(u.id)) fail(`unit "${u.id}"`, 'is in the catalog but no platform or build uses it');
+}
+
 // --- Report ----------------------------------------------------------------
+process.on('uncaughtException', err => {
+  console.error(`✗ ${rel} — the validator itself crashed, which is a bug in tools/validate.mjs:`);
+  console.error(err.stack);
+  process.exit(2);
+});
+
 if (errors.length) {
   console.error(`✗ ${rel} — ${errors.length} problem${errors.length > 1 ? 's' : ''}:\n`);
   for (const e of errors) console.error(`  ${e}`);
@@ -212,6 +254,6 @@ const points = doc.platforms.reduce(
   0
 );
 console.log(
-  `✓ ${rel} — ${doc.platforms.length} platforms, ${(doc.builds ?? []).length} standalone builds, ` +
+  `✓ ${rel} — ${(doc.units ?? []).length} catalog units, ${doc.platforms.length} platforms, ${(doc.builds ?? []).length} builds, ` +
     `${doc.meta.archetypes.length} archetypes, ${points} datapoints`
 );

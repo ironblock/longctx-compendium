@@ -34,23 +34,171 @@
     },
     "electricityUsdPerKwh": 0.17
   },
-  "platforms": [
+  "units": [
     {
-      "id": "pro6000",
-      "display": {"label":"RTX PRO 6000 (96 GB)","short":"PRO 6000","color":"#00e676","group":"NVIDIA"},
-      "hardware": {
-        "vendor": "NVIDIA",
-        "memoryGB": 96,
-        "compute": {
-          "unit": "Tops",
-          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-          "values": {}
-        }
+      "id": "rtx_pro_6000",
+      "label": "RTX PRO 6000 Blackwell 96GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 96,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
       },
       "pricing": {
         "street": {"usd":8500,"asOf":"2026-07"}
       },
-      "power": {"loadW":400,"idleW":50,"confidence":"i"},
+      "power": {"loadW":400,"idleW":50,"confidence":"i"}
+    },
+    {
+      "id": "rtx_5090",
+      "label": "GeForce RTX 5090 32GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 32,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {}
+    },
+    {
+      "id": "radeon_r9700",
+      "label": "Radeon AI PRO R9700 32GB",
+      "vendor": "AMD",
+      "memoryGB": 32,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {}
+    },
+    {
+      "id": "dgx_spark",
+      "label": "DGX Spark (GB10) 128GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 128,
+      "memoryBandwidthGBs": 273,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {"usd":4699,"asOf":"2026-07"}
+      },
+      "power": {"loadW":240,"idleW":50,"confidence":"i"}
+    },
+    {
+      "id": "mac_m3_ultra",
+      "label": "Mac Studio M3 Ultra 96GB",
+      "vendor": "Apple",
+      "memoryGB": 96,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {"usd":3600,"asOf":"2026-07"}
+      },
+      "power": {"loadW":150,"idleW":20,"confidence":"i"}
+    },
+    {
+      "id": "strix_halo",
+      "label": "Ryzen AI Max+ 395 128GB",
+      "vendor": "AMD",
+      "memoryGB": 128,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {"usd":2566,"asOf":"2026-07"}
+      },
+      "power": {"loadW":140,"idleW":15,"confidence":"i"}
+    },
+    {
+      "id": "pg199_card",
+      "label": "PG199 / DRIVE A100",
+      "vendor": "NVIDIA",
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {"usd":1500,"asOf":"2026-07"}
+      },
+      "power": {"loadW":250,"idleW":50,"confidence":"i"}
+    },
+    {
+      "id": "arc_b70",
+      "label": "Arc Pro B70 32GB",
+      "vendor": "Intel",
+      "memoryGB": 32,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {"usd":950,"asOf":"2026-07"}
+      },
+      "power": {"loadW":62.5,"idleW":25,"confidence":"i"}
+    },
+    {
+      "id": "v100_sxm2",
+      "label": "Tesla V100 SXM2 32GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 32,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {"usd":1000,"asOf":"2026-07"}
+      },
+      "power": {"loadW":125,"idleW":40,"confidence":"i"}
+    },
+    {
+      "id": "rtx_3090",
+      "label": "GeForce RTX 3090 24GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 24,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {"usd":1200,"asOf":"2026-07"}
+      },
+      "power": {"loadW":250,"idleW":40,"confidence":"i"}
+    },
+    {
+      "id": "a100_80",
+      "label": "A100 80GB PCIe",
+      "vendor": "NVIDIA",
+      "memoryGB": 80,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {"usd":8000,"asOf":"2026-07"}
+      },
+      "power": {"loadW":300,"idleW":50,"confidence":"i"}
+    }
+  ],
+  "platforms": [
+    {
+      "id": "pro6000",
+      "display": {"label":"RTX PRO 6000 (96 GB)","short":"PRO 6000","color":"#00e676","group":"NVIDIA"},
       "perf": {
         "moe": {
           "note": "llama.cpp Q4_K_M, Qwen3-30B-A3B; pp512 measured",
@@ -99,21 +247,14 @@
             "at32k": [159,"m"]
           }
         }
-      }
+      },
+      "composition": [
+        {"unit":"rtx_pro_6000","count":1}
+      ]
     },
     {
       "id": "rtx5090",
       "display": {"label":"RTX 5090 (32 GB)","short":"5090","color":"#b2ff59","group":"NVIDIA"},
-      "hardware": {
-        "vendor": "NVIDIA",
-        "memoryGB": 32,
-        "compute": {
-          "unit": "Tops",
-          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-          "values": {}
-        }
-      },
-      "pricing": {},
       "perf": {
         "moe": {
           "note": "llama.cpp Q4_K_XL, Qwen3moe-30B-A3B; pp4K/32K/64K measured",
@@ -148,21 +289,14 @@
           }
         },
         "oss120b": {"note":"32GB — cannot fit 120B (~63GB)","decodeNote":"32GB cannot fit 120B","unsupported":true}
-      }
+      },
+      "composition": [
+        {"unit":"rtx_5090","count":1}
+      ]
     },
     {
       "id": "r9700",
       "display": {"label":"Radeon AI PRO R9700","short":"R9700","color":"#ff5252","group":"AMD"},
-      "hardware": {
-        "vendor": "AMD",
-        "memoryGB": 32,
-        "compute": {
-          "unit": "Tops",
-          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-          "values": {}
-        }
-      },
-      "pricing": {},
       "perf": {
         "moe": {
           "note": "llama.cpp Vulkan Q4_K_XL, Qwen3.5-35B-A3B; 4 pts measured",
@@ -181,25 +315,14 @@
         },
         "dense": {"note":"no dense data found","decodeNote":"no data","unsupported":true},
         "oss120b": {"note":"32GB — cannot fit 120B","decodeNote":"32GB cannot fit 120B","unsupported":true}
-      }
+      },
+      "composition": [
+        {"unit":"radeon_r9700","count":1}
+      ]
     },
     {
       "id": "dgxspark",
       "display": {"label":"DGX Spark (GB10)","short":"DGX Spark","color":"#ffd740","group":"Unified"},
-      "hardware": {
-        "vendor": "NVIDIA",
-        "memoryGB": 128,
-        "memoryBandwidthGBs": 273,
-        "compute": {
-          "unit": "Tops",
-          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-          "values": {}
-        }
-      },
-      "pricing": {
-        "street": {"usd":4699,"asOf":"2026-07"}
-      },
-      "power": {"loadW":240,"idleW":50,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "llama.cpp CUDA Q4_K_M, Qwen3-30B-A3B; pp512 & pp16K measured",
@@ -246,24 +369,14 @@
             "short": [38.6,"m"]
           }
         }
-      }
+      },
+      "composition": [
+        {"unit":"dgx_spark","count":1}
+      ]
     },
     {
       "id": "m3ultra",
       "display": {"label":"Mac Studio M3 Ultra","short":"M3 Ultra","color":"#ce93d8","group":"Unified"},
-      "hardware": {
-        "vendor": "Apple",
-        "memoryGB": 96,
-        "compute": {
-          "unit": "Tops",
-          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-          "values": {}
-        }
-      },
-      "pricing": {
-        "street": {"usd":3600,"asOf":"2026-07"}
-      },
-      "power": {"loadW":150,"idleW":20,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "MoE prefill modeled; dense M3 Ultra is measured",
@@ -311,24 +424,14 @@
             "short": [60,"m~"]
           }
         }
-      }
+      },
+      "composition": [
+        {"unit":"mac_m3_ultra","count":1}
+      ]
     },
     {
       "id": "strixhalo",
       "display": {"label":"Strix Halo (AI Max+ 395)","short":"Strix Halo","color":"#ffab40","group":"Unified"},
-      "hardware": {
-        "vendor": "AMD",
-        "memoryGB": 128,
-        "compute": {
-          "unit": "Tops",
-          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-          "values": {}
-        }
-      },
-      "pricing": {
-        "street": {"usd":2566,"asOf":"2026-07"}
-      },
-      "power": {"loadW":140,"idleW":15,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "llama.cpp Vulkan UD-Q4, Qwen3.6-35B-A3B; pp512 & pp64K measured",
@@ -374,23 +477,14 @@
             "short": [40,"m"]
           }
         }
-      }
+      },
+      "composition": [
+        {"unit":"strix_halo","count":1}
+      ]
     },
     {
       "id": "pg199",
       "display": {"label":"PG199 / DRIVE A100","short":"PG199","color":"#ec5c9d","group":"Value"},
-      "hardware": {
-        "vendor": "NVIDIA",
-        "compute": {
-          "unit": "Tops",
-          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-          "values": {}
-        }
-      },
-      "pricing": {
-        "street": {"usd":1500,"asOf":"2026-07"}
-      },
-      "power": {"loadW":250,"idleW":50,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "modeled from specs + FA2 scaling",
@@ -437,24 +531,14 @@
             "short": [150,"i"]
           }
         }
-      }
+      },
+      "composition": [
+        {"unit":"pg199_card","count":1}
+      ]
     },
     {
       "id": "b70",
       "display": {"label":"4× Arc B70 (128GB)","short":"B70×4","color":"#37d6c6","group":"Value"},
-      "hardware": {
-        "vendor": "Intel",
-        "memoryGB": 128,
-        "compute": {
-          "unit": "Tops",
-          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-          "values": {}
-        }
-      },
-      "pricing": {
-        "street": {"usd":3800,"asOf":"2026-07"}
-      },
-      "power": {"loadW":250,"idleW":100,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "llama.cpp SYCL Q4_K_M, Qwen3.6-35B-A3B; 5 pts measured",
@@ -501,24 +585,14 @@
             "short": [40,"i"]
           }
         }
-      }
+      },
+      "composition": [
+        {"unit":"arc_b70","count":4}
+      ]
     },
     {
       "id": "v100",
       "display": {"label":"V100 NVLink ×4","short":"V100×4","color":"#f3b54c","group":"Value"},
-      "hardware": {
-        "vendor": "NVIDIA",
-        "memoryGB": 128,
-        "compute": {
-          "unit": "Tops",
-          "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-          "values": {}
-        }
-      },
-      "pricing": {
-        "street": {"usd":4000,"asOf":"2026-07"}
-      },
-      "power": {"loadW":500,"idleW":160,"confidence":"i"},
       "perf": {
         "moe": {
           "note": "1Cat-vLLM, modeled from short-prompt anchor",
@@ -565,7 +639,10 @@
             "short": [50,"i"]
           }
         }
-      }
+      },
+      "composition": [
+        {"unit":"v100_sxm2","count":4}
+      ]
     }
   ],
   "builds": [
@@ -573,14 +650,7 @@
       "id": "b_3090",
       "display": {"label":"4× RTX 3090 (96GB)","short":"4× 3090","color":"#4fc3f7"},
       "units": [
-        {
-          "label": "RTX 3090 24GB",
-          "count": 4,
-          "pricing": {
-            "street": {"usd":1200,"asOf":"2026-07"}
-          },
-          "power": {"loadW":250,"idleW":40,"confidence":"i"}
-        }
+        {"unit":"rtx_3090","count":4}
       ],
       "decode": {
         "oss120b": [124,"m"],
@@ -591,14 +661,7 @@
       "id": "b_a100",
       "display": {"label":"A100 80GB PCIe (1×)","short":"A100 80","color":"#80cbc4"},
       "units": [
-        {
-          "label": "A100 80GB PCIe",
-          "count": 1,
-          "pricing": {
-            "street": {"usd":8000,"asOf":"2026-07"}
-          },
-          "power": {"loadW":300,"idleW":50,"confidence":"i"}
-        }
+        {"unit":"a100_80","count":1}
       ],
       "decode": {
         "oss120b": [160,"i"],

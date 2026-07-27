@@ -17,6 +17,7 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'compendium-test-'));
 const clone = () => JSON.parse(JSON.stringify(good));
 const platform = (doc, id) => doc.platforms.find(p => p.id === id);
 const build = (doc, id) => doc.builds.find(b => b.id === id);
+const unit = (doc, id) => doc.units.find(u => u.id === id);
 
 // Each case breaks the data one way and names the substring the failure must
 // mention, so a check that starts passing for the wrong reason still fails.
@@ -30,8 +31,11 @@ const CASES = [
   ['prefill key not on the context axis', 'not a context', d => {
     platform(d, 'pro6000').perf.moe.prefill['20000'] = [500, 'e'];
   }],
-  ['duplicate platform id', 'duplicate id', d => {
+  ['duplicate id across collections', 'duplicate id', d => {
     d.platforms.push(clone().platforms[0]);
+  }],
+  ['a unit id colliding with a platform id', 'duplicate id', d => {
+    unit(d, 'v100_sxm2').id = 'v100';
   }],
   ['two devices sharing a colour', 'already used by', d => {
     platform(d, 'rtx5090').display.color = platform(d, 'pro6000').display.color;
@@ -40,22 +44,31 @@ const CASES = [
     platform(d, 'pro6000').perf.mamba = { note: 'x', decode: { short: [10, 'm'] } };
   }],
   ['misspelled field name', 'unknown property', d => {
-    platform(d, 'pro6000').hardware.memoryGb = 96;
+    unit(d, 'rtx_pro_6000').memoryGb = 96;
   }],
-  ['build unit pointing at a platform that does not exist', 'unknown platform', d => {
-    build(d, 'b_pro').units[0].platform = 'nosuchcard';
+  ['platform composition pointing at a unit that does not exist', 'unknown unit', d => {
+    platform(d, 'v100').composition[0].unit = 'nosuchcard';
   }],
-  ['unit whose platform has no street price', 'cost cannot be derived', d => {
-    delete platform(d, 'pro6000').pricing.street;
+  ['build pointing at a platform that does not exist', 'unknown platform', d => {
+    build(d, 'b_pro').units[0].platform = 'nosuchplatform';
   }],
-  ['unit whose platform has no power figures', 'efficiency cannot be derived', d => {
-    delete platform(d, 'pro6000').power;
+  ['costed unit with no street price', 'cost cannot be derived', d => {
+    delete unit(d, 'v100_sxm2').pricing.street;
   }],
-  ['unit that both references and describes hardware', 'not both', d => {
-    build(d, 'b_pro').units[0].label = 'RTX PRO 6000';
+  ['costed unit with no power figures', 'efficiency cannot be derived', d => {
+    delete unit(d, 'v100_sxm2').power;
+  }],
+  ['build entry naming both a platform and a unit', 'pick one', d => {
+    build(d, 'b_pro').units[0].unit = 'rtx_pro_6000';
+  }],
+  ['catalog unit nothing uses', 'no platform or build uses it', d => {
+    d.units.push({ ...clone().units[0], id: 'orphan_card' });
   }],
   ['build cost stored instead of derived', 'unknown property', d => {
     build(d, 'b_pro').buildCostUsd = 8500;
+  }],
+  ['platform storing its own price instead of composing', 'unknown property', d => {
+    platform(d, 'pro6000').pricing = { street: { usd: 8500 } };
   }],
   ['archetype entry with no data and no reason', 'neither data nor unsupported', d => {
     platform(d, 'pro6000').perf.moe = { note: 'todo' };
@@ -64,7 +77,7 @@ const CASES = [
     platform(d, 'rtx5090').perf.oss120b.decode = { short: [10, 'm'] };
   }],
   ['negative power draw', 'must be > 0', d => {
-    platform(d, 'pro6000').power.loadW = -5;
+    unit(d, 'rtx_pro_6000').power.loadW = -5;
   }],
   ['fractional card count', 'expected integer', d => {
     build(d, 'b_3090').units[0].count = 3.5;
@@ -73,10 +86,10 @@ const CASES = [
     platform(d, 'pro6000').display.color = 'green';
   }],
   ['release date that is not a date', 'does not match', d => {
-    platform(d, 'pro6000').hardware.released = 'spring 2025';
+    unit(d, 'rtx_pro_6000').released = 'spring 2025';
   }],
   ['unknown precision key shape', 'does not match', d => {
-    platform(d, 'pro6000').hardware.compute.values['FP 16'] = 250;
+    unit(d, 'rtx_pro_6000').compute.values['FP 16'] = 250;
   }],
 ];
 

@@ -2,21 +2,50 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Long Context Falloff Compendium data file",
   "type": "object",
-  "required": ["meta", "platforms"],
+  "required": [
+    "meta",
+    "units",
+    "platforms"
+  ],
   "additionalProperties": false,
   "properties": {
-    "$schema": { "type": "string" },
-    "meta": { "$ref": "#/definitions/meta" },
-    "platforms": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/platform" } },
-    "builds": { "type": "array", "items": { "$ref": "#/definitions/build" } }
+    "$schema": {
+      "type": "string"
+    },
+    "meta": {
+      "$ref": "#/definitions/meta"
+    },
+    "platforms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/platform"
+      }
+    },
+    "builds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/build"
+      }
+    },
+    "units": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/catalogUnit"
+      }
+    }
   },
-
   "definitions": {
     "confidence": {
       "description": "m = measured primary · m~ = measured secondary/anecdotal · e = extrapolated · i = modeled from specs. Absence means no data; there is no code for it.",
-      "enum": ["m", "m~", "e", "i"]
+      "enum": [
+        "m",
+        "m~",
+        "e",
+        "i"
+      ]
     },
-
     "measurement": {
       "description": "A benchmark number and how much to trust it. Tuple form for the common case, object form when it needs provenance.",
       "oneOf": [
@@ -24,25 +53,47 @@
           "type": "array",
           "minItems": 2,
           "maxItems": 2,
-          "items": [{ "type": "number" }, { "$ref": "#/definitions/confidence" }]
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "$ref": "#/definitions/confidence"
+            }
+          ]
         },
         {
           "type": "object",
-          "required": ["value", "confidence"],
+          "required": [
+            "value",
+            "confidence"
+          ],
           "additionalProperties": false,
           "properties": {
-            "value": { "type": "number" },
-            "confidence": { "$ref": "#/definitions/confidence" },
-            "source": { "type": "string" },
-            "note": { "type": "string" }
+            "value": {
+              "type": "number"
+            },
+            "confidence": {
+              "$ref": "#/definitions/confidence"
+            },
+            "source": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
           }
         }
       ]
     },
-
     "meta": {
       "type": "object",
-      "required": ["contexts", "archetypes", "confidence", "electricityUsdPerKwh"],
+      "required": [
+        "contexts",
+        "archetypes",
+        "confidence",
+        "electricityUsdPerKwh"
+      ],
       "additionalProperties": false,
       "properties": {
         "contexts": {
@@ -51,11 +102,19 @@
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["tokens", "label"],
+            "required": [
+              "tokens",
+              "label"
+            ],
             "additionalProperties": false,
             "properties": {
-              "tokens": { "type": "integer", "minimum": 1 },
-              "label": { "type": "string" }
+              "tokens": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "label": {
+                "type": "string"
+              }
             }
           }
         },
@@ -64,121 +123,154 @@
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["id", "label", "desc"],
+            "required": [
+              "id",
+              "label",
+              "desc"
+            ],
             "additionalProperties": false,
             "properties": {
-              "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
-              "label": { "type": "string" },
-              "desc": { "type": "string" }
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9_]+$"
+              },
+              "label": {
+                "type": "string"
+              },
+              "desc": {
+                "type": "string"
+              }
             }
           }
         },
         "confidence": {
           "type": "object",
           "description": "Human-readable gloss for each confidence code, rendered in the legend.",
-          "additionalProperties": { "type": "string" }
+          "additionalProperties": {
+            "type": "string"
+          }
         },
-        "electricityUsdPerKwh": { "type": "number", "exclusiveMinimum": 0 }
+        "electricityUsdPerKwh": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
       }
     },
-
     "display": {
       "type": "object",
-      "required": ["label", "short", "color"],
+      "required": [
+        "label",
+        "short",
+        "color"
+      ],
       "additionalProperties": false,
       "properties": {
-        "label": { "type": "string" },
-        "short": { "type": "string" },
-        "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
-        "group": { "type": "string" }
+        "label": {
+          "type": "string"
+        },
+        "short": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "group": {
+          "type": "string"
+        }
       }
     },
-
     "pricepoint": {
       "type": "object",
-      "required": ["usd"],
+      "required": [
+        "usd"
+      ],
       "additionalProperties": false,
       "properties": {
-        "usd": { "type": "number", "minimum": 0 },
+        "usd": {
+          "type": "number",
+          "minimum": 0
+        },
         "asOf": {
           "description": "YYYY or YYYY-MM. A price without a date is not a fact.",
           "type": "string",
           "pattern": "^[0-9]{4}(-[0-9]{2})?$"
         },
-        "source": { "type": "string" },
-        "note": { "type": "string" }
-      }
-    },
-
-    "pricing": {
-      "description": "Open by design: add lease/used/bundle alongside msrp and street without a schema change.",
-      "type": "object",
-      "additionalProperties": { "$ref": "#/definitions/pricepoint" }
-    },
-
-    "hardware": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "vendor": { "type": "string" },
-        "released": { "type": "string", "pattern": "^[0-9]{4}(-[0-9]{2})?$" },
-        "memoryGB": { "type": "number", "exclusiveMinimum": 0 },
-        "memoryBandwidthGBs": { "type": "number", "exclusiveMinimum": 0 },
-        "tdpW": { "type": "number", "exclusiveMinimum": 0 },
-        "process": { "type": "string" },
-        "compute": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "unit": { "type": "string" },
-            "note": { "type": "string" },
-            "source": { "type": "string" },
-            "values": {
-              "description": "Rated throughput keyed by precision (fp32, tf32, bf16, fp16, fp8, fp4, int8, ...). Suffix a key with ':sparse' for structured-sparsity figures. New precisions need no schema change.",
-              "type": "object",
-              "propertyNames": { "pattern": "^[a-z0-9]+(:sparse)?$" },
-              "additionalProperties": { "type": "number", "minimum": 0 }
-            }
-          }
+        "source": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
         }
       }
     },
-
+    "pricing": {
+      "description": "Open by design: add lease/used/bundle alongside msrp and street without a schema change.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/pricepoint"
+      }
+    },
     "power": {
       "description": "Draw for ONE unit, observed under LLM inference. Deliberately not hardware.tdpW: inference is bandwidth-bound and does not reach the datasheet ceiling, and cards are commonly power-capped. Build totals are summed from this, never stored.",
       "type": "object",
-      "required": ["loadW", "idleW"],
+      "required": [
+        "loadW",
+        "idleW"
+      ],
       "additionalProperties": false,
       "properties": {
-        "loadW": { "type": "number", "exclusiveMinimum": 0 },
-        "idleW": { "type": "number", "minimum": 0 },
-        "confidence": { "$ref": "#/definitions/confidence" },
-        "source": { "type": "string" },
-        "note": { "type": "string" }
+        "loadW": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "idleW": {
+          "type": "number",
+          "minimum": 0
+        },
+        "confidence": {
+          "$ref": "#/definitions/confidence"
+        },
+        "source": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        }
       }
     },
-
     "unit": {
-      "description": "A quantity of one purchasable thing. Reference a platform when one exists, otherwise carry the pricing and power inline.",
+      "description": "A quantity of one platform or one catalog unit. Exactly one of `platform` or `unit` must be given.",
       "type": "object",
-      "required": ["count"],
+      "required": [
+        "count"
+      ],
       "additionalProperties": false,
       "properties": {
-        "platform": { "type": "string", "pattern": "^[a-z0-9_]+$" },
-        "label": { "type": "string" },
-        "count": { "type": "integer", "minimum": 1 },
-        "pricing": { "$ref": "#/definitions/pricing" },
-        "power": { "$ref": "#/definitions/power" },
-        "hardware": { "$ref": "#/definitions/hardware" }
+        "platform": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "unit": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
-
     "archPerf": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "note": { "type": "string" },
-        "decodeNote": { "type": "string" },
+        "note": {
+          "type": "string"
+        },
+        "decodeNote": {
+          "type": "string"
+        },
         "unsupported": {
           "description": "True when this platform provably cannot run the archetype (capacity, not missing data). The note should say why.",
           "type": "boolean"
@@ -186,35 +278,55 @@
         "prefill": {
           "description": "Prefill throughput keyed by exact prompt length in tokens. Keying by token count rather than array position means a value can never drift away from its confidence code, and an absent context is a gap rather than a silent shift.",
           "type": "object",
-          "propertyNames": { "pattern": "^[0-9]+$" },
-          "additionalProperties": { "$ref": "#/definitions/measurement" }
+          "propertyNames": {
+            "pattern": "^[0-9]+$"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/measurement"
+          }
         },
         "decode": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "short": { "$ref": "#/definitions/measurement" },
-            "at32k": { "$ref": "#/definitions/measurement" }
+            "short": {
+              "$ref": "#/definitions/measurement"
+            },
+            "at32k": {
+              "$ref": "#/definitions/measurement"
+            }
           }
         }
       }
     },
-
     "platform": {
       "type": "object",
-      "required": ["id", "display"],
+      "required": [
+        "id",
+        "display",
+        "composition"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
-        "display": { "$ref": "#/definitions/display" },
-        "hardware": { "$ref": "#/definitions/hardware" },
-        "pricing": { "$ref": "#/definitions/pricing" },
-        "power": { "$ref": "#/definitions/power" },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "display": {
+          "$ref": "#/definitions/display"
+        },
+        "composition": {
+          "$ref": "#/definitions/composition"
+        },
         "perf": {
           "description": "Keyed by archetype id from meta.archetypes. Absent archetypes render as em dashes.",
           "type": "object",
-          "propertyNames": { "pattern": "^[a-z0-9_]+$" },
-          "additionalProperties": { "$ref": "#/definitions/archPerf" }
+          "propertyNames": {
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/archPerf"
+          }
         },
         "extra": {
           "description": "Escape hatch for data captured before anyone decided how to render it. Nothing reads this.",
@@ -222,33 +334,164 @@
         }
       }
     },
-
     "build": {
       "description": "A purchasable box, expressed as the units it contains. Cost and power are summed from those units and never stored here.",
       "type": "object",
-      "required": ["id", "display", "units"],
+      "required": [
+        "id",
+        "display",
+        "units"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
-        "display": { "$ref": "#/definitions/display" },
-        "units": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/unit" } },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "display": {
+          "$ref": "#/definitions/display"
+        },
+        "units": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/unit"
+          }
+        },
         "host": {
           "description": "Whatever the units do not account for: chassis, CPU, PSU, cooling. Keeps the residual visible instead of hidden inside a card price.",
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "costUsd": { "type": "number", "minimum": 0 },
-            "loadW": { "type": "number", "minimum": 0 },
-            "idleW": { "type": "number", "minimum": 0 },
-            "note": { "type": "string" }
+            "costUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "loadW": {
+              "type": "number",
+              "minimum": 0
+            },
+            "idleW": {
+              "type": "number",
+              "minimum": 0
+            },
+            "note": {
+              "type": "string"
+            }
           }
         },
         "decode": {
           "type": "object",
-          "propertyNames": { "pattern": "^[a-z0-9_]+$" },
-          "additionalProperties": { "$ref": "#/definitions/measurement" }
+          "propertyNames": {
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/measurement"
+          }
         },
-        "extra": { "type": "object" }
+        "extra": {
+          "type": "object"
+        }
+      }
+    },
+    "catalogUnit": {
+      "description": "A purchasable piece of hardware -- the thing a datasheet describes. Platforms and builds are quantities of these, so a price or spec corrected here corrects everything containing it.",
+      "type": "object",
+      "required": [
+        "id",
+        "label"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "label": {
+          "type": "string"
+        },
+        "vendor": {
+          "type": "string",
+          "description": "Sections the catalog table."
+        },
+        "released": {
+          "type": "string",
+          "pattern": "^[0-9]{4}(-[0-9]{2})?$"
+        },
+        "memoryGB": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "memoryBandwidthGBs": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "tdpW": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Datasheet TDP. Recorded only; nothing derives from it -- see power."
+        },
+        "process": {
+          "type": "string"
+        },
+        "compute": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "values": {
+              "description": "Rated throughput keyed by precision (fp32, tf32, bf16, fp16, fp8, fp4, int8, ...). Suffix a key with ':sparse' for structured-sparsity figures. New precisions need no schema change.",
+              "type": "object",
+              "propertyNames": {
+                "pattern": "^[a-z0-9]+(:sparse)?$"
+              },
+              "additionalProperties": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "pricing": {
+          "$ref": "#/definitions/pricing"
+        },
+        "power": {
+          "$ref": "#/definitions/power"
+        },
+        "extra": {
+          "type": "object"
+        }
+      }
+    },
+    "composition": {
+      "description": "What this configuration is made of. Cost, power and capacity are summed from it; storing them directly is not allowed.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "unit",
+          "count"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "unit": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
       }
     }
   }

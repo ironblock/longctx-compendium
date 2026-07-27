@@ -13,55 +13,62 @@ After any edit:
 node tools/validate.mjs        # schema + cross-record checks
 ```
 
+## The three collections
+
+| collection | what it is | example |
+|---|---|---|
+| `units` | a purchasable piece of hardware — what a datasheet describes | one Tesla V100 SXM2 32GB |
+| `platforms` | a benchmarked configuration, composed of units | `V100 NVLink ×4` = 4 units |
+| `builds` | a box you could buy, composed of platforms or units | `4× V100 32GB (1CATai)` |
+
+Prices, power draw, capacity and release dates live on **units**, once. A
+platform or build says how many of what it contains, and its totals are summed
+at render time. Correct one card's street price and every platform and rig
+containing it moves with it.
+
 ## Adding a device
 
-Append one object to `platforms`. Only `id` and `display` are required — a
-device with nothing else renders as a row of em dashes and fills in over time.
+Append one object to `platforms`. Only `id`, `display` and `composition` are
+required — a device with nothing else renders as a row of em dashes and fills
+in over time.
+
+First describe the hardware once, in `units`:
 
 ```json
 {
   "id": "some_card",
-  "display": {
-    "label": "Full Name For Table Rows (48 GB)",
-    "short": "ShortName",
-    "color": "#7ec8ff",
-    "group": "NVIDIA"
-  }
-}
-```
-
-`group` sections the tables (`NVIDIA`, `AMD`, `Unified`, `Value`, or a new one).
-`color` must be unique across all records and is what identifies the device in
-every chart.
-
-Then fill in whatever you have:
-
-```json
-{
-  "id": "some_card",
-  "display": { "…": "…" },
-
-  "hardware": {
-    "vendor": "NVIDIA",
-    "released": "2025-04",
-    "memoryGB": 48,
-    "memoryBandwidthGBs": 1008,
-    "tdpW": 300,
-    "process": "TSMC 4N",
-    "compute": {
-      "unit": "Tops",
-      "source": "https://en.wikipedia.org/wiki/…",
-      "values": { "fp32": 91.1, "bf16": 362.1, "fp8": 724.2, "fp8:sparse": 1448.4 }
-    }
+  "label": "Some Accelerator 48GB",
+  "vendor": "NVIDIA",
+  "released": "2025-04",
+  "memoryGB": 48,
+  "memoryBandwidthGBs": 1008,
+  "tdpW": 300,
+  "process": "TSMC 4N",
+  "compute": {
+    "unit": "Tops",
+    "source": "https://en.wikipedia.org/wiki/…",
+    "values": { "fp32": 91.1, "bf16": 362.1, "fp8": 724.2, "fp8:sparse": 1448.4 }
   },
-
   "pricing": {
     "msrp":   { "usd": 4500, "asOf": "2025-04" },
     "street": { "usd": 6200, "asOf": "2026-07", "note": "memory-shortage inflated" }
   },
+  "power": { "loadW": 285, "idleW": 22, "confidence": "m", "note": "wall draw, capped at 300W" }
+}
+```
 
-  "power": { "loadW": 285, "idleW": 22, "confidence": "m", "note": "wall draw, capped at 300W" },
+Then the benchmarked configuration, in `platforms`:
 
+```json
+{
+  "id": "some_platform",
+  "display": {
+    "label": "Some Accelerator ×2 (96 GB)",
+    "short": "SomeAcc×2",
+    "color": "#7ec8ff",
+    "group": "NVIDIA"
+  },
+  "composition": [{ "unit": "some_card", "count": 2 }],
   "perf": {
     "moe": {
       "note": "llama.cpp Vulkan Q4_K_XL, Qwen3.5-35B-A3B",
@@ -72,34 +79,39 @@ Then fill in whatever you have:
 }
 ```
 
-## Builds are compositions, not totals
+`group` sections the tables (`NVIDIA`, `AMD`, `Unified`, `Value`, or a new one).
+`color` must be unique across platforms and builds, and is what identifies the
+device in every chart. The platform's price, power and 96 GB of capacity all
+come from `2 × some_card` — writing any of them on the platform is rejected.
 
-Nothing that can be derived is stored. A build declares the **units** it
-contains; its cost, load draw, and idle draw are summed from them at render
-time. Correct one card's street price and every rig containing it moves.
-
-```json
-"builds": [
-  {
-    "id": "b_3090",
-    "display": { "label": "4× RTX 3090 (96GB)", "short": "4× 3090", "color": "#4fc3f7" },
-    "units": [{ "platform": "rtx3090", "count": 4 }],
-    "host": { "costUsd": 800, "loadW": 90, "idleW": 25, "note": "EPYC chassis + PSU" }
-  }
-]
-```
-
-Reference a `platform` when the unit is one of the benchmarked devices. When it
-is not — a card that appears only inside a rig — describe it inline instead:
+If it is also a box you would buy, add it to `builds`:
 
 ```json
-"units": [{
-  "label": "RTX 3090 24GB",
-  "count": 4,
-  "pricing": { "street": { "usd": 1200, "asOf": "2026-07" } },
-  "power":   { "loadW": 250, "idleW": 40, "confidence": "i" }
-}]
+{
+  "id": "b_someacc",
+  "display": { "label": "Some Accelerator ×2 workstation", "short": "SomeAcc×2", "color": "#7ec8ff" },
+  "units": [{ "platform": "some_platform", "count": 1 }],
+  "host": { "costUsd": 900, "loadW": 80, "idleW": 20, "note": "chassis + PSU" }
+}
 ```
+
+## Why compositions
+
+Nothing that can be derived is stored. Cost, load draw, idle draw and capacity
+are summed from the catalog every time the page renders, so there is no second
+copy to fall out of date.
+
+A build reaches its hardware one of two ways:
+
+```json
+"units": [{ "platform": "v100", "count": 1 }]     // through a benchmarked platform
+"units": [{ "unit": "rtx_3090", "count": 4 }]     // straight from the catalog
+```
+
+Use `platform` when the box is a benchmarked configuration. Use `unit` when the
+hardware appears only inside a rig and was never benchmarked on its own — the
+RTX 3090 and A100 are in the catalog for exactly this reason, with no platform
+record because there is no benchmark data for them.
 
 `host` is for whatever the units do not account for — chassis, CPU, PSU,
 cooling. It exists so the residual stays visible rather than getting smuggled
@@ -107,31 +119,40 @@ into a card price. The four-card PG199 entry is described in its source as
 "~$6,000 + host", and that "+ host" belongs here once someone prices it.
 
 A build with exactly one unit of one platform, and no `decode` of its own,
-inherits that platform's decode rate — one card performs like one card.
+inherits that platform's decode rate — one of a thing performs like that thing.
 Everything else states its own, because a four-card rig does not decode four
-times as fast.
+times as fast as one card.
 
-### `power` is not `hardware.tdpW`
+### Unknown is not zero
+
+If a unit has no street price, the totals that depend on it come out **unknown**
+rather than zero. A silent zero would make a rig look free and infinitely
+efficient, which is worse than a blank. The validator names the unit and the
+missing field.
+
+Only units that a *build* reaches need a price and power figure. A platform that
+exists purely to be benchmarked — a 32GB card that never clears the 96GB bar and
+so never appears in the value tables — is legitimately unpriced. `rtx_5090` and
+`radeon_r9700` are both in that position today.
+
+### `power` is not `tdpW`
 
 `power.loadW` is the draw **observed under LLM inference**, per unit. It is
 deliberately not the datasheet TDP: inference is bandwidth-bound and does not
 reach the compute ceiling, and these cards are routinely power-capped. Summing
 TDPs would overstate a 4× 3090 rig by about 40% and reshuffle the efficiency
-rankings. Keep the datasheet figure in `hardware.tdpW` if you want it recorded;
-nothing derives from it.
+rankings. Keep the datasheet figure in `tdpW` if you want it recorded; nothing
+derives from it.
 
-### A caveat about granularity
+### Platforms are not all the same size
 
-The platform records are not all the same kind of thing. `pro6000`, `rtx5090`,
-`r9700` and `pg199` are single cards; `m3ultra`, `strixhalo` and `dgxspark` are
-whole machines; and `v100` and `b70` are *already* four-card aggregates — their
-labels say "×4" and their benchmarks were run on four cards. So `b_v100` is one
-unit of an already-quadrupled platform, while `b_pg199` is four units of a
-single card.
+`v100` and `b70` are four-card platforms — their labels say "×4" and their
+benchmarks were run on four cards — so their `composition` is `count: 4` of a
+single card, and the builds that contain them are `count: 1` of the platform.
+`pg199` is a single card, so its build is `count: 4` of the platform.
 
-That inconsistency is inherited, not introduced, and the composition model
-works either way — if `v100` is ever split into a single-card record, its build
-becomes `count: 4` and the totals stay correct.
+Both spellings give the same totals. What matters is that the card is the thing
+with a price, and the multiplication happens in exactly one place.
 
 ## Measurements and confidence
 
@@ -174,12 +195,13 @@ gaps.
 { "tokens": 262144, "label": "256K" }
 ```
 
-**A precision** — add a key under `hardware.compute.values`. A column appears in
-the specifications table automatically. Suffix with `:sparse` for
+**A precision** — add a key under a unit's `compute.values`. A column appears in
+the hardware catalog table automatically. Suffix with `:sparse` for
 structured-sparsity figures.
 
-**A price kind** — add a key under `pricing`. `msrp` and `street` are rendered
-today; anything else is stored and ignored until something renders it.
+**A price kind** — add a key under a unit's `pricing`. `msrp` and `street` are
+rendered today, and `street` is what build costs are summed from; anything else
+is stored and ignored until something renders it.
 
 **A model archetype** — add it to `meta.archetypes`, then add a matching key
 under each device's `perf`. Note that the archetype toggle buttons and the

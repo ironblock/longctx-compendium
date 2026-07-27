@@ -84,39 +84,81 @@ export function normalize(doc) {
     }
   }
 
-  // A build is a purchasable box, expressed as the units it is made of. Its
-  // cost and power draw are summed from those units rather than stored, so
-  // correcting a card's street price corrects every rig containing it.
+  // Cost, power and capacity are summed from the hardware catalog rather than
+  // stored, so correcting one card's street price corrects every platform and
+  // every rig that contains it.
+  const unitById = Object.fromEntries((doc.units ?? []).map(u => [u.id, u]));
   const platformById = Object.fromEntries(doc.platforms.map(p => [p.id, p]));
+  const TOTALLED = ['costUsd', 'loadW', 'idleW', 'memoryGB'];
 
-  const resolveUnit = (u, buildId) => {
-    const src = u.platform ? platformById[u.platform] : u;
-    if (u.platform && !src) {
-      throw new Error(`build "${buildId}" references unknown platform "${u.platform}"`);
+  /**
+   * Adds contributions, but only where every contributor knows its value. One
+   * unpriced card makes the whole total unknown rather than making the rig look
+   * free -- a silent zero here would read as "infinitely efficient".
+   */
+  function sum(parts) {
+    const out = {};
+    for (const key of TOTALLED) {
+      out[key] = parts.some(p => p[key] == null)
+        ? null
+        : parts.reduce((n, p) => n + p[key], 0);
     }
-    return {
-      count: u.count ?? 1,
-      costUsd: src.pricing?.street?.usd,
-      loadW: src.power?.loadW,
-      idleW: src.power?.idleW,
-    };
-  };
+    return out;
+  }
+
+  const scale = (t, n) =>
+    Object.fromEntries(TOTALLED.map(k => [k, t[k] == null ? null : t[k] * n]));
+
+  function unitTotals(id, count, at) {
+    const u = unitById[id];
+    if (!u) throw new Error(`${at} references unknown unit "${id}"`);
+    return scale(
+      {
+        costUsd: u.pricing?.street?.usd ?? null,
+        loadW: u.power?.loadW ?? null,
+        idleW: u.power?.idleW ?? null,
+        memoryGB: u.memoryGB ?? null,
+      },
+      count
+    );
+  }
+
+  const platformTotals = p =>
+    sum((p.composition ?? []).map(c => unitTotals(c.unit, c.count ?? 1, `platform "${p.id}"`)));
+
+  // Cached because builds resolve through platforms and several share one.
+  const platformSpec = Object.fromEntries(doc.platforms.map(p => [p.id, platformTotals(p)]));
 
   const BUILDS = (doc.builds ?? []).map(b => {
-    const units = (b.units ?? []).map(u => resolveUnit(u, b.id));
-    // Anything the units do not account for -- chassis, CPU, cooling -- goes in
-    // host, so the residual is visible instead of smuggled into a card price.
-    const total = key =>
-      units.reduce((n, u) => n + (u[key] == null ? 0 : u.count * u[key]), 0) + (b.host?.[key] ?? 0);
+    const parts = (b.units ?? []).map(u => {
+      const count = u.count ?? 1;
+      if (!u.platform) return unitTotals(u.unit, count, `build "${b.id}"`);
+      if (!platformById[u.platform]) {
+        throw new Error(`build "${b.id}" references unknown platform "${u.platform}"`);
+      }
+      return scale(platformSpec[u.platform], count);
+    });
+    // Anything the units do not account for -- chassis, CPU, PSU, cooling --
+    // goes in host, so the residual stays visible.
+    if (b.host) {
+      parts.push({
+        costUsd: b.host.costUsd ?? 0,
+        loadW: b.host.loadW ?? 0,
+        idleW: b.host.idleW ?? 0,
+        memoryGB: 0,
+      });
+    }
+    const totals = sum(parts);
 
     const rec = {
       id: b.id,
       label: b.display.label,
       short: b.display.short,
       color: b.display.color,
-      cost: total('costUsd'),
-      loadW: total('loadW'),
-      idleW: total('idleW'),
+      cost: totals.costUsd,
+      loadW: totals.loadW,
+      idleW: totals.idleW,
+      memoryGB: totals.memoryGB,
     };
 
     // One unit of one platform performs exactly like that platform, so its
@@ -142,6 +184,10 @@ export function normalize(doc) {
     PP,
     TG,
     BUILDS,
+    UNITS: doc.units ?? [],
+    // Capacity, price and draw for each benchmarked configuration, summed from
+    // the units it is made of.
+    PLATFORM_SPEC: platformSpec,
     ARCHETYPES: doc.meta.archetypes,
     ARCH_DESC: Object.fromEntries(doc.meta.archetypes.map(a => [a.id, a.desc])),
     KWH: doc.meta.electricityUsdPerKwh,
