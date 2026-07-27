@@ -161,14 +161,17 @@ async function withPatchedData(patch) {
 {
   const { p, errs } = await withPatchedData(doc => {
     const t = doc.units.find(x => x.id === 'rtx_pro_6000');
-    t.compute.values.fp4 = 1234;
-    t.released = '2025-04';
+    // A precision the catalog has never seen and the renderer has no ordering
+    // rule for -- the real extensibility case, not one that already has a column.
+    t.compute.values.fp6 = 1234;
     t.pricing.msrp = { usd: 8565, asOf: '2025-04' };
   });
   const heads = await p.locator('#specTable thead th').allTextContents();
-  check('new precision key grows a column', heads.includes('FP4'), heads.join(','));
+  check('unknown precision key grows a column', heads.includes('FP6'), heads.join(','));
   check('injected rated throughput renders', (await p.locator('#specTable tbody').textContent()).includes('1234'));
   check('injected MSRP renders', (await p.locator('#specTable tbody').textContent()).includes('$8,565'));
+  // Sparsity figures pair into their dense column instead of doubling the width.
+  check('sparse figure renders beside its dense twin', (await p.locator('#specTable tbody').textContent()).includes('3352 sp'), 'expected the 5090 FP4 sparse rate');
   check('extensibility patch caused no errors', errs.length === 0, errs.join(' | '));
   await p.close();
 }

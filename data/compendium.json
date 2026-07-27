@@ -42,13 +42,41 @@
       "memoryGB": 96,
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "values": {
+          "fp32": 125,
+          "fp16": 500,
+          "fp16:sparse": 1000,
+          "bf16:sparse": 1000,
+          "fp8": 1000,
+          "fp8:sparse": 2000,
+          "fp4:sparse": 4000,
+          "int8": 1000
+        },
+        "source": "https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-6000/"
       },
       "pricing": {
-        "street": {"usd":8500,"asOf":"2026-07"}
+        "street": {"usd":8500,"asOf":"2026-07"},
+        "msrp": {"usd":8565,"asOf":"2025"}
       },
-      "power": {"loadW":400,"idleW":50,"confidence":"i"}
+      "power": {"loadW":400,"idleW":50,"confidence":"i"},
+      "released": "2025-03",
+      "memoryBandwidthGBs": 1792,
+      "tdpW": 600,
+      "process": "TSMC 4N (4 nm class)",
+      "sources": [
+        "https://boston.co.uk/content-hub/unveiling-the-nvidia-rtx-pro-6000-blackwell-a-workstation-powerhouse-from-gtc-2025/",
+        "https://global.microless.com/product/nvidia-rtx-pro-6000-blackwell-workstation-edition-graphics-card-96gb-gddr7-with-ecc-512-bit-memory-1792-gb-s-memory-bandwidth-24064-cuda-cores-pcie-5-0-x16-black-rtx-pro-6000/",
+        "https://www.centralcomputer.com/pny-nvrtxpro6000tcgpu-kit-nvidia-rtx-pro-6000-96gb-gddr7-24064-cuda-cores-pci-express-5-0-x16-600w-blackwell-server-edition.html",
+        "https://videocardz.net/nvidia-rtx-pro-6000-blackwell-server-edition",
+        "https://www.tomshardware.com/pc-components/gpus/nvidia-rtx-pro-6000-blackwell-gpu-is-listed-for-usd8-565-at-us-retailer-26-percent-more-expensive-than-the-last-gen-rtx-6000-ada",
+        "https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-6000/",
+        "https://www.storagereview.com/review/nvidia-rtx-pro-6000-workstation-gpu-review-blackwell-architecture-and-96-gb-for-pro-workflows",
+        "https://www.nvidia.com/en-us/data-center/rtx-pro-6000-blackwell-server-edition/",
+        "https://lenovopress.lenovo.com/lp2263-thinksystem-nvidia-rtx-pro-6000-blackwell-server-edition-pcie-gen5-gpu",
+        "https://gpupoet.com/gpu/learn/card/nvidia-rtx-pro-6000-blackwell-server"
+      ],
+      "note": "The 234 TFLOPS TF32 figure found is a Server Edition number; this record describes the 600 W Workstation Edition."
     },
     {
       "id": "rtx_5090",
@@ -57,10 +85,40 @@
       "memoryGB": 32,
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "values": {
+          "fp32": 104.8,
+          "fp64": 1.64,
+          "fp16": 419,
+          "fp16:sparse": 838,
+          "bf16": 209.5,
+          "bf16:sparse": 419,
+          "fp8": 838,
+          "fp8:sparse": 1676,
+          "fp4": 1676,
+          "fp4:sparse": 3352,
+          "int8": 838,
+          "int8:sparse": 1676
+        },
+        "source": "https://www.runpod.io/articles/guides/nvidia-rtx-5090"
       },
-      "pricing": {}
+      "pricing": {
+        "msrp": {"usd":1999,"asOf":"2025-01"}
+      },
+      "released": "2025-01",
+      "memoryBandwidthGBs": 1792,
+      "tdpW": 575,
+      "process": "TSMC 4N (NVIDIA custom, N5/4nm-class)",
+      "sources": [
+        "https://www.pcgamesn.com/nvidia/geforce-rtx-5090-guide",
+        "https://www.spheron.network/blog/nvidia-rtx-5090-specs/",
+        "https://www.techpowerup.com/330459/nvidia-geforce-rtx-5090-features-575-w-tdp-rtx-5080-carries-360-w-tdp",
+        "https://images.nvidia.com/aem-dam/Solutions/geforce/blackwell/nvidia-rtx-blackwell-gpu-architecture.pdf",
+        "https://www.runpod.io/articles/guides/nvidia-rtx-5090",
+        "https://forums.developer.nvidia.com/t/rtx-5090-specs-fp16-tensor-tflops-is-ambiguous/351063",
+        "https://news.ycombinator.com/item?id=44997957",
+        "https://forums.developer.nvidia.com/t/rtx-5090-peak-bf16-tensor-tflops/350543"
+      ]
     },
     {
       "id": "radeon_r9700",
@@ -69,10 +127,38 @@
       "memoryGB": 32,
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "values": {
+          "fp32": 47.8,
+          "fp16": 191.4,
+          "fp16:sparse": 382.7,
+          "bf16": 191.4,
+          "fp8": 382.7,
+          "fp8:sparse": 765.5,
+          "int8": 382.7,
+          "int8:sparse": 765.5,
+          "int4": 765.5,
+          "int4:sparse": 1531
+        },
+        "source": "https://www.gigabyte.com/us/Graphics-Card/GV-R9700AI-TOP-32GD-rev-10/sp"
       },
-      "pricing": {}
+      "pricing": {
+        "msrp": {"usd":1299,"asOf":"2025-10"}
+      },
+      "released": "2025-07",
+      "memoryBandwidthGBs": 640,
+      "tdpW": 300,
+      "process": "TSMC N4P (4nm)",
+      "sources": [
+        "https://videocardz.com/newz/amd-radeon-ai-pro-r9700-launches-july-23-diy-availability-in-the-coming-weeks",
+        "https://www.amd.com/content/dam/amd/en/documents/partner-hub/radeon-pro/radeon-ai-pro-r9700-datasheet.pdf",
+        "https://www.gigabyte.com/us/Graphics-Card/GV-R9700AI-TOP-32GD-rev-10/sp",
+        "https://wccftech.com/amd-radeon-ai-pro-r9700-gpu-32-gb-vram-128-ai-cores-300w-2x-faster-deepseek-r1/",
+        "https://www.geeks3d.com/20250521/amd-radeon-ai-pro-r9700-announced-32gb-vram-300w/",
+        "https://www.techpowerup.com/342203/amd-radeon-ai-pro-r9700-gpu-arrives-october-27-at-usd-1-299-for-retail",
+        "https://wccftech.com/amd-radeon-ai-pro-r9700-gpu-4x-more-tops-2x-ai-performance-vs-radeon-pro-w7800/",
+        "https://www.asus.com/motherboards-components/graphics-cards/turbo/turbo-ai-pro-r9700-32g/techspec/"
+      ]
     },
     {
       "id": "dgx_spark",
@@ -80,16 +166,33 @@
       "vendor": "NVIDIA",
       "memoryGB": 128,
       "memoryBandwidthGBs": 273,
-      "sources": ["inherited from this page's own Method note (gb10 community, 273 GB/s shared SoC bandwidth) — not independently sourced"],
+      "sources": [
+        "inherited from this page's own Method note (gb10 community, 273 GB/s shared SoC bandwidth) — not independently sourced",
+        "https://www.tomshardware.com/desktops/mini-pcs/nvidias-dgx-spark-ai-mini-pc-goes-up-for-sale-october-15-1-petaflop-developer-platform-was-originally-slated-for-may",
+        "https://docs.nvidia.com/dgx/dgx-spark/hardware.html",
+        "https://forums.developer.nvidia.com/t/dgx-spark-power-clarification/349668",
+        "https://www.techinsights.com/blog/nvidia-gb10-superchip-dgx-spark-floorplan-analysis",
+        "https://www.tomshardware.com/desktops/mini-pcs/nvidia-dgx-spark-gets-18-percent-price-increase-as-memory-shortages-bite-founders-edition-now-usd4-699-up-from-usd3-999",
+        "https://www.constellationr.com/insights/news/nvidia-dgx-spark-now-available-3999-real-impact-will-be-ai-edge",
+        "https://www.nvidia.com/en-us/products/workstations/dgx-spark/",
+        "https://forums.developer.nvidia.com/t/gb10-really-does-hit-1-pflop-nvfp4-2-4-sparse-measured-with-an-open-source-tool-to-reproduce-it/373618",
+        "https://www.servethehome.com/nvidia-outlines-gb10-soc-architecture-at-hot-chips-2025/",
+        "https://www.techpowerup.com/342321/nvidia-dgx-spark-reportedly-runs-at-half-the-power-and-performance"
+      ],
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "values": {"fp4:sparse":1000,"fp4":500,"fp32":31,"bf16":125},
+        "source": "https://www.nvidia.com/en-us/products/workstations/dgx-spark/"
       },
       "pricing": {
-        "street": {"usd":4699,"asOf":"2026-07"}
+        "street": {"usd":4699,"asOf":"2026-07"},
+        "msrp": {"usd":3999,"asOf":"2025-10"}
       },
-      "power": {"loadW":240,"idleW":50,"confidence":"i"}
+      "power": {"loadW":240,"idleW":50,"confidence":"i"},
+      "released": "2025-10",
+      "tdpW": 240,
+      "process": "TSMC 3nm (N3E)"
     },
     {
       "id": "mac_m3_ultra",
@@ -98,13 +201,27 @@
       "memoryGB": 96,
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "values": {"fp32":21.5},
+        "source": "https://www.eatyourbytes.com/applecpu-detail/apple-m3-ultra-60-core-gpu/"
       },
       "pricing": {
-        "street": {"usd":3600,"asOf":"2026-07"}
+        "street": {"usd":3600,"asOf":"2026-07"},
+        "msrp": {"usd":3999,"asOf":"2025-03"}
       },
-      "power": {"loadW":150,"idleW":20,"confidence":"i"}
+      "power": {"loadW":150,"idleW":20,"confidence":"i"},
+      "released": "2025-03",
+      "memoryBandwidthGBs": 819,
+      "process": "TSMC N3B (3 nm)",
+      "sources": [
+        "https://9to5mac.com/2025/03/05/apple-launches-new-mac-studio-with-m4-max-and-m3-ultra-configs-more/",
+        "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/",
+        "https://www.cpu-monkey.com/en/cpu-apple_m3_ultra_28_cpu_60_gpu",
+        "https://lowendmac.com/1234/apple-silicon-m3-ultra-chip-specs/",
+        "https://www.iclarified.com/p624/mac-studio-m3-ultra-28core-cpu-60core-gpu-96gb-ram-1tb-ssd",
+        "https://www.eatyourbytes.com/applecpu-detail/apple-m3-ultra-60-core-gpu/"
+      ],
+      "note": "Apple publishes 480 W 'maximum continuous power' for the Mac Studio — a PSU rating for the whole machine, not a GPU TDP."
     },
     {
       "id": "strix_halo",
@@ -113,13 +230,25 @@
       "memoryGB": 128,
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "values": {"fp32":14.85,"fp16":59.4,"bf16":59.4},
+        "source": "https://chipversus.com/hardware/gpu/radeon-8060s"
       },
       "pricing": {
         "street": {"usd":2566,"asOf":"2026-07"}
       },
-      "power": {"loadW":140,"idleW":15,"confidence":"i"}
+      "power": {"loadW":140,"idleW":15,"confidence":"i"},
+      "released": "2025-01",
+      "memoryBandwidthGBs": 256,
+      "process": "TSMC 4nm (N4P CCDs, N4 SoC/IO die)",
+      "sources": [
+        "https://www.techpowerup.com/330548/amd-debuts-ryzen-ai-max-series-strix-halo-soc-up-to-16-zen-5-cores-massive-igpu",
+        "https://www.amd.com/en/products/processors/laptop/ryzen/ai-300-series/amd-ryzen-ai-max-plus-395.html",
+        "https://www.techpowerup.com/332745/amd-ryzen-ai-max-strix-halo-die-exposed-and-annotated",
+        "https://chipversus.com/hardware/gpu/radeon-8060s",
+        "https://llm-tracker.info/AMD-Strix-Halo-(Ryzen-AI-Max+-395)-GPU-Performance"
+      ],
+      "note": "AMD default TDP is 55 W, configurable 45–120 W; the figure here would sit beside a 140 W observed inference draw and read as a contradiction, so it is left blank. The $1,999 figure circulating for this part is a Framework Desktop system price, not a chip MSRP; AMD publishes none. The widely-quoted 50 TOPS INT8 belongs to the XDNA 2 NPU, a different engine from the Radeon 8060S iGPU the other figures describe."
     },
     {
       "id": "pg199_card",

@@ -160,9 +160,20 @@ export function renderValueTable(model, state) {
 //
 // Columns for rated throughput are discovered from the data: add a precision
 // key to any unit's compute.values and a column appears with no code change.
+// Widest-to-narrowest, so the columns read the way a datasheet does.
+const PRECISION_ORDER = ['fp64', 'fp32', 'tf32', 'bf16', 'fp16', 'fp8', 'fp4', 'int8', 'int4'];
+
 export function renderSpecTable(model) {
   const units = model.UNITS;
-  const precisions = [...new Set(units.flatMap(u => Object.keys(u.compute?.values ?? {})))];
+
+  // A sparsity figure is always exactly twice its dense counterpart, so giving
+  // each its own column doubles the width to say nothing. Pair them in one cell
+  // and the table stays readable.
+  const seen = new Set(units.flatMap(u => Object.keys(u.compute?.values ?? {})));
+  const precisions = [
+    ...PRECISION_ORDER.filter(p => seen.has(p) || seen.has(`${p}:sparse`)),
+    ...[...seen].map(k => k.replace(':sparse', '')).filter(p => !PRECISION_ORDER.includes(p)),
+  ].filter((p, i, a) => a.indexOf(p) === i);
 
   document.querySelector('#specTable thead tr').innerHTML =
     '<th class="lbl" style="min-width:190px">Unit</th>' +
@@ -177,6 +188,18 @@ export function renderSpecTable(model) {
   const num = v => (v == null ? dash : `<td class="num">${v}</td>`);
   const usd = m => (m?.usd == null ? dash : `<td class="num">$${m.usd.toLocaleString()}</td>`);
 
+  /** Dense figure, with its structured-sparsity twin dimmed beneath it. */
+  const throughput = (values, p) => {
+    const dense = values?.[p];
+    const sparse = values?.[`${p}:sparse`];
+    if (dense == null && sparse == null) return dash;
+    return (
+      `<td class="num">${dense ?? '—'}` +
+      (sparse == null ? '' : `<span style="display:block;font-size:10px;color:var(--dim)">${sparse} sp</span>`) +
+      '</td>'
+    );
+  };
+
   // Where each unit is used, so the catalog explains itself.
   const usage = {};
   for (const p of model.raw.platforms) {
@@ -190,7 +213,7 @@ export function renderSpecTable(model) {
     }
   }
 
-  const colspan = 11 + precisions.length;
+  const colspan = 10 + precisions.length;
   for (const vendor of [...new Set(units.map(u => u.vendor ?? 'Other'))]) {
     const gr = document.createElement('tr');
     gr.innerHTML = groupRow(colspan, vendor);
@@ -207,7 +230,7 @@ export function renderSpecTable(model) {
         num(u.tdpW) +
         num(u.power?.loadW) +
         num(u.power?.idleW) +
-        precisions.map(x => num(u.compute?.values?.[x])).join('') +
+        precisions.map(x => throughput(u.compute?.values, x)).join('') +
         usd(u.pricing?.msrp) +
         usd(u.pricing?.street) +
         `<td class="lbl" style="white-space:normal;max-width:200px"><span style="font-size:11px;color:var(--dim)">${(usage[u.id] ?? []).join(' · ') || '—'}</span></td>`;
@@ -216,6 +239,6 @@ export function renderSpecTable(model) {
   }
 
   el('specUnits').textContent = precisions.length
-    ? `Rated throughput in ${units.find(u => u.compute?.unit)?.compute.unit ?? 'Tops'} (10¹² ops/sec), dense unless the key says :sparse. Load and idle watts are per unit, observed under inference — not datasheet TDP. Blank cells are untranscribed, not zero.`
+    ? `Rated throughput in 10¹² ops/sec. Large figure is dense; the dimmed "sp" beneath it is the 2:4 structured-sparsity rate, which vendors often quote unlabelled. Load and idle watts are per unit, observed under inference — not the datasheet TDP beside them. Blank cells are untranscribed, not zero.`
     : 'No rated-throughput figures transcribed yet — add compute.values to any unit in data/compendium.json and a column appears here automatically. Load and idle watts are per unit, observed under inference, not datasheet TDP.';
 }
