@@ -286,13 +286,19 @@
       "memoryGB": 32,
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "source": "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
+        "values": {"fp64":7.45,"fp32":14.9,"fp16":119.2}
       },
       "pricing": {
         "street": {"usd":1000,"asOf":"2026-07"}
       },
-      "power": {"loadW":125,"idleW":40,"confidence":"i"}
+      "power": {"loadW":125,"idleW":40,"confidence":"i"},
+      "released": "2017-05",
+      "memoryBandwidthGBs": 900,
+      "tdpW": 300,
+      "sources": ["https://en.wikipedia.org/wiki/Template:Nvidia_Tesla"],
+      "note": "The Tesla table gives one row for the 16 GB and 32 GB SXM2 parts; clocks, bandwidth and throughput are identical across both, so only the capacity differs. FP16 is the tensor-core rate with FP32 accumulate — Volta has no structured-sparsity path."
     },
     {
       "id": "rtx_3090",
@@ -316,13 +322,110 @@
       "memoryGB": 80,
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "source": "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
+        "values": {"fp64":9.7,"fp32":19.5,"fp16":312}
       },
       "pricing": {
         "street": {"usd":8000,"asOf":"2026-07"}
       },
-      "power": {"loadW":300,"idleW":50,"confidence":"i"}
+      "power": {"loadW":300,"idleW":50,"confidence":"i"},
+      "sources": ["https://en.wikipedia.org/wiki/Template:Nvidia_Tesla"],
+      "note": "The Tesla table collapses the 40 GB and 80 GB PCIe cards into one row. Its 1555 GB/s, 250 W and May-2020 launch all describe the 40 GB HBM2 part; the 80 GB HBM2e card differs on all three, so those fields are deliberately left unset here. The compute figures are shared — same GA100 die and clocks — so they are taken."
+    },
+    {
+      "id": "h100_sxm",
+      "label": "H100 SXM 80GB",
+      "vendor": "NVIDIA",
+      "released": "2022-03",
+      "memoryGB": 80,
+      "memoryBandwidthGBs": 3352,
+      "tdpW": 700,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "source": "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
+        "values": {"fp64":33.5,"fp32":66.9,"fp16":989.4}
+      },
+      "pricing": {},
+      "sources": ["https://en.wikipedia.org/wiki/Template:Nvidia_Tesla"],
+      "note": "Reference only — no benchmarks on this page. The Tesla row lists 64/80/96 GB variants; 80 GB is the common one."
+    },
+    {
+      "id": "h100_pcie",
+      "label": "H100 PCIe 80GB",
+      "vendor": "NVIDIA",
+      "released": "2022-03",
+      "memoryGB": 80,
+      "memoryBandwidthGBs": 2039,
+      "tdpW": 350,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "source": "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
+        "values": {"fp64":25.6,"fp32":51.2,"fp16":756.4}
+      },
+      "pricing": {},
+      "sources": ["https://en.wikipedia.org/wiki/Template:Nvidia_Tesla"],
+      "note": "Reference only — no benchmarks on this page. HBM2E rather than the SXM card's HBM3, which is most of the bandwidth gap."
+    },
+    {
+      "id": "mi300x",
+      "label": "AMD Instinct MI300X 192GB",
+      "vendor": "AMD",
+      "released": "2023-12",
+      "memoryGB": 192,
+      "memoryBandwidthGBs": 5300,
+      "tdpW": 750,
+      "process": "TSMC 6 & 5 nm",
+      "compute": {
+        "unit": "Tops",
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "source": "https://en.wikipedia.org/wiki/AMD_Instinct",
+        "values": {
+          "fp64": 81.7,
+          "fp32": 163.4,
+          "bf16": 1307.4,
+          "bf16:sparse": 2614.9,
+          "fp16": 1307.4,
+          "fp16:sparse": 2614.9,
+          "int8": 2614.9,
+          "int8:sparse": 5229.8
+        }
+      },
+      "pricing": {},
+      "sources": ["https://en.wikipedia.org/wiki/AMD_Instinct"],
+      "note": "Reference only — no benchmarks on this page. 192 GB in one OAM module clears gpt-oss-120B without a multi-card split. TBP rather than TDP in AMD's wording."
+    },
+    {
+      "id": "mi355x",
+      "label": "AMD Instinct MI355X 288GB",
+      "vendor": "AMD",
+      "released": "2025-06",
+      "memoryGB": 288,
+      "memoryBandwidthGBs": 8000,
+      "tdpW": 1400,
+      "process": "TSMC 3 nm",
+      "compute": {
+        "unit": "Tops",
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "source": "https://en.wikipedia.org/wiki/AMD_Instinct",
+        "values": {
+          "fp64": 78.6,
+          "fp32": 157.3,
+          "bf16": 2516.6,
+          "bf16:sparse": 5033.2,
+          "fp16": 2516.6,
+          "fp16:sparse": 5033.2,
+          "int8": 5033.2,
+          "int8:sparse": 10066,
+          "int4": 5033.2,
+          "int4:sparse": 10066
+        }
+      },
+      "pricing": {},
+      "sources": ["https://en.wikipedia.org/wiki/AMD_Instinct"],
+      "note": "Reference only — no benchmarks on this page. The Instinct table spans INT8 and INT4 with one figure (5.0332 POPS), so both are recorded at that rate."
     }
   ],
   "platforms": [

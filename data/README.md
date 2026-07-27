@@ -171,6 +171,12 @@ specification with a real-looking citation is worse than a blank cell: it
 launders a guess into a fact. If you cannot say where a figure came from, leave
 it out. `tools/coverage.mjs` will keep reminding you it is missing.
 
+A `note` on the unit is the right home for a figure that is real but measures
+something other than the column offered for it — a system PSU rating quoted as a
+GPU TDP, a Server Edition number on a Workstation record, an NPU throughput
+beside iGPU figures. Recording it in prose loses nothing and keeps the column
+honest.
+
 An entry may name something other than a URL when that is the truth —
 `dgx_spark` currently reads "inherited from this page's own Method note … not
 independently sourced", which is honest in a way that citing NVIDIA would not
@@ -229,6 +235,16 @@ is stored and ignored until something renders it.
 under each device's `perf`. Note that the archetype toggle buttons and the
 value-section anchors are still spelled out in `index.html`, so a fourth
 archetype needs a button added there too.
+
+## Reference units
+
+A catalog entry does not have to be in anything. `h100_sxm`, `h100_pcie`,
+`mi300x` and `mi355x` are recorded so the 96–128 GB class has something to be
+measured against; none has a platform or a build, and none has benchmarks on
+this page. The validator warns about them, which is correct — an unused unit is
+worth mentioning and not worth blocking.
+
+Their `note` says "Reference only" and their "Used in" cell renders empty.
 
 ## Devices that cannot run something
 

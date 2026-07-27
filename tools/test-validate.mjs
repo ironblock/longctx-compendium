@@ -61,8 +61,10 @@ const CASES = [
   ['build entry naming both a platform and a unit', 'pick one', d => {
     build(d, 'b_pro').units[0].unit = 'rtx_pro_6000';
   }],
+  // rtx_3090 is deliberately still unsourced; picking an already-sourced unit
+  // here would make this case pass without exercising the rule.
   ['specs with no source', 'no sources[]', d => {
-    unit(d, 'rtx_5090').tdpW = 575;
+    unit(d, 'rtx_3090').tdpW = 350;
   }],
   ['build cost stored instead of derived', 'unknown property', d => {
     build(d, 'b_pro').buildCostUsd = 8500;

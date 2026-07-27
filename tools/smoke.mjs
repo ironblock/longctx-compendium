@@ -97,8 +97,8 @@ for (const id of ['cMeasured', 'cExtrap', 'cModeled', 'cArch']) {
 // 9 platforms x 3 archetypes + 4 group header rows.
 check('prefill table rows', (await count('#ppTable tbody tr')) === 31, `got ${await count('#ppTable tbody tr')}`);
 check('decode table rows', (await count('#tgTable tbody tr')) === 13, `got ${await count('#tgTable tbody tr')}`);
-// 11 catalog units + 4 vendor group headers
-check('spec table rows', (await count('#specTable tbody tr')) === 15, `got ${await count('#specTable tbody tr')}`);
+// 15 catalog units + 4 vendor group headers
+check('spec table rows', (await count('#specTable tbody tr')) === 19, `got ${await count('#specTable tbody tr')}`);
 check('value table rows', (await count('#valTable tbody tr')) === 9, `got ${await count('#valTable tbody tr')}`);
 check('legend entries', (await count('#pleg span')) >= 9);
 check('verdict rendered', (await text('#verdict')).length > 80);
@@ -188,6 +188,9 @@ async function withPatchedData(patch) {
   check('minimal device appears in the legend', (await p.locator('#pleg').textContent()).includes('NewThing'));
   check('minimal device appears in the prefill table', (await p.locator('#ppTable tbody').textContent()).includes('NewThing'));
   check('minimal device renders em dashes', (await p.locator('#ppTable tbody tr').count()) === 34);
+  // A reference unit has no build behind it, so its "Used in" cell is empty
+  // rather than the row being dropped.
+  check('reference units appear in the catalog', (await p.locator('#specTable tbody').textContent()).includes('MI355X'));
   await p.close();
 }
 
