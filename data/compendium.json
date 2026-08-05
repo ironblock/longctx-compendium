@@ -362,7 +362,8 @@
       "power": {
         "loadW": 62.5,
         "idleW": 25,
-        "confidence": "i"
+        "confidence": "i",
+        "note": "Modeled single-card Q4 estimate. Measured FP16 TP=4 draw (Puget, 4-card aggregate, primary/m) runs 328-632W total under load \u2014 see puget_arc_b70_fp16_measurements. Different precision/topology, not directly substitutable for this per-card figure."
       }
     },
     {
@@ -1792,7 +1793,8 @@
         "falloff_percent": -7,
         "falloff_rating": "flat",
         "ttft_32k": "~22s",
-        "quant": "Q5_K_M"
+        "quant": "Q5_K_M",
+        "confidence": "m~"
       },
       {
         "architecture": "Gated DeltaNet hybrid",
@@ -1802,7 +1804,8 @@
         "falloff_percent": -11,
         "falloff_rating": "flat",
         "ttft_32k": "~63s",
-        "quant": "UD-IQ1_M"
+        "quant": "UD-IQ1_M",
+        "confidence": "m~"
       },
       {
         "architecture": "Full-attention MoE",
@@ -1812,7 +1815,8 @@
         "falloff_percent": -18,
         "falloff_rating": "quadratic",
         "ttft_32k": "~44s",
-        "quant": "Q4_K_M"
+        "quant": "Q4_K_M",
+        "confidence": "m~"
       },
       {
         "architecture": "Full-attention sparse (GLM-4.7-Flash)",
@@ -1822,7 +1826,8 @@
         "falloff_percent": -64,
         "falloff_rating": "wall",
         "ttft_32k": "~75s",
-        "quant": "Q4_K_M"
+        "quant": "Q4_K_M",
+        "confidence": "m~"
       },
       {
         "architecture": "Dense full-attention",
@@ -1832,30 +1837,35 @@
         "falloff_percent": -27,
         "falloff_rating": "quadratic",
         "ttft_32k": "~46s",
-        "quant": "Q4_K_M"
+        "quant": "Q4_K_M",
+        "confidence": "m~"
       }
-    ]
+    ],
+    "source": "r/localLLaMA \u2014 single-user anecdata, screenshots only (V100-SXM2-32GB); permalink pending"
   },
   "kv_cache_quantization": {
     "description": "Impact of KV-cache quantization on decode performance (32GB single-card constraint)",
     "finding": "Dense models suffer most; MoE/linear sidestep it due to smaller KV cache",
     "examples": [
       {
-        "model": "Qwen3.5-40B-Claude-4.5-Opus",
+        "model": "Dense ~40B (HF distill of Opus reasoning traces; exact checkpoint unspecified in source)",
         "kv_cache_bf16": 22,
         "kv_cache_q4_0": 17,
         "degradation_percent": -23,
         "quant": "Q4_K_M",
-        "note": "Dense 40B particularly sensitive"
+        "note": "Dense 40B particularly sensitive",
+        "confidence": "m~"
       },
       {
         "model": "Qwen3.5-27B",
         "kv_cache_bf16": 33,
         "kv_cache_q4_0": 24,
         "degradation_percent": -27,
-        "quant": "Q4_K_M"
+        "quant": "Q4_K_M",
+        "confidence": "m~"
       }
-    ]
+    ],
+    "source": "r/localLLaMA \u2014 single-user anecdata, screenshots only (V100-SXM2-32GB); permalink pending"
   },
   "llama_cpp_sycl_tensor_parallel": {
     "description": "llama.cpp SYCL --split-mode tensor for Intel Arc multi-GPU (merged Jun 25 2026)",
@@ -1869,7 +1879,9 @@
         "pp_512_improvement": "+20%",
         "tg_layer_split": 9.74,
         "tg_tensor_split": 17.4,
-        "tg_improvement": "+78.6%"
+        "tg_improvement": "+78.6%",
+        "confidence": "m~",
+        "confidence_note": "author's own numbers, cross-checked"
       },
       {
         "config": "2\u00d7 Arc Pro B70",
@@ -1877,29 +1889,39 @@
         "pp_512": 217,
         "tg_layer_split": 14.3,
         "tg_tensor_split": 17.6,
-        "tg_improvement": "+23.0%"
+        "tg_improvement": "+23.0%",
+        "confidence": "m~",
+        "confidence_note": "author's own numbers, cross-checked",
+        "pp_512_improvement": "+38.3%"
       },
       {
         "config": "2\u00d7 Arc B580 (12GB each)",
         "model": "Qwen3.5-9B \u00b7 Q4_K_M",
         "pp_512": 582,
-        "tg": 40.8
+        "tg": 40.8,
+        "confidence": "m~",
+        "confidence_note": "corroborating commenter, single-read (lower trust)"
       },
       {
         "config": "2\u00d7 Arc B580 (12GB each)",
         "model": "Qwen3.5-27B \u00b7 Q6_K",
         "pp_512": 205,
         "tg": 16.0,
-        "note": "~flat vs layer-split"
+        "note": "~flat vs layer-split",
+        "confidence": "m~",
+        "confidence_note": "corroborating commenter, single-read (lower trust)"
       },
       {
         "config": "B70 + B580 (heterogeneous)",
         "model": "Gemma-4-31B \u00b7 Q4_K_XL",
         "pp_512": 755,
         "tg": 32.5,
-        "note": "Balanced split; 3:1 split hurt"
+        "note": "Balanced split; 3:1 split hurt",
+        "confidence": "m~",
+        "confidence_note": "corroborating commenter, single-read (lower trust)"
       }
-    ]
+    ],
+    "source": "https://github.com/ggml-org/llama.cpp/pull/24152 (\"Sycl --split-mode tensor\", merged 2026-06-25)"
   },
   "puget_arc_b70_fp16_measurements": {
     "description": "4\u00d7 Arc Pro B70 (32GB each, 128GB total) multi-GPU measurement \u2014 FP16, vLLM TP=4",
@@ -1922,7 +1944,8 @@
         "single_card_tps": 72.9,
         "four_card_tps": 62.6,
         "eight_concurrent_tps": 410,
-        "note": "Sharding hurts on small models; run on 1 card"
+        "note": "Sharding hurts on small models; run on 1 card",
+        "confidence": "m"
       },
       {
         "model": "Llama 3.1 8B Instruct",
@@ -1930,7 +1953,8 @@
         "single_card_tps": 35.4,
         "four_card_tps": 70.3,
         "eight_concurrent_tps": 472,
-        "ttft_ms": 86
+        "ttft_ms": 86,
+        "confidence": "m"
       },
       {
         "model": "DeepSeek R1 Distill 8B",
@@ -1939,7 +1963,8 @@
         "four_card_tps": 136,
         "eight_concurrent_tps": 905,
         "itl_ms": "7\u20139",
-        "note": "Lowest ITL in suite"
+        "note": "Lowest ITL in suite",
+        "confidence": "m"
       },
       {
         "model": "Qwen3.6-27B",
@@ -1947,7 +1972,8 @@
         "single_card_tps": null,
         "four_card_tps": 13.1,
         "eight_concurrent_tps": 95.9,
-        "ttft_ms": 265
+        "ttft_ms": 265,
+        "confidence": "m"
       },
       {
         "model": "Qwen3.6-35B-A3B",
@@ -1955,7 +1981,8 @@
         "single_card_tps": null,
         "four_card_tps": 16.3,
         "eight_concurrent_tps": 122,
-        "note": "Sparse ~3B active params; beats dense 27B despite more total params"
+        "note": "Sparse ~3B active params; beats dense 27B despite more total params",
+        "confidence": "m"
       }
     ],
     "power_measurements": [
@@ -1964,28 +1991,32 @@
         "gpu_power_avg": 328,
         "gpu_peak": 343,
         "cost_per_1m_output_tokens": 0.43,
-        "vs_frontier_cloud": "28\u00d7 cheaper than Gemini 3.1 Pro"
+        "vs_frontier_cloud": "28\u00d7 cheaper than Gemini 3.1 Pro",
+        "confidence": "m"
       },
       {
         "model": "DeepSeek R1 8B \u00b7 TP=1",
         "gpu_power_avg": 350,
         "gpu_peak": 366,
         "cost_per_1m_output_tokens": 0.49,
-        "vs_frontier_cloud": "25\u201362\u00d7 cheaper than Gemini/Opus/GPT"
+        "vs_frontier_cloud": "25\u201362\u00d7 cheaper than Gemini/Opus/GPT",
+        "confidence": "m"
       },
       {
         "model": "Llama 3.1 8B \u00b7 TP=1",
         "gpu_power_avg": 350,
         "gpu_peak": 367,
         "cost_per_1m_output_tokens": 0.92,
-        "vs_frontier_cloud": "13\u00d7 cheaper than Gemini 3.1 Pro"
+        "vs_frontier_cloud": "13\u00d7 cheaper than Gemini 3.1 Pro",
+        "confidence": "m"
       },
       {
         "model": "Qwen3.6-35B-A3B \u00b7 TP=4",
         "gpu_power_avg": 420,
         "gpu_peak": 492,
         "cost_per_1m_output_tokens": 2.21,
-        "vs_frontier_cloud": "5.4\u201314\u00d7 cheaper than Gemini/Opus/GPT"
+        "vs_frontier_cloud": "5.4\u201314\u00d7 cheaper than Gemini/Opus/GPT",
+        "confidence": "m"
       },
       {
         "model": "Qwen3.6-27B \u00b7 TP=4",
@@ -1993,9 +2024,11 @@
         "gpu_peak": 632,
         "cost_per_1m_output_tokens": 3.18,
         "vs_frontier_cloud": "3.8\u00d7 cheaper than Gemini",
-        "note": "Costliest local config; peak 632W under theoretical 920W"
+        "note": "Costliest local config; peak 632W under theoretical 920W",
+        "confidence": "m"
       }
-    ]
+    ],
+    "source": "Puget Systems Labs \u2014 Dustin Moore, \"Intel Arc Pro B70 Multi-GPU AI Inference Performance,\" Jun 18 2026; exact URL pending"
   },
   "apple_silicon_decode_baseline": {
     "description": "Apple Silicon memory bandwidth and decode capacity comparison",
@@ -2006,75 +2039,144 @@
         "bandwidth_gbs": 900,
         "memory": "32 GB HBM2",
         "ranking": "highest",
-        "note": "2017 HBM2 still leads all laptop-class Apple chips"
+        "note": "2017 HBM2 still leads all laptop-class Apple chips",
+        "source": "r/localLLaMA \u2014 single-user anecdata, screenshots only (V100-SXM2-32GB); permalink pending"
       },
       {
         "name": "M3 Ultra",
-        "bandwidth_gbs": 800,
+        "bandwidth_gbs": 819,
         "memory": "up to 512 GB unified",
         "ranking": "second",
-        "note": "Only chip near the V100; still Apple's decode king"
+        "note": "Only chip near the V100; still Apple's decode king [corrected from 800 to match sourced unit figure]",
+        "source": "catalog unit mac_m3_ultra (already sourced \u2014 see units[])"
       },
       {
         "name": "M5 Max (40-core GPU)",
         "bandwidth_gbs": 614,
         "memory": "up to 128 GB unified",
         "ranking": "third",
-        "note": "Newest \u2260 fastest decode \u2014 sits below M3 Ultra; gains are in prefill (Neural Accelerators)"
+        "note": "Newest \u2260 fastest decode \u2014 sits below M3 Ultra; gains are in prefill (Neural Accelerators)",
+        "source": "notebookcheck.net (M4/M5 Max bandwidth specs); exact URL pending"
       },
       {
         "name": "M4 Max",
         "bandwidth_gbs": 546,
         "memory": "up to 128 GB unified",
         "ranking": "fourth",
-        "note": "~12% slower decode than M5 Max (bandwidth gap)"
+        "note": "~12% slower decode than M5 Max (bandwidth gap)",
+        "source": "notebookcheck.net (M4/M5 Max bandwidth specs); exact URL pending"
       },
       {
         "name": "M5 Max (32-core GPU)",
         "bandwidth_gbs": 460,
         "memory": "up to 128 GB unified",
         "ranking": "fifth",
-        "note": "Base bin actually trails the M4 Max on decode"
+        "note": "Base bin actually trails the M4 Max on decode",
+        "source": "notebookcheck.net (M4/M5 Max bandwidth specs); exact URL pending"
       }
-    ]
+    ],
+    "source": "Per-platform \u2014 see source field on each entry in platforms[] below"
   },
   "apple_silicon_decode_estimates": {
     "description": "Decode performance estimates on Apple Silicon (bandwidth-scaled from V100 measured)",
     "calibration": "V100 measured \u00d7 (bandwidth \u00f7 900) \u00d7 ~0.92 runtime factor",
     "moe_models": {
       "Nemotron-3-Nano-30B-A3B": {
-        "v100": 150.9,
-        "m3_ultra": 123,
-        "m5_max_40core": 95,
-        "m4_max": 84
+        "v100": [
+          150.9,
+          "m~"
+        ],
+        "m3_ultra": [
+          123,
+          "e"
+        ],
+        "m5_max_40core": [
+          95,
+          "e"
+        ],
+        "m4_max": [
+          84,
+          "e"
+        ]
       },
       "Qwen3-Coder-30B-A3B": {
-        "v100": 120.0,
-        "m3_ultra": 98,
-        "m5_max_40core": 75,
-        "m4_max": 67
+        "v100": [
+          120.0,
+          "m~"
+        ],
+        "m3_ultra": [
+          98,
+          "e"
+        ],
+        "m5_max_40core": [
+          75,
+          "e"
+        ],
+        "m4_max": [
+          67,
+          "e"
+        ]
       },
       "Qwen3.5-35B-A3B": {
-        "v100": 98.1,
-        "m3_ultra": 80.4,
-        "m5_max_40core": 62,
-        "m4_max": 55
+        "v100": [
+          98.1,
+          "m~"
+        ],
+        "m3_ultra": [
+          80.4,
+          "m~"
+        ],
+        "m5_max_40core": [
+          62,
+          "e"
+        ],
+        "m4_max": [
+          55,
+          "e"
+        ]
       }
     },
     "dense_models": {
       "Qwen3.5-27B": {
-        "v100": 33.5,
-        "m3_ultra": 21.3,
-        "m5_max_40core": 20,
-        "m4_max": 18
+        "v100": [
+          33.5,
+          "m~"
+        ],
+        "m3_ultra": [
+          21.3,
+          "m~"
+        ],
+        "m5_max_40core": [
+          20,
+          "e"
+        ],
+        "m4_max": [
+          18,
+          "e"
+        ]
       },
       "Qwen3.5-40B": {
-        "v100": 30.0,
-        "m3_ultra": 19,
-        "m5_max_40core": 17,
-        "m4_max": 16
+        "v100": [
+          30.0,
+          "m~"
+        ],
+        "m3_ultra": [
+          19,
+          "e"
+        ],
+        "m5_max_40core": [
+          17,
+          "e"
+        ],
+        "m4_max": [
+          16,
+          "e"
+        ]
       }
-    }
+    },
+    "calibration_source": "mlx discussions #3209 (M3 Ultra dense anchor); exact URL pending",
+    "neural_accelerator_source": "Apple Machine Learning Research, \"Exploring LLMs with MLX + M5 Neural Accelerators\"; exact URL pending",
+    "source": "Derived from V100 anecdata (see long_context_falloff) scaled by bandwidth; see calibration_source and neural_accelerator_source for the calibration anchor and prefill-gain claim"
   },
   "key_findings": {
     "bandwidth_is_destiny": "Single-stream decode is memory-bandwidth-bound. Tokens/sec scales with GB/s. V100 (900 GB/s) out-decodes every laptop-class Apple chip; only M3 Ultra (800 GB/s) competes.",

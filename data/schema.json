@@ -34,9 +34,29 @@
       "items": {
         "$ref": "#/definitions/catalogUnit"
       }
+    },
+    "long_context_falloff": { "$ref": "#/definitions/appendixSection" },
+    "kv_cache_quantization": { "$ref": "#/definitions/appendixSection" },
+    "llama_cpp_sycl_tensor_parallel": { "$ref": "#/definitions/appendixSection" },
+    "puget_arc_b70_fp16_measurements": { "$ref": "#/definitions/appendixSection" },
+    "apple_silicon_decode_baseline": { "$ref": "#/definitions/appendixSection" },
+    "apple_silicon_decode_estimates": { "$ref": "#/definitions/appendixSection" },
+    "key_findings": {
+      "description": "Prose synthesis of the appendix sections above. Not itself a source of numbers — every figure it restates must already be sourced in its section.",
+      "type": "object"
     }
   },
   "definitions": {
+    "appendixSection": {
+      "description": "A secondary dataset merged in from an unmerged branch rather than modeled as units/platforms/builds — e.g. an anecdotal architecture comparison or a one-off lab benchmark. Loosely typed on purpose (shapes vary), but every section must say where it came from, and every individual number in it must carry a confidence code the same as any other measurement on this page.",
+      "type": "object",
+      "required": ["source"],
+      "properties": {
+        "source": { "type": "string" },
+        "calibration_source": { "type": "string" },
+        "neural_accelerator_source": { "type": "string" }
+      }
+    },
     "confidence": {
       "description": "m = measured primary · m~ = measured secondary/anecdotal · e = extrapolated · i = modeled from specs. Absence means no data; there is no code for it.",
       "enum": [
