@@ -2175,7 +2175,7 @@
         "note": "v100 anchor corrected from the merge's inherited 30.0 (unverifiable against source screenshots \u2014 no 40B row scored above 23 t/s bf16) to 22.9, matching the Qwen3.5-40B-Claude-4.5-Opus i1-Q4_K_M row (see kv_cache_quantization). m5_max_40core/m4_max/m3_ultra recomputed from the corrected anchor using this section's stated formula."
       }
     },
-    "calibration_source": "mlx discussions #3209 (M3 Ultra dense anchor); exact URL pending",
+    "calibration_source": "mlx discussions #3209 (M3 Ultra dense decode anchor, Qwen3.5-35B-A3B 80.4 t/s / Qwen3.5-27B 21.3 t/s) \u2014 named in the original benchmark page's own Method & sources note; not independently re-verified or linked beyond that citation.",
     "neural_accelerator_source": "https://machinelearning.apple.com/research/exploring-llms-mlx-m5",
     "source": "Derived from V100 anecdata (see long_context_falloff) scaled by bandwidth; see calibration_source and neural_accelerator_source for the calibration anchor and prefill-gain claim",
     "supplementary_sources": [
