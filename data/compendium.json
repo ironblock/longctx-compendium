@@ -1789,59 +1789,59 @@
         "architecture": "Linear attention (Mamba2)",
         "model": "Nemotron-3-Nano-30B-A3B",
         "pp_512": 1619,
-        "pp_32k": 1505,
+        "pp_32k": 1515,
         "falloff_percent": -7,
         "falloff_rating": "flat",
-        "ttft_32k": "~22s",
-        "quant": "Q5_K_M",
+        "ttft_32k": "21.6s",
+        "quant": "Q3_K_M",
         "confidence": "m~"
       },
       {
         "architecture": "Gated DeltaNet hybrid",
         "model": "Qwen3-Next-80B-A3B",
-        "pp_512": 583,
-        "pp_32k": 520,
-        "falloff_percent": -11,
+        "pp_512": 601,
+        "pp_32k": 540,
+        "falloff_percent": -9,
         "falloff_rating": "flat",
-        "ttft_32k": "~63s",
+        "ttft_32k": "60.7s",
         "quant": "UD-IQ1_M",
         "confidence": "m~"
       },
       {
         "architecture": "Full-attention MoE",
         "model": "Qwen3.5-35B-A3B",
-        "pp_512": 911,
-        "pp_32k": 747,
-        "falloff_percent": -18,
+        "pp_512": 922,
+        "pp_32k": 744,
+        "falloff_percent": -19,
         "falloff_rating": "quadratic",
-        "ttft_32k": "~44s",
+        "ttft_32k": "44.0s",
         "quant": "Q4_K_M",
         "confidence": "m~"
       },
       {
         "architecture": "Full-attention sparse (GLM-4.7-Flash)",
         "model": "GLM-4.7-Flash",
-        "pp_512": 1268,
-        "pp_32k": 457,
+        "pp_512": 1222,
+        "pp_32k": 439,
         "falloff_percent": -64,
         "falloff_rating": "wall",
-        "ttft_32k": "~75s",
+        "ttft_32k": "74.6s",
         "quant": "Q4_K_M",
         "confidence": "m~"
       },
       {
         "architecture": "Dense full-attention",
         "model": "Qwen3.5-27B",
-        "pp_512": 878,
-        "pp_32k": 640,
-        "falloff_percent": -27,
+        "pp_512": 869,
+        "pp_32k": 614,
+        "falloff_percent": -29,
         "falloff_rating": "quadratic",
-        "ttft_32k": "~46s",
+        "ttft_32k": "53.4s",
         "quant": "Q4_K_M",
         "confidence": "m~"
       }
     ],
-    "source": "r/localLLaMA \u2014 single-user anecdata, screenshots only (V100-SXM2-32GB); permalink pending"
+    "source": "Screenshots of a Claude-generated benchmark artifact (Tesla V100-SXM2-32GB, llama-bench, CUDA, ngl 99, flash-attn, vs Apple Silicon MLX/llama.cpp community benchmarks), relayed into chat by the repo owner from an r/localLLaMA post \u2014 Reddit was not directly accessible in the environment that produced this page, so this is a secondhand relay with no captured permalink, not an independently verifiable primary source."
   },
   "kv_cache_quantization": {
     "description": "Impact of KV-cache quantization on decode performance (32GB single-card constraint)",
@@ -1849,23 +1849,23 @@
     "examples": [
       {
         "model": "Dense ~40B (HF distill of Opus reasoning traces; exact checkpoint unspecified in source)",
-        "kv_cache_bf16": 22,
-        "kv_cache_q4_0": 17,
-        "degradation_percent": -23,
-        "quant": "Q4_K_M",
-        "note": "Dense 40B particularly sensitive",
+        "kv_cache_bf16": 22.9,
+        "kv_cache_q4_0": 16.9,
+        "degradation_percent": -26,
+        "quant": "i1-Q4_K_M",
+        "note": "Dense 40B particularly sensitive. Matched to the Qwen3.5-40B-Claude-4.5-Opus i1-Q4_K_M row; a second 40B distill (Deckard-Heretic, same quant) scored within 1%.",
         "confidence": "m~"
       },
       {
         "model": "Qwen3.5-27B",
-        "kv_cache_bf16": 33,
-        "kv_cache_q4_0": 24,
-        "degradation_percent": -27,
+        "kv_cache_bf16": 33.5,
+        "kv_cache_q4_0": 24.1,
+        "degradation_percent": -28,
         "quant": "Q4_K_M",
         "confidence": "m~"
       }
     ],
-    "source": "r/localLLaMA \u2014 single-user anecdata, screenshots only (V100-SXM2-32GB); permalink pending"
+    "source": "Screenshots of a Claude-generated benchmark artifact (Tesla V100-SXM2-32GB, llama-bench, CUDA, ngl 99, flash-attn, vs Apple Silicon MLX/llama.cpp community benchmarks), relayed into chat by the repo owner from an r/localLLaMA post \u2014 Reddit was not directly accessible in the environment that produced this page, so this is a secondhand relay with no captured permalink, not an independently verifiable primary source."
   },
   "llama_cpp_sycl_tensor_parallel": {
     "description": "llama.cpp SYCL --split-mode tensor for Intel Arc multi-GPU (merged Jun 25 2026)",
@@ -2157,21 +2157,22 @@
       },
       "Qwen3.5-40B": {
         "v100": [
-          30.0,
+          22.9,
           "m~"
         ],
         "m3_ultra": [
-          19,
+          19.2,
           "e"
         ],
         "m5_max_40core": [
-          17,
+          14.4,
           "e"
         ],
         "m4_max": [
-          16,
+          12.8,
           "e"
-        ]
+        ],
+        "note": "v100 anchor corrected from the merge's inherited 30.0 (unverifiable against source screenshots \u2014 no 40B row scored above 23 t/s bf16) to 22.9, matching the Qwen3.5-40B-Claude-4.5-Opus i1-Q4_K_M row (see kv_cache_quantization). m5_max_40core/m4_max/m3_ultra recomputed from the corrected anchor using this section's stated formula."
       }
     },
     "calibration_source": "mlx discussions #3209 (M3 Ultra dense anchor); exact URL pending",
