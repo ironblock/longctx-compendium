@@ -2056,7 +2056,7 @@
         "memory": "up to 128 GB unified",
         "ranking": "third",
         "note": "Newest \u2260 fastest decode \u2014 sits below M3 Ultra; gains are in prefill (Neural Accelerators)",
-        "source": "notebookcheck.net (M4/M5 Max bandwidth specs); exact URL pending"
+        "source": "https://www.apple.com/newsroom/2026/03/apple-debuts-m5-pro-and-m5-max-to-supercharge-the-most-demanding-pro-workflows/ ; https://www.notebookcheck.net/Apple-M5-Max-Processor-Benchmarks-and-Specs.1244918.0.html (both confirm 614 GB/s directly)"
       },
       {
         "name": "M4 Max",
@@ -2064,7 +2064,7 @@
         "memory": "up to 128 GB unified",
         "ranking": "fourth",
         "note": "~12% slower decode than M5 Max (bandwidth gap)",
-        "source": "notebookcheck.net (M4/M5 Max bandwidth specs); exact URL pending"
+        "source": "https://www.apple.com/newsroom/2024/10/apple-introduces-m4-pro-and-m4-max/ ; https://www.notebookcheck.net/Apple-M4-Max-40-core-GPU-Benchmarks-and-Specs.920457.0.html (40-core GPU bin, 546 GB/s; the 32-core bin is 410 GB/s)"
       },
       {
         "name": "M5 Max (32-core GPU)",
@@ -2072,7 +2072,7 @@
         "memory": "up to 128 GB unified",
         "ranking": "fifth",
         "note": "Base bin actually trails the M4 Max on decode",
-        "source": "notebookcheck.net (M4/M5 Max bandwidth specs); exact URL pending"
+        "source": "Not independently confirmed by Apple for M5 specifically (both https://www.apple.com/newsroom/2026/03/apple-debuts-m5-pro-and-m5-max-to-supercharge-the-most-demanding-pro-workflows/ and https://www.notebookcheck.net/Apple-M5-Max-Processor-Benchmarks-and-Specs.1244918.0.html give only one M5 Max figure, 614 GB/s, with no core-count split). 460 GB/s is consistent with applying the M4 Max generation's confirmed 40-core/32-core bandwidth ratio (546/410 GB/s, ~1.33x) to the M5 Max's confirmed 614 GB/s \u2014 an extrapolation, not a cited figure."
       }
     ],
     "source": "Per-platform \u2014 see source field on each entry in platforms[] below"
@@ -2176,8 +2176,12 @@
       }
     },
     "calibration_source": "mlx discussions #3209 (M3 Ultra dense anchor); exact URL pending",
-    "neural_accelerator_source": "Apple Machine Learning Research, \"Exploring LLMs with MLX + M5 Neural Accelerators\"; exact URL pending",
-    "source": "Derived from V100 anecdata (see long_context_falloff) scaled by bandwidth; see calibration_source and neural_accelerator_source for the calibration anchor and prefill-gain claim"
+    "neural_accelerator_source": "https://machinelearning.apple.com/research/exploring-llms-mlx-m5",
+    "source": "Derived from V100 anecdata (see long_context_falloff) scaled by bandwidth; see calibration_source and neural_accelerator_source for the calibration anchor and prefill-gain claim",
+    "supplementary_sources": [
+      "https://yage.ai/share/mlx-apple-silicon-en-20260331.html (MLX vs llama.cpp on Apple Silicon)",
+      "https://llmcheck.net/benchmarks"
+    ]
   },
   "key_findings": {
     "bandwidth_is_destiny": "Single-stream decode is memory-bandwidth-bound. Tokens/sec scales with GB/s. V100 (900 GB/s) out-decodes every laptop-class Apple chip; only M3 Ultra (800 GB/s) competes.",
