@@ -2028,7 +2028,7 @@
         "confidence": "m"
       }
     ],
-    "source": "Puget Systems Labs \u2014 Dustin Moore, \"Intel Arc Pro B70 Multi-GPU AI Inference Performance,\" Jun 18 2026; exact URL pending"
+    "source": "https://www.pugetsystems.com/labs/articles/intel-arc-pro-b70-multi-gpu-ai-inference-performance (Puget Systems Labs, Dustin Moore, \"Intel Arc Pro B70 Multi-GPU AI Inference Performance,\" Jun 18 2026; site blocks automated fetch, retrieved as a static/PDF copy)"
   },
   "apple_silicon_decode_baseline": {
     "description": "Apple Silicon memory bandwidth and decode capacity comparison",
