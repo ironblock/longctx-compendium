@@ -134,6 +134,11 @@
         "msrp": {
           "usd": 1999,
           "asOf": "2025-01"
+        },
+        "street": {
+          "usd": 4300,
+          "asOf": "2026-08",
+          "note": "New $4,199-$5,000+ / used $3,680-$3,999 as of Aug 2026 -- ~2-2.5x the $1,999 launch MSRP on GDDR7 shortage. NVIDIA notified AIB partners of a ~$300 price increase effective ~May 13 2026 (per Board Channels via VideoCardz/Tom's Hardware)."
         }
       },
       "released": "2025-01",
@@ -148,7 +153,8 @@
         "https://www.runpod.io/articles/guides/nvidia-rtx-5090",
         "https://forums.developer.nvidia.com/t/rtx-5090-specs-fp16-tensor-tflops-is-ambiguous/351063",
         "https://news.ycombinator.com/item?id=44997957",
-        "https://forums.developer.nvidia.com/t/rtx-5090-peak-bf16-tensor-tflops/350543"
+        "https://forums.developer.nvidia.com/t/rtx-5090-peak-bf16-tensor-tflops/350543",
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
       ]
     },
     {
@@ -351,12 +357,22 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp32": 22.94,
+          "fp16": 45.88,
+          "int8": 367
+        },
+        "source": "Intel Arc Pro B70 datasheet (BMG-G31 Battlemage die, launched 2026-03-25); corroborated by Tom's Hardware, Puget Systems, StorageReview, igor'sLAB reviews"
       },
       "pricing": {
         "street": {
-          "usd": 950,
-          "asOf": "2026-07"
+          "usd": 1200,
+          "asOf": "2026-08",
+          "note": "Memory-crunch premium over $949 MSRP. StorageReview: street \"pushed over $1,100\" as of its review. GPU Poet eBay tracking: avg $1,142-$1,415 across Apr 2026, listings up to $2,000."
+        },
+        "msrp": {
+          "usd": 949,
+          "asOf": "2026-03"
         }
       },
       "power": {
@@ -364,7 +380,17 @@
         "idleW": 25,
         "confidence": "i",
         "note": "Modeled single-card Q4 estimate. Measured FP16 TP=4 draw (Puget, 4-card aggregate, primary/m) runs 328-632W total under load \u2014 see puget_arc_b70_fp16_measurements. Different precision/topology, not directly substitutable for this per-card figure."
-      }
+      },
+      "released": "2026-03",
+      "memoryBandwidthGBs": 608,
+      "tdpW": 230,
+      "sources": [
+        "Intel Arc Pro B70 datasheet",
+        "Tom's Hardware / Puget Systems / StorageReview / igor'sLAB Arc Pro B70 reviews",
+        "GPU Poet eBay price tracking (Apr 2026)",
+        "AI Inference Hardware \u2014 Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026)"
+      ],
+      "note": "230W reference TDP (160-290W partner range). PCIe 5.0 x16, one GPU per card (unlike the dual-GPU B60's x8/x8 split). Software: SYCL/oneAPI is a valid current toolkit but immature -- llama.cpp SYCL backend and IPEX-LLM work today; vLLM requires Intel's maintained fork (mainline CUDA kernels won't run); no FP4/NVFP4 acceleration (XMX engines are FP16/INT8-optimized). StorageReview's verdict: \"the hardware is ready, the stack needs to catch up.\""
     },
     {
       "id": "v100_sxm2",
@@ -412,15 +438,21 @@
       },
       "pricing": {
         "street": {
-          "usd": 1200,
-          "asOf": "2026-07"
+          "usd": 1248,
+          "asOf": "2026-08",
+          "source": "resaleprices.com (374 listings)",
+          "note": "Sampled 2026-08-03. Fair range $1,202-$1,296, observed range $1,000-$1,500. Supersedes an earlier $700-$1,050 pull the compiling analyst traced to unfiltered \"No Core, No VRAM\" / parts-only eBay listings ($120-$260, mostly Guangdong/HK sellers) -- a byproduct of the GA102-to-higher-VRAM transplant/mod trade -- dragging an uncondition-filtered average down an estimated $300-$500."
         }
       },
       "power": {
         "loadW": 250,
         "idleW": 40,
         "confidence": "i"
-      }
+      },
+      "memoryBandwidthGBs": 936,
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026) -- corrected mid-session against resaleprices.com/bestvaluegpu.com after a contamination check"
+      ]
     },
     {
       "id": "a100_80",
@@ -440,7 +472,13 @@
       "pricing": {
         "street": {
           "usd": 8000,
-          "asOf": "2026-07"
+          "asOf": "2026-07",
+          "note": "Used $4,000-$9,000; SXM4 used ~50% below MSRP. Deep, liquid secondary market -- best-value used data-center card per Q1 2026 survey."
+        },
+        "msrp": {
+          "usd": 13000,
+          "asOf": "2026-08",
+          "note": "PCIe new $8,500-$18,900. SXM4 variant runs higher, $18,000-$20,000 new."
         }
       },
       "power": {
@@ -449,7 +487,8 @@
         "confidence": "i"
       },
       "sources": [
-        "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla"
+        "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
       ],
       "note": "The Tesla table collapses the 40 GB and 80 GB PCIe cards into one row. Its 1555 GB/s, 250 W and May-2020 launch all describe the 40 GB HBM2 part; the 80 GB HBM2e card differs on all three, so those fields are deliberately left unset here. The compute figures are shared \u2014 same GA100 die and clocks \u2014 so they are taken."
     },
@@ -471,9 +510,21 @@
           "fp16": 989.4
         }
       },
-      "pricing": {},
+      "pricing": {
+        "msrp": {
+          "usd": 37500,
+          "asOf": "2026-08",
+          "note": "Range $35,000-$40,000 new."
+        },
+        "street": {
+          "usd": 10000,
+          "asOf": "2026-08",
+          "note": "Used SXM5 as low as $6,000-$15,000; steep depreciation as Blackwell ramps. OEM/HGX-only -- requires compatible baseboard, not a standalone buy."
+        }
+      },
       "sources": [
-        "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla"
+        "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
       ],
       "note": "Reference only \u2014 no benchmarks on this page. The Tesla row lists 64/80/96 GB variants; 80 GB is the common one."
     },
@@ -495,9 +546,21 @@
           "fp16": 756.4
         }
       },
-      "pricing": {},
+      "pricing": {
+        "msrp": {
+          "usd": 26000,
+          "asOf": "2026-08",
+          "note": "Range $22,000-$30,970 new."
+        },
+        "street": {
+          "usd": 21000,
+          "asOf": "2026-08",
+          "note": "Used $15,000-$28,000; prices stabilized after 2023 peak."
+        }
+      },
       "sources": [
-        "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla"
+        "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
       ],
       "note": "Reference only \u2014 no benchmarks on this page. HBM2E rather than the SXM card's HBM3, which is most of the bandwidth gap."
     },
@@ -525,9 +588,20 @@
           "int8:sparse": 5229.8
         }
       },
-      "pricing": {},
+      "pricing": {
+        "msrp": {
+          "usd": 15000,
+          "asOf": "2026-08"
+        },
+        "street": {
+          "usd": 12000,
+          "asOf": "2026-08",
+          "note": "Launched street $10,000-$15,000; current market ~$18,000."
+        }
+      },
       "sources": [
-        "https://en.wikipedia.org/wiki/AMD_Instinct"
+        "https://en.wikipedia.org/wiki/AMD_Instinct",
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
       ],
       "note": "Reference only \u2014 no benchmarks on this page. 192 GB in one OAM module clears gpt-oss-120B without a multi-card split. TBP rather than TDP in AMD's wording."
     },
@@ -557,11 +631,330 @@
           "int4:sparse": 10066
         }
       },
-      "pricing": {},
+      "pricing": {
+        "street": {
+          "usd": 25000,
+          "asOf": "2026-08",
+          "note": "Market estimate, NOT a confirmed transaction -- almost all public data is cloud-rental pricing; standalone purchase is OEM-channel (Dell/HPE/Supermicro), quote-only."
+        }
+      },
       "sources": [
-        "https://en.wikipedia.org/wiki/AMD_Instinct"
+        "https://en.wikipedia.org/wiki/AMD_Instinct",
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
       ],
       "note": "Reference only \u2014 no benchmarks on this page. The Instinct table spans INT8 and INT4 with one figure (5.0332 POPS), so both are recorded at that rate."
+    },
+    {
+      "id": "rtx_3090_ti",
+      "label": "GeForce RTX 3090 Ti 24GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 24,
+      "memoryBandwidthGBs": 1008,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {
+          "usd": 1240,
+          "asOf": "2026-08",
+          "source": "bestvaluegpu.com",
+          "note": "~$1,200-$1,400 used band, avg $1,240. Corrected from an initial $800-$1,200 pull, traced to the same parts-only-listing contamination affecting RTX 3090 pricing (see that unit's note). New-old-stock is scarce."
+        }
+      },
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026) -- corrected mid-session against bestvaluegpu.com after a contamination check"
+      ],
+      "note": "Fully-unlocked GA102."
+    },
+    {
+      "id": "rtx_4090",
+      "label": "GeForce RTX 4090 24GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 24,
+      "memoryBandwidthGBs": 1008,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {
+          "usd": 1900,
+          "asOf": "2026-08",
+          "note": "New $1,650-$3,765 (held 15-35% over $1,599 MSRP for 18+ months); used $1,500-$2,350. NOT independently re-verified the way RTX 3090/3090 Ti were -- the 4090 is also a donor board for the GA102/AD102 VRAM-transplant mod trade (e.g. RTX 4090 48GB mods) that contaminated the 3090 scrape, though the compiling analyst judged the effect \"smaller\" here. Treat with the same skepticism until spot-checked."
+        }
+      },
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+      ]
+    },
+    {
+      "id": "rtx_a6000",
+      "label": "RTX A6000 48GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 48,
+      "memoryBandwidthGBs": 768,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "msrp": {
+          "usd": 4650,
+          "asOf": "2026-08",
+          "source": "NVIDIA marketplace"
+        },
+        "street": {
+          "usd": 3200,
+          "asOf": "2026-08",
+          "note": "Used $2,600-$3,800; supply rising mid-2026 as enterprise contracts expire."
+        }
+      },
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+      ],
+      "note": "Ampere workstation card, 48GB GDDR6 ECC + NVLink -- budget path to 96GB with 2 cards."
+    },
+    {
+      "id": "rtx_6000_ada",
+      "label": "RTX 6000 Ada 48GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 48,
+      "memoryBandwidthGBs": 960,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {
+          "usd": 9000,
+          "asOf": "2026-08",
+          "note": "Range $7,350-$10,800 new; no reliable used figure in source data."
+        }
+      },
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+      ],
+      "note": "No NVLink; 18,176 CUDA cores. Predecessor to RTX PRO 6000 Blackwell."
+    },
+    {
+      "id": "l40s",
+      "label": "L40S 48GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 48,
+      "memoryBandwidthGBs": 864,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {
+          "usd": 8500,
+          "asOf": "2026-08",
+          "note": "Range $7,500-$10,000 new; used $7,300+ (eBay)."
+        }
+      },
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+      ],
+      "note": "PCIe-only, no NVLink. FP8 support."
+    },
+    {
+      "id": "radeon_pro_w7900",
+      "label": "Radeon Pro W7900 48GB",
+      "vendor": "AMD",
+      "memoryGB": 48,
+      "memoryBandwidthGBs": 864,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "msrp": {
+          "usd": 3999,
+          "asOf": "2025",
+          "note": "$3,499 SEP for the Dual-Slot variant."
+        },
+        "street": {
+          "usd": 3300,
+          "asOf": "2026-08",
+          "note": "New $3,100-$3,650; used $3,000-$3,500."
+        }
+      },
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+      ],
+      "note": "ROCm on Linux. AMD claims ~38% better AI-perf/$ than RTX 6000 Ada."
+    },
+    {
+      "id": "rx_7900_xtx",
+      "label": "Radeon RX 7900 XTX 24GB",
+      "vendor": "AMD",
+      "memoryGB": 24,
+      "memoryBandwidthGBs": 960,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {
+          "usd": 700,
+          "asOf": "2026-08",
+          "note": "Used $600-$800."
+        }
+      },
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+      ],
+      "note": "RDNA3 (gfx1100), official ROCm support. Edges the RTX 3090 on bandwidth."
+    },
+    {
+      "id": "arc_b65",
+      "label": "Arc Pro B65 32GB",
+      "vendor": "Intel",
+      "memoryGB": 32,
+      "memoryBandwidthGBs": 608,
+      "tdpW": 200,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "values": {
+          "int8": 197
+        },
+        "source": "AI Inference Hardware \u2014 Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026) -- Intel official spec sheet, per CraftRigs reporting"
+      },
+      "pricing": {
+        "street": {
+          "usd": 750,
+          "asOf": "2026-08",
+          "note": "No confirmed MSRP -- Intel says pricing will vary by AIB partner (ARKN, ASRock, Gunnir, Maxsun, Sparkle); CraftRigs estimates $700-800. AIB-partner-only, shipping mid-Apr 2026."
+        }
+      },
+      "sources": [
+        "AI Inference Hardware \u2014 Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026)"
+      ],
+      "note": "Same 32GB/608GB/s as the B70 but fewer compute cores (20 vs 32 Xe cores, 160 vs 256 XMX engines, 200W vs 230W). Initially misreported pre-launch as a 24GB part; Intel's official spec sheet confirms 32GB."
+    },
+    {
+      "id": "mi210",
+      "label": "AMD Instinct MI210 64GB",
+      "vendor": "AMD",
+      "memoryGB": 64,
+      "memoryBandwidthGBs": 1600,
+      "tdpW": 300,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {
+          "usd": 8000,
+          "asOf": "2026-08",
+          "note": "Range $7,400-$8,700 used/new (eBay)."
+        }
+      },
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "AI Inference Hardware \u2014 Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026)"
+      ],
+      "note": "The only native-PCIe Instinct card (MI250/MI250X/MI300X/MI300A are OAM-only) -- the practical AMD path to 128GB with 2 cards. As of Aug 2026 there is no validated single-OAM-module-to-PCIe carrier for AMD Instinct (firmware-locked PSP signing, encrypted HPE BMC on OEM-branded MI250X modules); MI210 sidesteps that dead end entirely. Strong FP64 (45.3 TFLOPS matrix)."
+    },
+    {
+      "id": "mi325x",
+      "label": "AMD Instinct MI325X 256GB",
+      "vendor": "AMD",
+      "memoryGB": 256,
+      "memoryBandwidthGBs": 6000,
+      "tdpW": 1000,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {},
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+      ],
+      "note": "Reference only -- no benchmarks on this page, and no direct purchase price: OEM channel only, referenced by cloud rental rate ($2.25-$3.31/hr) rather than a street or MSRP figure. Ships 256GB, not the pre-announced 288GB."
+    },
+    {
+      "id": "h200",
+      "label": "H200 141GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 141,
+      "memoryBandwidthGBs": 4800,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {
+          "usd": 30000,
+          "asOf": "2026-08",
+          "note": "PCIe/NVL $28,000-$35,000; SXM5 $32,000-$45,000. Supply volatile through 2026; AWS raised instance pricing 15% in Jan 2026."
+        }
+      },
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+      ],
+      "note": "Reference only -- no benchmarks on this page. Exceeds this page's 96-128GB build class on a single card."
+    },
+    {
+      "id": "b200",
+      "label": "B200 192GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 192,
+      "memoryBandwidthGBs": 8000,
+      "tdpW": 1000,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {
+          "usd": 47000,
+          "asOf": "2026-08",
+          "note": "List $30,000-$40,000 in 8-GPU volume; street quotes $45,000-$50,000. Allocation-gated -- backlog ~3.6M units as of Apr 2026 (GPUaaS.com), lead times 8-16 wks for priority OEM buyers as of Q2 2026."
+        }
+      },
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+      ],
+      "note": "Reference only -- no benchmarks on this page. SXM-only (no PCIe); requires HGX/UBB baseboard, not a standalone purchase."
+    },
+    {
+      "id": "b300",
+      "label": "B300 (Blackwell Ultra) 288GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 288,
+      "memoryBandwidthGBs": 8000,
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
+        "values": {}
+      },
+      "pricing": {
+        "street": {
+          "usd": 53000,
+          "asOf": "2026-07",
+          "source": "Spheron Network OEM quote",
+          "note": "Single July 2026 OEM-quote estimate; standalone availability is minimal."
+        }
+      },
+      "sources": [
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+      ],
+      "note": "Reference only -- no benchmarks on this page."
     }
   ],
   "platforms": [

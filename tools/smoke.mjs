@@ -97,8 +97,8 @@ for (const id of ['cMeasured', 'cExtrap', 'cModeled', 'cArch']) {
 // 9 platforms x 3 archetypes + 4 group header rows.
 check('prefill table rows', (await count('#ppTable tbody tr')) === 31, `got ${await count('#ppTable tbody tr')}`);
 check('decode table rows', (await count('#tgTable tbody tr')) === 13, `got ${await count('#tgTable tbody tr')}`);
-// 15 catalog units + 4 vendor group headers
-check('spec table rows', (await count('#specTable tbody tr')) === 19, `got ${await count('#specTable tbody tr')}`);
+// 28 catalog units + 4 vendor group headers
+check('spec table rows', (await count('#specTable tbody tr')) === 32, `got ${await count('#specTable tbody tr')}`);
 check('value table rows', (await count('#valTable tbody tr')) === 9, `got ${await count('#valTable tbody tr')}`);
 check('legend entries', (await count('#pleg span')) >= 9);
 check('verdict rendered', (await text('#verdict')).length > 80);
@@ -210,7 +210,7 @@ async function withPatchedData(patch) {
     // +$300 on a card the 4x 3090 rig contains four of.
     doc.units.find(u => u.id === 'rtx_3090').pricing.street.usd += 300;
   });
-  check('four-card rig tracks its card price ×4', (await costOf(after, '4× 3090')) === '$6,000', `${base3090} → ${await costOf(after, '4× 3090')}`);
+  check('four-card rig tracks its card price ×4', (await costOf(after, '4× 3090')) === '$6,192', `${base3090} → ${await costOf(after, '4× 3090')}`);
   check('unrelated build is unaffected', (await costOf(after, 'PRO 6000')) === basePro);
   check('price change caused no errors', errs.length === 0, errs.join(' | '));
   await after.close();

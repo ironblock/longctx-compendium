@@ -61,10 +61,11 @@ const CASES = [
   ['build entry naming both a platform and a unit', 'pick one', d => {
     build(d, 'b_pro').units[0].unit = 'rtx_pro_6000';
   }],
-  // rtx_3090 is deliberately still unsourced; picking an already-sourced unit
-  // here would make this case pass without exercising the rule.
+  // pg199_card is deliberately still unsourced; picking an already-sourced unit
+  // here would make this case pass without exercising the rule. (rtx_3090 held
+  // this role until it gained real sourced specs in the Aug 2026 hardware survey.)
   ['specs with no source', 'no sources[]', d => {
-    unit(d, 'rtx_3090').tdpW = 350;
+    unit(d, 'pg199_card').tdpW = 350;
   }],
   ['build cost stored instead of derived', 'unknown property', d => {
     build(d, 'b_pro').buildCostUsd = 8500;
