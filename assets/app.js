@@ -2,14 +2,16 @@
 // view state. Everything below this file is a pure function of (model, state).
 
 import { load } from './data.js';
-import { archOf } from './derive.js';
-import { renderPrefill, renderDecode, renderWallClock, renderValue } from './charts.js';
+import { archOf, precisionRows, precisionUnitLabel } from './derive.js';
+import { renderPrefill, renderDecode, renderWallClock, renderValue, renderPrecision } from './charts.js';
 import {
   renderLegend,
   renderPrefillTable,
   renderDecodeTable,
   renderValueTable,
   renderSpecTable,
+  renderPrecisionToggle,
+  renderVendorLegend,
 } from './tables.js';
 import { prefillVerdict, valueVerdict, captionFor, valueCaption } from './verdicts.js';
 
@@ -19,6 +21,8 @@ const state = {
   hidden: new Set(),
   valModel: 'tg120',
   valPower: 'load',
+  precision: null,
+  precHidden: new Set(),
 };
 
 const el = id => document.getElementById(id);
@@ -74,6 +78,19 @@ function renderValueSection(model) {
   el('valVerdict').innerHTML = valueVerdict(state.valModel, state.valPower);
 }
 
+function renderPrecisionSection(model) {
+  renderPrecisionToggle(model, state); // may update state.precision
+  renderVendorLegend(model, state, () => renderPrecision(model, state));
+  renderPrecision(model, state);
+  if (state.precision) {
+    const n = precisionRows(model.UNITS, state.precision).length;
+    el('precCap').textContent =
+      `${state.precision.toUpperCase()} throughput (${precisionUnitLabel(state.precision)}) · ${n} of ${model.UNITS.length} catalog units have data`;
+  } else {
+    el('precCap').textContent = 'No compute.values recorded on any unit yet.';
+  }
+}
+
 /** Radio-style button groups: exactly one `on` at a time. */
 function wireToggle(groupId, attr, onPick) {
   const buttons = [...document.querySelectorAll(`#${groupId} button`)];
@@ -103,6 +120,7 @@ try {
   renderPrefillTable(model);
   renderDecodeTable(model);
   renderSpecTable(model);
+  renderPrecisionSection(model);
   renderValueSection(model);
   renderMain(model);
 
@@ -121,6 +139,15 @@ try {
   wireToggle('valPowerTg', 'vp', vp => {
     state.valPower = vp;
     renderValueSection(model);
+  });
+  // The precision toggle rebuilds its own buttons every render (the set of
+  // precisions is data-driven), so binding is delegated to the container
+  // rather than rebound per-button like the fixed toggles above.
+  el('precTg').addEventListener('click', e => {
+    const prec = e.target.dataset.prec;
+    if (!prec) return;
+    state.precision = prec;
+    renderPrecisionSection(model);
   });
 } catch (err) {
   fail(err);

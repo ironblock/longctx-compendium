@@ -2,7 +2,18 @@
 // mutates the existing chart when one exists so toggling a view never leaks a
 // canvas.
 
-import { computeWC, fmtT, hexA, platColor, buildDecode, idleYr, rankedBuilds } from './derive.js';
+import {
+  computeWC,
+  fmtT,
+  hexA,
+  platColor,
+  buildDecode,
+  idleYr,
+  rankedBuilds,
+  vendorColor,
+  precisionRows,
+  precisionUnitLabel,
+} from './derive.js';
 
 const GRID = 'rgba(255,255,255,.07)';
 const TICKC = '#5a6a7d';
@@ -290,6 +301,89 @@ export function renderValue(model, state, arch) {
               : 'idle watts — lower better'
           ),
           y: { grid: { color: 'rgba(0,0,0,0)' }, ticks: { color: TICKC, font: MONO } },
+        },
+      },
+    },
+    true
+  );
+}
+
+// === Compute throughput by precision: one precision at a time, vendor-colored ===
+// A single axis across every precision would put ~1 TFLOPS FP64 parts next to
+// ~10,000 TOPS INT4 parts, so this shows one precision per view rather than
+// grouping them all -- the precision toggle in the tbar is the "sort" the
+// user picks, this chart is what results. Units with nothing recorded for the
+// selected precision are absent from the chart entirely, never a zero bar.
+export function renderPrecision(model, state) {
+  if (!state.precision) return;
+  const rows = precisionRows(model.UNITS, state.precision).filter(r => !state.precHidden.has(r.u.vendor ?? 'Other'));
+  const unitLabel = precisionUnitLabel(state.precision);
+  const colors = rows.map(r => vendorColor(r.u.vendor));
+
+  // Chart.js does not grow a fixed-height container on its own, and this list
+  // can run much longer than the 9-platform charts elsewhere on the page.
+  const canvas = document.getElementById('precChart');
+  canvas.parentElement.style.height = `${Math.max(340, rows.length * 30 + 40)}px`;
+
+  paint(
+    'prec',
+    'precChart',
+    {
+      type: 'bar',
+      data: {
+        labels: rows.map(r => r.u.label),
+        datasets: [
+          {
+            label: 'dense',
+            data: rows.map(r => r.dense),
+            backgroundColor: colors.map(c => hexA(c, 0.85)),
+            borderColor: colors,
+            borderWidth: 1.5,
+            borderRadius: 3,
+          },
+          {
+            label: '2:4 structured sparsity',
+            data: rows.map(r => r.sparse),
+            backgroundColor: colors.map(c => hexA(c, 0.35)),
+            borderColor: colors,
+            borderWidth: 1.5,
+            borderDash: [3, 3],
+            borderRadius: 3,
+          },
+        ],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            labels: {
+              color: '#8898a9',
+              font: MONO,
+              generateLabels: chart =>
+                chart.data.datasets.map((d, i) => ({
+                  text: d.label,
+                  fillStyle: i === 0 ? 'rgba(118,185,0,.8)' : 'rgba(118,185,0,.35)',
+                  strokeStyle: 'transparent',
+                  index: i,
+                  hidden: !chart.isDatasetVisible(i),
+                })),
+            },
+          },
+          tooltip: {
+            ...TOOLTIP,
+            callbacks: {
+              label: c => (c.parsed.x ? `${c.dataset.label}: ${c.parsed.x.toLocaleString()} ${unitLabel}` : '—'),
+            },
+          },
+        },
+        scales: {
+          x: axis(`${state.precision.toUpperCase()} throughput (10¹² ops/sec, ${unitLabel})`, {
+            ticks: { color: TICKC, font: MONO_S, callback: v => (v >= 1000 ? v / 1000 + 'K' : v) },
+          }),
+          y: { grid: { color: 'rgba(0,0,0,0)' }, ticks: { color: TICKC, font: MONO_S } },
         },
       },
     },

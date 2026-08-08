@@ -104,6 +104,13 @@ check('legend entries', (await count('#pleg span')) >= 9);
 check('verdict rendered', (await text('#verdict')).length > 80);
 check('value verdict rendered', (await text('#valVerdict')).length > 80);
 check('spec units note rendered', (await text('#specUnits')).length > 20);
+// Precision count grows as compute.values fills in -- a floor, not an exact
+// count, so backfilling data doesn't require touching this test.
+check('precision toggle buttons rendered', (await count('#precTg button')) >= 6, `got ${await count('#precTg button')}`);
+// Direct-child selector, not `#precLeg span` -- each entry nests a `.pdot`
+// color swatch span too, so the descendant selector would double-count.
+check('vendor legend entries', (await count('#precLeg > span')) === 4, `got ${await count('#precLeg > span')}`);
+check('precision caption rendered', (await text('#precCap')).length > 10);
 
 const canvasPainted = async id =>
   await page.evaluate(sel => {
@@ -115,6 +122,7 @@ const canvasPainted = async id =>
   }, `#${id}`);
 
 check('prefill chart painted', await canvasPainted('ppChart'));
+check('precision chart painted', await canvasPainted('precChart'));
 
 // Every toggle in every combination, asserting the page survives each click.
 for (const [group, ids] of [
@@ -129,6 +137,31 @@ for (const [group, ids] of [
     await page.waitForTimeout(120);
     check(`${group} → ${v} renders cleanly`, consoleErrors.length === before, consoleErrors.slice(before).join(' | '));
   }
+}
+
+// Precision toggle: buttons are rebuilt from data rather than hand-authored,
+// so read what actually rendered instead of a hardcoded id list.
+{
+  const precButtons = await page.locator('#precTg button').all();
+  const precs = [];
+  for (const b of precButtons) precs.push(await b.getAttribute('data-prec'));
+  for (const p of precs) {
+    const before = consoleErrors.length;
+    await page.locator(`#precTg button[data-prec="${p}"]`).click();
+    await page.waitForTimeout(120);
+    check(`#precTg → ${p} renders cleanly`, consoleErrors.length === before, consoleErrors.slice(before).join(' | '));
+    check(`#precTg → ${p} chart painted`, await canvasPainted('precChart'));
+  }
+}
+
+// Vendor legend hide/show, mirroring the platform legend's click-to-filter.
+{
+  const before = consoleErrors.length;
+  await page.locator('#precLeg span').first().click();
+  await page.waitForTimeout(120);
+  check('vendor legend toggle renders cleanly', consoleErrors.length === before, consoleErrors.slice(before).join(' | '));
+  await page.locator('#precLeg span').first().click(); // restore
+  await page.waitForTimeout(120);
 }
 
 // Back to the default view, then confirm the chart repainted rather than
@@ -172,6 +205,9 @@ async function withPatchedData(patch) {
   check('injected MSRP renders', (await p.locator('#specTable tbody').textContent()).includes('$8,565'));
   // Sparsity figures pair into their dense column instead of doubling the width.
   check('sparse figure renders beside its dense twin', (await p.locator('#specTable tbody').textContent()).includes('3352 sp'), 'expected the 5090 FP4 sparse rate');
+  // The same new precision should grow its own button in the precision toggle.
+  const precBtns = await p.locator('#precTg button').allTextContents();
+  check('unknown precision key grows a toggle button', precBtns.includes('FP6'), precBtns.join(','));
   check('extensibility patch caused no errors', errs.length === 0, errs.join(' | '));
   await p.close();
 }

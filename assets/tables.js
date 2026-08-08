@@ -1,6 +1,17 @@
 // DOM rendering for the tables and the platform legend.
 
-import { cssConf, computeWC, fmtT, ttBand, wcById, buildDecode, idleYr, archOf } from './derive.js';
+import {
+  cssConf,
+  computeWC,
+  fmtT,
+  ttBand,
+  wcById,
+  buildDecode,
+  idleYr,
+  archOf,
+  vendorColor,
+  discoveredPrecisions,
+} from './derive.js';
 
 const el = id => document.getElementById(id);
 const tbody = sel => document.querySelector(`${sel} tbody`);
@@ -160,20 +171,13 @@ export function renderValueTable(model, state) {
 //
 // Columns for rated throughput are discovered from the data: add a precision
 // key to any unit's compute.values and a column appears with no code change.
-// Widest-to-narrowest, so the columns read the way a datasheet does.
-const PRECISION_ORDER = ['fp64', 'fp32', 'tf32', 'bf16', 'fp16', 'fp8', 'fp4', 'int8', 'int4'];
-
 export function renderSpecTable(model) {
   const units = model.UNITS;
 
   // A sparsity figure is always exactly twice its dense counterpart, so giving
   // each its own column doubles the width to say nothing. Pair them in one cell
   // and the table stays readable.
-  const seen = new Set(units.flatMap(u => Object.keys(u.compute?.values ?? {})));
-  const precisions = [
-    ...PRECISION_ORDER.filter(p => seen.has(p) || seen.has(`${p}:sparse`)),
-    ...[...seen].map(k => k.replace(':sparse', '')).filter(p => !PRECISION_ORDER.includes(p)),
-  ].filter((p, i, a) => a.indexOf(p) === i);
+  const precisions = discoveredPrecisions(units);
 
   document.querySelector('#specTable thead tr').innerHTML =
     '<th class="lbl" style="min-width:190px">Unit</th>' +
@@ -241,4 +245,51 @@ export function renderSpecTable(model) {
   el('specUnits').textContent = precisions.length
     ? `Rated throughput in 10¹² ops/sec. Large figure is dense; the dimmed "sp" beneath it is the 2:4 structured-sparsity rate, which vendors often quote unlabelled. Load and idle watts are per unit, observed under inference — not the datasheet TDP beside them. Blank cells are untranscribed, not zero.`
     : 'No rated-throughput figures transcribed yet — add compute.values to any unit in data/compendium.json and a column appears here automatically. Load and idle watts are per unit, observed under inference, not datasheet TDP.';
+}
+
+// === Precision toggle: one button per precision the catalog has data for ===
+// Rebuilt on every render because the set of available precisions is data-
+// driven (a new key in compendium.json grows a new button with no code
+// change), unlike the fixed view/archetype toggles that are hand-authored in
+// index.html. Click handling is delegated once in app.js rather than rebound
+// here on every rebuild.
+export function renderPrecisionToggle(model, state) {
+  const precisions = discoveredPrecisions(model.UNITS);
+  if (!precisions.includes(state.precision)) {
+    // Default to whichever precision the most units actually have, so the
+    // chart opens non-empty rather than on an arbitrary first column.
+    const richest = precisions
+      .map(p => ({
+        p,
+        n: model.UNITS.filter(u => u.compute?.values?.[p] != null || u.compute?.values?.[`${p}:sparse`] != null).length,
+      }))
+      .sort((a, b) => b.n - a.n)[0];
+    state.precision = richest?.p ?? precisions[0] ?? null;
+  }
+  const host = el('precTg');
+  host.innerHTML = precisions
+    .map(p => `<button data-prec="${p}"${p === state.precision ? ' class="on"' : ''}>${p.toUpperCase()}</button>`)
+    .join('');
+}
+
+// === Vendor legend for the precision chart (click to hide/show) ===
+export function renderVendorLegend(model, state, onToggle) {
+  const host = el('precLeg');
+  host.innerHTML = '';
+  const vendors = [...new Set(model.UNITS.map(u => u.vendor ?? 'Other'))];
+  for (const v of vendors) {
+    const sp = document.createElement('span');
+    const dot = document.createElement('span');
+    dot.className = 'pdot';
+    dot.style.background = vendorColor(v);
+    sp.append(dot, document.createTextNode(v));
+    sp.style.opacity = state.precHidden.has(v) ? 0.3 : 1;
+    sp.onclick = () => {
+      if (state.precHidden.has(v)) state.precHidden.delete(v);
+      else state.precHidden.add(v);
+      sp.style.opacity = state.precHidden.has(v) ? 0.3 : 1;
+      onToggle();
+    };
+    host.appendChild(sp);
+  }
 }

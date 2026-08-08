@@ -113,6 +113,22 @@
 </table></div>
 <p class="src" id="specUnits"></p>
 
+<h2>Compute throughput by precision <span class="tail">rated FLOPS/TOPS per unit · pick a precision · filter by vendor</span></h2>
+<p style="font-size:13px;color:var(--muted);margin:6px 0 8px">The same <span class="num" style="font-size:12px">compute.values</span> figures as the catalog table above, one precision at a time, so BF16/FP8/INT8/INT4 are actually comparable across vendors instead of collapsed to "double, single, half" the way some datasheets — Wikipedia's NVIDIA and AMD tables especially — report it. A unit with nothing recorded for the selected precision is simply absent from the chart, not a zero bar.</p>
+
+<div class="tbar">
+  <div>
+    <div class="tglabel" style="margin-bottom:5px">Precision</div>
+    <div class="tg" id="precTg"></div>
+  </div>
+</div>
+
+<div class="chartbox">
+  <div class="cap"><span id="precCap"></span><span>sorted highest→lowest · open bar = 2:4 structured sparsity where published</span></div>
+  <div class="ch ch-bar"><canvas id="precChart"></canvas></div>
+</div>
+<div class="pleg" id="precLeg"></div>
+
 <h2>Bang-for-buck-per-watt <span class="tail">96–128GB builds · gpt-oss-120B anchor · cost + power</span></h2>
 <p style="font-size:13px;color:var(--muted);margin:6px 0 8px">Scoped to builds that clear 96GB — the 120B model needs ~63GB, so single 32GB cards can't play. <b style="color:var(--text)">Power figures are estimates</b> (you confirmed no measured data beyond the docs); decode is measured for PRO 6000, 4× 3090, DGX Spark, Strix Halo and M3 Ultra, and modeled for the SXM2 builds + A100 (PG199 is fully unmeasured on LLMs). Reframe applied: <b style="color:var(--text)">off-when-idle</b>, so idle is a cost-of-how-you-run-it, not a disqualifier.</p>
 
@@ -160,6 +176,7 @@
   <li><b>Multi-GPU 3090:</b> 2-way NVLink gives ~48% TP throughput boost over PCIe-only; 4-way (two bridged pairs over PCIe) only ~8–10% and can lower single-request decode (71→53 t/s on QwQ-32B). dzombak.com: 2× 3090 TP-2 runs Qwen3.6-27B AWQ at ~100 t/s full 256K ctx. Medium/fzbcwvv: 1× 3090 + MTP on Qwen3.6-27B reaches 85–106 t/s at 230 W cap.</li>
   <li><b>TTFT and wall-clock:</b> TTFT = context_length ÷ pp(context_length). Wall-clock for 16K+2K turn = TTFT@16K + (2048 ÷ tg). These are cold (un-cached) monolithic prefills; prefix caching significantly improves repeated-system-prompt agentic loops.</li>
   <li><b>AMD R9700 included as bonus:</b> Strong Qwen3.5-35B-A3B MoE numbers, R9700 single-card, Q4_K_XL (ggml #19890). Not in the user's original list but data quality warranted inclusion.</li>
+  <li><b>Compute throughput by precision:</b> each unit's <span class="num" style="font-size:12px">compute.values</span> entries come from vendor datasheets/whitepapers where available, with per-unit provenance in <span class="num" style="font-size:12px">compute.source</span> and <span class="num" style="font-size:12px">sources[]</span> — see the hardware catalog table above. Coverage is intentionally uneven: about half the catalog has a real multi-precision breakdown (RTX PRO 6000, RTX 5090, Radeon AI PRO R9700, MI300X, MI355X); several NVIDIA data-center units (V100, A100, H100) currently show only FP64/FP32/FP16 because the Wikipedia Tesla template they're sourced from doesn't publish more, not because the silicon lacks BF16/INT8 paths — exactly the "double, single, half" flattening this chart exists to see past. Filling in the rest is ongoing.</li>
   <li><b>Editing this page:</b> every number lives in <span class="num" style="font-size:12px">data/compendium.json</span>. See <span class="num" style="font-size:12px">data/README.md</span> for how to add a device or a datapoint.</li>
 </ul>
 <p class="src">SOURCES: DandinPower/llama.cpp_bench (DGX Spark) · NVIDIA Dev Forums/claytantor (DGX Spark Qwen3.5) · Level1Techs/lhl (Strix Halo) · strix-halo-guide/hogeheer499 (Strix Halo Qwen3.6) · lilting.ch (Strix Halo long-ctx) · mlx #3209 (M3 Ultra dense) · llm-tracker.info (PRO 6000) · vaditaslim.com (PRO 6000 dense) · jarvislabs.ai (PRO 6000 MTP) · loftllc.dev (dual PRO 6000 NVFP4+MTP) · hardware-corner.net (RTX 5090) · ggml #19890 (RTX 5090 vs R9700) · PMZFX/intel-arc-pro-b70-benchmarks (B70) · dzombak.com · medium/fzbcwvv (3090) · himeshp.blogspot (4× 3090 TP) · willitrunai.com (4090 TP) · CloudRift (multi-GPU serving)</p>
