@@ -477,6 +477,22 @@
                 "type": "number",
                 "minimum": 0
               }
+            },
+            "unknown": {
+              "description": "Precisions believed supported (or at least not ruled out) that no sourced figure was found for after a real search -- rendered as a colored '?' rather than a blank dash, so 'we don't have a number yet' reads differently from 'confirmed unsupported' or 'never looked'. Not a dumping ground for every unresearched precision -- only add a key here after an actual search came up empty.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(:sparse)?$"
+              }
+            },
+            "unsupported": {
+              "description": "Precisions confirmed architecturally absent on this part (not merely undocumented) -- still rendered as a dash, kept separate from 'unknown' so the two are never conflated. The reasoning belongs in the unit's note, not duplicated here.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(:sparse)?$"
+              }
             }
           }
         },

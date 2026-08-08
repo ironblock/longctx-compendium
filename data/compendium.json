@@ -228,7 +228,14 @@
           "fp32": 31,
           "bf16": 125
         },
-        "source": "https://www.nvidia.com/en-us/products/workstations/dgx-spark/"
+        "source": "https://www.nvidia.com/en-us/products/workstations/dgx-spark/",
+        "unknown": [
+          "fp16",
+          "int8",
+          "int4",
+          "int8:sparse",
+          "int4:sparse"
+        ]
       },
       "pricing": {
         "street": {
@@ -260,7 +267,12 @@
         "values": {
           "fp32": 21.5
         },
-        "source": "https://www.eatyourbytes.com/applecpu-detail/apple-m3-ultra-60-core-gpu/"
+        "source": "https://www.eatyourbytes.com/applecpu-detail/apple-m3-ultra-60-core-gpu/",
+        "unknown": [
+          "fp16",
+          "bf16",
+          "int8"
+        ]
       },
       "pricing": {
         "street": {
@@ -305,7 +317,12 @@
           "int8": 59.4,
           "int4": 118.8
         },
-        "source": "https://chipversus.com/hardware/gpu/radeon-8060s"
+        "source": "https://chipversus.com/hardware/gpu/radeon-8060s",
+        "unsupported": [
+          "fp8",
+          "int8:sparse",
+          "int4:sparse"
+        ]
       },
       "pricing": {
         "street": {
@@ -338,7 +355,19 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {},
+        "unknown": [
+          "fp64",
+          "fp32",
+          "tf32",
+          "bf16",
+          "fp16",
+          "int8",
+          "int4"
+        ],
+        "unsupported": [
+          "fp8"
+        ]
       },
       "pricing": {
         "street": {
@@ -366,7 +395,15 @@
           "fp16": 45.88,
           "int8": 367
         },
-        "source": "Intel Arc Pro B70 datasheet (BMG-G31 Battlemage die, launched 2026-03-25); corroborated by Tom's Hardware, Puget Systems, StorageReview, igor'sLAB reviews"
+        "source": "Intel Arc Pro B70 datasheet (BMG-G31 Battlemage die, launched 2026-03-25); corroborated by Tom's Hardware, Puget Systems, StorageReview, igor'sLAB reviews",
+        "unknown": [
+          "bf16",
+          "int4"
+        ],
+        "unsupported": [
+          "fp8",
+          "fp4"
+        ]
       },
       "pricing": {
         "street": {
@@ -409,7 +446,10 @@
           "fp64": 7.45,
           "fp32": 14.9,
           "fp16": 119.2
-        }
+        },
+        "unsupported": [
+          "int8"
+        ]
       },
       "pricing": {
         "street": {
@@ -702,7 +742,21 @@
         "values": {
           "fp32": 40
         },
-        "source": "https://www.nvidia.com/en-us/geforce/news/geforce-rtx-3090-ti-out-now/"
+        "source": "https://www.nvidia.com/en-us/geforce/news/geforce-rtx-3090-ti-out-now/",
+        "unknown": [
+          "fp16",
+          "bf16",
+          "bf16:sparse",
+          "tf32",
+          "tf32:sparse",
+          "int8",
+          "int8:sparse",
+          "int4",
+          "int4:sparse"
+        ],
+        "unsupported": [
+          "fp32:sparse"
+        ]
       },
       "pricing": {
         "street": {
@@ -740,7 +794,10 @@
           "int4": 1321.2,
           "int4:sparse": 2642.4
         },
-        "source": "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf"
+        "source": "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf",
+        "unsupported": [
+          "fp32:sparse"
+        ]
       },
       "pricing": {
         "street": {
@@ -776,7 +833,10 @@
           "int4": 619.3,
           "int4:sparse": 1238.6
         },
-        "source": "https://www.nvidia.com/content/PDF/nvidia-ampere-ga-102-gpu-architecture-whitepaper-v2.pdf"
+        "source": "https://www.nvidia.com/content/PDF/nvidia-ampere-ga-102-gpu-architecture-whitepaper-v2.pdf",
+        "unsupported": [
+          "fp32:sparse"
+        ]
       },
       "pricing": {
         "msrp": {
@@ -818,7 +878,10 @@
           "int4": 1457,
           "int4:sparse": 2914
         },
-        "source": "https://images.nvidia.com/aem-dam/en-zz/Solutions/technologies/NVIDIA-ADA-GPU-PROVIZ-Architecture-Whitepaper_1.1.pdf"
+        "source": "https://images.nvidia.com/aem-dam/en-zz/Solutions/technologies/NVIDIA-ADA-GPU-PROVIZ-Architecture-Whitepaper_1.1.pdf",
+        "unsupported": [
+          "fp32:sparse"
+        ]
       },
       "pricing": {
         "street": {
@@ -856,7 +919,10 @@
           "int4": 733,
           "int4:sparse": 1466
         },
-        "source": "https://www.nvidia.com/en-us/data-center/l40s/"
+        "source": "https://www.nvidia.com/en-us/data-center/l40s/",
+        "unsupported": [
+          "fp32:sparse"
+        ]
       },
       "pricing": {
         "street": {
@@ -887,7 +953,13 @@
           "int8": 123,
           "int4": 245
         },
-        "source": "https://www.amd.com/en/products/graphics/workstations/radeon-pro/w7900.html"
+        "source": "https://www.amd.com/en/products/graphics/workstations/radeon-pro/w7900.html",
+        "unsupported": [
+          "fp16:sparse",
+          "bf16:sparse",
+          "int8:sparse",
+          "int4:sparse"
+        ]
       },
       "pricing": {
         "msrp": {
@@ -954,7 +1026,11 @@
           "int8": 197,
           "fp32": 12.28
         },
-        "source": "AI Inference Hardware \u2014 Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026) -- Intel official spec sheet, per CraftRigs reporting"
+        "source": "AI Inference Hardware \u2014 Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026) -- Intel official spec sheet, per CraftRigs reporting",
+        "unknown": [
+          "fp16",
+          "bf16"
+        ]
       },
       "pricing": {
         "street": {
@@ -986,7 +1062,14 @@
           "bf16": 181,
           "int8": 181
         },
-        "source": "https://www.amd.com/en/products/accelerators/instinct/mi200/mi210.html"
+        "source": "https://www.amd.com/en/products/accelerators/instinct/mi200/mi210.html",
+        "unsupported": [
+          "fp64:sparse",
+          "fp32:sparse",
+          "fp16:sparse",
+          "bf16:sparse",
+          "int8:sparse"
+        ]
       },
       "pricing": {
         "street": {
@@ -1022,7 +1105,11 @@
           "int8": 2614.9,
           "int8:sparse": 5229.8
         },
-        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/instinct-mi325x-datasheet.pdf"
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/instinct-mi325x-datasheet.pdf",
+        "unsupported": [
+          "fp4",
+          "fp6"
+        ]
       },
       "pricing": {},
       "sources": [
@@ -1093,7 +1180,10 @@
           "int8": 4500,
           "int8:sparse": 9000
         },
-        "source": "https://nvdam.widen.net/s/wwnsxrhm2w/blackwell-datasheet-3384703"
+        "source": "https://nvdam.widen.net/s/wwnsxrhm2w/blackwell-datasheet-3384703",
+        "unsupported": [
+          "fp32:sparse"
+        ]
       },
       "pricing": {
         "street": {
@@ -1127,7 +1217,12 @@
           "int8:sparse": 333.33,
           "fp32": 83.33
         },
-        "source": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/"
+        "source": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/",
+        "unknown": [
+          "bf16",
+          "fp16",
+          "int8"
+        ]
       },
       "pricing": {
         "street": {

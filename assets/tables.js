@@ -192,13 +192,31 @@ export function renderSpecTable(model) {
   const num = v => (v == null ? dash : `<td class="num">${v}</td>`);
   const usd = m => (m?.usd == null ? dash : `<td class="num">$${m.usd.toLocaleString()}</td>`);
 
-  /** Dense figure, with its structured-sparsity twin dimmed beneath it. */
-  const throughput = (values, p) => {
+  /**
+   * Dense figure, with its structured-sparsity twin dimmed beneath it. An
+   * empty cell means one of two different things, and they read the same to
+   * the schema: "nobody has looked" and "confirmed this doesn't exist" --
+   * `unknown`/`unsupported` on the unit let a real search's outcome show up
+   * as a colored '?' instead of blending into every other blank dash.
+   */
+  const unknownMark = '<span class="num" style="color:var(--u)" title="Believed supported — no sourced figure found yet">?</span>';
+  const throughput = (u, p) => {
+    const values = u.compute?.values;
     const dense = values?.[p];
     const sparse = values?.[`${p}:sparse`];
-    if (dense == null && sparse == null) return dash;
+    const denseUnknown = dense == null && u.compute?.unknown?.includes(p);
+    if (dense == null && sparse == null) {
+      if (denseUnknown) return `<td class="c-u">${unknownMark}</td>`;
+      const unsupported = u.compute?.unsupported?.includes(p);
+      return unsupported
+        ? `<td class="c-n"><span class="num" title="Confirmed unsupported on this part">—</span></td>`
+        : dash;
+    }
+    // Sparse is present but dense specifically isn't -- still worth flagging
+    // as unknown rather than a plain dash, distinct from the whole-cell case
+    // above since this cell already carries a real (sparse) figure.
     return (
-      `<td class="num">${dense ?? '—'}` +
+      `<td class="num">${denseUnknown ? unknownMark : (dense ?? '—')}` +
       (sparse == null ? '' : `<span style="display:block;font-size:10px;color:var(--dim)">${sparse} sp</span>`) +
       '</td>'
     );
@@ -234,7 +252,7 @@ export function renderSpecTable(model) {
         num(u.tdpW) +
         num(u.power?.loadW) +
         num(u.power?.idleW) +
-        precisions.map(x => throughput(u.compute?.values, x)).join('') +
+        precisions.map(x => throughput(u, x)).join('') +
         usd(u.pricing?.msrp) +
         usd(u.pricing?.street) +
         `<td class="lbl" style="white-space:normal;max-width:200px"><span style="font-size:11px;color:var(--dim)">${(usage[u.id] ?? []).join(' · ') || '—'}</span></td>`;
@@ -243,7 +261,7 @@ export function renderSpecTable(model) {
   }
 
   el('specUnits').textContent = precisions.length
-    ? `Rated throughput in 10¹² ops/sec. Large figure is dense; the dimmed "sp" beneath it is the 2:4 structured-sparsity rate, which vendors often quote unlabelled. Load and idle watts are per unit, observed under inference — not the datasheet TDP beside them. Blank cells are untranscribed, not zero.`
+    ? `Rated throughput in 10¹² ops/sec. Large figure is dense; the dimmed "sp" beneath it is the 2:4 structured-sparsity rate, which vendors often quote unlabelled. A blue "?" means a real search came up empty — believed supported, no sourced figure yet; a plain dash means either confirmed unsupported or simply not yet researched. Load and idle watts are per unit, observed under inference — not the datasheet TDP beside them.`
     : 'No rated-throughput figures transcribed yet — add compute.values to any unit in data/compendium.json and a column appears here automatically. Load and idle watts are per unit, observed under inference, not datasheet TDP.';
 }
 

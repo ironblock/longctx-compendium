@@ -1,7 +1,7 @@
 :root {
   --bg:#090d13; --panel:#0f1520; --panel2:#0b1019; --line:#1a2535;
   --text:#ccd6e0; --muted:#6b7a8d; --dim:#3d4e60;
-  --m:#5fd97a; --e:#f3b54c; --i:#c2708f;
+  --m:#5fd97a; --e:#f3b54c; --i:#c2708f; --u:#5b9bd5;
   --bad:#ff6060; --warn:#ffa040; --ok:#5fd97a;
   --mono:'Space Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
 }
@@ -71,6 +71,10 @@ tbody tr:hover{background:rgba(255,255,255,.015)}
 .c-i{box-shadow:inset 2px 0 0 var(--i);background:rgba(194,112,143,.05)}
 .c-i .num{font-style:italic}
 .c-n{color:var(--dim)}
+/* believed-supported-but-unsourced: distinct from c-n's "confirmed absent or
+   never checked" dash, so the two states can't be mistaken for each other */
+.c-u{box-shadow:inset 2px 0 0 var(--u);background:rgba(91,155,213,.05)}
+.c-u .num{color:var(--u);cursor:help}
 .t-ok{color:var(--ok)} .t-warn{color:var(--warn)} .t-bad{color:var(--bad)}
 .grp{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;background:var(--panel2);color:var(--dim);border-top:1px solid var(--line)}
 

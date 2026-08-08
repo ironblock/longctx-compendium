@@ -212,6 +212,23 @@ async function withPatchedData(patch) {
   await p.close();
 }
 
+// "Believed supported, no figure yet" must render as a distinct '?', not the
+// same blank dash as "confirmed unsupported" or "never checked".
+{
+  const { p, errs } = await withPatchedData(doc => {
+    const t = doc.units.find(x => x.id === 'rtx_pro_6000');
+    t.compute.unknown = ['fp8'];
+    // fp8 already has a value on this unit -- move it elsewhere so the '?'
+    // path (no value recorded at all) is what's actually under test.
+    delete t.compute.values.fp8;
+    delete t.compute.values['fp8:sparse'];
+  });
+  const cell = p.locator('#specTable tbody tr', { hasText: 'RTX PRO 6000' }).first().locator('td.c-u');
+  check('unknown precision renders a distinct "?" marker', (await cell.locator('.num').textContent()) === '?');
+  check('unknown-precision patch caused no errors', errs.length === 0, errs.join(' | '));
+  await p.close();
+}
+
 // A device added with nothing but a name must render as gaps, not a blank page.
 {
   const { p, errs } = await withPatchedData(doc => {
