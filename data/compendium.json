@@ -288,7 +288,7 @@
         "https://www.iclarified.com/p624/mac-studio-m3-ultra-28core-cpu-60core-gpu-96gb-ram-1tb-ssd",
         "https://www.eatyourbytes.com/applecpu-detail/apple-m3-ultra-60-core-gpu/"
       ],
-      "note": "Apple publishes 480 W 'maximum continuous power' for the Mac Studio \u2014 a PSU rating for the whole machine, not a GPU TDP."
+      "note": "Apple publishes 480 W 'maximum continuous power' for the Mac Studio \u2014 a PSU rating for the whole machine, not a GPU TDP. Apple does not publish formal per-precision GPU compute figures the way NVIDIA/AMD/Intel do (no FP16/BF16/INT8 TFLOPS/TOPS spec exists in any official Apple material) -- this entry stays FP32-only for that reason, not for lack of searching."
     },
     {
       "id": "strix_halo",
@@ -301,7 +301,9 @@
         "values": {
           "fp32": 14.85,
           "fp16": 59.4,
-          "bf16": 59.4
+          "bf16": 59.4,
+          "int8": 59.4,
+          "int4": 118.8
         },
         "source": "https://chipversus.com/hardware/gpu/radeon-8060s"
       },
@@ -324,9 +326,10 @@
         "https://www.amd.com/en/products/processors/laptop/ryzen/ai-300-series/amd-ryzen-ai-max-plus-395.html",
         "https://www.techpowerup.com/332745/amd-ryzen-ai-max-strix-halo-die-exposed-and-annotated",
         "https://chipversus.com/hardware/gpu/radeon-8060s",
-        "https://llm-tracker.info/AMD-Strix-Halo-(Ryzen-AI-Max+-395)-GPU-Performance"
+        "https://llm-tracker.info/AMD-Strix-Halo-(Ryzen-AI-Max+-395)-GPU-Performance",
+        "https://github.com/ROCm/amd_matrix_instruction_calculator"
       ],
-      "note": "AMD default TDP is 55 W, configurable 45\u2013120 W; the figure here would sit beside a 140 W observed inference draw and read as a contradiction, so it is left blank. The $1,999 figure circulating for this part is a Framework Desktop system price, not a chip MSRP; AMD publishes none. The widely-quoted 50 TOPS INT8 belongs to the XDNA 2 NPU, a different engine from the Radeon 8060S iGPU the other figures describe."
+      "note": "AMD default TDP is 55 W, configurable 45\u2013120 W; the figure here would sit beside a 140 W observed inference draw and read as a contradiction, so it is left blank. The $1,999 figure circulating for this part is a Framework Desktop system price, not a chip MSRP; AMD publishes none. The widely-quoted 50 TOPS INT8 belongs to the XDNA 2 NPU, a different engine from the Radeon 8060S iGPU the other figures describe. INT8/INT4 figures computed from AMD's own official ROCm amd_matrix_instruction_calculator tool (gfx1151), cross-checked against AMD's published RDNA3 WMMA throughput article -- AMD does not publish a standalone spec table for the 8060S iGPU. FP8 and 2:4 structured sparsity (SWMMAC) confirmed architecturally absent on this RDNA 3.5 part -- both arrive with RDNA4."
     },
     {
       "id": "pg199_card",
@@ -347,7 +350,8 @@
         "loadW": 250,
         "idleW": 50,
         "confidence": "i"
-      }
+      },
+      "note": "FP8 confirmed architecturally absent -- this is an Ampere-generation automotive board, predating FP8 tensor-core support (introduced with Hopper/Ada in 2022). No other compute.values figures were found from any public source; this remains the least-documented unit in the catalog."
     },
     {
       "id": "arc_b70",
@@ -390,7 +394,7 @@
         "GPU Poet eBay price tracking (Apr 2026)",
         "AI Inference Hardware \u2014 Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026)"
       ],
-      "note": "230W reference TDP (160-290W partner range). PCIe 5.0 x16, one GPU per card (unlike the dual-GPU B60's x8/x8 split). Software: SYCL/oneAPI is a valid current toolkit but immature -- llama.cpp SYCL backend and IPEX-LLM work today; vLLM requires Intel's maintained fork (mainline CUDA kernels won't run); no FP4/NVFP4 acceleration (XMX engines are FP16/INT8-optimized). StorageReview's verdict: \"the hardware is ready, the stack needs to catch up.\""
+      "note": "230W reference TDP (160-290W partner range). PCIe 5.0 x16, one GPU per card (unlike the dual-GPU B60's x8/x8 split). Software: SYCL/oneAPI is a valid current toolkit but immature -- llama.cpp SYCL backend and IPEX-LLM work today; vLLM requires Intel's maintained fork (mainline CUDA kernels won't run); no FP4/NVFP4 acceleration (XMX engines are FP16/INT8-optimized). StorageReview's verdict: \"the hardware is ready, the stack needs to catch up.\" FP8 and FP4/NVFP4 confirmed architecturally absent on this Battlemage Xe2 die (not merely undocumented) -- corroborates the earlier report's note that XMX engines here are FP16/INT8-optimized with no FP4 path."
     },
     {
       "id": "v100_sxm2",
@@ -424,7 +428,7 @@
       "sources": [
         "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla"
       ],
-      "note": "The Tesla table gives one row for the 16 GB and 32 GB SXM2 parts; clocks, bandwidth and throughput are identical across both, so only the capacity differs. FP16 is the tensor-core rate with FP32 accumulate \u2014 Volta has no structured-sparsity path."
+      "note": "The Tesla table gives one row for the 16 GB and 32 GB SXM2 parts; clocks, bandwidth and throughput are identical across both, so only the capacity differs. FP16 is the tensor-core rate with FP32 accumulate \u2014 Volta has no structured-sparsity path. No INT8 figure recorded: Volta's Tensor Cores are hard-wired FP16-input/FP32-accumulate only -- NVIDIA's own current Tensor Core page attributes full FP32/FP16/INT8/INT4 inference precision support to Turing onward, not Volta. No official DP4A/integer-ALU INT8 figure was ever published for V100 either (the Volta architecture whitepaper gives an INT8 figure for sibling Pascal parts P40/P4 but conspicuously omits one for V100). Unsourced ~62-63 TOPS figures circulating on aggregator sites appear to be an unofficial 4x-of-FP32 estimate, not a published spec -- not used."
     },
     {
       "id": "rtx_3090",
@@ -434,7 +438,20 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp32": 35.6,
+          "fp16": 142,
+          "fp16:sparse": 284,
+          "bf16": 71,
+          "bf16:sparse": 142,
+          "tf32": 35.6,
+          "tf32:sparse": 71,
+          "int8": 284,
+          "int8:sparse": 568,
+          "int4": 568,
+          "int4:sparse": 1136
+        },
+        "source": "https://www.nvidia.com/content/PDF/nvidia-ampere-ga-102-gpu-architecture-whitepaper-v2.pdf"
       },
       "pricing": {
         "street": {
@@ -451,7 +468,8 @@
       },
       "memoryBandwidthGBs": 936,
       "sources": [
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026) -- corrected mid-session against resaleprices.com/bestvaluegpu.com after a contamination check"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026) -- corrected mid-session against resaleprices.com/bestvaluegpu.com after a contamination check",
+        "https://www.nvidia.com/content/PDF/nvidia-ampere-ga-102-gpu-architecture-whitepaper-v2.1.pdf"
       ]
     },
     {
@@ -466,7 +484,15 @@
         "values": {
           "fp64": 9.7,
           "fp32": 19.5,
-          "fp16": 312
+          "fp16": 312,
+          "tf32": 156,
+          "tf32:sparse": 312,
+          "bf16": 312,
+          "bf16:sparse": 624,
+          "int8": 624,
+          "int8:sparse": 1248,
+          "int4": 1248,
+          "int4:sparse": 2496
         }
       },
       "pricing": {
@@ -488,7 +514,8 @@
       },
       "sources": [
         "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://images.nvidia.com/aem-dam/en-zz/Solutions/data-center/nvidia-ampere-architecture-whitepaper.pdf"
       ],
       "note": "The Tesla table collapses the 40 GB and 80 GB PCIe cards into one row. Its 1555 GB/s, 250 W and May-2020 launch all describe the 40 GB HBM2 part; the 80 GB HBM2e card differs on all three, so those fields are deliberately left unset here. The compute figures are shared \u2014 same GA100 die and clocks \u2014 so they are taken."
     },
@@ -507,7 +534,15 @@
         "values": {
           "fp64": 33.5,
           "fp32": 66.9,
-          "fp16": 989.4
+          "fp16": 989.4,
+          "tf32": 494.7,
+          "tf32:sparse": 989.4,
+          "bf16": 989.4,
+          "bf16:sparse": 1978.9,
+          "fp8": 1978.9,
+          "fp8:sparse": 3957.8,
+          "int8": 1978.9,
+          "int8:sparse": 3957.8
         }
       },
       "pricing": {
@@ -524,7 +559,8 @@
       },
       "sources": [
         "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://www.glennklockwood.com/garden/processors/h100"
       ],
       "note": "Reference only \u2014 no benchmarks on this page. The Tesla row lists 64/80/96 GB variants; 80 GB is the common one."
     },
@@ -543,7 +579,15 @@
         "values": {
           "fp64": 25.6,
           "fp32": 51.2,
-          "fp16": 756.4
+          "fp16": 756.4,
+          "tf32": 378.2,
+          "tf32:sparse": 756,
+          "bf16": 756.4,
+          "bf16:sparse": 1513,
+          "fp8": 1512.9,
+          "fp8:sparse": 3026,
+          "int8": 1512.9,
+          "int8:sparse": 3026
         }
       },
       "pricing": {
@@ -560,7 +604,9 @@
       },
       "sources": [
         "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://forums.developer.nvidia.com/t/how-to-calculate-the-tensor-core-fp16-performance-of-h100/244727",
+        "https://www.aspsys.com/wp-content/uploads/2023/09/nvidia-h100-datasheet.pdf"
       ],
       "note": "Reference only \u2014 no benchmarks on this page. HBM2E rather than the SXM card's HBM3, which is most of the bandwidth gap."
     },
@@ -653,7 +699,10 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp32": 40
+        },
+        "source": "https://www.nvidia.com/en-us/geforce/news/geforce-rtx-3090-ti-out-now/"
       },
       "pricing": {
         "street": {
@@ -664,7 +713,8 @@
         }
       },
       "sources": [
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026) -- corrected mid-session against bestvaluegpu.com after a contamination check"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026) -- corrected mid-session against bestvaluegpu.com after a contamination check",
+        "https://www.nvidia.com/en-us/geforce/news/geforce-rtx-3090-ti-out-now/"
       ],
       "note": "Fully-unlocked GA102."
     },
@@ -677,7 +727,20 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp32": 82.6,
+          "fp16": 330.3,
+          "fp16:sparse": 660.6,
+          "bf16": 165.2,
+          "bf16:sparse": 330.4,
+          "fp8": 660.6,
+          "fp8:sparse": 1321.2,
+          "int8": 660.6,
+          "int8:sparse": 1321.2,
+          "int4": 1321.2,
+          "int4:sparse": 2642.4
+        },
+        "source": "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf"
       },
       "pricing": {
         "street": {
@@ -687,7 +750,8 @@
         }
       },
       "sources": [
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf"
       ]
     },
     {
@@ -699,7 +763,20 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp32": 38.7,
+          "fp16": 154.8,
+          "fp16:sparse": 309.6,
+          "bf16": 154.8,
+          "bf16:sparse": 309.6,
+          "tf32": 77.4,
+          "tf32:sparse": 154.8,
+          "int8": 309.7,
+          "int8:sparse": 619.4,
+          "int4": 619.3,
+          "int4:sparse": 1238.6
+        },
+        "source": "https://www.nvidia.com/content/PDF/nvidia-ampere-ga-102-gpu-architecture-whitepaper-v2.pdf"
       },
       "pricing": {
         "msrp": {
@@ -714,7 +791,8 @@
         }
       },
       "sources": [
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://www.nvidia.com/content/PDF/nvidia-ampere-ga-102-gpu-architecture-whitepaper-v2.pdf"
       ],
       "note": "Ampere workstation card, 48GB GDDR6 ECC + NVLink -- budget path to 96GB with 2 cards."
     },
@@ -727,7 +805,20 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp32": 91.1,
+          "fp16": 364.2,
+          "fp16:sparse": 728.4,
+          "bf16": 364.2,
+          "bf16:sparse": 728.4,
+          "fp8": 728.5,
+          "fp8:sparse": 1457,
+          "int8": 728.5,
+          "int8:sparse": 1457,
+          "int4": 1457,
+          "int4:sparse": 2914
+        },
+        "source": "https://images.nvidia.com/aem-dam/en-zz/Solutions/technologies/NVIDIA-ADA-GPU-PROVIZ-Architecture-Whitepaper_1.1.pdf"
       },
       "pricing": {
         "street": {
@@ -737,7 +828,9 @@
         }
       },
       "sources": [
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://images.nvidia.com/aem-dam/en-zz/Solutions/technologies/NVIDIA-ADA-GPU-PROVIZ-Architecture-Whitepaper_1.1.pdf",
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/rtx-6000/proviz-print-rtx6000-datasheet-web-2504660.pdf"
       ],
       "note": "No NVLink; 18,176 CUDA cores. Predecessor to RTX PRO 6000 Blackwell."
     },
@@ -750,7 +843,20 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp32": 91.6,
+          "fp16": 362.05,
+          "fp16:sparse": 733,
+          "bf16": 362.05,
+          "bf16:sparse": 733,
+          "fp8": 733,
+          "fp8:sparse": 1466,
+          "int8": 733,
+          "int8:sparse": 1466,
+          "int4": 733,
+          "int4:sparse": 1466
+        },
+        "source": "https://www.nvidia.com/en-us/data-center/l40s/"
       },
       "pricing": {
         "street": {
@@ -760,9 +866,10 @@
         }
       },
       "sources": [
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://www.nvidia.com/en-us/data-center/l40s/"
       ],
-      "note": "PCIe-only, no NVLink. FP8 support."
+      "note": "PCIe-only, no NVLink. FP8 support. NVIDIA's official datasheet lists INT4 (733 / 1,466 sparse TOPS) as identical to the FP8/INT8 row -- architecturally implausible (INT4 is normally ~2x INT8 on Ada, e.g. RTX 4090: INT8 660.6 vs INT4 1321.2) and very likely an uncorrected duplication on NVIDIA's page, but genuinely what it currently states -- kept as published rather than guessed at."
     },
     {
       "id": "radeon_pro_w7900",
@@ -773,7 +880,14 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp32": 61.3,
+          "fp16": 123,
+          "bf16": 123,
+          "int8": 123,
+          "int4": 245
+        },
+        "source": "https://www.amd.com/en/products/graphics/workstations/radeon-pro/w7900.html"
       },
       "pricing": {
         "msrp": {
@@ -788,7 +902,9 @@
         }
       },
       "sources": [
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://gpuopen.com/learn/wmma_on_rdna3/",
+        "https://www.amd.com/en/products/graphics/workstations/radeon-pro/w7900-dual-slot.html"
       ],
       "note": "ROCm on Linux. AMD claims ~38% better AI-perf/$ than RTX 6000 Ada."
     },
@@ -801,7 +917,14 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp32": 61.4,
+          "fp16": 123,
+          "bf16": 123,
+          "int8": 123,
+          "int4": 246
+        },
+        "source": "https://www.amd.com/en/products/graphics/desktops/radeon/7000-series/amd-radeon-rx-7900xtx.html"
       },
       "pricing": {
         "street": {
@@ -811,7 +934,9 @@
         }
       },
       "sources": [
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://gpuopen.com/learn/wmma_on_rdna3/",
+        "https://www.amd.com/en/products/graphics/desktops/radeon/7000-series/amd-radeon-rx-7900xtx.html"
       ],
       "note": "RDNA3 (gfx1100), official ROCm support. Edges the RTX 3090 on bandwidth."
     },
@@ -826,7 +951,8 @@
         "unit": "Tops",
         "note": "dense unless the key says :sparse; 10^12 ops/sec",
         "values": {
-          "int8": 197
+          "int8": 197,
+          "fp32": 12.28
         },
         "source": "AI Inference Hardware \u2014 Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026) -- Intel official spec sheet, per CraftRigs reporting"
       },
@@ -838,7 +964,8 @@
         }
       },
       "sources": [
-        "AI Inference Hardware \u2014 Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026)"
+        "AI Inference Hardware \u2014 Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026)",
+        "https://www.intel.com/content/www/us/en/products/sku/245796/intel-arc-pro-b65-graphics/specifications.html"
       ],
       "note": "Same 32GB/608GB/s as the B70 but fewer compute cores (20 vs 32 Xe cores, 160 vs 256 XMX engines, 200W vs 230W). Initially misreported pre-launch as a 24GB part; Intel's official spec sheet confirms 32GB."
     },
@@ -852,7 +979,14 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp64": 22.6,
+          "fp32": 45.3,
+          "fp16": 181,
+          "bf16": 181,
+          "int8": 181
+        },
+        "source": "https://www.amd.com/en/products/accelerators/instinct/mi200/mi210.html"
       },
       "pricing": {
         "street": {
@@ -863,7 +997,8 @@
       },
       "sources": [
         "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
-        "AI Inference Hardware \u2014 Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026)"
+        "AI Inference Hardware \u2014 Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026)",
+        "https://www.amd.com/en/products/accelerators/instinct/mi200/mi210.html"
       ],
       "note": "The only native-PCIe Instinct card (MI250/MI250X/MI300X/MI300A are OAM-only) -- the practical AMD path to 128GB with 2 cards. As of Aug 2026 there is no validated single-OAM-module-to-PCIe carrier for AMD Instinct (firmware-locked PSP signing, encrypted HPE BMC on OEM-branded MI250X modules); MI210 sidesteps that dead end entirely. Strong FP64 (45.3 TFLOPS matrix)."
     },
@@ -877,11 +1012,22 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp64": 81.7,
+          "fp32": 163.4,
+          "bf16": 1307.4,
+          "bf16:sparse": 2614.9,
+          "fp16": 1307.4,
+          "fp16:sparse": 2614.9,
+          "int8": 2614.9,
+          "int8:sparse": 5229.8
+        },
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/instinct-mi325x-datasheet.pdf"
       },
       "pricing": {},
       "sources": [
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/instinct-mi325x-datasheet.pdf"
       ],
       "note": "Reference only -- no benchmarks on this page, and no direct purchase price: OEM channel only, referenced by cloud rental rate ($2.25-$3.31/hr) rather than a street or MSRP figure. Ships 256GB, not the pre-announced 288GB."
     },
@@ -894,7 +1040,19 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "tf32": 495,
+          "tf32:sparse": 989,
+          "bf16": 990,
+          "bf16:sparse": 1979,
+          "fp16": 990,
+          "fp16:sparse": 1979,
+          "fp8": 1979,
+          "fp8:sparse": 3958,
+          "int8": 1979,
+          "int8:sparse": 3958
+        },
+        "source": "https://www.nvidia.com/en-us/data-center/h200/"
       },
       "pricing": {
         "street": {
@@ -904,7 +1062,9 @@
         }
       },
       "sources": [
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://lenovopress.lenovo.com/lp1944.pdf",
+        "https://www.nvidia.com/en-us/data-center/h200/"
       ],
       "note": "Reference only -- no benchmarks on this page. Exceeds this page's 96-128GB build class on a single card."
     },
@@ -918,7 +1078,22 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp32": 75,
+          "tf32": 1100,
+          "tf32:sparse": 2200,
+          "bf16": 2250,
+          "bf16:sparse": 4500,
+          "fp16": 2250,
+          "fp16:sparse": 4500,
+          "fp8": 4500,
+          "fp8:sparse": 9000,
+          "fp4": 9000,
+          "fp4:sparse": 18000,
+          "int8": 4500,
+          "int8:sparse": 9000
+        },
+        "source": "https://nvdam.widen.net/s/wwnsxrhm2w/blackwell-datasheet-3384703"
       },
       "pricing": {
         "street": {
@@ -928,7 +1103,8 @@
         }
       },
       "sources": [
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://nvdam.widen.net/s/wwnsxrhm2w/blackwell-datasheet-3384703"
       ],
       "note": "Reference only -- no benchmarks on this page. SXM-only (no PCIe); requires HGX/UBB baseboard, not a standalone purchase."
     },
@@ -941,7 +1117,17 @@
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
-        "values": {}
+        "values": {
+          "fp4": 15000,
+          "fp4:sparse": 20000,
+          "fp8": 5000,
+          "fp8:sparse": 10000,
+          "bf16:sparse": 5000,
+          "fp16:sparse": 5000,
+          "int8:sparse": 333.33,
+          "fp32": 83.33
+        },
+        "source": "https://www.nvidia.com/en-us/data-center/gb300-nvl72/"
       },
       "pricing": {
         "street": {
@@ -952,9 +1138,11 @@
         }
       },
       "sources": [
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://developer.nvidia.com/blog/inside-nvidia-blackwell-ultra-the-chip-powering-the-ai-factory-era/",
+        "https://www.nvidia.com/en-us/data-center/gb300-nvl72/"
       ],
-      "note": "Reference only -- no benchmarks on this page."
+      "note": "Reference only -- no benchmarks on this page. Most compute.values figures here are per-GPU derived by dividing NVIDIA's published 72-GPU GB300 NVL72 rack totals by 72 -- this division method was cross-validated by applying it to the non-Ultra GB200 NVL72 page and reproducing B200's independently-known 80 TFLOPS FP32 spec exactly. No dense (non-sparse) BF16/FP16/INT8 breakout is published for this part, only combined sparse rack figures. The int8:sparse figure (333.33 TOPS) is ~30x lower than this same part's fp8:sparse (10,000) -- an apparent anomaly on NVIDIA's own page, not an extraction error (confirmed against the source and against GB200's page, where INT8 does equal FP8) -- kept as published rather than silently corrected."
     }
   ],
   "platforms": [
