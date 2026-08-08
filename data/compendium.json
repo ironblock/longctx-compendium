@@ -448,6 +448,7 @@
           "fp16": 119.2
         },
         "unsupported": [
+          "bf16",
           "int8"
         ]
       },
@@ -468,7 +469,7 @@
       "sources": [
         "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla"
       ],
-      "note": "The Tesla table gives one row for the 16 GB and 32 GB SXM2 parts; clocks, bandwidth and throughput are identical across both, so only the capacity differs. FP16 is the tensor-core rate with FP32 accumulate \u2014 Volta has no structured-sparsity path. No INT8 figure recorded: Volta's Tensor Cores are hard-wired FP16-input/FP32-accumulate only -- NVIDIA's own current Tensor Core page attributes full FP32/FP16/INT8/INT4 inference precision support to Turing onward, not Volta. No official DP4A/integer-ALU INT8 figure was ever published for V100 either (the Volta architecture whitepaper gives an INT8 figure for sibling Pascal parts P40/P4 but conspicuously omits one for V100). Unsourced ~62-63 TOPS figures circulating on aggregator sites appear to be an unofficial 4x-of-FP32 estimate, not a published spec -- not used."
+      "note": "The Tesla table gives one row for the 16 GB and 32 GB SXM2 parts; clocks, bandwidth and throughput are identical across both, so only the capacity differs. FP16 is the tensor-core rate with FP32 accumulate \u2014 Volta has no structured-sparsity path. No INT8 figure recorded: Volta's Tensor Cores are hard-wired FP16-input/FP32-accumulate only -- NVIDIA's own current Tensor Core page attributes full FP32/FP16/INT8/INT4 inference precision support to Turing onward, not Volta. No official DP4A/integer-ALU INT8 figure was ever published for V100 either (the Volta architecture whitepaper gives an INT8 figure for sibling Pascal parts P40/P4 but conspicuously omits one for V100). Unsourced ~62-63 TOPS figures circulating on aggregator sites appear to be an unofficial 4x-of-FP32 estimate, not a published spec -- not used. Also lacks BF16 (arrived with Ampere, later still than Turing) -- the same FP16-input/FP32-accumulate-only tensor path that rules out INT8 rules out BF16 too."
     },
     {
       "id": "rtx_3090",
