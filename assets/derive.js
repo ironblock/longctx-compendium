@@ -105,6 +105,78 @@ export const wcById = (model, arch) =>
   Object.fromEntries(computeWC(model, arch).map(x => [x.id, x]));
 
 /**
+ * The cold wall-clock above answers "what does a session START, a cache
+ * eviction, or a mid-prefix edit cost" -- not "what does turn 50 of an
+ * otherwise-untouched session cost". An active session's KV cache stays hot
+ * turn to turn, so nothing re-prefills the existing context. But caching only
+ * erases the cost of the PAST: for full/quadratic attention, each newly
+ * appended token still has to attend across the entire existing cache, so the
+ * marginal cost of the next turn keeps growing with session depth even
+ * though nothing is literally re-prefilled. That growth is exactly the slope
+ * of the cold prefill curve -- this derives it by differencing cumulative
+ * time (tokens / pp) between consecutive context checkpoints, rather than
+ * needing a separate "incremental append" benchmark that doesn't exist.
+ * Linear/hybrid-attention architectures (Mamba2, Gated DeltaNet) are the
+ * thing that actually escapes this scaling -- see the Strix Halo note.
+ */
+export function marginalSegments(model, arch, platId) {
+  const pp = model.PP[arch][platId];
+  const segments = [];
+  for (let i = 0; i < model.CTX.length - 1; i++) {
+    const n1 = model.CTX[i], n2 = model.CTX[i + 1];
+    const v1 = pp.v[i], v2 = pp.v[i + 1];
+    const c1 = pp.c[i], c2 = pp.c[i + 1];
+    if (v1 == null || v2 == null) {
+      segments.push(null);
+      continue;
+    }
+    const t1 = n1 / v1, t2 = n2 / v2;
+    const dTime = t2 - t1;
+    segments.push({
+      fromCtx: n1,
+      toCtx: n2,
+      // Marginal tokens/sec for tokens appended within this segment. A
+      // non-positive dTime means the curve inverted between checkpoints
+      // (measurement noise, not a real speedup appending more context).
+      rate: dTime > 0 ? (n2 - n1) / dTime : null,
+      est: c1 !== 'm' || c2 !== 'm',
+    });
+  }
+  return segments;
+}
+
+const marginalRateAt = (model, arch, platId, atCtx) =>
+  marginalSegments(model, arch, platId).find(s => s && atCtx >= s.fromCtx && atCtx < s.toCtx) ?? null;
+
+// Matches computeWC's default 16K prompt / 2K generation, so the cold and
+// steady-state charts describe the same-sized turn and are directly
+// comparable rather than differing in two variables at once.
+export const STEADY_STATE_AT_CTX = 16384;
+export const STEADY_STATE_TOKENS = 2048;
+
+/**
+ * Steady-state turn: append `newTokens` onto a session already `atCtx`
+ * tokens deep (KV cache hot, nothing re-processed), then generate
+ * `genTokens`. This is the number an active session actually pays turn to
+ * turn -- computeWC above is what a cold event costs, not a typical turn.
+ */
+export function computeSteadyState(model, arch, atCtx = STEADY_STATE_AT_CTX, newTokens = STEADY_STATE_TOKENS, genTokens = STEADY_STATE_TOKENS) {
+  return model.PLAT.map(p => {
+    const seg = marginalRateAt(model, arch, p.id, atCtx);
+    const tg = model.TG[arch][p.id];
+    if (!seg?.rate || !tg.v) return { id: p.id, ttft: null, gen: null, total: null, est: true };
+    const ttft = newTokens / seg.rate;
+    const gen = genTokens / tg.v;
+    return { id: p.id, ttft, gen, total: ttft + gen, est: seg.est || tg.c !== 'm' };
+  });
+}
+
+export const steadyStateById = (model, arch, atCtx, newTokens, genTokens) =>
+  Object.fromEntries(
+    computeSteadyState(model, arch, atCtx, newTokens, genTokens).map(x => [x.id, x])
+  );
+
+/**
  * A build's decode rate for an archetype: inherited from its platform when the
  * build is just that platform in a case, explicit when it is a multi-card rig
  * whose numbers do not match any single-card entry.

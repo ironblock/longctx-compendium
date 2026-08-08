@@ -206,6 +206,43 @@ Specifications and prices are plain numbers — they are datasheet facts, not
 benchmarks, so they carry a `source` or `asOf` on their block rather than a
 confidence code.
 
+## Prefill is a per-event cost, not a per-turn cost
+
+Read this before writing prose about wall-clock, TTFT, or "how long a turn
+takes" anywhere on this page — it is easy to imply the wrong thing without
+meaning to.
+
+No inference server worth using re-prefills the whole context every turn in
+an active session. The KV cache from earlier turns stays hot, and only newly
+appended tokens get processed. That means the **cold-start** number this page
+computes as `context_length ÷ pp(context_length)` — the "wall-clock turn" that
+was the original framing — is what a session *start* costs, a cache eviction,
+or a context-mutating edit (anything that busts the cache). It is not what
+turn 50 of an otherwise-untouched session costs, and prose that implies
+otherwise is misleading even though the number itself is correct.
+
+What caching does **not** erase: for full/quadratic attention, each newly
+appended token still has to attend across the entire existing cache, so the
+marginal cost of the *next* turn keeps growing with session depth even though
+nothing is literally re-prefilled. That growth is exactly the slope of the
+prefill-falloff curve already on this page — `assets/derive.js`'s
+`marginalSegments()` derives it directly from the existing `pp(context)`
+checkpoints (differencing cumulative time, `tokens ÷ pp`, between consecutive
+context lengths) rather than needing a separate incremental-append benchmark
+that doesn't exist. `computeSteadyState()` uses that marginal rate to price
+"append N tokens onto a session already this deep, then generate" — the
+number an active agentic loop actually pays turn to turn.
+
+Linear/hybrid-attention architectures (Mamba2, Gated DeltaNet) are the one
+thing that genuinely escapes this scaling — their marginal rate stays close
+to flat regardless of session depth, which is the real payoff of that
+architecture class for long sessions, not just a nicer cold-start number. The
+Strix Halo method note already documents this directly: DeltaNet keeps
+long-context KV growth nearly flat, 4K→32K adding only 560 MB.
+
+If you're adding a new wall-clock-adjacent chart, table, or sentence: say
+which of the two you mean. "Wall-clock" alone is now ambiguous on this page.
+
 ## Adding data points, not devices
 
 **A context length for one device** — add the key. It must already exist in

@@ -127,7 +127,7 @@ check('precision chart painted', await canvasPainted('precChart'));
 // Every toggle in every combination, asserting the page survives each click.
 for (const [group, ids] of [
   ['#archTg', ['moe', 'dense', 'oss120b']],
-  ['#viewTg', ['pp', 'tg', 'wc']],
+  ['#viewTg', ['pp', 'tg', 'wc', 'ss']],
   ['#valModelTg', ['tg120', 'tgMoe']],
   ['#valPowerTg', ['load', 'idle']],
 ]) {
@@ -137,6 +137,19 @@ for (const [group, ids] of [
     await page.waitForTimeout(120);
     check(`${group} → ${v} renders cleanly`, consoleErrors.length === before, consoleErrors.slice(before).join(' | '));
   }
+}
+
+// Steady-state view: its own chart and its own verdict prose, not just the
+// cold wall-clock chart relabeled.
+{
+  await page.locator('#viewTg button[data-v="ss"]').click();
+  await page.waitForTimeout(150);
+  check('steady-state chart painted', await canvasPainted('ssChart'));
+  check('steady-state caption rendered', (await text('#ssCap')).length > 10);
+  check('steady-state verdict rendered', (await text('#verdict')).length > 80);
+  check('steady-state verdict mentions warm/steady', /steady-state/i.test(await text('#verdict')));
+  await page.locator('#viewTg button[data-v="pp"]').click();
+  await page.waitForTimeout(150);
 }
 
 // Precision toggle: buttons are rebuilt from data rather than hand-authored,

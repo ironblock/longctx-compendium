@@ -2,7 +2,7 @@
 // part most often rewritten, and because prose interleaved with Chart.js config
 // is miserable to review in a diff.
 
-import { computeWC, fmtT } from './derive.js';
+import { computeWC, computeSteadyState, fmtT } from './derive.js';
 
 export function prefillVerdict(model, arch) {
   const wc = computeWC(model, arch);
@@ -39,6 +39,60 @@ export function prefillVerdict(model, arch) {
   );
 }
 
+/**
+ * The steady-state counterpart to prefillVerdict above -- same per-arch
+ * structure, but narrating what an active session actually pays turn to
+ * turn rather than what a cold event costs. See computeSteadyState's own
+ * comment in derive.js for why this isn't just "caching makes it free".
+ */
+export function steadyStateVerdict(model, arch) {
+  const ss = computeSteadyState(model, arch);
+  const cold = computeWC(model, arch);
+  const ranked = ss.filter(x => x.total).sort((a, b) => a.total - b.total);
+  const best = ranked[0];
+  const worst = ranked[ranked.length - 1];
+  const plat = Object.fromEntries(model.PLAT.map(p => [p.id, p]));
+  const name = id => `<b style="color:${plat[id].color}">${plat[id].short}</b>`;
+
+  if (!best) {
+    return (
+      `<b>Steady-state turn.</b> No platform in this archetype has both a measured decode rate and a ` +
+      `bracketing prefill segment to derive a marginal append rate from yet.`
+    );
+  }
+
+  const compare = id => {
+    const s = ss.find(x => x.id === id)?.total;
+    const c = cold.find(x => x.id === id)?.total;
+    if (!s || !c) return '';
+    return ` (${fmtT(s)} steady-state vs ${fmtT(c)} cold — ${Math.round((1 - s / c) * 100)}% faster once warm)`;
+  };
+
+  if (arch === 'moe') {
+    return (
+      `<b>MoE steady-state — the number that actually governs an active session.</b> Fastest once warm: ` +
+      `${name(best.id)} at <b>${fmtT(best.total)}</b>${compare(best.id)}. Linear/hybrid attention (Nemotron-class ` +
+      `Mamba2, Gated DeltaNet) keeps this close to flat no matter how deep the session already is — full-attention ` +
+      `platforms don't get that escape, and their steady-state number keeps climbing the longer the session runs, ` +
+      `even though nothing is being re-prefilled.`
+    );
+  }
+  if (arch === 'dense') {
+    return (
+      `<b>Dense steady-state.</b> Dense full-attention gets none of the architectural relief MoE/hybrid models ` +
+      `get: every appended token still attends across the whole cache. Fastest once warm: ${name(best.id)} at ` +
+      `<b>${fmtT(best.total)}</b>${compare(best.id)}. This is the honest floor for a long dense-model agentic ` +
+      `session — caching buys you the past, not the climbing marginal cost of the present.`
+    );
+  }
+  return (
+    `<b>gpt-oss-120B steady-state.</b> Fastest once warm: ${name(best.id)} at <b>${fmtT(best.total)}</b>` +
+    `${compare(best.id)}. Slowest: ${name(worst.id)} at <b>${fmtT(worst.total)}</b>. Compare against the ` +
+    `Cold-start wall-clock view for the same platforms — the gap between the two is the entire caching story ` +
+    `for this archetype.`
+  );
+}
+
 export function valueVerdict(valModel, valPower) {
   const isLoad = valPower === 'load';
   if (valModel === 'tg120') {
@@ -55,7 +109,8 @@ export const captionFor = (model, arch, kind) => {
   const desc = model.ARCH_DESC[arch];
   if (kind === 'pp') return `${desc} · prefill throughput (tokens/sec)`;
   if (kind === 'tg') return `${desc} · decode rate (tokens/sec) · single-stream`;
-  return `${desc} · wall-clock: 16K-token prompt + 2K generated`;
+  if (kind === 'ss') return `${desc} · steady-state turn: append 2K to a 16K-deep warm session + 2K generated`;
+  return `${desc} · cold-start wall-clock: 16K-token prompt from empty + 2K generated`;
 };
 
 export const valueCaption = (valModel, valPower) => {

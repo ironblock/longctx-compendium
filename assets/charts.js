@@ -4,6 +4,9 @@
 
 import {
   computeWC,
+  computeSteadyState,
+  STEADY_STATE_AT_CTX,
+  STEADY_STATE_TOKENS,
   fmtT,
   hexA,
   platColor,
@@ -175,7 +178,9 @@ export function renderDecode(model, state) {
   });
 }
 
-// === Wall-clock: TTFT + generation, stacked ===
+// === Cold-start wall-clock: TTFT + generation, stacked ===
+// What a session START, a cache eviction, or a mid-prefix edit costs -- see
+// renderSteadyState below for what an already-warm turn costs instead.
 export function renderWallClock(model, state) {
   const sorted = computeWC(model, state.arch)
     .filter(x => x.total !== null)
@@ -190,7 +195,7 @@ export function renderWallClock(model, state) {
       labels,
       datasets: [
         {
-          label: 'TTFT (16K prefill)',
+          label: 'TTFT (16K cold prefill)',
           data: sorted.map(x => x.ttft),
           backgroundColor: sorted.map(x => platColor(model, x.id, 0.9)),
           borderColor: borders,
@@ -240,6 +245,86 @@ export function renderWallClock(model, state) {
       },
       scales: {
         x: axis('wall-clock seconds (TTFT + generation, stacked)', {
+          stacked: true,
+          ticks: { color: TICKC, font: MONO_S, callback: v => (v < 60 ? v + 's' : (v / 60).toFixed(1) + 'm') },
+        }),
+        y: { stacked: true, grid: { color: 'rgba(0,0,0,0)' }, ticks: { color: TICKC, font: MONO } },
+      },
+    },
+  });
+}
+
+// === Steady-state turn: append + generate, once the session is already warm ===
+// Same 16K-deep / 2K-token turn size as the cold chart above, so the two are
+// directly comparable -- the only thing that changes is whether the prompt
+// is prefilled from empty or appended onto an already-hot KV cache. The gap
+// between the two IS the caching story: near-zero for linear/hybrid attention,
+// still substantial for full attention, because the marginal cost of new
+// tokens keeps scaling with how deep the session already is.
+export function renderSteadyState(model, state) {
+  const sorted = computeSteadyState(model, state.arch)
+    .filter(x => x.total !== null)
+    .sort((a, b) => a.total - b.total);
+  const platMap = Object.fromEntries(model.PLAT.map(p => [p.id, p]));
+  const labels = sorted.map(x => platMap[x.id].short);
+  const borders = sorted.map(x => platMap[x.id].color);
+
+  paint('ss', 'ssChart', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: `Append ${STEADY_STATE_TOKENS / 1024}K (warm, marginal rate)`,
+          data: sorted.map(x => x.ttft),
+          backgroundColor: sorted.map(x => platColor(model, x.id, 0.9)),
+          borderColor: borders,
+          borderWidth: 1.2,
+          borderRadius: 2,
+          stack: 's',
+        },
+        {
+          label: `Generation (${STEADY_STATE_TOKENS / 1024}K tokens)`,
+          data: sorted.map(x => x.gen),
+          backgroundColor: sorted.map(x => platColor(model, x.id, 0.4)),
+          borderColor: borders,
+          borderWidth: 1.2,
+          borderRadius: 2,
+          borderDash: [2, 2],
+          stack: 's',
+        },
+      ],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: '#8898a9',
+            font: MONO,
+            generateLabels: chart =>
+              chart.data.datasets.map((d, i) => ({
+                text: d.label,
+                fillStyle: i === 0 ? 'rgba(91,155,213,.7)' : 'rgba(91,155,213,.3)',
+                strokeStyle: 'transparent',
+                index: i,
+                hidden: !chart.isDatasetVisible(i),
+              })),
+          },
+        },
+        tooltip: {
+          ...TOOLTIP,
+          callbacks: {
+            title: i => `${labels[i[0].dataIndex]} · total: ${fmtT(sorted[i[0].dataIndex].total)}`,
+            label: c => `${c.dataset.label}: ${fmtT(c.parsed.x)}${c.datasetIndex === 0 ? ' (append)' : ' (gen)'}`,
+          },
+        },
+      },
+      scales: {
+        x: axis('wall-clock seconds (append + generation, stacked)', {
           stacked: true,
           ticks: { color: TICKC, font: MONO_S, callback: v => (v < 60 ? v + 's' : (v / 60).toFixed(1) + 'm') },
         }),

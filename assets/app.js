@@ -3,7 +3,7 @@
 
 import { load } from './data.js';
 import { archOf, precisionRows, precisionUnitLabel } from './derive.js';
-import { renderPrefill, renderDecode, renderWallClock, renderValue, renderPrecision } from './charts.js';
+import { renderPrefill, renderDecode, renderWallClock, renderSteadyState, renderValue, renderPrecision } from './charts.js';
 import {
   renderLegend,
   renderPrefillTable,
@@ -13,7 +13,7 @@ import {
   renderPrecisionToggle,
   renderVendorLegend,
 } from './tables.js';
-import { prefillVerdict, valueVerdict, captionFor, valueCaption } from './verdicts.js';
+import { prefillVerdict, steadyStateVerdict, valueVerdict, captionFor, valueCaption } from './verdicts.js';
 
 const state = {
   view: 'pp',
@@ -61,10 +61,16 @@ function renderMain(model) {
   el('ppCap').textContent = captionFor(model, state.arch, 'pp');
   el('tgCap').textContent = captionFor(model, state.arch, 'tg');
   el('wcCap').textContent = captionFor(model, state.arch, 'wc');
-  el('verdict').innerHTML = prefillVerdict(model, state.arch);
+  el('ssCap').textContent = captionFor(model, state.arch, 'ss');
+  // The verdict box is the bottom-line synthesis regardless of which chart is
+  // visible, but "the bottom line" means something different once you're
+  // looking at steady-state turns instead of a cold-start event.
+  el('verdict').innerHTML =
+    state.view === 'ss' ? steadyStateVerdict(model, state.arch) : prefillVerdict(model, state.arch);
 
   if (state.view === 'pp') renderPrefill(model, state);
   else if (state.view === 'tg') renderDecode(model, state);
+  else if (state.view === 'ss') renderSteadyState(model, state);
   else renderWallClock(model, state);
 }
 
@@ -108,6 +114,7 @@ function setView(v) {
   el('ppBox').classList.toggle('hidden', v !== 'pp');
   el('tgBox').classList.toggle('hidden', v !== 'tg');
   el('wcBox').classList.toggle('hidden', v !== 'wc');
+  el('ssBox').classList.toggle('hidden', v !== 'ss');
 }
 
 try {
