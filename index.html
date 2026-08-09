@@ -141,6 +141,29 @@
 </div>
 <div class="pleg" id="precLeg"></div>
 
+<h2>Theoretical maximum: roofline ceiling <span class="tail">what the catalog's own OPS + bandwidth numbers say a unit COULD do — before any benchmark</span></h2>
+<p style="font-size:13px;color:var(--muted);margin:6px 0 8px">Every measured number above sits below some physical ceiling: for a chosen model and storage quant, prefill is bounded by the unit's rated compute throughput and decode is bounded by its memory bandwidth. This table computes both ceilings straight from the hardware catalog — no benchmark involved — assuming <b style="color:var(--text)">perfect (100%) utilization</b>, so nothing real should ever exceed it. A measurement that DOES exceed its own ceiling (see <code>tools/roofline-check.mjs</code>) means something in its attribution is wrong, not that the hardware is unusually fast. Compute-precision-per-quant is currently the documented-safe floor (dequantize to FP16) everywhere a per-architecture native fast-path hasn't been separately grounded — see <code>docs/roofline-dequant-paths.md</code> — so a quant/architecture combo with a real faster native path (e.g. NVFP4 on Blackwell) will show a ceiling here that is <i>lower</i> than the true one, never higher.</p>
+
+<div class="tbar">
+  <div>
+    <div class="tglabel" style="margin-bottom:5px">Model</div>
+    <div class="tg" id="roofModelTg"></div>
+  </div>
+  <div>
+    <div class="tglabel" style="margin-bottom:5px">Storage quant</div>
+    <div class="tg" id="roofQuantTg"></div>
+  </div>
+</div>
+
+<div class="tscroll"><table id="roofTable">
+  <thead><tr>
+    <th class="lbl" style="min-width:190px">Platform</th>
+    <th>Prefill (t/s)</th><th>Decode (t/s)</th><th class="lbl">Basis</th>
+  </tr></thead>
+  <tbody></tbody>
+</table></div>
+<p class="src" id="roofCap"></p>
+
 <h2>Bang-for-buck-per-watt <span class="tail">96–128GB builds · gpt-oss-120B anchor · cost + power</span></h2>
 <p style="font-size:13px;color:var(--muted);margin:6px 0 8px">Scoped to builds that clear 96GB — the 120B model needs ~63GB, so single 32GB cards can't play. <b style="color:var(--text)">Power figures are estimates</b> (you confirmed no measured data beyond the docs); decode is measured for PRO 6000, 4× 3090, DGX Spark, Strix Halo and M3 Ultra, and modeled for the SXM2 builds + A100 (PG199 is fully unmeasured on LLMs). Reframe applied: <b style="color:var(--text)">off-when-idle</b>, so idle is a cost-of-how-you-run-it, not a disqualifier.</p>
 

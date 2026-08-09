@@ -14,6 +14,7 @@ import {
   renderVendorLegend,
 } from './tables.js';
 import { prefillVerdict, steadyStateVerdict, valueVerdict, captionFor, valueCaption } from './verdicts.js';
+import { renderRooflineToggles, renderRooflineTable } from './roofline-ui.js';
 
 const state = {
   view: 'pp',
@@ -23,6 +24,12 @@ const state = {
   valPower: 'load',
   precision: null,
   precHidden: new Set(),
+  // Q4_K_M is the single most-cited quant across this page's own perf
+  // notes, and the hybrid-MoE model is what most of the multi-point-
+  // measured platforms (B70, R9700, Strix Halo) actually ran, so the
+  // section opens on the comparison closest to what's already on the page.
+  roofModel: 'qwen36_35b_a3b',
+  roofQuant: 'q4_k_m',
 };
 
 const el = id => document.getElementById(id);
@@ -84,6 +91,11 @@ function renderValueSection(model) {
   el('valVerdict').innerHTML = valueVerdict(state.valModel, state.valPower);
 }
 
+function renderRooflineSection(model) {
+  renderRooflineToggles(state);
+  renderRooflineTable(model, state);
+}
+
 function renderPrecisionSection(model) {
   renderPrecisionToggle(model, state); // may update state.precision
   renderVendorLegend(model, state, () => renderPrecision(model, state));
@@ -128,6 +140,7 @@ try {
   renderDecodeTable(model);
   renderSpecTable(model);
   renderPrecisionSection(model);
+  renderRooflineSection(model);
   renderValueSection(model);
   renderMain(model);
 
@@ -155,6 +168,14 @@ try {
     if (!prec) return;
     state.precision = prec;
     renderPrecisionSection(model);
+  });
+  wireToggle('roofModelTg', 'rm', rm => {
+    state.roofModel = rm;
+    renderRooflineTable(model, state);
+  });
+  wireToggle('roofQuantTg', 'rq', rq => {
+    state.roofQuant = rq;
+    renderRooflineTable(model, state);
   });
 } catch (err) {
   fail(err);
