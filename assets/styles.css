@@ -63,6 +63,11 @@ table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:600px}
 th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-family:var(--mono);font-weight:400;font-size:10px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;background:var(--panel2);position:sticky;top:0}
 td.lbl,th.lbl{text-align:left}
+/* sortable headers: the catalog's columns are discovered from the data, so the
+   sort affordance has to be applied by class rather than named per column */
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--text);background:var(--panel)}
+th.sorted{color:var(--text);background:var(--panel)}
 tbody tr:hover{background:rgba(255,255,255,.015)}
 .num{font-family:var(--mono)}
 .c-m{box-shadow:inset 2px 0 0 var(--m);background:rgba(95,217,122,.05)}

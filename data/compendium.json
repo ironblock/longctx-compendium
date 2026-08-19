@@ -1063,13 +1063,14 @@
       "process": "Multiple -- 47 active tiles across five process nodes, combined via EMIB 2.5D + Foveros 3D packaging (Intel does not name individual node processes in its public product brief)",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec. fp64/fp32 are non-systolic (vector-engine) rated throughput -- Ponte Vecchio runs FP64 and FP32 at the same native 1:1 rate (unlike the usual 1:2), part of how Intel targeted 2 exaFLOPS peak FP64 for the Aurora supercomputer. bf16/fp16/tf32/int8/int4 execute on separate systolic (XMX) matrix engines per Intel's own datasheet, but no sourced per-model figure was found for any of them on this specific SKU after a real search.",
-        "source": "https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series (rated/boost-clock column, itself citing Intel's official product brief and ARK specification page)",
+        "note": "dense unless the key says :sparse; 10^12 ops/sec. fp64/fp32 are non-systolic (vector-engine) rated throughput -- Ponte Vecchio runs FP64 and FP32 at the same native 1:1 rate (unlike the usual 1:2), which Intel called out as a deliberate design choice and is how it targeted 2 exaFLOPS peak FP64 for the Aurora supercomputer. Both are the boost-clock figure and reproduce exactly from the shader count: 7168 ALUs x 2 FLOP/clock x 1.55 GHz = 22.22. bf16 is the same template's own Bfloat16 column. tf32/fp16/int8/int4 also execute on the systolic (XMX) matrix engines per Intel's datasheet, but no published per-SKU figure exists for them on this part -- Intel's 419 TFLOPS TF32 headline is the 1550, and scaling it by core count and clock would be deriving a number, not sourcing one.",
+        "source": "https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series (boost-clock row, itself citing Intel's official product brief and ARK specification page)",
         "values": {
           "fp64": 22.2,
-          "fp32": 22.2
+          "fp32": 22.2,
+          "bf16": 352
         },
-        "unknown": ["tf32", "bf16", "fp16", "int8", "int4"],
+        "unknown": ["tf32", "fp16", "int8", "int4"],
         "unsupported": ["fp8", "fp4"]
       },
       "pricing": {
@@ -1087,6 +1088,38 @@
         "Intel ARK Product Specification Comparison export (Max 1550 vs Max 1100), user-captured 2026-08-19"
       ],
       "note": "Reference only -- no benchmarks on this page, and there may not be any soon: llama.cpp's own community SYCL performance-reference thread (github.com/ggml-org/llama.cpp discussion #23313) has zero PVC datapoints as of this writing, despite the SYCL backend officially listing both Max 1550 and Max 1100 as verified devices. The only public PVC/llama.cpp number found anywhere is one changelog row (2025.2): Max 1550 going 39->73 tok/s on llama-2-7b Q4_0 -- 18-months-stale, on the flagship rather than this SKU, and roughly a tenth of an Arc A770's memory-bandwidth efficiency (the A770 posts 55-67 tok/s on a sixth of the bandwidth). The software stack has matured a lot since PVC's 2022 launch -- SYCL flash-attention (native and oneDNN-fused) landed 2026.03, and split-mode tensor (true tensor parallelism, not just layer-splitting) is explicitly 'optimized for 2 GPUs,' a good match for a 2-card 96GB build -- but nobody has published it running at depth. GGML_SYCL_FA_ONEDNN_MAX_KV exists specifically because 'GPU driver watchdog resets (DEVICE_LOST) occur during long-context inference,' with a documented workaround capping context near 24,576 tokens -- below this page's own long-context framing. Intel's own ARK listing gives this SKU's expected discontinuance as Jan 2026 (already past as of Aug 2026), which is presumably why pulled cards are turning up on eBay around $2,000 -- cheap for 48GB of HBM2e with real XMX matrix engines, expensive to be the first person to actually measure it at 128K context."
+    },
+    {
+      "id": "max_1550",
+      "label": "Data Center GPU Max 1550 128GB",
+      "vendor": "Intel",
+      "released": "2023-01",
+      "memoryGB": 128,
+      "memoryBandwidthGBs": 3276.8,
+      "tdpW": 600,
+      "process": "Multiple -- 47 active tiles across five process nodes, combined via EMIB 2.5D + Foveros 3D packaging (Intel does not name individual node processes in its public product brief)",
+      "compute": {
+        "unit": "Tops",
+        "note": "dense unless the key says :sparse; 10^12 ops/sec. fp64/fp32 are non-systolic (vector-engine) throughput at the 1:1 rate Ponte Vecchio is unusual for; tf32/bf16 are systolic (XMX) matrix-engine figures. Note that Wikipedia's Max-series template gives 54.423 in this row, which is a typo: its base-clock figure (29.491) reproduces exactly from 16384 ALUs x 2 FLOP/clock x 0.9 GHz, and the same arithmetic at the 1.6 GHz boost clock gives 52.43, not 54.42 -- the 1100 and 1350 rows of that same table are internally exact, so only this cell is wrong. Intel's own 52 TFLOPS headline is used here instead. The tf32 and bf16 figures corroborate each other independently: Intel's 419 TF32 doubled is 838 against the template's 832 bf16, 0.7% apart, and the template's bf16:fp32 ratio is a consistent 15.84x across all three SKUs.",
+        "source": "Intel via https://www.theregister.com/2022/08/23/intel_ponte_vecchio/ (fp64/fp32/tf32, Intel's own SC22 launch figures) and https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series (bf16)",
+        "values": {
+          "fp64": 52.4,
+          "fp32": 52.4,
+          "tf32": 419,
+          "bf16": 832
+        },
+        "unknown": ["fp16", "int8", "int4"],
+        "unsupported": ["fp8", "fp4"]
+      },
+      "sources": [
+        "https://www.intel.com/content/www/us/en/products/sku/232873/intel-data-center-gpu-max-1550/specifications.html",
+        "https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2023-01/data-center-gpu-max-series-product-brief.pdf",
+        "https://www.theregister.com/2022/08/23/intel_ponte_vecchio/",
+        "https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series",
+        "https://www.glennklockwood.com/garden/processors/pvc",
+        "Intel ARK Product Specification Comparison export (Max 1550 vs Max 1100), user-captured 2026-08-19"
+      ],
+      "note": "Reference only -- and unlike the Max 1100 beside it, not a card you can buy or fit. This is a 600W OAM module, not a PCIe add-in card: it needs an OAM baseboard and the cooling to match, the same way an H100 SXM does, so 128GB in one package is academic for a workstation build no matter what it costs. No price is recorded because none was found -- Max Series went through OEM/integrator channels rather than retail, and unlike the 1100 (which turns up pulled on eBay around $2,000 post-EOL) the flagship has no observed secondary market at all. Included because 128GB of HBM2e at 3.28 TB/s in a single package is a genuinely interesting anchor for this page's 96-128GB class: it is the capacity target hit in one module, at roughly 2.7x an RTX PRO 6000's bandwidth. Worth knowing that the only public measured PVC numbers are Glenn Lockwood's DGEMM runs on Aurora, and they land far below these rated peaks -- 17 TFLOPS FP64 against 52 rated, 110 TF32 against 419, 273 BF16 against 832, roughly 30-35% of peak. Those are HPC GEMM kernels rather than LLM inference, but they are the closest thing to a reality check that exists for this silicon, and they are not in compute.values because this column is rated throughput, not achieved. Intel's ARK listing gives expected discontinuance as Jan 2026."
     },
     {
       "id": "mi210",

@@ -97,8 +97,8 @@ for (const id of ['cMeasured', 'cExtrap', 'cModeled', 'cArch']) {
 // 9 platforms x 3 archetypes + 4 group header rows.
 check('prefill table rows', (await count('#ppTable tbody tr')) === 31, `got ${await count('#ppTable tbody tr')}`);
 check('decode table rows', (await count('#tgTable tbody tr')) === 13, `got ${await count('#tgTable tbody tr')}`);
-// 29 catalog units + 4 vendor group headers
-check('spec table rows', (await count('#specTable tbody tr')) === 33, `got ${await count('#specTable tbody tr')}`);
+// 30 catalog units + 4 vendor group headers
+check('spec table rows', (await count('#specTable tbody tr')) === 34, `got ${await count('#specTable tbody tr')}`);
 check('value table rows', (await count('#valTable tbody tr')) === 9, `got ${await count('#valTable tbody tr')}`);
 check('legend entries', (await count('#pleg span')) >= 9);
 check('verdict rendered', (await text('#verdict')).length > 80);
@@ -110,6 +110,67 @@ check('precision toggle buttons rendered', (await count('#precTg button')) >= 6,
 // Direct-child selector, not `#precLeg span` -- each entry nests a `.pdot`
 // color swatch span too, so the descendant selector would double-count.
 check('vendor legend entries', (await count('#precLeg > span')) === 4, `got ${await count('#precLeg > span')}`);
+check('catalog vendor filter entries', (await count('#specLeg > span')) === 4, `got ${await count('#specLeg > span')}`);
+
+// --- Catalog sorting and filtering ---------------------------------------
+// The catalog's columns are discovered from the data, so its sorting is too.
+// These assert the behaviour rather than a fixed column list, so backfilling a
+// precision doesn't break them.
+{
+  const unitIds = async () =>
+    (await page.locator('#specTable tbody tr td.lbl:first-child').allTextContents()).map(t => t.trim());
+
+  const grouped = await count('#specTable tbody tr');
+  const memHead = page.locator('#specTable thead th[data-sortkey="mem"]');
+  check('numeric columns are sortable', (await memHead.count()) === 1);
+  check('prose column is not sortable', (await page.locator('#specTable thead th[data-sortkey="usage"]').count()) === 0);
+
+  await memHead.click();
+  const descRows = await count('#specTable tbody tr');
+  // Group headers are gone once sorted, so the row count drops to unit count.
+  check('sorting drops the vendor group rows', descRows === grouped - 4, `got ${descRows} vs grouped ${grouped}`);
+  check('sorted header marked', (await page.locator('#specTable thead th.sorted').count()) === 1);
+  check('sort direction shown', (await memHead.textContent()).includes('↓'));
+
+  const memOf = async () => {
+    const cells = await page.locator('#specTable tbody tr td:nth-child(3)').allTextContents();
+    return cells.map(t => Number(t.trim())).filter(n => Number.isFinite(n) && n > 0);
+  };
+  const desc = await memOf();
+  check('descending really is descending', desc.every((v, i) => i === 0 || desc[i - 1] >= v), desc.slice(0, 6).join(','));
+  check('largest memory first', desc[0] === Math.max(...desc), `got ${desc[0]}`);
+
+  await memHead.click();
+  check('second click reverses', (await memHead.textContent()).includes('↑'));
+  const asc = await memOf();
+  check('ascending really is ascending', asc.every((v, i) => i === 0 || asc[i - 1] <= v), asc.slice(0, 6).join(','));
+
+  await memHead.click();
+  check('third click restores vendor grouping', (await count('#specTable tbody tr')) === grouped);
+  check('no header marked sorted after reset', (await page.locator('#specTable thead th.sorted').count()) === 0);
+
+  // Blanks last in both directions: an unknown figure is not a zero one, and a
+  // column of blanks floating to the top would bury the data being sorted for.
+  const idleHead = page.locator('#specTable thead th[data-sortkey="idleW"]');
+  await idleHead.click();
+  await idleHead.click(); // ascending -- the direction that would surface nulls first
+  const idleCells = await page.locator('#specTable tbody tr td:nth-child(7)').allTextContents();
+  const firstBlank = idleCells.findIndex(t => !Number.isFinite(Number(t.trim())) || !t.trim());
+  const lastFilled = idleCells.reduce((acc, t, i) => (Number.isFinite(Number(t.trim())) && t.trim() ? i : acc), -1);
+  check('blanks sort last even ascending', firstBlank === -1 || firstBlank > lastFilled, `blank@${firstBlank} filled@${lastFilled}`);
+  await idleHead.click(); // back to grouped
+
+  // Filtering by vendor
+  const before = await unitIds();
+  check('catalog lists NVIDIA parts before filtering', before.some(t => t.includes('rtx_pro_6000')));
+  await page.locator('#specLeg > span', { hasText: 'NVIDIA' }).first().click();
+  const after = await unitIds();
+  check('filtered vendor leaves the table', !after.some(t => t.includes('rtx_pro_6000')));
+  check('other vendors stay', after.some(t => t.includes('max_1100')));
+  check('filter reports what it hid', (await text('#specUnits')).includes('Showing'));
+  await page.locator('#specLeg > span', { hasText: 'NVIDIA' }).first().click();
+  check('unfiltering restores the table', (await count('#specTable tbody tr')) === grouped);
+}
 check('precision caption rendered', (await text('#precCap')).length > 10);
 
 const canvasPainted = async id =>

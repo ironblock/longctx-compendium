@@ -10,6 +10,8 @@ import {
   renderDecodeTable,
   renderValueTable,
   renderSpecTable,
+  renderSpecFilter,
+  cycleSpecSort,
   renderPrecisionToggle,
   renderVendorLegend,
 } from './tables.js';
@@ -24,6 +26,10 @@ const state = {
   valPower: 'load',
   precision: null,
   precHidden: new Set(),
+  // Catalog table: no sort key means the vendor grouping, which is the default
+  // because it shows what the catalog is rather than how one column ranks.
+  specSort: { key: null, dir: 'desc' },
+  specHidden: new Set(),
   // Q4_K_M is the single most-cited quant across this page's own perf
   // notes, and the hybrid-MoE model is what most of the multi-point-
   // measured platforms (B70, R9700, Strix Halo) actually ran, so the
@@ -96,6 +102,11 @@ function renderRooflineSection(model) {
   renderRooflineTable(model, state);
 }
 
+function renderSpecSection(model) {
+  renderSpecFilter(model, state, () => renderSpecTable(model, state));
+  renderSpecTable(model, state);
+}
+
 function renderPrecisionSection(model) {
   renderPrecisionToggle(model, state); // may update state.precision
   renderVendorLegend(model, state, () => renderPrecision(model, state));
@@ -138,7 +149,7 @@ try {
   });
   renderPrefillTable(model);
   renderDecodeTable(model);
-  renderSpecTable(model);
+  renderSpecSection(model);
   renderPrecisionSection(model);
   renderRooflineSection(model);
   renderValueSection(model);
@@ -159,6 +170,14 @@ try {
   wireToggle('valPowerTg', 'vp', vp => {
     state.valPower = vp;
     renderValueSection(model);
+  });
+  // Catalog headers are rebuilt on every sort, so the click has to be delegated
+  // to the thead rather than bound to header cells that no longer exist.
+  document.querySelector('#specTable thead').addEventListener('click', e => {
+    const key = e.target.closest('th')?.dataset.sortkey;
+    if (!key) return;
+    cycleSpecSort(state, key);
+    renderSpecTable(model, state);
   });
   // The precision toggle rebuilds its own buttons every render (the set of
   // precisions is data-driven), so binding is delegated to the container

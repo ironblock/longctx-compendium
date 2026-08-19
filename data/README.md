@@ -261,8 +261,17 @@ gaps.
 ```
 
 **A precision** — add a key under a unit's `compute.values`. A column appears in
-the hardware catalog table automatically. Suffix with `:sparse` for
-structured-sparsity figures.
+the hardware catalog table automatically, sortable, and a button appears on the
+precision chart. Suffix with `:sparse` for structured-sparsity figures. Sorting
+orders by the *dense* figure only: a cell showing just a sparse number has no
+dense figure to rank, and ranking it by its sparse twin would put it two-for-one
+ahead of every dense figure beside it. Blanks sort last in both directions, for
+the same reason unknown is not zero everywhere else here.
+
+If a real search for a figure came up empty, say so with `compute.unknown` rather
+than leaving the key out — the catalog renders that as a blue `?`, which is a
+different claim from the dash that means "confirmed unsupported"
+(`compute.unsupported`) or "nobody has looked yet" (absent from both).
 
 **A price kind** — add a key under a unit's `pricing`. `msrp` and `street` are
 rendered today, and `street` is what build costs are summed from; anything else

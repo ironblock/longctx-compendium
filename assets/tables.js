@@ -171,23 +171,18 @@ export function renderValueTable(model, state) {
 //
 // Columns for rated throughput are discovered from the data: add a precision
 // key to any unit's compute.values and a column appears with no code change.
-export function renderSpecTable(model) {
-  const units = model.UNITS;
+// Sorting is data-driven for the same reason -- each column carries its own
+// accessor beside its own renderer, so a new precision arrives sortable rather
+// than needing a matching entry in a hand-maintained list of sort keys.
+export function renderSpecTable(model, state) {
+  const all = model.UNITS;
+  const units = all.filter(u => !state.specHidden.has(u.vendor ?? 'Other'));
 
   // A sparsity figure is always exactly twice its dense counterpart, so giving
   // each its own column doubles the width to say nothing. Pair them in one cell
   // and the table stays readable.
-  const precisions = discoveredPrecisions(units);
+  const precisions = discoveredPrecisions(all);
 
-  document.querySelector('#specTable thead tr').innerHTML =
-    '<th class="lbl" style="min-width:190px">Unit</th>' +
-    '<th>Released</th><th>Mem GB</th><th>BW GB/s</th><th>TDP W</th><th>Load W</th><th>Idle W</th>' +
-    precisions.map(x => `<th>${x.toUpperCase()}</th>`).join('') +
-    '<th>MSRP</th><th>Street</th>' +
-    '<th class="lbl">Used in</th>';
-
-  const tb = tbody('#specTable');
-  tb.innerHTML = '';
   const dash = '<td class="c-n"><span class="num">—</span></td>';
   const num = v => (v == null ? dash : `<td class="num">${v}</td>`);
   const usd = m => (m?.usd == null ? dash : `<td class="num">$${m.usd.toLocaleString()}</td>`);
@@ -235,34 +230,138 @@ export function renderSpecTable(model) {
     }
   }
 
-  const colspan = 10 + precisions.length;
-  for (const vendor of [...new Set(units.map(u => u.vendor ?? 'Other'))]) {
-    const gr = document.createElement('tr');
-    gr.innerHTML = groupRow(colspan, vendor);
-    tb.appendChild(gr);
+  // Each column pairs its renderer with the value a sort should order by, so
+  // the two can never drift apart. A column with no `sort` is simply not
+  // clickable ("Used in" is prose, and ordering by it means nothing).
+  // Named apart from the module-level nameCell(), which takes a platform. Once
+  // the vendor grouping is gone, a vendor dot is the only thing left saying who
+  // made the part, so it appears exactly when the group rows don't.
+  const unitCell = u =>
+    '<td class="lbl">' +
+    (state.specSort.key
+      ? `<span class="pdot" style="display:inline-block;vertical-align:middle;margin-right:7px;background:${vendorColor(u.vendor ?? 'Other')}"></span>`
+      : '') +
+    `<span style="font-family:var(--mono);font-size:12px">${u.label}</span>` +
+    `<span style="display:block;font-size:10px;color:var(--dim)">${u.id}</span></td>`;
 
-    for (const u of units.filter(x => (x.vendor ?? 'Other') === vendor)) {
-      const tr = document.createElement('tr');
-      tr.innerHTML =
-        `<td class="lbl"><span style="font-family:var(--mono);font-size:12px">${u.label}</span>` +
-        `<span style="display:block;font-size:10px;color:var(--dim)">${u.id}</span></td>` +
-        num(u.released) +
-        num(u.memoryGB) +
-        num(u.memoryBandwidthGBs) +
-        num(u.tdpW) +
-        num(u.power?.loadW) +
-        num(u.power?.idleW) +
-        precisions.map(x => throughput(u, x)).join('') +
-        usd(u.pricing?.msrp) +
-        usd(u.pricing?.street) +
-        `<td class="lbl" style="white-space:normal;max-width:200px"><span style="font-size:11px;color:var(--dim)">${(usage[u.id] ?? []).join(' · ') || '—'}</span></td>`;
-      tb.appendChild(tr);
+  const cols = [
+    { key: 'label', label: 'Unit', cls: 'lbl', style: 'min-width:190px', sort: u => u.label, cell: unitCell },
+    { key: 'released', label: 'Released', sort: u => u.released, cell: u => num(u.released) },
+    { key: 'mem', label: 'Mem GB', sort: u => u.memoryGB, cell: u => num(u.memoryGB) },
+    { key: 'bw', label: 'BW GB/s', sort: u => u.memoryBandwidthGBs, cell: u => num(u.memoryBandwidthGBs) },
+    { key: 'tdp', label: 'TDP W', sort: u => u.tdpW, cell: u => num(u.tdpW) },
+    { key: 'loadW', label: 'Load W', sort: u => u.power?.loadW, cell: u => num(u.power?.loadW) },
+    { key: 'idleW', label: 'Idle W', sort: u => u.power?.idleW, cell: u => num(u.power?.idleW) },
+    ...precisions.map(p => ({
+      key: `prec:${p}`,
+      label: p.toUpperCase(),
+      // Dense only. A cell showing just a sparse figure has no dense number to
+      // rank, and quietly ranking it by its sparse twin would put it two-for-one
+      // ahead of every dense figure it is listed beside.
+      sort: u => u.compute?.values?.[p],
+      cell: u => throughput(u, p),
+    })),
+    { key: 'msrp', label: 'MSRP', sort: u => u.pricing?.msrp?.usd, cell: u => usd(u.pricing?.msrp) },
+    { key: 'street', label: 'Street', sort: u => u.pricing?.street?.usd, cell: u => usd(u.pricing?.street) },
+    {
+      label: 'Used in',
+      cls: 'lbl',
+      cell: u =>
+        `<td class="lbl" style="white-space:normal;max-width:200px"><span style="font-size:11px;color:var(--dim)">${(usage[u.id] ?? []).join(' · ') || '—'}</span></td>`,
+    },
+  ];
+
+  // The column set follows the data, so a sort key can outlive its column if a
+  // precision is removed from compendium.json. Fall back rather than throw.
+  let active = state.specSort.key ? cols.find(c => c.key === state.specSort.key) : null;
+  if (!active) state.specSort.key = null;
+
+  document.querySelector('#specTable thead tr').innerHTML = cols
+    .map(c => {
+      const on = state.specSort.key === c.key;
+      const cls = [c.cls, c.sort ? 'sortable' : null, on ? 'sorted' : null].filter(Boolean).join(' ');
+      const arrow = on ? (state.specSort.dir === 'desc' ? ' ↓' : ' ↑') : '';
+      return (
+        '<th' +
+        (cls ? ` class="${cls}"` : '') +
+        (c.style ? ` style="${c.style}"` : '') +
+        (c.sort
+          ? ` data-sortkey="${c.key}" title="Sort by ${c.label} — click again to reverse, once more to return to vendor grouping"`
+          : '') +
+        `>${c.label}${arrow}</th>`
+      );
+    })
+    .join('');
+
+  const tb = tbody('#specTable');
+  tb.innerHTML = '';
+  const row = u => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = cols.map(c => c.cell(u)).join('');
+    tb.appendChild(tr);
+  };
+
+  if (!units.length) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="lbl" colspan="${cols.length}" style="color:var(--dim);padding:14px 10px">Every vendor is filtered out — click a vendor above to bring it back.</td>`;
+    tb.appendChild(tr);
+  } else if (active) {
+    for (const u of sortUnits(units, active, state.specSort.dir)) row(u);
+  } else {
+    for (const vendor of [...new Set(units.map(u => u.vendor ?? 'Other'))]) {
+      const gr = document.createElement('tr');
+      gr.innerHTML = groupRow(cols.length, vendor);
+      tb.appendChild(gr);
+      for (const u of units.filter(x => (x.vendor ?? 'Other') === vendor)) row(u);
     }
   }
 
+  const shown = units.length === all.length ? '' : ` Showing ${units.length} of ${all.length} units.`;
+  const sorted = active
+    ? ` Sorted by ${active.label}, ${state.specSort.dir === 'desc' ? 'highest' : 'lowest'} first — blanks sort last in both directions, because an unknown figure is not a zero one.`
+    : ' Click any column heading to sort by it.';
   el('specUnits').textContent = precisions.length
-    ? `Rated throughput in 10¹² ops/sec. Large figure is dense; the dimmed "sp" beneath it is the 2:4 structured-sparsity rate, which vendors often quote unlabelled. A blue "?" means a real search came up empty — believed supported, no sourced figure yet; a plain dash means either confirmed unsupported or simply not yet researched. Load and idle watts are per unit, observed under inference — not the datasheet TDP beside them.`
-    : 'No rated-throughput figures transcribed yet — add compute.values to any unit in data/compendium.json and a column appears here automatically. Load and idle watts are per unit, observed under inference, not datasheet TDP.';
+    ? `Rated throughput in 10¹² ops/sec. Large figure is dense; the dimmed "sp" beneath it is the 2:4 structured-sparsity rate, which vendors often quote unlabelled. A blue "?" means a real search came up empty — believed supported, no sourced figure yet; a plain dash means either confirmed unsupported or simply not yet researched. Load and idle watts are per unit, observed under inference — not the datasheet TDP beside them.${sorted}${shown}`
+    : `No rated-throughput figures transcribed yet — add compute.values to any unit in data/compendium.json and a column appears here automatically. Load and idle watts are per unit, observed under inference, not datasheet TDP.${sorted}${shown}`;
+}
+
+/**
+ * Missing values sort last in *both* directions. Ascending-with-nulls-first
+ * would open every numeric column on a wall of blanks and bury the data the
+ * sort was asked for -- the same reason the catalog renders unknowns as blanks
+ * rather than zeroes.
+ */
+function sortUnits(units, col, dir) {
+  return [...units].sort((a, b) => {
+    const va = col.sort(a) ?? null;
+    const vb = col.sort(b) ?? null;
+    if (va === null && vb === null) return a.label.localeCompare(b.label);
+    if (va === null) return 1;
+    if (vb === null) return -1;
+    const cmp =
+      typeof va === 'string' || typeof vb === 'string'
+        ? String(va).localeCompare(String(vb))
+        : va - vb;
+    return dir === 'desc' ? -cmp : cmp;
+  });
+}
+
+/**
+ * Heading clicks cycle descending → ascending → off. The third click matters:
+ * it is the only way back to the vendor grouping, which is the view that shows
+ * what the catalog *is* rather than how one column ranks.
+ */
+export function cycleSpecSort(state, key) {
+  const s = state.specSort;
+  if (s.key !== key) {
+    s.key = key;
+    s.dir = 'desc';
+  } else if (s.dir === 'desc') {
+    s.dir = 'asc';
+  } else {
+    s.key = null;
+    s.dir = 'desc';
+  }
 }
 
 // === Precision toggle: one button per precision the catalog has data for ===
@@ -290,24 +389,36 @@ export function renderPrecisionToggle(model, state) {
     .join('');
 }
 
-// === Vendor legend for the precision chart (click to hide/show) ===
-export function renderVendorLegend(model, state, onToggle) {
-  const host = el('precLeg');
+// === Vendor chips: click to hide/show ===
+// The precision chart and the catalog table both filter by vendor, but each
+// keeps its own hidden-set: hiding NVIDIA to read the chart shouldn't silently
+// empty the table you scroll back up to.
+function vendorChips(hostId, model, hidden, onToggle) {
+  const host = el(hostId);
   host.innerHTML = '';
-  const vendors = [...new Set(model.UNITS.map(u => u.vendor ?? 'Other'))];
-  for (const v of vendors) {
+  for (const v of [...new Set(model.UNITS.map(u => u.vendor ?? 'Other'))]) {
     const sp = document.createElement('span');
     const dot = document.createElement('span');
     dot.className = 'pdot';
     dot.style.background = vendorColor(v);
     sp.append(dot, document.createTextNode(v));
-    sp.style.opacity = state.precHidden.has(v) ? 0.3 : 1;
+    sp.style.opacity = hidden.has(v) ? 0.3 : 1;
     sp.onclick = () => {
-      if (state.precHidden.has(v)) state.precHidden.delete(v);
-      else state.precHidden.add(v);
-      sp.style.opacity = state.precHidden.has(v) ? 0.3 : 1;
+      if (hidden.has(v)) hidden.delete(v);
+      else hidden.add(v);
+      sp.style.opacity = hidden.has(v) ? 0.3 : 1;
       onToggle();
     };
     host.appendChild(sp);
   }
+}
+
+/** Vendor legend for the precision chart. */
+export function renderVendorLegend(model, state, onToggle) {
+  vendorChips('precLeg', model, state.precHidden, onToggle);
+}
+
+/** Vendor filter for the hardware catalog table. */
+export function renderSpecFilter(model, state, onToggle) {
+  vendorChips('specLeg', model, state.specHidden, onToggle);
 }
