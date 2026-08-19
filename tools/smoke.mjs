@@ -97,8 +97,8 @@ for (const id of ['cMeasured', 'cExtrap', 'cModeled', 'cArch']) {
 // 9 platforms x 3 archetypes + 4 group header rows.
 check('prefill table rows', (await count('#ppTable tbody tr')) === 31, `got ${await count('#ppTable tbody tr')}`);
 check('decode table rows', (await count('#tgTable tbody tr')) === 13, `got ${await count('#tgTable tbody tr')}`);
-// 28 catalog units + 4 vendor group headers
-check('spec table rows', (await count('#specTable tbody tr')) === 32, `got ${await count('#specTable tbody tr')}`);
+// 29 catalog units + 4 vendor group headers
+check('spec table rows', (await count('#specTable tbody tr')) === 33, `got ${await count('#specTable tbody tr')}`);
 check('value table rows', (await count('#valTable tbody tr')) === 9, `got ${await count('#valTable tbody tr')}`);
 check('legend entries', (await count('#pleg span')) >= 9);
 check('verdict rendered', (await text('#verdict')).length > 80);

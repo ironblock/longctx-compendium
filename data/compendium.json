@@ -1053,6 +1053,42 @@
       "note": "Same 32GB/608GB/s as the B70 but fewer compute cores (20 vs 32 Xe cores, 160 vs 256 XMX engines, 200W vs 230W). Initially misreported pre-launch as a 24GB part; Intel's official spec sheet confirms 32GB."
     },
     {
+      "id": "max_1100",
+      "label": "Data Center GPU Max 1100 48GB",
+      "vendor": "Intel",
+      "released": "2023",
+      "memoryGB": 48,
+      "memoryBandwidthGBs": 1228.8,
+      "tdpW": 300,
+      "process": "Multiple -- 47 active tiles across five process nodes, combined via EMIB 2.5D + Foveros 3D packaging (Intel does not name individual node processes in its public product brief)",
+      "compute": {
+        "unit": "Tops",
+        "note": "dense unless the key says :sparse; 10^12 ops/sec. fp64/fp32 are non-systolic (vector-engine) rated throughput -- Ponte Vecchio runs FP64 and FP32 at the same native 1:1 rate (unlike the usual 1:2), part of how Intel targeted 2 exaFLOPS peak FP64 for the Aurora supercomputer. bf16/fp16/tf32/int8/int4 execute on separate systolic (XMX) matrix engines per Intel's own datasheet, but no sourced per-model figure was found for any of them on this specific SKU after a real search.",
+        "source": "https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series (rated/boost-clock column, itself citing Intel's official product brief and ARK specification page)",
+        "values": {
+          "fp64": 22.2,
+          "fp32": 22.2
+        },
+        "unknown": ["tf32", "bf16", "fp16", "int8", "int4"],
+        "unsupported": ["fp8", "fp4"]
+      },
+      "pricing": {
+        "street": {
+          "usd": 2000,
+          "asOf": "2026-08",
+          "note": "User-observed eBay secondary-market listings, Aug 2026 -- decommissioned/pulled datacenter cards. No confirmed original MSRP: Max Series cards sold primarily through OEM/system-integrator channels (Supermicro etc.), not direct retail list pricing."
+        }
+      },
+      "sources": [
+        "https://www.intel.com/content/www/us/en/products/sku/232876/intel-data-center-gpu-max-1100/specifications.html",
+        "https://cdrdv2-public.intel.com/817799/817799_Intel%20Data%20Center%20GPU%20Max%201100%20Datasheet_Rev_1_0.pdf",
+        "https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2023-01/data-center-gpu-max-series-product-brief.pdf",
+        "https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series",
+        "Intel ARK Product Specification Comparison export (Max 1550 vs Max 1100), user-captured 2026-08-19"
+      ],
+      "note": "Reference only -- no benchmarks on this page, and there may not be any soon: llama.cpp's own community SYCL performance-reference thread (github.com/ggml-org/llama.cpp discussion #23313) has zero PVC datapoints as of this writing, despite the SYCL backend officially listing both Max 1550 and Max 1100 as verified devices. The only public PVC/llama.cpp number found anywhere is one changelog row (2025.2): Max 1550 going 39->73 tok/s on llama-2-7b Q4_0 -- 18-months-stale, on the flagship rather than this SKU, and roughly a tenth of an Arc A770's memory-bandwidth efficiency (the A770 posts 55-67 tok/s on a sixth of the bandwidth). The software stack has matured a lot since PVC's 2022 launch -- SYCL flash-attention (native and oneDNN-fused) landed 2026.03, and split-mode tensor (true tensor parallelism, not just layer-splitting) is explicitly 'optimized for 2 GPUs,' a good match for a 2-card 96GB build -- but nobody has published it running at depth. GGML_SYCL_FA_ONEDNN_MAX_KV exists specifically because 'GPU driver watchdog resets (DEVICE_LOST) occur during long-context inference,' with a documented workaround capping context near 24,576 tokens -- below this page's own long-context framing. Intel's own ARK listing gives this SKU's expected discontinuance as Jan 2026 (already past as of Aug 2026), which is presumably why pulled cards are turning up on eBay around $2,000 -- cheap for 48GB of HBM2e with real XMX matrix engines, expensive to be the first person to actually measure it at 128K context."
+    },
+    {
       "id": "mi210",
       "label": "AMD Instinct MI210 64GB",
       "vendor": "AMD",
