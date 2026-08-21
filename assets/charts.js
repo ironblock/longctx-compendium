@@ -186,7 +186,10 @@ export function renderWallClock(model, state) {
     .filter(x => x.total !== null)
     .sort((a, b) => a.total - b.total);
   const platMap = Object.fromEntries(model.PLAT.map(p => [p.id, p]));
-  const labels = sorted.map(x => platMap[x.id].short);
+  // A star marks a bar whose generation was timed at the short-context decode
+  // rate because no depth measurement exists for it -- understated against the
+  // unstarred bars beside it, which is measurement coverage, not hardware.
+  const labels = sorted.map(x => platMap[x.id].short + (x.decode?.basis === 'shortOnly' ? ' \u2605' : ''));
   const borders = sorted.map(x => platMap[x.id].color);
 
   paint('wc', 'wcChart', {
@@ -266,7 +269,10 @@ export function renderSteadyState(model, state) {
     .filter(x => x.total !== null)
     .sort((a, b) => a.total - b.total);
   const platMap = Object.fromEntries(model.PLAT.map(p => [p.id, p]));
-  const labels = sorted.map(x => platMap[x.id].short);
+  // A star marks a bar whose generation was timed at the short-context decode
+  // rate because no depth measurement exists for it -- understated against the
+  // unstarred bars beside it, which is measurement coverage, not hardware.
+  const labels = sorted.map(x => platMap[x.id].short + (x.decode?.basis === 'shortOnly' ? ' \u2605' : ''));
   const borders = sorted.map(x => platMap[x.id].color);
 
   paint('ss', 'ssChart', {

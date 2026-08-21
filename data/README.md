@@ -233,6 +233,33 @@ that doesn't exist. `computeSteadyState()` uses that marginal rate to price
 "append N tokens onto a session already this deep, then generate" — the
 number an active agentic loop actually pays turn to turn.
 
+### Decode is not flat with depth either
+
+The same reasoning applies to the *generation* half of a turn, and it is worth
+stating separately because it is easy to get wrong in the opposite direction.
+Every generated token reads the whole KV cache, so a bandwidth-bound decode
+slows as the session grows. This repo's own data has it falling **29–53%**
+between the short-context rate and 32K.
+
+So `decode.short` is the rate at ~zero depth and nothing else. Using it to price
+generation at 16K understates every turn it describes. `decodeAtDepth()` in
+`derive.js` interpolates between `decode.short` and `decode.at32k` **in seconds
+per token, not tokens/sec** — KV bytes read per token grow linearly with depth,
+so time per token is what moves linearly; interpolating the rate directly bends
+the wrong way and flatters deep contexts, which is the exact bias being fixed.
+
+The catch is coverage: only 5 of 24 decode entries have `at32k`, and none has
+anything deeper. Entries without it fall back to the short-context rate, tagged
+`basis: 'shortOnly'`, and their bars are starred in the charts. **A starred bar
+is understated against an unstarred one**, so correcting the well-measured
+platforms makes them look worse than the under-measured ones. That asymmetry is
+a reason to add measurements, not a reason to revert the correction — but any
+prose comparing two platforms has to know which side of it each one is on.
+
+Adding `"at128k"` beside `"at32k"` on any device is the single highest-value
+datapoint this repo can currently gain. The interpolation extends to it with no
+code change.
+
 Linear/hybrid-attention architectures (Mamba2, Gated DeltaNet) are the one
 thing that genuinely escapes this scaling — their marginal rate stays close
 to flat regardless of session depth, which is the real payoff of that

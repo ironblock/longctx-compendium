@@ -2,7 +2,27 @@
 // part most often rewritten, and because prose interleaved with Chart.js config
 // is miserable to review in a diff.
 
-import { computeWC, computeSteadyState, fmtT } from './derive.js';
+import {
+  computeWC,
+  computeSteadyState,
+  decodeBasisTally,
+  fmtT,
+  STEADY_STATE_AT_CTX,
+  STEADY_STATE_TOKENS,
+} from './derive.js';
+
+/**
+ * The leader is the bar most exposed to the decode-coverage asymmetry: a
+ * platform with no depth measurement generates at its short-context rate, so it
+ * can lead partly by not having been measured. Say so exactly where the winner
+ * is declared, rather than only in a caption further down the page.
+ */
+const leaderCaveat = best =>
+  best?.decode?.basis === 'shortOnly'
+    ? ` <b style="color:var(--warn)">★ Read that lead with care:</b> this platform has no decode-at-depth ` +
+      `measurement, so its generation half is priced at the short-context rate and its true turn is slower. ` +
+      `It may be ahead partly on thinner data than the platforms behind it.`
+    : '';
 
 export function prefillVerdict(model, arch) {
   const wc = computeWC(model, arch);
@@ -18,7 +38,8 @@ export function prefillVerdict(model, arch) {
       `<b>MoE wall-clock.</b> Fastest: ${name(best.id)} at <b>${fmtT(best.total)}</b> ` +
       `(${fmtT(best.ttft)} prefill + ${fmtT(best.gen)} gen). Slowest modeled: ${name(worst.id)} ` +
       `at <b>${fmtT(worst.total)}</b>. MoE linear-attention keeps decode alive on bandwidth-starved ` +
-      `boxes (DGX Spark ~37s, Strix Halo ~51s), but prefill at 16K is still 2–10× slower than the discrete GPUs.`
+      `boxes (DGX Spark ~37s, Strix Halo ~51s), but prefill at 16K is still 2–10× slower than the discrete GPUs.` +
+      leaderCaveat(best)
     );
   }
   if (arch === 'dense') {
@@ -35,7 +56,8 @@ export function prefillVerdict(model, arch) {
     `<b>gpt-oss-120B (117B MoE, ~63GB) — the model that justifies 96–128GB.</b> Single 32GB cards ` +
     `(5090, R9700, 1× B70) can't load it and drop out here. Fastest wall-clock: ${name(best.id)} ` +
     `at <b>${fmtT(best.total)}</b>. Unified boxes stay usable on decode (Spark ~39, Strix ~40, Mac ~60 t/s) ` +
-    `but pay for it in prefill. Build cost/power value is in the Bang-for-buck-per-watt section below.`
+    `but pay for it in prefill. Build cost/power value is in the Bang-for-buck-per-watt section below.` +
+    leaderCaveat(best)
   );
 }
 
@@ -74,7 +96,8 @@ export function steadyStateVerdict(model, arch) {
       `${name(best.id)} at <b>${fmtT(best.total)}</b>${compare(best.id)}. Linear/hybrid attention (Nemotron-class ` +
       `Mamba2, Gated DeltaNet) keeps this close to flat no matter how deep the session already is — full-attention ` +
       `platforms don't get that escape, and their steady-state number keeps climbing the longer the session runs, ` +
-      `even though nothing is being re-prefilled.`
+      `even though nothing is being re-prefilled.` +
+      leaderCaveat(best)
     );
   }
   if (arch === 'dense') {
@@ -82,14 +105,16 @@ export function steadyStateVerdict(model, arch) {
       `<b>Dense steady-state.</b> Dense full-attention gets none of the architectural relief MoE/hybrid models ` +
       `get: every appended token still attends across the whole cache. Fastest once warm: ${name(best.id)} at ` +
       `<b>${fmtT(best.total)}</b>${compare(best.id)}. This is the honest floor for a long dense-model agentic ` +
-      `session — caching buys you the past, not the climbing marginal cost of the present.`
+      `session — caching buys you the past, not the climbing marginal cost of the present.` +
+      leaderCaveat(best)
     );
   }
   return (
     `<b>gpt-oss-120B steady-state.</b> Fastest once warm: ${name(best.id)} at <b>${fmtT(best.total)}</b>` +
     `${compare(best.id)}. Slowest: ${name(worst.id)} at <b>${fmtT(worst.total)}</b>. Compare against the ` +
     `Cold-start wall-clock view for the same platforms — the gap between the two is the entire caching story ` +
-    `for this archetype.`
+    `for this archetype.` +
+    leaderCaveat(best)
   );
 }
 
@@ -105,12 +130,25 @@ export function valueVerdict(valModel, valPower) {
     : `<b>35B-A3B MoE · idle.</b> Same idle picture as 120B — the build's idle draw doesn't change with the model. Multi-GPU rigs ~200–280W, unified ~15–20W. Off-when-idle neutralizes it.`;
 }
 
+/**
+ * Both turn charts now price generation at the depth it actually runs at, so
+ * how many platforms lack a depth measurement is part of reading the chart --
+ * a starred bar is understated against an unstarred one, and the gap between
+ * them is partly measurement coverage rather than hardware.
+ */
+const decodeDepthNote = (model, arch, atCtx) => {
+  const t = decodeBasisTally(model, arch, atCtx);
+  if (!t.shortOnly) return '';
+  return ` · ★ = short-context decode rate, no depth measurement (${t.shortOnly} of ${t.shortOnly + t.interpolated + t.extrapolated + t.measured}) — those turns are understated`;
+};
+
 export const captionFor = (model, arch, kind) => {
   const desc = model.ARCH_DESC[arch];
   if (kind === 'pp') return `${desc} · prefill throughput (tokens/sec)`;
   if (kind === 'tg') return `${desc} · decode rate (tokens/sec) · single-stream`;
-  if (kind === 'ss') return `${desc} · steady-state turn: append 2K to a 16K-deep warm session + 2K generated`;
-  return `${desc} · cold-start wall-clock: 16K-token prompt from empty + 2K generated`;
+  if (kind === 'ss')
+    return `${desc} · steady-state turn: append 2K to a 16K-deep warm session + 2K generated${decodeDepthNote(model, arch, STEADY_STATE_AT_CTX + STEADY_STATE_TOKENS)}`;
+  return `${desc} · cold-start wall-clock: 16K-token prompt from empty + 2K generated${decodeDepthNote(model, arch, 16384)}`;
 };
 
 export const valueCaption = (valModel, valPower) => {
