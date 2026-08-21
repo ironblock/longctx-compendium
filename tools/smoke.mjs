@@ -209,8 +209,54 @@ for (const [group, ids] of [
   check('steady-state caption rendered', (await text('#ssCap')).length > 10);
   check('steady-state verdict rendered', (await text('#verdict')).length > 80);
   check('steady-state verdict mentions warm/steady', /steady-state/i.test(await text('#verdict')));
+  check('steady-state caption flags depth-unmeasured decode', (await text('#ssCap')).includes('★'));
   await page.locator('#viewTg button[data-v="pp"]').click();
   await page.waitForTimeout(150);
+}
+
+// Decode slows with context depth, and both turn charts must price generation
+// at the depth it runs at rather than at the short-context rate. Asserted
+// against derive.js directly: the browser charts render the result, but the
+// arithmetic is what can silently regress.
+{
+  const { pathToFileURL } = await import('node:url');
+  const D = await import(pathToFileURL(path.join(root, 'assets/derive.js')).href);
+
+  const tg = { v: 234, c: 'm', v32: 110.7, c32: 'm' };
+  check('decode at zero depth is the short rate', D.decodeAtDepth(tg, 0).v === 234);
+  check('decode at the 32K anchor is the measured 32K rate', D.decodeAtDepth(tg, 32768).v === 110.7);
+
+  const mid = D.decodeAtDepth(tg, 16384);
+  check('mid-depth decode is interpolated', mid.basis === 'interpolated');
+  check('mid-depth decode sits between the anchors', mid.v < 234 && mid.v > 110.7, `got ${mid.v}`);
+  // Linear in seconds/token, so the midpoint rate is the harmonic mean of the
+  // anchors -- strictly below their arithmetic mean. Interpolating tokens/sec
+  // directly would land on the arithmetic mean and flatter deep contexts.
+  check(
+    'interpolation is linear in time, not rate',
+    Math.abs(mid.v - 2 / (1 / 234 + 1 / 110.7)) < 0.01 && mid.v < (234 + 110.7) / 2,
+    `got ${mid.v.toFixed(2)}, arithmetic mean would be ${((234 + 110.7) / 2).toFixed(2)}`,
+  );
+  check('past the anchor extrapolates', D.decodeAtDepth(tg, 65536).basis === 'extrapolated');
+  check('deeper is slower', D.decodeAtDepth(tg, 65536).v < D.decodeAtDepth(tg, 32768).v);
+
+  // No depth anchor: fall back to the short rate but never call it measured.
+  const flat = D.decodeAtDepth({ v: 100, c: 'm', v32: null }, 16384);
+  check('no depth measurement falls back to the short rate', flat.v === 100);
+  check('short-only fallback is flagged', flat.basis === 'shortOnly' && flat.est === true);
+
+  // The correction has to actually move the charts, or it is not applied.
+  const doc = JSON.parse(fs.readFileSync(path.join(root, 'data/compendium.json'), 'utf8'));
+  const { normalize } = await import(pathToFileURL(path.join(root, 'assets/data.js')).href);
+  const model = normalize(doc);
+  const wc = D.computeWC(model, 'dense');
+  const pro = wc.find(x => x.id === 'pro6000') ?? wc.find(x => model.PLAT.find(p => p.id === x.id)?.short?.includes('PRO'));
+  const proTg = model.TG.dense[pro.id];
+  check('a platform with a 32K anchor is slower than its short rate implies',
+    pro.gen > 2048 / proTg.v, `gen ${pro.gen?.toFixed(1)} vs naive ${(2048 / proTg.v).toFixed(1)}`);
+  const tally = D.decodeBasisTally(model, 'dense', 16384);
+  check('some platforms still lack a depth anchor', tally.shortOnly > 0, JSON.stringify(tally));
+  check('some platforms have one', tally.interpolated > 0, JSON.stringify(tally));
 }
 
 // Precision toggle: buttons are rebuilt from data rather than hand-authored,

@@ -82,22 +82,74 @@ export function ttBand(s) {
 
 export const idleYr = (model, w) => (w * 8760) / 1000 * model.KWH;
 
+// The one depth at which this page has any second decode measurement.
+export const DECODE_ANCHOR_CTX = 32768;
+
+/**
+ * Decode rate at a given context depth.
+ *
+ * Decode is not flat with depth. Every generated token reads the whole KV
+ * cache, so a bandwidth-bound decode slows as the session grows -- this page's
+ * own data has it falling 29-53% between the short-context rate and 32K
+ * (5090 MoE: 234 -> 110.7 t/s). Pricing a 16K-deep turn's generation at the
+ * short-context rate, which is what this used to do, understates every turn it
+ * describes.
+ *
+ * Interpolation is linear in SECONDS PER TOKEN, not in tokens/sec: KV-cache
+ * bytes read per token grow linearly with depth, so time per token is the
+ * quantity that moves linearly. Interpolating the rate directly would bend the
+ * wrong way and flatter deep contexts -- exactly the bias being corrected.
+ *
+ * Only five of this page's 24 decode entries have a 32K measurement at all,
+ * and none has one deeper. Where there is nothing to interpolate against, the
+ * short-context rate is still returned but marked `shortOnly`, so "we know
+ * this decays and measured it" stays distinct from "we have one number and are
+ * using it everywhere".
+ */
+export function decodeAtDepth(tg, atCtx = 0) {
+  if (!tg?.v) return { v: null, basis: 'none', est: true };
+  if (!(atCtx > 0)) return { v: tg.v, basis: 'measured', est: tg.c !== 'm' };
+  if (tg.v32 == null) return { v: tg.v, basis: 'shortOnly', est: true };
+  if (atCtx === DECODE_ANCHOR_CTX) return { v: tg.v32, basis: 'measured', est: tg.c32 !== 'm' };
+
+  const t0 = 1 / tg.v;
+  const t = t0 + ((1 / tg.v32 - t0) * atCtx) / DECODE_ANCHOR_CTX;
+  // A non-positive time would mean the two anchors imply decode reaching
+  // infinite speed at this depth -- measurement noise, not a result.
+  if (!(t > 0)) return { v: tg.v, basis: 'shortOnly', est: true };
+  return {
+    v: 1 / t,
+    basis: atCtx < DECODE_ANCHOR_CTX ? 'interpolated' : 'extrapolated',
+    est: true,
+  };
+}
+
+/** How many platforms are running on a short-context rate with no depth anchor. */
+export function decodeBasisTally(model, arch, atCtx) {
+  const tally = { measured: 0, interpolated: 0, extrapolated: 0, shortOnly: 0, none: 0 };
+  for (const p of model.PLAT) tally[decodeAtDepth(model.TG[arch][p.id], atCtx).basis]++;
+  return tally;
+}
+
 /**
  * Wall-clock for one representative agentic turn: a 16K-token prompt prefilled
  * cold, then 2K tokens generated. Flagged estimated unless BOTH the 16K prefill
- * point and the decode rate are primary measurements.
+ * point and the depth-adjusted decode rate are primary measurements.
+ *
+ * Generation happens with the prompt already in the cache, so the decode rate
+ * is taken at `promptTokens` deep rather than at zero.
  */
 export function computeWC(model, arch, promptTokens = 16384, genTokens = 2048) {
   const idx = model.CTX.indexOf(promptTokens);
   return model.PLAT.map(p => {
     const pp = model.PP[arch][p.id];
-    const tg = model.TG[arch][p.id];
+    const dec = decodeAtDepth(model.TG[arch][p.id], promptTokens);
     const ppV = idx >= 0 ? pp.v[idx] : null;
     const ppC = idx >= 0 ? pp.c[idx] : NO_DATA;
-    if (!ppV || !tg.v) return { id: p.id, ttft: null, gen: null, total: null, est: true };
+    if (!ppV || !dec.v) return { id: p.id, ttft: null, gen: null, total: null, est: true, decode: dec };
     const ttft = promptTokens / ppV;
-    const gen = genTokens / tg.v;
-    return { id: p.id, ttft, gen, total: ttft + gen, est: ppC !== 'm' || tg.c !== 'm' };
+    const gen = genTokens / dec.v;
+    return { id: p.id, ttft, gen, total: ttft + gen, est: ppC !== 'm' || dec.est, decode: dec };
   });
 }
 
@@ -163,11 +215,13 @@ export const STEADY_STATE_TOKENS = 2048;
 export function computeSteadyState(model, arch, atCtx = STEADY_STATE_AT_CTX, newTokens = STEADY_STATE_TOKENS, genTokens = STEADY_STATE_TOKENS) {
   return model.PLAT.map(p => {
     const seg = marginalRateAt(model, arch, p.id, atCtx);
-    const tg = model.TG[arch][p.id];
-    if (!seg?.rate || !tg.v) return { id: p.id, ttft: null, gen: null, total: null, est: true };
+    // The appended tokens are in the cache before the first token is generated,
+    // so generation runs at atCtx + newTokens deep, not atCtx.
+    const dec = decodeAtDepth(model.TG[arch][p.id], atCtx + newTokens);
+    if (!seg?.rate || !dec.v) return { id: p.id, ttft: null, gen: null, total: null, est: true, decode: dec };
     const ttft = newTokens / seg.rate;
-    const gen = genTokens / tg.v;
-    return { id: p.id, ttft, gen, total: ttft + gen, est: seg.est || tg.c !== 'm' };
+    const gen = genTokens / dec.v;
+    return { id: p.id, ttft, gen, total: ttft + gen, est: seg.est || dec.est, decode: dec };
   });
 }
 

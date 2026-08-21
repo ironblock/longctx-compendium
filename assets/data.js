@@ -58,6 +58,9 @@ function normalizePlatformPerf(platform, arch, contexts) {
       v: short.v,
       c: short.c,
       v32: at32k.v,
+      // Kept so a depth-adjusted decode rate can report honest confidence
+      // rather than inheriting the short-context code.
+      c32: at32k.c,
       note: entry?.decodeNote ?? entry?.note ?? '',
     },
   };
