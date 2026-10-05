@@ -228,8 +228,14 @@ for (const id of costed) {
 // --- Lines and candidates ---------------------------------------------------
 // A line is only worth having if a reader can tell what it measured. These make
 // the omissions that quietly turn a number into folklore into errors.
-const checkRig = (rig, at) =>
+const checkRig = (rig, at) => {
   (rig.units ?? []).forEach((c, i) => exists(c.unit, `${at} rig.units[${i}]`));
+  // An interconnect rating is a vendor claim like any other spec: say whose.
+  const ic = rig.interconnect;
+  if (ic && (ic.peakP2pGBsPerGpu != null || ic.hostLinkGBs != null || ic.linksPerGpu != null) && !ic.source) {
+    fail(at, 'interconnect carries link figures but no source -- say where they came from');
+  }
+};
 
 const modelKnown = (id, at) => {
   if (!MODEL_ARCH[id]) {

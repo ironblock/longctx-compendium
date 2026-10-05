@@ -532,6 +532,12 @@ export function renderCandidatesTable(model) {
       }</span></td>` +
       `<td class="lbl" style="white-space:normal;min-width:200px;font-size:11.5px">${esc(ic?.kind ?? 'unknown')}` +
       `<span style="display:block;font-size:10px;color:var(--dim)" title="${esc(ic?.note ?? '')}">${esc(ic?.bridge ?? '')}</span></td>` +
+      `<td class="lbl" style="min-width:150px">${
+        ic?.peakP2pGBsPerGpu != null
+          ? `<span class="num">${ic.peakP2pGBsPerGpu} GB/s</span>`
+          : '<span class="num" style="color:var(--dim)" title="The vendor datasheet gives no GB/s figure">not stated</span>'
+      }<span style="display:block;font-size:10px;color:var(--dim)">peak P2P per GPU${ic?.linksPerGpu ? ` · ${ic.linksPerGpu} links` : ''}</span>` +
+      `<span style="display:block;font-size:10px;color:var(--dim)">${ic?.hostLinkGBs ? `host link ${ic.hostLinkGBs} GB/s` : 'host link unverified'}</span></td>` +
       `<td class="lbl" style="white-space:normal;min-width:300px;font-size:11px;color:var(--muted)">${esc(c.note ?? '')}</td>` +
       `<td class="lbl" style="font-size:11px"><span class="prov weak">${c.status}</span></td>`;
     tb.appendChild(tr);

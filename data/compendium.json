@@ -458,8 +458,9 @@
       },
       "pricing": {
         "street": {
-          "usd": 1000,
-          "asOf": "2026-07"
+          "usd": 700,
+          "asOf": "2026-10",
+          "note": "The maintainer's observation of used SXM2 32GB listings, Oct 2026; was $1,000 as of 2026-07."
         }
       },
       "power": {
@@ -1063,14 +1064,14 @@
       "process": "Multiple -- 47 active tiles across five process nodes, combined via EMIB 2.5D + Foveros 3D packaging (Intel does not name individual node processes in its public product brief)",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec. fp64/fp32 are non-systolic (vector-engine) rated throughput -- Ponte Vecchio runs FP64 and FP32 at the same native 1:1 rate (unlike the usual 1:2), which Intel called out as a deliberate design choice and is how it targeted 2 exaFLOPS peak FP64 for the Aurora supercomputer. Both are the boost-clock figure and reproduce exactly from the shader count: 7168 ALUs x 2 FLOP/clock x 1.55 GHz = 22.22. bf16 is the same template's own Bfloat16 column. tf32/fp16/int8/int4 also execute on the systolic (XMX) matrix engines per Intel's datasheet, but no published per-SKU figure exists for them on this part -- Intel's 419 TFLOPS TF32 headline is the 1550, and scaling it by core count and clock would be deriving a number, not sourcing one.",
+        "note": "dense unless the key says :sparse; 10^12 ops/sec. fp64/fp32 are non-systolic (vector-engine) rated throughput -- Ponte Vecchio runs FP64 and FP32 at the same native 1:1 rate (unlike the usual 1:2), which Intel called out as a deliberate design choice and is how it targeted 2 exaFLOPS peak FP64 for the Aurora supercomputer. Both are the boost-clock figure and reproduce exactly from the shader count: 7168 ALUs x 2 FLOP/clock x 1.55 GHz = 22.22. bf16 is the same template's own Bfloat16 column. tf32/fp16/int8/int4 also execute on the systolic (XMX) matrix engines per Intel's datasheet, but no published per-SKU figure exists for them on this part -- Intel's 419 TFLOPS TF32 headline is the 1550, and scaling it by core count and clock would be deriving a number, not sourcing one. WHICH precisions the XMX engines accept is now sourced: Intel's own SYCL matrix extension (intel/llvm, see sources) lists signed and unsigned INT8, FP16 (FP32 or FP16 accumulate), BF16 and TF32 as supported on intel_gpu_pvc, with no INT4, FP8 or FP4 entry. That is an API support list, not a rate, so the figures stay unknown. Correction to the sentence above: Intel's platform datasheet (817799) lists no precisions at all, so that claim rests on the product brief, which refused an automated fetch when this was rechecked (as did ARK).",
         "source": "https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series (boost-clock row, itself citing Intel's official product brief and ARK specification page)",
         "values": {
           "fp64": 22.2,
           "fp32": 22.2,
           "bf16": 352
         },
-        "unknown": ["tf32", "fp16", "int8", "int4"],
+        "unknown": ["tf32", "fp16", "int8"],
         "unsupported": ["fp8", "fp4"]
       },
       "pricing": {
@@ -1085,9 +1086,10 @@
         "https://cdrdv2-public.intel.com/817799/817799_Intel%20Data%20Center%20GPU%20Max%201100%20Datasheet_Rev_1_0.pdf",
         "https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2023-01/data-center-gpu-max-series-product-brief.pdf",
         "https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series",
-        "Intel ARK Product Specification Comparison export (Max 1550 vs Max 1100), user-captured 2026-08-19"
+        "Intel ARK Product Specification Comparison export (Max 1550 vs Max 1100), user-captured 2026-08-19",
+        "https://github.com/intel/llvm/blob/b98b3a76c11345f1ff6f295e416755ce8c11b60c/sycl/doc/extensions/experimental/sycl_ext_matrix/sycl_ext_oneapi_matrix.asciidoc"
       ],
-      "note": "Reference only -- no benchmarks on this page, and there may not be any soon: llama.cpp's own community SYCL performance-reference thread (github.com/ggml-org/llama.cpp discussion #23313) has zero PVC datapoints as of this writing, despite the SYCL backend officially listing both Max 1550 and Max 1100 as verified devices. The only public PVC/llama.cpp number found anywhere is one changelog row (2025.2): Max 1550 going 39->73 tok/s on llama-2-7b Q4_0 -- 18-months-stale, on the flagship rather than this SKU, and roughly a tenth of an Arc A770's memory-bandwidth efficiency (the A770 posts 55-67 tok/s on a sixth of the bandwidth). The software stack has matured a lot since PVC's 2022 launch -- SYCL flash-attention (native and oneDNN-fused) landed 2026.03, and split-mode tensor (true tensor parallelism, not just layer-splitting) is explicitly 'optimized for 2 GPUs,' a good match for a 2-card 96GB build -- but nobody has published it running at depth. GGML_SYCL_FA_ONEDNN_MAX_KV exists specifically because 'GPU driver watchdog resets (DEVICE_LOST) occur during long-context inference,' with a documented workaround capping context near 24,576 tokens -- below this page's own long-context framing. Intel's own ARK listing gives this SKU's expected discontinuance as Jan 2026 (already past as of Aug 2026), which is presumably why pulled cards are turning up on eBay around $2,000 -- cheap for 48GB of HBM2e with real XMX matrix engines, expensive to be the first person to actually measure it at 128K context."
+      "note": "Reference only -- no benchmarks on this page, and there may not be any soon: llama.cpp's own community SYCL performance-reference thread (github.com/ggml-org/llama.cpp discussion #23313) has zero PVC datapoints as of this writing, despite the SYCL backend officially listing both Max 1550 and Max 1100 as verified devices. The only public PVC/llama.cpp number found anywhere is one changelog row (2025.2): Max 1550 going 39->73 tok/s on llama-2-7b Q4_0 -- 18-months-stale, on the flagship rather than this SKU, and roughly a tenth of an Arc A770's memory-bandwidth efficiency (the A770 posts 55-67 tok/s on a sixth of the bandwidth). The software stack has matured a lot since PVC's 2022 launch -- SYCL flash-attention (native and oneDNN-fused) landed 2026.03, and split-mode tensor (true tensor parallelism, not just layer-splitting) is explicitly 'optimized for 2 GPUs,' a good match for a 2-card 96GB build -- but nobody has published it running at depth. GGML_SYCL_FA_ONEDNN_MAX_KV exists specifically because 'GPU driver watchdog resets (DEVICE_LOST) occur during long-context inference,' with a documented workaround capping context near 24,576 tokens -- below this page's own long-context framing. Intel's own ARK listing gives this SKU's expected discontinuance as Jan 2026 (already past as of Aug 2026), which is presumably why pulled cards are turning up on eBay around $2,000 -- cheap for 48GB of HBM2e with real XMX matrix engines, expensive to be the first person to actually measure it at 128K context. Memory arithmetic: Intel's datasheet (817799) says three enabled 16 GB HBM2e stacks at 3.2 GT/s and, in its block diagram, '1.6 TB/s peak BW'; the package physically carries four stacks with one permanently disabled, so 1.6 TB/s is the four-stack figure and three stacks at the standard 1,024 bits give the 1,228.8 GB/s recorded here. PCIe 5.0 x16 to the host."
     },
     {
       "id": "max_1550",
@@ -3575,7 +3577,10 @@
         "interconnect": {
           "kind": "nvlink",
           "bridge": "1CatAI SXM2 carrier board",
-          "note": "NVLink is taken from this page's own platform label (V100 NVLink x4). Topology and whether peer-to-peer is enabled are not verified."
+            "linksPerGpu": 6,
+            "peakP2pGBsPerGpu": 300,
+            "source": "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf",
+          "note": "NVIDIA rates the SXM2 V100 at 300 GB/s of NVLink 2.0 per GPU (six links). Whether the 1CatAI carrier wires all six per GPU, its topology, and whether peer-to-peer is enabled are not verified; the NVLink itself is taken from this page's own platform label (V100 NVLink x4)."
         }
       },
       "models": [
@@ -3599,8 +3604,11 @@
           "kind": "infinity-fabric",
           "bridge": "Infinity Fabric bridge (four-GPU hive)",
             "costUsd": 650,
+            "linksPerGpu": 3,
+            "peakP2pGBsPerGpu": 276,
+            "hostLinkGBs": 64,
           "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/product-briefs/instinct-mi100-brochure.pdf",
-          "note": "AMD: three Infinity Fabric links per GPU, up to 276 GB/s peer-to-peer per GPU and 552 GB/s for a four-GPU hive, all theoretical peaks; PCIe Gen4 x16 to the host."
+          "note": "AMD: three Infinity Fabric links per GPU, up to 276 GB/s peer-to-peer per GPU and 552 GB/s for a four-GPU hive, all theoretical peaks; PCIe Gen4 x16 (64 GB/s) to the host."
         }
       },
       "models": [
@@ -3623,7 +3631,10 @@
         "interconnect": {
           "kind": "xe-link",
           "bridge": "Xe Link bridge",
-          "note": "Bridge topology and bandwidth not yet sourced."
+            "linksPerGpu": 6,
+            "hostLinkGBs": 128,
+            "source": "https://cdrdv2-public.intel.com/817799/817799_Intel%20Data%20Center%20GPU%20Max%201100%20Datasheet_Rev_1_0.pdf",
+          "note": "Intel datasheet 817799: each card has six 53 Gbps SerDes ports. The X2 bridge (99ARXG) joins two cards with six Xe Link connections between them; the X4 bridge (99ARXX) gives each pair of four cards two. The datasheet states no GB/s: whether a connection is one lane or several changes the aggregate about eightfold, so none is recorded. Host link is PCIe 5.0 x16 at 32 GT/s (128 GB/s counted AMD's way; about 63 GB/s per direction after encoding). A separate Xe Link Bridge Card Datasheet (788941) should state the bandwidth and could not be found."
         }
       },
       "models": [

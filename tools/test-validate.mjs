@@ -156,6 +156,12 @@ const CASES = [
   ['a candidate id colliding with a line id', 'duplicate id', d => {
     candidate(d, 'c_mi100x4').id = L;
   }],
+  ['an interconnect rating with no source', 'no source', d => {
+    delete candidate(d, 'c_mi100x4').rig.interconnect.source;
+  }],
+  ['a negative peer bandwidth', 'must be > 0', d => {
+    candidate(d, 'c_mi100x4').rig.interconnect.peakP2pGBsPerGpu = -1;
+  }],
   ['a candidate rig pointing at a unit that does not exist', 'unknown unit', d => {
     candidate(d, 'c_mi100x4').rig.units[0].unit = 'nosuchcard';
   }],

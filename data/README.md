@@ -358,6 +358,20 @@ they are meant to serve, and a note. Price, capacity and bandwidth are derived f
 their units. Leave `interconnect` fields out rather than guessing; absent means
 nobody has looked.
 
+`interconnect` can carry the vendor's numbers: `linksPerGpu`, `peakP2pGBsPerGpu`
+(peak GPU-to-GPU bandwidth per GPU, both directions summed over every link, as the
+vendor states it) and `hostLinkGBs` (line rate x lanes, both directions, encoding
+overhead not subtracted -- AMD's convention for its PCIe figures). All are ratings,
+not measurements, and any of them needs a `source`. A vendor that does not state
+GB/s gets no number: Intel's Max 1100 datasheet gives six 53 Gbps SerDes ports but
+no bandwidth, and guessing whether a port is one lane or several is an eightfold
+error. `costUsd` prices the bridge or carrier board, which belongs to no card; a rig
+that declares an interconnect without one is shown as "cards only".
+
+Peer bandwidth does not set single-stream decode, which follows per-card memory
+bandwidth. It matters for tensor-parallel prefill, concurrent streams, and anything
+streamed from host RAM or a spill tier.
+
 ## Reference units
 
 A catalog entry does not have to be in anything. `h100_sxm`, `h100_pcie`,

@@ -118,6 +118,8 @@ check('provenance chips rendered on every line', (await count('#lineTable .prov.
 check('every first-party line is attested', (await count('#lineTable .prov.witnessed')) === 8, `got ${await count('#lineTable .prov.witnessed')}`);
 const candText = await text('#candTable tbody');
 check('the MI100 rig totals its cards and bridge', candText.includes('$4,250') && /cards \+ bridge/.test(candText), 'expected 4 x $900 + $650');
+check('peer bandwidth is shown where the vendor states it', /300 GB\/s/.test(candText) && /276 GB\/s/.test(candText), 'expected NVLink 2.0 and Infinity Fabric ratings');
+check('a missing peer bandwidth says so rather than showing a number', /not stated/.test(candText), 'expected the Max 1100 Xe Link entry');
 check('rigs whose bridge is unpriced say so', (candText.match(/bridge unpriced/g) ?? []).length === 2, `got ${(candText.match(/bridge unpriced/g) ?? []).length}`);
 check('legend entries', (await count('#pleg span')) >= 9);
 check('verdict rendered', (await text('#verdict')).length > 80);
