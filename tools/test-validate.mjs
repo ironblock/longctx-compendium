@@ -128,10 +128,16 @@ const CASES = [
     line(d, L).results.push(JSON.parse(JSON.stringify(line(d, L).results[0])));
   }],
   ['an issue report with no reproduction status', 'reproduced', d => {
-    line(d, L).provenance = { kind: 'issue-report', authorship: 'unknown', source: 'https://example.invalid/issues/1' };
+    line(d, L).provenance = { kind: 'issue-report', attestation: 'reported', source: 'https://example.invalid/issues/1' };
   }],
-  ['authorship outside the declared set', 'must be one of', d => {
-    line(d, L).provenance.authorship = 'ghost';
+  ['attestation outside the declared set', 'must be one of', d => {
+    line(d, L).provenance.attestation = 'vibes';
+  }],
+  ['a field the provenance no longer has', 'unknown property', d => {
+    line(d, L).provenance.authorship = 'agent-authored';
+  }],
+  ['an issue report claimed as witnessed', 'cannot be witnessed', d => {
+    line(d, L).provenance = { kind: 'issue-report', attestation: 'witnessed', source: 'https://example.invalid/issues/1', reproduced: false };
   }],
   ['a withdrawn line that never says why', 'never says why', d => {
     const l = line(d, L);
@@ -183,8 +189,11 @@ ACCEPTED.push(
   ['a point deeper than the pool', 'is more than the', d => {
     line(d, L).results.push({ metric: 'decode', depth: 500000, streams: 1, basis: 'per-stream', value: 10, confidence: 'e' });
   }],
+  ['a first-party measurement the maintainer did not personally see', null, d => {
+    line(d, L).provenance.attestation = 'reported';
+  }],
   ['an unreproduced issue report that says so', null, d => {
-    line(d, L).provenance = { kind: 'issue-report', authorship: 'unknown', source: 'https://example.invalid/issues/1', reproduced: false };
+    line(d, L).provenance = { kind: 'issue-report', attestation: 'reported', source: 'https://example.invalid/issues/1', reproduced: false };
   }]
 );
 

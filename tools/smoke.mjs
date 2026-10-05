@@ -115,6 +115,7 @@ check('lines name their engines', /ExLlamaV3/.test(lineText) && /llama\.cpp/.tes
 check('points state their depth', /@2K/.test(lineText) && /@227K|@226K/.test(lineText), 'expected depth suffixes on decode figures');
 check('range figures render as a range', /129\.3–131\.3/.test(lineText), 'expected the Ada top rung 10K decode range');
 check('provenance chips rendered on every line', (await count('#lineTable .prov.first')) === 8, `got ${await count('#lineTable .prov.first')}`);
+check('every first-party line is attested', (await count('#lineTable .prov.witnessed')) === 8, `got ${await count('#lineTable .prov.witnessed')}`);
 check('the unpriced candidate says so', /unpriced/.test(await text('#candTable tbody')));
 check('legend entries', (await count('#pleg span')) >= 9);
 check('verdict rendered', (await text('#verdict')).length > 80);

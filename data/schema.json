@@ -587,13 +587,13 @@
       }
     },
     "provenance": {
-      "description": "Where a number came from and how far to trust the route it took. `kind` says what sort of source it is; `authorship` says who produced it. Authorship is declared, never inferred: a measurement is weighed by whether its inputs can be checked, not by who typed it.",
+      "description": "Where a number came from and whether the page's maintainer vouches for it. `kind` says what sort of source it is; `attestation` is the maintainer's own word, declared and never inferred. Who ran the test or compiled the data is deliberately not the question: a number is weighed by whether someone accountable saw it happen and whether its inputs can be checked.",
       "type": "object",
-      "required": ["kind", "authorship", "source"],
+      "required": ["kind", "attestation", "source"],
       "additionalProperties": false,
       "properties": {
         "kind": { "enum": ["first-party", "issue-report", "forum", "vendor", "modeled"] },
-        "authorship": { "enum": ["human", "agent-assisted", "agent-authored", "unknown"] },
+        "attestation": { "enum": ["witnessed", "reported"], "description": "witnessed = the maintainer personally saw this hardware produce these numbers. reported = someone else's account, included because nothing gives a specific reason to doubt it; where there is a specific reason, leave the number out." },
         "source": { "type": "string", "description": "A repository path, issue or comment reference, or URL -- enough to go and read the original." },
         "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "sha256 of the manifest that pins the receipts, when one exists." },
         "reproduced": { "type": "boolean", "description": "Whether anyone other than the reporter has reproduced the numbers. Required for issue-report and forum sources." },

@@ -308,7 +308,7 @@ The two layers are never mixed in a chart.
     { "metric": "decode", "depth": 98000, "streams": 1, "basis": "per-stream", "value": 27.7, "confidence": "m", "spec": "off" },
     { "metric": "prefill", "depth": 2000, "streams": 1, "basis": "per-stream", "value": 786.8, "confidence": "m", "prefillBasis": "cold" }
   ],
-  "provenance": { "kind": "first-party", "authorship": "agent-authored", "source": "repo path or issue", "digest": "sha256:…" }
+  "provenance": { "kind": "first-party", "attestation": "witnessed", "source": "repo path or issue", "digest": "sha256:…" }
 }
 ```
 
@@ -327,12 +327,16 @@ What the validator holds you to, and why:
 - **`model` must exist in `assets/models.js` `MODEL_ARCH`**, with its architecture
   read from the published `config.json` (layer types are counted from the config's
   own `layer_types`, not assumed). That is what lets `kvBytesPerToken` size a context.
-- **Provenance is declared.** `kind` is the sort of source (`first-party`,
-  `issue-report`, `forum`, `vendor`, `modeled`); `authorship` is who produced it
-  (`human`, `agent-assisted`, `agent-authored`, `unknown`). It is never inferred --
-  the point is whether the inputs can be checked, not who typed them. An
-  `issue-report` or `forum` post must say whether anyone has reproduced it.
-  A first-party line should pin a `digest`.
+- **Provenance is declared, and the question is vouching, not typing.** `kind` is the
+  sort of source (`first-party`, `issue-report`, `forum`, `vendor`, `modeled`).
+  `attestation` is the maintainer's own word: `witnessed` means they personally saw
+  this hardware produce these numbers, whoever ran the test and compiled the data;
+  `reported` is someone else's account, included because nothing gives a specific
+  reason to doubt it. Where there is a specific reason to doubt a claim, leave it out
+  rather than marking it. Only a `first-party` measurement can be `witnessed`, and a
+  first-party run the maintainer did not see is `reported`. An `issue-report` or
+  `forum` post must also say whether anyone has reproduced it, and a first-party
+  line should pin a `digest`.
 - **A line that produced invalid numbers is `withdrawn`**, with the reason in
   `hazards`, rather than deleted or left looking measured.
 

@@ -463,7 +463,7 @@ const provChip = p => {
   const label = p.kind === 'first-party' ? p.kind : `${p.kind} · ${p.reproduced ? 'reproduced' : 'unreproduced'}`;
   return (
     `<span class="prov ${weak ? 'weak' : 'first'}" title="${esc(p.source)}">${label}</span>` +
-    `<span class="prov" title="Authorship is declared, not inferred. ${esc(p.note ?? '')}">${p.authorship}</span>`
+    `<span class="prov ${p.attestation}" title="${p.attestation === 'witnessed' ? 'The maintainer personally saw this hardware produce these numbers.' : "Someone else's account, included because nothing gives a specific reason to doubt it."} ${esc(p.note ?? '')}">${p.attestation}</span>`
   );
 };
 

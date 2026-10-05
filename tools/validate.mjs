@@ -247,6 +247,9 @@ for (const l of doc.lines ?? []) {
   if (['issue-report', 'forum'].includes(l.provenance.kind) && l.provenance.reproduced == null) {
     fail(at, `a ${l.provenance.kind} must say whether anyone has reproduced it (provenance.reproduced)`);
   }
+  if (l.provenance.attestation === 'witnessed' && l.provenance.kind !== 'first-party') {
+    fail(at, `a ${l.provenance.kind} cannot be witnessed -- only first-party measurements can be; use "reported"`);
+  }
   if (l.provenance.kind === 'first-party' && !l.provenance.digest) {
     warn(at, 'is first-party but pins no digest -- a reader cannot tell the receipts have not moved');
   }

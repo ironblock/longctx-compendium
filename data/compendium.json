@@ -2714,7 +2714,7 @@
       ],
       "provenance": {
         "kind": "first-party",
-        "authorship": "agent-authored",
+        "attestation": "witnessed",
         "source": "ironblock/discipline#143 comment 5883986293 (profile window 2026-09-29), restated in substrates/LADDER.md (branch chore/143-ladder) and the #335 record",
         "note": "Greedy, 256 new tokens, single samples. Not re-run in #335. No pinned digest for the profile window itself."
       },
@@ -2843,7 +2843,7 @@
       ],
       "provenance": {
         "kind": "first-party",
-        "authorship": "agent-authored",
+        "attestation": "witnessed",
         "source": "ironblock/discipline@a6ccbdbb85e4 substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/README.md",
         "digest": "sha256:432e9394a4cdb3148cfa4de67cfc02b68d13cace5b8a5bdde3eb03bedcd7f644",
         "note": "Measured by the inference seat in windows the maintainer approved; every receipt is pinned by SHA256SUMS."
@@ -2975,7 +2975,7 @@
       ],
       "provenance": {
         "kind": "first-party",
-        "authorship": "agent-authored",
+        "attestation": "witnessed",
         "source": "ironblock/discipline@a6ccbdbb85e4 substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/README.md",
         "digest": "sha256:432e9394a4cdb3148cfa4de67cfc02b68d13cace5b8a5bdde3eb03bedcd7f644",
         "note": "Measured by the inference seat in windows the maintainer approved; every receipt is pinned by SHA256SUMS."
@@ -3077,7 +3077,7 @@
       ],
       "provenance": {
         "kind": "first-party",
-        "authorship": "agent-authored",
+        "attestation": "witnessed",
         "source": "ironblock/discipline@a6ccbdbb85e4 substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/README.md",
         "digest": "sha256:432e9394a4cdb3148cfa4de67cfc02b68d13cace5b8a5bdde3eb03bedcd7f644",
         "note": "Measured by the inference seat in windows the maintainer approved; every receipt is pinned by SHA256SUMS."
@@ -3180,7 +3180,7 @@
       ],
       "provenance": {
         "kind": "first-party",
-        "authorship": "agent-authored",
+        "attestation": "witnessed",
         "source": "ironblock/discipline@a6ccbdbb85e4 substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/README.md",
         "digest": "sha256:432e9394a4cdb3148cfa4de67cfc02b68d13cace5b8a5bdde3eb03bedcd7f644",
         "note": "Measured by the inference seat in windows the maintainer approved; every receipt is pinned by SHA256SUMS."
@@ -3279,7 +3279,7 @@
       ],
       "provenance": {
         "kind": "first-party",
-        "authorship": "agent-authored",
+        "attestation": "witnessed",
         "source": "ironblock/discipline@a6ccbdbb85e4 substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/README.md",
         "digest": "sha256:432e9394a4cdb3148cfa4de67cfc02b68d13cace5b8a5bdde3eb03bedcd7f644",
         "note": "Measured by the inference seat in windows the maintainer approved; every receipt is pinned by SHA256SUMS."
@@ -3412,7 +3412,7 @@
       ],
       "provenance": {
         "kind": "first-party",
-        "authorship": "agent-authored",
+        "attestation": "witnessed",
         "source": "ironblock/discipline@6b0381e992 substrates/measurements/2026-10-03-characterization/README.md",
         "digest": "sha256:addeb2e36613bea09871192f4c20517e12e6afa57367671a42d2320f12cb9daf",
         "note": "A/B windows on rtx6000ada-host, 2026-10-03. Decode is reps 1-2 only; ranges are across those reps."
@@ -3546,7 +3546,7 @@
       ],
       "provenance": {
         "kind": "first-party",
-        "authorship": "agent-authored",
+        "attestation": "witnessed",
         "source": "ironblock/discipline@6b0381e992 substrates/measurements/2026-10-03-characterization/README.md",
         "digest": "sha256:addeb2e36613bea09871192f4c20517e12e6afa57367671a42d2320f12cb9daf",
         "note": "A/B windows on rtx6000ada-host, 2026-10-03. Decode is reps 1-2 only; ranges are across those reps."
