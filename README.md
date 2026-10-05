@@ -30,12 +30,14 @@ assets/derive.js        everything computed rather than stored
 assets/charts.js        Chart.js configuration
 assets/tables.js        table and legend rendering
 assets/verdicts.js      editorial copy
+assets/models.js        parameter counts (roofline) and MODEL_ARCH (shape facts for memory arithmetic)
 assets/chart.umd.js     vendored Chart.js 4.4.1 (MIT)
 data/compendium.json    ← every number on the page (units · platforms · builds)
 data/schema.json
 data/README.md          ← how to add a device or a datapoint
 tools/validate.mjs      schema + cross-record checks, no dependencies
 tools/test-validate.mjs proves the validator rejects bad data
+tools/test-kv.mjs       holds the config-derived KV arithmetic against first-party measurements
 tools/smoke.mjs         renders the page in Chromium and asserts it drew
 tools/coverage.mjs      reports what the hardware catalog is still missing
 ```
@@ -61,11 +63,12 @@ python3 -m http.server 8000    # then open http://localhost:8000
 ```sh
 node tools/validate.mjs        # data file: schema + semantic checks
 node tools/test-validate.mjs   # the validator's own tests
+node tools/test-kv.mjs         # memory arithmetic against first-party measurements
 node tools/smoke.mjs           # renders in Chromium (needs playwright)
 node tools/coverage.mjs        # what the catalog is still missing (never fails)
 ```
 
-The first two have no dependencies. CI runs all three on every push.
+The first three have no dependencies. CI runs all of them on every push.
 
 ## Deployment
 

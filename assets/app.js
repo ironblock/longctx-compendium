@@ -14,6 +14,8 @@ import {
   cycleSpecSort,
   renderPrecisionToggle,
   renderVendorLegend,
+  renderLinesTable,
+  renderCandidatesTable,
 } from './tables.js';
 import { prefillVerdict, steadyStateVerdict, valueVerdict, captionFor, valueCaption } from './verdicts.js';
 import { renderRooflineToggles, renderRooflineTable } from './roofline-ui.js';
@@ -153,6 +155,8 @@ try {
   renderPrecisionSection(model);
   renderRooflineSection(model);
   renderValueSection(model);
+  renderLinesTable(model);
+  renderCandidatesTable(model);
   renderMain(model);
 
   wireToggle('viewTg', 'v', v => {

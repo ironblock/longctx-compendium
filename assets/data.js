@@ -177,6 +177,12 @@ export function normalize(doc) {
     return rec;
   });
 
+  // A rig is quantities of catalog units, so its price and capacity come from the
+  // same sums as everything else on the page and cannot drift from the catalog.
+  const rigTotals = (rig, at) => sum(rig.units.map(c => unitTotals(c.unit, c.count, at)));
+  const LINES = (doc.lines ?? []).map(l => ({ ...l, rigTotals: rigTotals(l.rig, `line "${l.id}"`) }));
+  const CANDIDATES = (doc.candidates ?? []).map(c => ({ ...c, rigTotals: rigTotals(c.rig, `candidate "${c.id}"`) }));
+
   return {
     CTX,
     CTXL,
@@ -184,6 +190,8 @@ export function normalize(doc) {
     PP,
     TG,
     BUILDS,
+    LINES,
+    CANDIDATES,
     UNITS: doc.units ?? [],
     // Capacity, price and draw for each benchmarked configuration, summed from
     // the units it is made of.

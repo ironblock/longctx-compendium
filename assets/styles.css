@@ -90,3 +90,9 @@ ul.notes b{color:var(--text)}
 
 /* data load failure — a static site has no server-side error page */
 .loaderr{background:rgba(255,96,96,.07);border:1px solid rgba(255,96,96,.35);border-left:3px solid var(--bad);border-radius:10px;padding:14px 16px;margin:8px 0 24px;font-family:var(--mono);font-size:12.5px;color:#ff9a9a;white-space:pre-wrap}
+
+/* provenance chips on first-party lines: kind says what sort of source, the
+   second chip says who produced it, and a weak kind is amber rather than green */
+.prov{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:1px 7px;margin-right:5px;border-radius:9px;border:1px solid var(--line);color:var(--muted);cursor:help}
+.prov.first{color:var(--m);border-color:rgba(95,217,122,.4)}
+.prov.weak{color:var(--e);border-color:rgba(243,181,76,.4)}

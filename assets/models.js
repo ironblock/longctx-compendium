@@ -89,3 +89,50 @@ export const MODELS = {
  *  gap instead of a wrong number -- same "no data beats a guess" rule as
  *  the rest of this page. */
 export const modelFor = id => MODELS[id] ?? null;
+
+// Architecture of the named models the first-party lines measure. Kept apart
+// from MODELS above: those are parameter counts for the roofline, these are
+// the shape facts the memory arithmetic needs (see derive.js kvBytesPerToken).
+//
+// Read from each model's published config.json on 2026-10-05, not recalled --
+// the 3.8 generation postdates what a model writing this page could have known.
+// layerTypes is counted from the config's own layer_types list rather than
+// derived from full_attention_interval, so a model that breaks the pattern
+// cannot slip through as "every fourth layer".
+//
+// No parameter counts yet: config.json does not state them and the model cards
+// were not read. The roofline therefore cannot use these entries.
+export const MODEL_ARCH = {
+  qwen38_27b: {
+    label: 'Qwen3.8-27B',
+    modelType: 'qwen3_5_text',
+    layers: 64,
+    layerTypes: { full_attention: 16, linear_attention: 48 },
+    kvHeads: 4,
+    headDim: 256,
+    linear: { valueHeads: 48, keyHeads: 16, keyHeadDim: 128, valueHeadDim: 128 },
+    mtpLayers: 1,
+    maxPositions: 262144,
+    confidence: 'm',
+    source: 'https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/config.json',
+    note: 'Hybrid Gated DeltaNet: three linear-attention layers to every full-attention one. Dense in the all-weights-active sense, which is not the same claim as full attention.',
+  },
+  qwen38_flash_next: {
+    label: 'Qwen3.8-Flash-Next',
+    modelType: 'qwen4_exp_text',
+    layers: 48,
+    layerTypes: { full_attention: 12, linear_attention: 36 },
+    kvHeads: 2,
+    headDim: 256,
+    linear: { valueHeads: 48, keyHeads: 16, keyHeadDim: 128, valueHeadDim: 128 },
+    moe: { experts: 512, expertsPerToken: 10, sharedExpertIntermediate: 640, expertIntermediate: 640 },
+    // A 20M-entry n-gram embedding table. The program that measures this model
+    // keeps it in host RAM, which makes host RAM a capacity spec for this model.
+    ngram: { vocabBase: 20000000, size: 3, headsPerNgram: 8, pleEmbedDim: 2560 },
+    mtpLayers: 1,
+    maxPositions: 262144,
+    confidence: 'm',
+    source: 'https://huggingface.co/Qwen/Qwen3.8-Flash-Next/raw/main/config.json',
+    note: 'Hybrid Gated DeltaNet MoE. Two KV heads: a 4-way tensor-parallel split must replicate them unless the engine also shards the cache along the sequence.',
+  },
+};

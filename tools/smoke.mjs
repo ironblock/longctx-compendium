@@ -97,9 +97,25 @@ for (const id of ['cMeasured', 'cExtrap', 'cModeled', 'cArch']) {
 // 9 platforms x 3 archetypes + 4 group header rows.
 check('prefill table rows', (await count('#ppTable tbody tr')) === 31, `got ${await count('#ppTable tbody tr')}`);
 check('decode table rows', (await count('#tgTable tbody tr')) === 13, `got ${await count('#tgTable tbody tr')}`);
-// 30 catalog units + 4 vendor group headers
-check('spec table rows', (await count('#specTable tbody tr')) === 34, `got ${await count('#specTable tbody tr')}`);
+// 31 catalog units + 4 vendor group headers
+check('spec table rows', (await count('#specTable tbody tr')) === 35, `got ${await count('#specTable tbody tr')}`);
 check('value table rows', (await count('#valTable tbody tr')) === 9, `got ${await count('#valTable tbody tr')}`);
+// First-party lines are data-driven too: one row per line, one per candidate, and
+// nothing in either table may render as a missing value.
+check('first-party line rows', (await count('#lineTable tbody tr')) === 8, `got ${await count('#lineTable tbody tr')}`);
+check('runoff candidate rows', (await count('#candTable tbody tr')) === 3, `got ${await count('#candTable tbody tr')}`);
+for (const id of ['lineTable', 'candTable']) {
+  const t = await text(`#${id} tbody`);
+  check(`${id} renders no NaN/undefined/null`, !/NaN|undefined|null/.test(t), t.match(/.{0,30}(NaN|undefined|null).{0,30}/)?.[0]);
+}
+// Every line must say its engine and quant, and every deep point its depth: the
+// whole reason these rows exist is that a bare tok/s is not a fact.
+const lineText = await text('#lineTable tbody');
+check('lines name their engines', /ExLlamaV3/.test(lineText) && /llama\.cpp/.test(lineText));
+check('points state their depth', /@2K/.test(lineText) && /@227K|@226K/.test(lineText), 'expected depth suffixes on decode figures');
+check('range figures render as a range', /129\.3–131\.3/.test(lineText), 'expected the Ada top rung 10K decode range');
+check('provenance chips rendered on every line', (await count('#lineTable .prov.first')) === 8, `got ${await count('#lineTable .prov.first')}`);
+check('the unpriced candidate says so', /unpriced/.test(await text('#candTable tbody')));
 check('legend entries', (await count('#pleg span')) >= 9);
 check('verdict rendered', (await text('#verdict')).length > 80);
 check('value verdict rendered', (await text('#valVerdict')).length > 80);

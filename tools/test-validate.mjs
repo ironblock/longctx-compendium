@@ -18,6 +18,10 @@ const clone = () => JSON.parse(JSON.stringify(good));
 const platform = (doc, id) => doc.platforms.find(p => p.id === id);
 const build = (doc, id) => doc.builds.find(b => b.id === id);
 const unit = (doc, id) => doc.units.find(u => u.id === id);
+const line = (doc, id) => doc.lines.find(l => l.id === id);
+const candidate = (doc, id) => doc.candidates.find(c => c.id === id);
+// A decode point and a prefill point on the 3.8 27B IQ3_S line, by position.
+const L = 'l_3090_27b_iq3s_dflash2';
 
 // Each case breaks the data one way and names the substring the failure must
 // mention, so a check that starts passing for the wrong reason still fails.
@@ -98,6 +102,57 @@ const CASES = [
   ['unknown precision key shape', 'does not match', d => {
     unit(d, 'rtx_pro_6000').compute.values['FP 16'] = 250;
   }],
+  ['line for a model with no architecture entry', 'not in MODEL_ARCH', d => {
+    line(d, L).model = 'qwen99_100b';
+  }],
+  ['line whose rig names a unit that does not exist', 'unknown unit', d => {
+    line(d, L).rig.units[0].unit = 'nosuchcard';
+  }],
+  ['a point carrying both a value and a range', 'exactly one of value or range', d => {
+    line(d, L).results[0].range = [70, 80];
+  }],
+  ['a point carrying neither value nor range', 'exactly one of value or range', d => {
+    delete line(d, L).results[0].value;
+  }],
+  ['a reversed range', 'is reversed', d => {
+    const r = line(d, 'l_ada48_flash_exl3_2p05_mtp3').results[0];
+    r.range = [r.range[1], r.range[0]];
+  }],
+  ['aggregate claimed for one stream', 'one stream is per-stream', d => {
+    line(d, L).results[0].basis = 'aggregate';
+  }],
+  ['prefill that does not say cold or new-tokens', 'prefillBasis', d => {
+    delete line(d, L).results.find(r => r.metric === 'prefill').prefillBasis;
+  }],
+  ['the same point twice', 'repeats an earlier point', d => {
+    line(d, L).results.push(JSON.parse(JSON.stringify(line(d, L).results[0])));
+  }],
+  ['an issue report with no reproduction status', 'reproduced', d => {
+    line(d, L).provenance = { kind: 'issue-report', authorship: 'unknown', source: 'https://example.invalid/issues/1' };
+  }],
+  ['authorship outside the declared set', 'must be one of', d => {
+    line(d, L).provenance.authorship = 'ghost';
+  }],
+  ['a withdrawn line that never says why', 'never says why', d => {
+    const l = line(d, L);
+    l.status = 'withdrawn';
+    delete l.hazards;
+  }],
+  ['a measured line with no results', 'no results', d => {
+    line(d, L).results = [];
+  }],
+  ['draft acceptance above one', 'must be <=', d => {
+    line(d, L).results[0].acceptance = 1.5;
+  }],
+  ['a candidate for a model with no architecture entry', 'not in MODEL_ARCH', d => {
+    candidate(d, 'c_mi100x4').models = ['qwen99_100b'];
+  }],
+  ['a candidate id colliding with a line id', 'duplicate id', d => {
+    candidate(d, 'c_mi100x4').id = L;
+  }],
+  ['a candidate rig pointing at a unit that does not exist', 'unknown unit', d => {
+    candidate(d, 'c_mi100x4').rig.units[0].unit = 'nosuchcard';
+  }],
 ];
 
 // Edits that must be ACCEPTED. A validator that rejects legitimate data is as
@@ -120,6 +175,18 @@ const ACCEPTED = [
     });
   }],
 ];
+
+ACCEPTED.push(
+  ['a first-party line with no digest', 'pins no digest', d => {
+    delete line(d, L).provenance.digest;
+  }],
+  ['a point deeper than the pool', 'is more than the', d => {
+    line(d, L).results.push({ metric: 'decode', depth: 500000, streams: 1, basis: 'per-stream', value: 10, confidence: 'e' });
+  }],
+  ['an unreproduced issue report that says so', null, d => {
+    line(d, L).provenance = { kind: 'issue-report', authorship: 'unknown', source: 'https://example.invalid/issues/1', reproduced: false };
+  }]
+);
 
 let passed = 0;
 const failures = [];

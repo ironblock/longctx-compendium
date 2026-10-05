@@ -12,6 +12,7 @@ import {
   vendorColor,
   discoveredPrecisions,
 } from './derive.js';
+import { MODEL_ARCH } from './models.js';
 
 const el = id => document.getElementById(id);
 const tbody = sel => document.querySelector(`${sel} tbody`);
@@ -421,4 +422,116 @@ export function renderVendorLegend(model, state, onToggle) {
 /** Vendor filter for the hardware catalog table. */
 export function renderSpecFilter(model, state, onToggle) {
   vendorChips('specLeg', model, state.specHidden, onToggle);
+}
+
+// === First-party serving lines ===
+// One row per line: a rig, an engine, a quant and a cache, with every point
+// stating its own depth. Rows are not comparable with the platform tables above
+// (proxy models, no engine or quant), so nothing here feeds those charts.
+
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+
+/** 2236 -> 2.2K, 98000 -> 98K, 226750 -> 227K. */
+const fmtDepth = n => {
+  if (n < 1000) return String(n);
+  const k = n / 1000;
+  return (k < 10 ? String(Math.round(k * 10) / 10) : String(Math.round(k))) + 'K';
+};
+
+const pointValue = r => (r.range ? `${r.range[0]}–${r.range[1]}` : String(r.value));
+
+/** One point: its figure, the depth it was taken at, and a dagger when it has a caveat. */
+const pointHtml = r => {
+  const flag = r.note ? `<sup style="cursor:help;color:var(--e)" title="${esc(r.note)}">†</sup>` : '';
+  const at = r.streams > 1 ? `${r.streams}×${fmtDepth(r.depth)}` : fmtDepth(r.depth);
+  return `<div><span class="num">${pointValue(r)}</span>${flag}<span style="color:var(--dim);font-size:10px"> @${at}</span></div>`;
+};
+
+// The weakest confidence among a set of points sets the cell's colour, so one
+// extrapolated figure cannot hide inside a green cell.
+const CONF_RANK = { m: 0, 'm~': 1, e: 2, i: 3 };
+const weakest = pts => pts.reduce((w, r) => (CONF_RANK[r.confidence] > CONF_RANK[w] ? r.confidence : w), 'm');
+
+const pointsCell = (pts, label = '') => {
+  if (!pts.length) return '<td class="c-n"><span class="num">—</span></td>';
+  const head = label ? `<div style="color:var(--dim);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase">${label}</div>` : '';
+  return `<td class="c-${cssConf(weakest(pts))}" style="text-align:left">${head}${pts.map(pointHtml).join('')}</td>`;
+};
+
+const provChip = p => {
+  const weak = p.kind !== 'first-party' || p.reproduced === false;
+  const label = p.kind === 'first-party' ? p.kind : `${p.kind} · ${p.reproduced ? 'reproduced' : 'unreproduced'}`;
+  return (
+    `<span class="prov ${weak ? 'weak' : 'first'}" title="${esc(p.source)}">${label}</span>` +
+    `<span class="prov" title="Authorship is declared, not inferred. ${esc(p.note ?? '')}">${p.authorship}</span>`
+  );
+};
+
+const unitLabelOf = (model, id) => model.UNITS.find(u => u.id === id)?.label ?? id;
+const rigLabel = (model, rig) => rig.units.map(c => `${c.count}× ${unitLabelOf(model, c.unit)}`).join(' + ');
+
+export function renderLinesTable(model) {
+  const tb = tbody('#lineTable');
+  tb.innerHTML = '';
+  for (const l of model.LINES) {
+    const decode = l.results.filter(r => r.metric === 'decode');
+    const spec = r => r.spec ?? 'default';
+    const single = decode.filter(r => r.streams === 1 && spec(r) === 'default');
+    const off = decode.filter(r => r.streams === 1 && spec(r) === 'off');
+    const multi = decode.filter(r => r.streams > 1);
+    const prefill = l.results.filter(r => r.metric === 'prefill');
+    const q = l.quant;
+    const kld = q.kld ? `KLD ${q.kld.code} / ${q.kld.prose}` : 'KLD —';
+    const kv = l.kvCache ? `${l.kvCache.k}/${l.kvCache.v}${l.kvCache.kibPerToken ? ` · ${l.kvCache.kibPerToken} KiB/tok` : ''}` : '—';
+    const sp = l.spec ? `${l.spec.method}${l.spec.draftN ? ` n=${l.spec.draftN}` : ''}` : 'none';
+    const hazard = l.hazards?.length
+      ? `<span style="color:var(--warn);cursor:help" title="${esc(l.hazards.join(' | '))}">${l.hazards.length} hazard${l.hazards.length > 1 ? 's' : ''}</span>`
+      : '';
+    const state = [l.status === 'withdrawn' ? '<span class="t-bad">withdrawn</span>' : '', l.admission ?? 'no admission word', hazard]
+      .filter(Boolean)
+      .join('<br>');
+
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="lbl" style="min-width:230px"><span style="font-size:12px;color:var(--text)">${esc(l.label)}</span>` +
+      `<span style="display:block;margin-top:4px">${provChip(l.provenance)}</span>` +
+      `<span style="display:block;font-size:10px;color:var(--dim);margin-top:3px">${esc(MODEL_ARCH[l.model]?.label ?? l.model)}</span></td>` +
+      `<td class="lbl" style="white-space:normal;min-width:150px;font-size:11.5px">${esc(rigLabel(model, l.rig))}` +
+      `<span style="display:block;font-size:10px;color:var(--dim)" title="${esc(l.rig.note ?? '')}">${esc(l.rig.host?.name ?? '')}${l.rig.note ? ' †' : ''}</span></td>` +
+      `<td class="lbl" style="white-space:normal;font-size:11.5px">${esc(l.engine.name)}` +
+      `<span style="display:block;font-size:10px;color:var(--dim)">${esc([l.engine.version, l.engine.lineage].filter(Boolean).join(' · '))}</span></td>` +
+      `<td class="lbl" style="white-space:normal;font-size:11.5px">${esc(q.format)}` +
+      `<span style="display:block;font-size:10px;color:var(--dim)">${[q.bpw ? q.bpw + ' bpw' : '', q.sizeGB ? q.sizeGB + ' GB' : '', kld].filter(Boolean).join(' · ')}</span></td>` +
+      `<td class="lbl" style="font-size:11.5px">${esc(sp)}<span style="display:block;font-size:10px;color:var(--dim)">KV ${esc(kv)}</span>` +
+      `<span style="display:block;font-size:10px;color:var(--dim)">${l.pool ? `${l.pool.tokens.toLocaleString()} pool · ${l.pool.slots} slot${l.pool.slots > 1 ? 's' : ''}` : ''}</span></td>` +
+      pointsCell(single, 'decode tok/s') +
+      pointsCell(off, 'spec off') +
+      pointsCell(multi, 'aggregate') +
+      pointsCell(prefill, 'prefill') +
+      `<td class="num">${l.freeAtPeakMiB ?? '—'}</td>` +
+      `<td class="lbl" style="font-size:11px;color:var(--muted)">${state}</td>`;
+    tb.appendChild(tr);
+  }
+}
+
+export function renderCandidatesTable(model) {
+  const tb = tbody('#candTable');
+  tb.innerHTML = '';
+  for (const c of model.CANDIDATES) {
+    const u = model.UNITS.find(x => x.id === c.rig.units[0].unit);
+    const ic = c.rig.interconnect;
+    const t = c.rigTotals;
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="lbl" style="min-width:230px"><span style="font-size:12px;color:var(--text)">${esc(c.label)}</span>` +
+      `<span style="display:block;font-size:10px;color:var(--dim);margin-top:3px">${esc(c.models.map(m => MODEL_ARCH[m]?.label ?? m).join(' · '))}</span></td>` +
+      `<td class="num">${t.memoryGB ?? '—'} GB</td>` +
+      `<td class="num">${u?.memoryBandwidthGBs ?? '—'}<span style="display:block;font-size:10px;color:var(--dim)">GB/s per card</span></td>` +
+      `<td class="num">${t.costUsd == null ? '—' : '$' + t.costUsd.toLocaleString()}<span style="display:block;font-size:10px;color:var(--dim)">${t.costUsd == null ? 'unpriced' : 'cards, street'}</span></td>` +
+      `<td class="lbl" style="white-space:normal;min-width:200px;font-size:11.5px">${esc(ic?.kind ?? 'unknown')}` +
+      `<span style="display:block;font-size:10px;color:var(--dim)" title="${esc(ic?.note ?? '')}">${esc(ic?.bridge ?? '')}</span></td>` +
+      `<td class="lbl" style="white-space:normal;min-width:300px;font-size:11px;color:var(--muted)">${esc(c.note ?? '')}</td>` +
+      `<td class="lbl" style="font-size:11px"><span class="prov weak">${c.status}</span></td>`;
+    tb.appendChild(tr);
+  }
 }

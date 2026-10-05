@@ -282,6 +282,78 @@ under each device's `perf`. Note that the archetype toggle buttons and the
 value-section anchors are still spelled out in `index.html`, so a fourth
 archetype needs a button added there too.
 
+## Serving lines: named models, with the engine on the record
+
+`platforms[].perf` is the older layer: three proxy archetypes, no record of which
+engine, quant, cache type or draft method produced a number. Named-model results
+go in `lines` instead, one object per **serving line** -- a rig, an engine, a set
+of weights and the flags it ran with -- and every number belongs to exactly one.
+The two layers are never mixed in a chart.
+
+```json
+{
+  "id": "l_some_rig_27b",
+  "label": "Qwen3.8 27B · IQ3_S · llama.cpp · MTP n=2",
+  "model": "qwen38_27b",
+  "rig": { "units": [{ "unit": "rtx_3090", "count": 1 }], "host": { "name": "linux-pc", "ramGB": 32 } },
+  "engine": { "name": "llama.cpp", "commit": "4ceb171…", "lineage": "upstream" },
+  "quant": { "format": "GSQ-RCO IQ3_S", "bpw": 3.4981, "sizeGB": 12.12,
+             "kld": { "code": 0.0542, "prose": 0.0860, "reference": "Q8_0 of the same model" } },
+  "kvCache": { "k": "q8_0", "v": "q8_0" },
+  "spec": { "method": "mtp", "draftN": 2 },
+  "pool": { "tokens": 229376, "slots": 2 },
+  "status": "measured",
+  "results": [
+    { "metric": "decode", "depth": 2236, "streams": 1, "basis": "per-stream", "value": 68.1, "confidence": "m" },
+    { "metric": "decode", "depth": 98000, "streams": 1, "basis": "per-stream", "value": 27.7, "confidence": "m", "spec": "off" },
+    { "metric": "prefill", "depth": 2000, "streams": 1, "basis": "per-stream", "value": 786.8, "confidence": "m", "prefillBasis": "cold" }
+  ],
+  "provenance": { "kind": "first-party", "authorship": "agent-authored", "source": "repo path or issue", "digest": "sha256:…" }
+}
+```
+
+What the validator holds you to, and why:
+
+- **Every point states its depth, its stream count and its basis.** A bare tok/s
+  means three different things. One stream is always `per-stream`; `aggregate` is a
+  total across streams and needs `streams > 1`. Give either `value` or a `range`
+  (when the source reports one across repeated runs), never both.
+- **Prefill says what it covered.** `cold` is the whole prompt; `new-tokens` is the
+  rate over only the tokens not already cached, which can be far higher than a cold
+  rate at the same depth.
+- **Speculation is stated.** Draft acceptance flatters deep rows on easy text, so a
+  `spec: "off"` point is the clean reading at depth. Acceptance is not comparable
+  across engines; each defines it differently.
+- **`model` must exist in `assets/models.js` `MODEL_ARCH`**, with its architecture
+  read from the published `config.json` (layer types are counted from the config's
+  own `layer_types`, not assumed). That is what lets `kvBytesPerToken` size a context.
+- **Provenance is declared.** `kind` is the sort of source (`first-party`,
+  `issue-report`, `forum`, `vendor`, `modeled`); `authorship` is who produced it
+  (`human`, `agent-assisted`, `agent-authored`, `unknown`). It is never inferred --
+  the point is whether the inputs can be checked, not who typed them. An
+  `issue-report` or `forum` post must say whether anyone has reproduced it.
+  A first-party line should pin a `digest`.
+- **A line that produced invalid numbers is `withdrawn`**, with the reason in
+  `hazards`, rather than deleted or left looking measured.
+
+`kld` is the KL divergence of the quant against a stated reference, on code and on
+prose. It is quality, which tok/s is not: compare speed across lines only where the
+quality is comparable, and note that the same model name ships as 2-bit and 4-bit
+quants that are different products.
+
+`kvCache.kibPerToken`, where measured, is held against the config-derived figure by
+`tools/test-kv.mjs`. The derived figure is a **lower bound** on any engine's real
+cost (drafters, workspaces and padding add to it); on llama.cpp with an inline MTP
+head it lands on the measurement exactly.
+
+### Candidates
+
+`candidates` are rigs under consideration with no measured line yet: units, an
+`interconnect` (kind, bridge, whether peer-to-peer is actually enabled), the models
+they are meant to serve, and a note. Price, capacity and bandwidth are derived from
+their units. Leave `interconnect` fields out rather than guessing; absent means
+nobody has looked.
+
 ## Reference units
 
 A catalog entry does not have to be in anything. `h100_sxm`, `h100_pcie`,

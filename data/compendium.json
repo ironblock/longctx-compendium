@@ -1122,6 +1122,38 @@
       "note": "Reference only -- and unlike the Max 1100 beside it, not a card you can buy or fit. This is a 600W OAM module, not a PCIe add-in card: it needs an OAM baseboard and the cooling to match, the same way an H100 SXM does, so 128GB in one package is academic for a workstation build no matter what it costs. No price is recorded because none was found -- Max Series went through OEM/integrator channels rather than retail, and unlike the 1100 (which turns up pulled on eBay around $2,000 post-EOL) the flagship has no observed secondary market at all. Included because 128GB of HBM2e at 3.28 TB/s in a single package is a genuinely interesting anchor for this page's 96-128GB class: it is the capacity target hit in one module, at roughly 2.7x an RTX PRO 6000's bandwidth. Worth knowing that the only public measured PVC numbers are Glenn Lockwood's DGEMM runs on Aurora, and they land far below these rated peaks -- 17 TFLOPS FP64 against 52 rated, 110 TF32 against 419, 273 BF16 against 832, roughly 30-35% of peak. Those are HPC GEMM kernels rather than LLM inference, but they are the closest thing to a reality check that exists for this silicon, and they are not in compute.values because this column is rated throughput, not achieved. Intel's ARK listing gives expected discontinuance as Jan 2026."
     },
     {
+      "id": "mi100",
+      "label": "AMD Instinct MI100 32GB",
+      "vendor": "AMD",
+      "released": "2020-11",
+      "memoryGB": 32,
+      "memoryBandwidthGBs": 1228.8,
+      "tdpW": 300,
+      "process": "TSMC 7nm FinFET",
+      "compute": {
+        "unit": "Tops",
+        "note": "dense throughput in 10^12 ops/sec. fp64 and fp32 are the vector rates and fp16/bf16/int8 the Matrix Core rates, as on the other units; AMD also lists FP32 Matrix at 46.1 TFLOPS.",
+        "values": {
+          "fp64": 11.5,
+          "fp32": 23.1,
+          "fp16": 184.6,
+          "bf16": 92.3,
+          "int8": 184.6
+        },
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/product-briefs/instinct-mi100-brochure.pdf",
+        "unsupported": [
+          "tf32",
+          "fp8",
+          "fp4"
+        ]
+      },
+      "sources": [
+        "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/product-briefs/instinct-mi100-brochure.pdf",
+        "https://www.amd.com/en/products/accelerators/instinct/mi100.html"
+      ],
+      "note": "Taken from AMD's product brief. AMD's own product page disagrees with it on two figures -- FP32 Matrix 23.1 TFLOPS and INT8/INT4 92.3 TOPS, against the brief's 46.1 and 184.6 -- and the brief is the internally consistent one: its footnote computes 46.14 TFLOPS FP32 Matrix and 184.57 FP16, and its 'nearly 3.5x' claim over the MI50 matches 46.1. Bandwidth is 4,096 bit x 1.2 GHz x 2 = 1,228.8 GB/s; AMD states ~1.2 TB/s. tf32/fp8/fp4 are marked unsupported because AMD's list of supported precisions omits them, not from independent confirmation. PCIe Gen4 x16, full-height dual-slot, passively cooled, three Infinity Fabric links. No street price or measured inference draw recorded yet: unknown, not zero."
+    },
+    {
       "id": "mi210",
       "label": "AMD Instinct MI210 64GB",
       "vendor": "AMD",
@@ -2537,6 +2569,1061 @@
           "count": 1
         }
       ]
+    }
+  ],
+  "lines": [
+    {
+      "id": "l_3090_27b_iq3s_mtp2",
+      "label": "Qwen3.8 27B \u00b7 IQ3_S \u00b7 llama.cpp \u00b7 MTP n=2",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "host": {
+          "name": "linux-pc",
+          "ramGB": 32,
+          "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
+        },
+        "note": "Custom water-cooled card that does not throttle under sustained decode. Absolute rates are NOT portable to a stock air-cooled 3090; only within-machine comparisons hold (registry, cooling_matters_because)."
+      },
+      "engine": {
+        "name": "llama.cpp (ggml-org mainline)",
+        "version": "0.4.1-dev build 1",
+        "commit": "4ceb1719101f32637b841206c172f3f058ffc182",
+        "lineage": "upstream"
+      },
+      "quant": {
+        "format": "GSQ-RCO IQ3_S (MTP layer inline)",
+        "bpw": 3.4981,
+        "sizeGB": 12.12,
+        "kld": {
+          "code": 0.0542,
+          "prose": 0.086,
+          "reference": "Q8_0 of the same model, #334 harness",
+          "source": "substrates/measurements/2026-10-03-qwen38-27b-quality-ladder/"
+        },
+        "note": "bpw excludes the inline MTP layer (3.5457 with it); registry measured_bpw."
+      },
+      "kvCache": {
+        "k": "q8_0",
+        "v": "q8_0",
+        "kibPerToken": 34,
+        "note": "7,616 MiB at a 229,376-token pool (#143); the config-derived figure matches it exactly."
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 2,
+        "note": "MTP n=3 adds nothing over n=2 for 300 MiB more (LADDER.md)."
+      },
+      "pool": {
+        "tokens": 229376,
+        "slots": 2
+      },
+      "freeAtPeakMiB": 1966,
+      "registryId": "accel24-llamacpp-qwen38-27b-iq3s",
+      "admission": "admitted",
+      "status": "measured",
+      "hazards": [
+        "Speculation is not bit-exact with the spec-off path on this hybrid model; nothing may be gated on token identity (registry).",
+        "On this Ampere card any quantized-KV batch wider than one query takes a full-cache f16 conversion, which covers the MTP verify batch and two-stream decode (registry; planning's reading, not measured by the data seat)."
+      ],
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 2236,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 68.1,
+          "confidence": "m",
+          "reps": 1
+        },
+        {
+          "metric": "decode",
+          "depth": 98000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 43.1,
+          "confidence": "m",
+          "reps": 1
+        },
+        {
+          "metric": "decode",
+          "depth": 125000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 34.6,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Draft acceptance rises to 0.92-0.97 at 126k and beyond on this prompt, so deep spec-on rows flatter typical use."
+        },
+        {
+          "metric": "decode",
+          "depth": 226750,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 35.5,
+          "confidence": "m",
+          "reps": 1,
+          "note": "The full pool. Spec-on; see the note on the 125k row."
+        },
+        {
+          "metric": "decode",
+          "depth": 2236,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 45.3,
+          "confidence": "m",
+          "spec": "off",
+          "reps": 1
+        },
+        {
+          "metric": "decode",
+          "depth": 98000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 27.7,
+          "confidence": "m",
+          "spec": "off",
+          "reps": 1,
+          "note": "Spec-off is the clean reading at depth."
+        },
+        {
+          "metric": "decode",
+          "depth": 125000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 18.3,
+          "confidence": "m",
+          "spec": "off",
+          "reps": 1
+        },
+        {
+          "metric": "decode",
+          "depth": 112600,
+          "streams": 2,
+          "basis": "aggregate",
+          "value": 29.9,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Two streams at about 112.6k each, total tokens over wall time."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "authorship": "agent-authored",
+        "source": "ironblock/discipline#143 comment 5883986293 (profile window 2026-09-29), restated in substrates/LADDER.md (branch chore/143-ladder) and the #335 record",
+        "note": "Greedy, 256 new tokens, single samples. Not re-run in #335. No pinned digest for the profile window itself."
+      },
+      "note": "The floor for new claims in Discipline's ladder."
+    },
+    {
+      "id": "l_3090_27b_iq3s_dflash2",
+      "label": "Qwen3.8 27B \u00b7 IQ3_S \u00b7 llama.cpp \u00b7 DFlash2",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "host": {
+          "name": "linux-pc",
+          "ramGB": 32,
+          "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
+        },
+        "note": "Custom water-cooled card that does not throttle under sustained decode. Absolute rates are NOT portable to a stock air-cooled 3090; only within-machine comparisons hold (registry, cooling_matters_because)."
+      },
+      "engine": {
+        "name": "llama.cpp (ggml-org mainline)",
+        "version": "0.4.1-dev build 1",
+        "commit": "4ceb1719101f32637b841206c172f3f058ffc182",
+        "lineage": "upstream"
+      },
+      "quant": {
+        "format": "GSQ-RCO IQ3_S (MTP layer inline)",
+        "bpw": 3.4981,
+        "sizeGB": 12.12,
+        "kld": {
+          "code": 0.0542,
+          "prose": 0.086,
+          "reference": "Q8_0 of the same model, #334 harness",
+          "source": "substrates/measurements/2026-10-03-qwen38-27b-quality-ladder/"
+        },
+        "note": "bpw excludes the inline MTP layer (3.5457 with it); registry measured_bpw."
+      },
+      "kvCache": {
+        "k": "q8_0",
+        "v": "q8_0"
+      },
+      "spec": {
+        "method": "dflash2",
+        "drafter": "Z-Lab Qwen3.8-27B-DFlash2-Q4_K_M.gguf (1,143,006,816 bytes, sha256 1a25c568...)",
+        "note": "Acceptance 0.57-0.77 as llama.cpp defines it (accepted/drafted). Smaller Anbeeld drafters decode 42.5 (Q3_K_M) and 41.3 (Q2_K) at about 100k."
+      },
+      "pool": {
+        "tokens": 229376,
+        "slots": 2
+      },
+      "freeAtPeakMiB": 1412,
+      "status": "measured",
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 2000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 74.6,
+          "confidence": "m",
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 100000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 44.7,
+          "confidence": "m",
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 226376,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 38.5,
+          "confidence": "m",
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 112688,
+          "streams": 2,
+          "basis": "aggregate",
+          "value": 32.6,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Two streams, total over wall time, rep 2."
+        },
+        {
+          "metric": "prefill",
+          "depth": 2000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 786.8,
+          "confidence": "m",
+          "prefillBasis": "cold",
+          "reps": 1
+        },
+        {
+          "metric": "prefill",
+          "depth": 100000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 810.8,
+          "confidence": "m",
+          "prefillBasis": "cold",
+          "reps": 1
+        },
+        {
+          "metric": "prefill",
+          "depth": 226376,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 469.4,
+          "confidence": "m",
+          "prefillBasis": "new-tokens",
+          "reps": 1,
+          "note": "127,547 new tokens over a cached 99,203-token prefix."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "authorship": "agent-authored",
+        "source": "ironblock/discipline@a6ccbdbb85e4 substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/README.md",
+        "digest": "sha256:432e9394a4cdb3148cfa4de67cfc02b68d13cace5b8a5bdde3eb03bedcd7f644",
+        "note": "Measured by the inference seat in windows the maintainer approved; every receipt is pinned by SHA256SUMS."
+      },
+      "note": "Characterization only; not an admitted line."
+    },
+    {
+      "id": "l_3090_27b_exl3_3p00_dflash2",
+      "label": "Qwen3.8 27B \u00b7 EXL3 3.00 bpw \u00b7 ExLlamaV3 \u00b7 DFlash2",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "host": {
+          "name": "linux-pc",
+          "ramGB": 32,
+          "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
+        },
+        "note": "Custom water-cooled card that does not throttle under sustained decode. Absolute rates are NOT portable to a stock air-cooled 3090; only within-machine comparisons hold (registry, cooling_matters_because)."
+      },
+      "engine": {
+        "name": "ExLlamaV3",
+        "version": "1.5.4",
+        "lineage": "upstream",
+        "note": "In-process bench (exl3deep.py), not TabbyAPI. KLD rows ran on 1.5.1."
+      },
+      "quant": {
+        "format": "EXL3 plain 3.00bpw (turboderp/Qwen3.8-27B-exl3)",
+        "bpw": 3.0,
+        "sizeGB": 13.82,
+        "kld": {
+          "code": 0.0522,
+          "prose": 0.0731,
+          "reference": "Q8_0 of the same model, #334 harness",
+          "source": "substrates/measurements/2026-10-03-qwen38-27b-quality-ladder-size-matched/"
+        }
+      },
+      "kvCache": {
+        "k": "8bit",
+        "v": "8bit"
+      },
+      "spec": {
+        "method": "dflash2",
+        "draftN": 7,
+        "drafter": "igor255/Qwen3.8-27B-DFlash2-EXL3-4.00bpw rev cbf4643e (sha256 f2a39784...)",
+        "note": "Acceptance as ExLlamaV3 defines it (accepted/(accepted+rejected)), 0.28-0.53 across EXL3 arms; not comparable to llama.cpp's."
+      },
+      "pool": {
+        "tokens": 196608,
+        "slots": 2
+      },
+      "freeAtPeakMiB": 488,
+      "status": "measured",
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 2000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 120.6,
+          "confidence": "m",
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 100000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 64.1,
+          "confidence": "m",
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 193608,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 43.4,
+          "confidence": "m",
+          "acceptance": 0.345,
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 96304,
+          "streams": 2,
+          "basis": "aggregate",
+          "value": 60.0,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Two streams, total over wall time, rep 2."
+        },
+        {
+          "metric": "prefill",
+          "depth": 2000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1072,
+          "confidence": "m",
+          "prefillBasis": "cold",
+          "reps": 1
+        },
+        {
+          "metric": "prefill",
+          "depth": 100000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 858,
+          "confidence": "m",
+          "prefillBasis": "new-tokens",
+          "reps": 1,
+          "note": "97,880 new tokens over a cached 1,792-token prefix."
+        },
+        {
+          "metric": "prefill",
+          "depth": 193608,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 515,
+          "confidence": "m",
+          "prefillBasis": "new-tokens",
+          "reps": 1,
+          "note": "94,046 new tokens over a cached 99,584-token prefix."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "authorship": "agent-authored",
+        "source": "ironblock/discipline@a6ccbdbb85e4 substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/README.md",
+        "digest": "sha256:432e9394a4cdb3148cfa4de67cfc02b68d13cace5b8a5bdde3eb03bedcd7f644",
+        "note": "Measured by the inference seat in windows the maintainer approved; every receipt is pinned by SHA256SUMS."
+      },
+      "note": "The line the maintainer ratified as linux-pc's baseline, pending admission (LADDER.md, #393), is this quant served through TabbyAPI with a vision tower; this row is the in-process bench of the same weights."
+    },
+    {
+      "id": "l_3090_27b_exl3_sc3p00_dflash2_c54",
+      "label": "Qwen3.8 27B \u00b7 EXL3 SC 3.00 bpw \u00b7 cache 5,4 \u00b7 DFlash2",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "host": {
+          "name": "linux-pc",
+          "ramGB": 32,
+          "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
+        },
+        "note": "Custom water-cooled card that does not throttle under sustained decode. Absolute rates are NOT portable to a stock air-cooled 3090; only within-machine comparisons hold (registry, cooling_matters_because)."
+      },
+      "engine": {
+        "name": "ExLlamaV3",
+        "version": "1.5.4",
+        "lineage": "upstream",
+        "note": "In-process bench (exl3deep.py), not TabbyAPI. KLD rows ran on 1.5.1."
+      },
+      "quant": {
+        "format": "EXL3 SC_3.00bpw_H4 (self-calibrated)",
+        "bpw": 3.0,
+        "sizeGB": 13.45,
+        "kld": {
+          "code": 0.0591,
+          "prose": 0.0738,
+          "reference": "Q8_0 of the same model, #334 harness",
+          "source": "substrates/measurements/2026-10-03-qwen38-27b-quality-ladder-size-matched/"
+        }
+      },
+      "kvCache": {
+        "k": "5bit",
+        "v": "4bit",
+        "kibPerToken": 26,
+        "note": "Measured against the residency baseline; includes the DFlash2 drafter's cache and workspaces, so it sits above the config-derived figure."
+      },
+      "spec": {
+        "method": "dflash2",
+        "draftN": 7,
+        "drafter": "igor255/Qwen3.8-27B-DFlash2-EXL3-4.00bpw rev cbf4643e (sha256 f2a39784...)",
+        "note": "Acceptance as ExLlamaV3 defines it (accepted/(accepted+rejected)), 0.28-0.53 across EXL3 arms; not comparable to llama.cpp's."
+      },
+      "pool": {
+        "tokens": 229376,
+        "slots": 2
+      },
+      "freeAtPeakMiB": 3406,
+      "status": "measured",
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 2000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 100.5,
+          "confidence": "m",
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 100000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 52.5,
+          "confidence": "m",
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 226376,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 45.1,
+          "confidence": "m",
+          "reps": 2,
+          "note": "Published as 45.1; the raw logs print 45.05 and 45.04, whose mean is 45.045 -- rounding at the log's own precision."
+        },
+        {
+          "metric": "decode",
+          "depth": 112688,
+          "streams": 2,
+          "basis": "aggregate",
+          "value": 55.2,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Two streams, total over wall time, rep 2."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "authorship": "agent-authored",
+        "source": "ironblock/discipline@a6ccbdbb85e4 substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/README.md",
+        "digest": "sha256:432e9394a4cdb3148cfa4de67cfc02b68d13cace5b8a5bdde3eb03bedcd7f644",
+        "note": "Measured by the inference seat in windows the maintainer approved; every receipt is pinned by SHA256SUMS."
+      },
+      "note": "Cache mode 5,4 buys pool and headroom at the cost of speed against 8,8."
+    },
+    {
+      "id": "l_3090_27b_exl3_sc3p00_dflash2_c88",
+      "label": "Qwen3.8 27B \u00b7 EXL3 SC 3.00 bpw \u00b7 cache 8,8 \u00b7 DFlash2",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "host": {
+          "name": "linux-pc",
+          "ramGB": 32,
+          "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
+        },
+        "note": "Custom water-cooled card that does not throttle under sustained decode. Absolute rates are NOT portable to a stock air-cooled 3090; only within-machine comparisons hold (registry, cooling_matters_because)."
+      },
+      "engine": {
+        "name": "ExLlamaV3",
+        "version": "1.5.4",
+        "lineage": "upstream",
+        "note": "In-process bench (exl3deep.py), not TabbyAPI. KLD rows ran on 1.5.1."
+      },
+      "quant": {
+        "format": "EXL3 SC_3.00bpw_H4 (self-calibrated)",
+        "bpw": 3.0,
+        "sizeGB": 13.45,
+        "kld": {
+          "code": 0.0591,
+          "prose": 0.0738,
+          "reference": "Q8_0 of the same model, #334 harness",
+          "source": "substrates/measurements/2026-10-03-qwen38-27b-quality-ladder-size-matched/"
+        }
+      },
+      "kvCache": {
+        "k": "8bit",
+        "v": "8bit",
+        "kibPerToken": 44,
+        "note": "Measured against the residency baseline; includes the DFlash2 drafter's cache and workspaces, so it sits above the config-derived figure."
+      },
+      "spec": {
+        "method": "dflash2",
+        "draftN": 7,
+        "drafter": "igor255/Qwen3.8-27B-DFlash2-EXL3-4.00bpw rev cbf4643e (sha256 f2a39784...)",
+        "note": "Acceptance as ExLlamaV3 defines it (accepted/(accepted+rejected)), 0.28-0.53 across EXL3 arms; not comparable to llama.cpp's."
+      },
+      "pool": {
+        "tokens": 196608,
+        "slots": 2
+      },
+      "freeAtPeakMiB": 874,
+      "status": "measured",
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 2000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 111.1,
+          "confidence": "m",
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 100000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 57.9,
+          "confidence": "m",
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 193608,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 60.6,
+          "confidence": "m",
+          "acceptance": 0.534,
+          "reps": 2,
+          "note": "This depth's prompt ends on easier text: acceptance 0.53 against 0.33-0.40 elsewhere. Compare deep rows only at matched depths."
+        },
+        {
+          "metric": "decode",
+          "depth": 96304,
+          "streams": 2,
+          "basis": "aggregate",
+          "value": 59.0,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Two streams, total over wall time, rep 2."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "authorship": "agent-authored",
+        "source": "ironblock/discipline@a6ccbdbb85e4 substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/README.md",
+        "digest": "sha256:432e9394a4cdb3148cfa4de67cfc02b68d13cace5b8a5bdde3eb03bedcd7f644",
+        "note": "Measured by the inference seat in windows the maintainer approved; every receipt is pinned by SHA256SUMS."
+      },
+      "note": "The 8,8 cache does not load at 229,376 with this quant."
+    },
+    {
+      "id": "l_3090_27b_exl3_sc2p20_dflash2",
+      "label": "Qwen3.8 27B \u00b7 EXL3 SC 2.20 bpw \u00b7 cache 8,8 \u00b7 DFlash2",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "host": {
+          "name": "linux-pc",
+          "ramGB": 32,
+          "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
+        },
+        "note": "Custom water-cooled card that does not throttle under sustained decode. Absolute rates are NOT portable to a stock air-cooled 3090; only within-machine comparisons hold (registry, cooling_matters_because)."
+      },
+      "engine": {
+        "name": "ExLlamaV3",
+        "version": "1.5.4",
+        "lineage": "upstream",
+        "note": "In-process bench (exl3deep.py), not TabbyAPI. KLD rows ran on 1.5.1."
+      },
+      "quant": {
+        "format": "EXL3 SC_2.20bpw_H3 (self-calibrated)",
+        "bpw": 2.2,
+        "sizeGB": 10.8,
+        "kld": {
+          "code": 0.1226,
+          "prose": 0.1697,
+          "reference": "Q8_0 of the same model, #334 harness",
+          "source": "ironblock/discipline substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/we/logs/kld-SC_2.20bpw_H3.log"
+        }
+      },
+      "kvCache": {
+        "k": "8bit",
+        "v": "8bit"
+      },
+      "spec": {
+        "method": "dflash2",
+        "draftN": 7,
+        "drafter": "igor255/Qwen3.8-27B-DFlash2-EXL3-4.00bpw rev cbf4643e (sha256 f2a39784...)",
+        "note": "Acceptance as ExLlamaV3 defines it (accepted/(accepted+rejected)), 0.28-0.53 across EXL3 arms; not comparable to llama.cpp's."
+      },
+      "pool": {
+        "tokens": 229376,
+        "slots": 2
+      },
+      "freeAtPeakMiB": 1778,
+      "status": "measured",
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 2000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 142.7,
+          "confidence": "m",
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 100000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 60.6,
+          "confidence": "m",
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 226376,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 35.5,
+          "confidence": "m",
+          "reps": 2
+        },
+        {
+          "metric": "decode",
+          "depth": 112688,
+          "streams": 2,
+          "basis": "aggregate",
+          "value": 51.7,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Two streams, total over wall time, rep 2."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "authorship": "agent-authored",
+        "source": "ironblock/discipline@a6ccbdbb85e4 substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/README.md",
+        "digest": "sha256:432e9394a4cdb3148cfa4de67cfc02b68d13cace5b8a5bdde3eb03bedcd7f644",
+        "note": "Measured by the inference seat in windows the maintainer approved; every receipt is pinned by SHA256SUMS."
+      },
+      "note": "Fastest at short context and the lowest quality here: code KLD is 2.3x the IQ3_S line's. At 262,144 it does not load with 8,8."
+    },
+    {
+      "id": "l_ada48_flash_llamacpp_q2_0_mtp3",
+      "label": "Flash-Next \u00b7 Q2_0 \u00b7 llama.cpp fork \u00b7 MTP n=3",
+      "model": "qwen38_flash_next",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_6000_ada",
+            "count": 1
+          }
+        ],
+        "host": {
+          "name": "rtx6000ada-host"
+        }
+      },
+      "engine": {
+        "name": "llama.cpp (ironblock fork, q8-sparse-fa)",
+        "version": "b7-e7051ef",
+        "commit": "e7051ef",
+        "lineage": "fork",
+        "note": "Retired as the serving line 2026-10-03T16:22Z. The sibling build e486f80 is withdrawn for mixing concurrent requests' contexts and is not this line."
+      },
+      "quant": {
+        "format": "GSQ-RCO Q2_0",
+        "sizeGB": 66,
+        "kld": {
+          "code": 0.1593,
+          "prose": 0.3866,
+          "reference": "Q8_0 of Flash-Next; cross-engine KLD includes the engines' numerical differences",
+          "source": "substrates/measurements/2026-10-03-characterization/ section 1"
+        }
+      },
+      "kvCache": {
+        "k": "q8_0",
+        "v": "q8_0"
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 3,
+        "drafter": "mtp-Qwen3.8-Flash-Next-Q4_K_M.gguf"
+      },
+      "pool": {
+        "tokens": 262144,
+        "slots": 4
+      },
+      "vramAfterLoadMiB": 46572,
+      "registryId": "ada48-llamacpp-qwen38flashnext-q20",
+      "admission": "unadmitted",
+      "status": "measured",
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 10000,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            96.7,
+            106.4
+          ],
+          "confidence": "m"
+        },
+        {
+          "metric": "decode",
+          "depth": 100000,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            69.8,
+            82.1
+          ],
+          "confidence": "m",
+          "note": "The \"100k\" and \"200k\" depths are the README's own nominal labels; prefill at those depths is over new tokens only because the cache reused the previous phase's prefix."
+        },
+        {
+          "metric": "decode",
+          "depth": 200000,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            57.6,
+            62.3
+          ],
+          "confidence": "m",
+          "note": "The \"100k\" and \"200k\" depths are the README's own nominal labels; prefill at those depths is over new tokens only because the cache reused the previous phase's prefix."
+        },
+        {
+          "metric": "decode",
+          "depth": 10000,
+          "streams": 4,
+          "basis": "aggregate",
+          "range": [
+            146.4,
+            152.0
+          ],
+          "confidence": "m",
+          "note": "Four streams, aggregate."
+        },
+        {
+          "metric": "prefill",
+          "depth": 100000,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            1143,
+            1169
+          ],
+          "confidence": "m",
+          "prefillBasis": "new-tokens",
+          "note": "Run 1 prefilled 101,622 new tokens, run 2 only 92,098 after reusing a ~9.5k prefix."
+        },
+        {
+          "metric": "prefill",
+          "depth": 200000,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            902,
+            904
+          ],
+          "confidence": "m",
+          "prefillBasis": "new-tokens",
+          "note": "99,374 new tokens."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "authorship": "agent-authored",
+        "source": "ironblock/discipline@6b0381e992 substrates/measurements/2026-10-03-characterization/README.md",
+        "digest": "sha256:addeb2e36613bea09871192f4c20517e12e6afa57367671a42d2320f12cb9daf",
+        "note": "A/B windows on rtx6000ada-host, 2026-10-03. Decode is reps 1-2 only; ranges are across those reps."
+      },
+      "note": "The top rung's previous engine, kept for rollback."
+    },
+    {
+      "id": "l_ada48_flash_exl3_2p05_mtp3",
+      "label": "Flash-Next \u00b7 EXL3 2.05 bpw \u00b7 TabbyAPI + ExLlamaV3 \u00b7 MTP n=3",
+      "model": "qwen38_flash_next",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_6000_ada",
+            "count": 1
+          }
+        ],
+        "host": {
+          "name": "rtx6000ada-host"
+        }
+      },
+      "engine": {
+        "name": "TabbyAPI + ExLlamaV3",
+        "version": "1.5.2",
+        "lineage": "upstream",
+        "note": "TabbyAPI be74bf0a. The line now serves ExLlamaV3 1.5.4: KLD identical, VRAM after load 41,238 MiB, decode 2-5% slower at 10k. Those rows are not restated here."
+      },
+      "quant": {
+        "format": "EXL3 2.05bpw (turboderp/Qwen3.8-Flash-Next-exl3, 2.05bpw_h4_ng4) with its 2-bit MTP head",
+        "bpw": 2.05,
+        "sizeGB": 59,
+        "kld": {
+          "code": 0.086,
+          "prose": 0.2297,
+          "reference": "Q8_0 of Flash-Next; cross-engine KLD includes the engines' numerical differences",
+          "source": "substrates/measurements/2026-10-03-characterization/ section 1"
+        }
+      },
+      "kvCache": {
+        "k": "8bit",
+        "v": "8bit",
+        "note": "18.9 KiB/token measured on 1.5.4 at its 606,208-token pool (LADDER.md), against about 12 KiB/token for the main layers from the model's config; the difference is not explained in the record."
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 3,
+        "note": "n=3 is best single-stream and n=1 best at four concurrent requests (characterization section 3)."
+      },
+      "pool": {
+        "tokens": 262144,
+        "slots": 4
+      },
+      "vramAfterLoadMiB": 43762,
+      "registryId": "ada48-tabbyapi-exl3-qwen38flashnext-2p05",
+      "admission": "unadmitted",
+      "status": "measured",
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 10000,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            129.3,
+            131.3
+          ],
+          "confidence": "m"
+        },
+        {
+          "metric": "decode",
+          "depth": 100000,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            121.9,
+            132.6
+          ],
+          "confidence": "m",
+          "note": "The \"100k\" and \"200k\" depths are the README's own nominal labels; prefill at those depths is over new tokens only because the cache reused the previous phase's prefix."
+        },
+        {
+          "metric": "decode",
+          "depth": 200000,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            108.9,
+            124.9
+          ],
+          "confidence": "m",
+          "note": "The \"100k\" and \"200k\" depths are the README's own nominal labels; prefill at those depths is over new tokens only because the cache reused the previous phase's prefix."
+        },
+        {
+          "metric": "decode",
+          "depth": 10000,
+          "streams": 4,
+          "basis": "aggregate",
+          "range": [
+            153.9,
+            160.1
+          ],
+          "confidence": "m",
+          "note": "Four streams, aggregate."
+        },
+        {
+          "metric": "prefill",
+          "depth": 100000,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            2928,
+            2941
+          ],
+          "confidence": "m",
+          "prefillBasis": "new-tokens",
+          "note": "91,680 new tokens."
+        },
+        {
+          "metric": "prefill",
+          "depth": 200000,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            2871,
+            2876
+          ],
+          "confidence": "m",
+          "prefillBasis": "new-tokens",
+          "note": "98,890 new tokens."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "authorship": "agent-authored",
+        "source": "ironblock/discipline@6b0381e992 substrates/measurements/2026-10-03-characterization/README.md",
+        "digest": "sha256:addeb2e36613bea09871192f4c20517e12e6afa57367671a42d2320f12cb9daf",
+        "note": "A/B windows on rtx6000ada-host, 2026-10-03. Decode is reps 1-2 only; ranges are across those reps."
+      },
+      "note": "Discipline's top rung. Unadmitted: no admission cell has run on it (#396)."
+    }
+  ],
+  "candidates": [
+    {
+      "id": "c_v100x4_1cat",
+      "label": "4\u00d7 V100 SXM2 32GB on the 1CatAI board",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm2",
+            "count": 4
+          }
+        ],
+        "interconnect": {
+          "kind": "nvlink",
+          "bridge": "1CatAI SXM2 carrier board",
+          "note": "NVLink is taken from this page's own platform label (V100 NVLink x4). Topology and whether peer-to-peer is enabled are not verified."
+        }
+      },
+      "models": [
+        "qwen38_27b",
+        "qwen38_flash_next"
+      ],
+      "status": "preregistered",
+      "note": "The engine in play is 1Cat-vLLM, a one-team vLLM fork for SM70. The only report so far is one unreproduced GitHub issue (1CatAI/1Cat-vLLM#746), which describes a different variant: four PCIe cards, no NVLink, 200 W caps."
+    },
+    {
+      "id": "c_mi100x4",
+      "label": "4\u00d7 Instinct MI100 32GB with an Infinity Fabric bridge",
+      "rig": {
+        "units": [
+          {
+            "unit": "mi100",
+            "count": 4
+          }
+        ],
+        "interconnect": {
+          "kind": "infinity-fabric",
+          "bridge": "Infinity Fabric bridge (four-GPU hive)",
+          "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/product-briefs/instinct-mi100-brochure.pdf",
+          "note": "AMD: three Infinity Fabric links per GPU, up to 276 GB/s peer-to-peer per GPU and 552 GB/s for a four-GPU hive, all theoretical peaks; PCIe Gen4 x16 to the host."
+        }
+      },
+      "models": [
+        "qwen38_27b",
+        "qwen38_flash_next"
+      ],
+      "status": "preregistered",
+      "note": "Passively cooled, full-height dual-slot, 300 W each (AMD brochure): the rig needs server airflow. Which engines run the model's recurrent layers on gfx908 is unknown here; llama.cpp HIP and vLLM-ROCm are the obvious ones and specialist engines may exist. Continued ROCm support for gfx908 is a risk raised in the program's planning notes, not verified here."
+    },
+    {
+      "id": "c_max1100x2",
+      "label": "2\u00d7 Data Center GPU Max 1100 48GB with an Xe Link bridge",
+      "rig": {
+        "units": [
+          {
+            "unit": "max_1100",
+            "count": 2
+          }
+        ],
+        "interconnect": {
+          "kind": "xe-link",
+          "bridge": "Xe Link bridge",
+          "note": "Bridge topology and bandwidth not yet sourced."
+        }
+      },
+      "models": [
+        "qwen38_27b",
+        "qwen38_flash_next"
+      ],
+      "status": "preregistered",
+      "note": "Two cards split two KV heads cleanly under tensor parallel. The catalog unit records that no public Max 1100 llama.cpp datapoints existed as of Aug 2026; engines in play include llama.cpp SYCL and vLLM-XPU."
     }
   ],
   "long_context_falloff": {

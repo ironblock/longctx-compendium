@@ -199,3 +199,46 @@ export function rankedBuilds(model, arch, metric) {
     .map(b => ({ b, m: metric(b, buildDecode(model, b, arch).v) }))
     .sort((x, y) => y.m - x.m);
 }
+
+// === Memory arithmetic for named models ====================================
+// What a context costs in memory, from a model's published shape rather than
+// from a benchmark. Only the full-attention layers keep a per-token KV cache;
+// the linear-attention layers keep one fixed-size recurrent state per sequence.
+// Both are lower bounds on what an engine really allocates -- tools/test-kv.mjs
+// holds the first-party measurements against them.
+
+/** Bytes per cache element. llama.cpp block types carry their scale in the block. */
+export const KV_BYTES_PER_ELEMENT = {
+  f32: 4,
+  f16: 2,
+  bf16: 2,
+  fp8: 1,
+  q8_0: 34 / 32,
+  q5_1: 24 / 32,
+  q5_0: 22 / 32,
+  q4_1: 20 / 32,
+  q4_0: 18 / 32,
+  // ExLlamaV3 cache_mode "k,v" is a bit width per tensor; nominal, scales not counted.
+  '8bit': 1,
+  '5bit': 5 / 8,
+  '4bit': 4 / 8,
+};
+
+/** KV bytes per token across the full-attention layers; null for an unknown cache type. */
+export function kvBytesPerToken(arch, k = 'f16', v = k) {
+  const bk = KV_BYTES_PER_ELEMENT[k];
+  const bv = KV_BYTES_PER_ELEMENT[v];
+  if (bk == null || bv == null) return null;
+  return arch.layerTypes.full_attention * arch.kvHeads * arch.headDim * (bk + bv);
+}
+
+/**
+ * Recurrent state per sequence across the linear-attention layers. An estimate:
+ * it assumes one [keyHeadDim x valueHeadDim] matrix per value head per layer
+ * held at `bytesPerElement` (f32 by default) and leaves out the short
+ * convolution state. Nobody has measured it on the engines this page names.
+ */
+export function recurrentStateBytes(arch, bytesPerElement = 4) {
+  const { valueHeads, keyHeadDim, valueHeadDim } = arch.linear;
+  return arch.layerTypes.linear_attention * valueHeads * keyHeadDim * valueHeadDim * bytesPerElement;
+}

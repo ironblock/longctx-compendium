@@ -23,6 +23,8 @@ jobs:
         run: node tools/validate.mjs
       - name: Check the validator still rejects bad data
         run: node tools/test-validate.mjs
+      - name: Check the memory arithmetic against first-party measurements
+        run: node tools/test-kv.mjs
 
   render:
     name: rendered page

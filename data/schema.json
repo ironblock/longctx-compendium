@@ -35,6 +35,16 @@
         "$ref": "#/definitions/catalogUnit"
       }
     },
+    "lines": {
+      "description": "Serving lines: one rig, one engine, one set of weights and flags, and the points measured on it. Named-model results live here; platforms[].perf stays the older proxy-model layer and the two are not mixed in any chart.",
+      "type": "array",
+      "items": { "$ref": "#/definitions/line" }
+    },
+    "candidates": {
+      "description": "Rigs under consideration that have no measured line yet. Cost, capacity and bandwidth are derived from their units, so a candidate cannot disagree with the catalog.",
+      "type": "array",
+      "items": { "$ref": "#/definitions/candidate" }
+    },
     "long_context_falloff": { "$ref": "#/definitions/appendixSection" },
     "kv_cache_quantization": { "$ref": "#/definitions/appendixSection" },
     "llama_cpp_sycl_tensor_parallel": { "$ref": "#/definitions/appendixSection" },
@@ -540,6 +550,173 @@
             "minimum": 1
           }
         }
+      }
+    }
+    ,
+    "rig": {
+      "description": "The hardware a line ran on, or a candidate would run on: catalog units, how they are connected, and the host around them. Cost, power draw and capacity are derived from the units and never stored here.",
+      "type": "object",
+      "required": ["units"],
+      "additionalProperties": false,
+      "properties": {
+        "units": { "$ref": "#/definitions/composition" },
+        "interconnect": {
+          "description": "How the units talk to each other. Absent means nobody has looked; say so in a note rather than guessing a link type.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "type": "string", "description": "nvlink, infinity-fabric, xe-link, pcie ... free text on purpose, so a new fabric needs no schema change." },
+            "bridge": { "type": "string" },
+            "topology": { "type": "string" },
+            "p2p": { "type": "boolean", "description": "Whether peer-to-peer transfers were actually enabled for the run. A container or VM can disable them without anyone noticing." },
+            "source": { "type": "string" },
+            "note": { "type": "string" }
+          }
+        },
+        "powerCapW": { "type": "number", "exclusiveMinimum": 0, "description": "Per-unit power cap the run was under, if any." },
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "ramGB": { "type": "number", "exclusiveMinimum": 0 },
+            "note": { "type": "string" }
+          }
+        },
+        "note": { "type": "string" }
+      }
+    },
+    "provenance": {
+      "description": "Where a number came from and how far to trust the route it took. `kind` says what sort of source it is; `authorship` says who produced it. Authorship is declared, never inferred: a measurement is weighed by whether its inputs can be checked, not by who typed it.",
+      "type": "object",
+      "required": ["kind", "authorship", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["first-party", "issue-report", "forum", "vendor", "modeled"] },
+        "authorship": { "enum": ["human", "agent-assisted", "agent-authored", "unknown"] },
+        "source": { "type": "string", "description": "A repository path, issue or comment reference, or URL -- enough to go and read the original." },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "sha256 of the manifest that pins the receipts, when one exists." },
+        "reproduced": { "type": "boolean", "description": "Whether anyone other than the reporter has reproduced the numbers. Required for issue-report and forum sources." },
+        "note": { "type": "string" }
+      }
+    },
+    "linePoint": {
+      "description": "One number from one line. Depth, stream count and per-stream-versus-aggregate are always stated, because a bare tok/s means three different things without them.",
+      "type": "object",
+      "required": ["metric", "depth", "streams", "basis", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "metric": { "enum": ["decode", "prefill"] },
+        "depth": { "type": "integer", "minimum": 0, "description": "Context tokens already in the session, per stream, when the point was taken." },
+        "streams": { "type": "integer", "minimum": 1 },
+        "basis": { "enum": ["per-stream", "aggregate"], "description": "One stream is always per-stream; aggregate means the total across streams." },
+        "value": { "type": "number", "minimum": 0 },
+        "range": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number", "minimum": 0 }, "description": "Low and high across repeated runs, when the source reports a range rather than one figure. Give exactly one of value or range." },
+        "confidence": { "$ref": "#/definitions/confidence" },
+        "spec": { "enum": ["on", "off"], "description": "Whether speculative decoding was active for this point, when it differs from the line's default." },
+        "prefillBasis": { "enum": ["cold", "new-tokens"], "description": "Prefill only. cold = the whole prompt was evaluated; new-tokens = the rate over only the tokens not already cached." },
+        "acceptance": { "type": "number", "minimum": 0, "maximum": 1, "description": "Draft acceptance, as the engine defines it. Not comparable across engines." },
+        "reps": { "type": "integer", "minimum": 1 },
+        "note": { "type": "string" }
+      }
+    },
+    "line": {
+      "description": "One serving line. Every result belongs to exactly one, so engine, quant, cache type and speculation are never implied by a table row.",
+      "type": "object",
+      "required": ["id", "label", "model", "rig", "engine", "quant", "status", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "label": { "type": "string" },
+        "model": { "type": "string", "pattern": "^[a-z0-9_]+$", "description": "A key in assets/models.js MODEL_ARCH." },
+        "rig": { "$ref": "#/definitions/rig" },
+        "engine": {
+          "type": "object",
+          "required": ["name"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "commit": { "type": "string" },
+            "lineage": { "type": "string", "description": "upstream, fork, vendor ... where the code comes from and who maintains it. Free text: specialist engines exist for most of this hardware." },
+            "note": { "type": "string" }
+          }
+        },
+        "quant": {
+          "type": "object",
+          "required": ["format"],
+          "additionalProperties": false,
+          "properties": {
+            "format": { "type": "string" },
+            "bpw": { "type": "number", "exclusiveMinimum": 0 },
+            "sizeGB": { "type": "number", "exclusiveMinimum": 0 },
+            "kld": {
+              "description": "KL divergence of the quantized model against a stated reference, on code and on prose. Quality, not speed: tok/s across different quants is not the same product.",
+              "type": "object",
+              "required": ["code", "prose", "reference"],
+              "additionalProperties": false,
+              "properties": {
+                "code": { "type": "number", "minimum": 0 },
+                "prose": { "type": "number", "minimum": 0 },
+                "reference": { "type": "string" },
+                "source": { "type": "string" }
+              }
+            },
+            "note": { "type": "string" }
+          }
+        },
+        "kvCache": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "k": { "type": "string" },
+            "v": { "type": "string" },
+            "kibPerToken": { "type": "number", "exclusiveMinimum": 0, "description": "Measured KV cost per token on this engine. The config-derived figure is a lower bound on it (see tools/test-kv.mjs)." },
+            "note": { "type": "string" }
+          }
+        },
+        "spec": {
+          "type": "object",
+          "required": ["method"],
+          "additionalProperties": false,
+          "properties": {
+            "method": { "type": "string", "description": "none, mtp, dflash2 ... free text." },
+            "draftN": { "type": "integer", "minimum": 1 },
+            "drafter": { "type": "string" },
+            "note": { "type": "string" }
+          }
+        },
+        "pool": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tokens": { "type": "integer", "minimum": 1, "description": "The KV pool as loaded. Under a unified pool this is shared by every slot, not a per-request limit." },
+            "slots": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "vramAfterLoadMiB": { "type": "number", "exclusiveMinimum": 0 },
+        "freeAtPeakMiB": { "type": "number", "minimum": 0 },
+        "registryId": { "type": "string", "description": "The Discipline substrate id, when the line is one." },
+        "admission": { "enum": ["admitted", "unadmitted"], "description": "Discipline's own word, only where a registry entry carries one. Absent for lines that are characterization only." },
+        "status": { "enum": ["measured", "withdrawn"], "description": "withdrawn = the build or configuration is known to produce invalid numbers; say why in hazards." },
+        "hazards": { "type": "array", "items": { "type": "string" } },
+        "results": { "type": "array", "items": { "$ref": "#/definitions/linePoint" } },
+        "provenance": { "$ref": "#/definitions/provenance" },
+        "note": { "type": "string" }
+      }
+    },
+    "candidate": {
+      "description": "A rig under consideration with no measured line yet.",
+      "type": "object",
+      "required": ["id", "label", "rig", "models", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "label": { "type": "string" },
+        "rig": { "$ref": "#/definitions/rig" },
+        "models": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[a-z0-9_]+$" } },
+        "status": { "enum": ["preregistered"] },
+        "note": { "type": "string" }
       }
     }
   }

@@ -11,6 +11,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { MODEL_ARCH } from '../assets/models.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const docPath = process.argv[2] ?? path.join(root, 'data/compendium.json');
@@ -68,6 +69,7 @@ function check(value, rawNode, at) {
     if (node.exclusiveMinimum != null && value <= node.exclusiveMinimum) {
       fail(at, `must be > ${node.exclusiveMinimum}, got ${value}`);
     }
+    if (node.maximum != null && value > node.maximum) fail(at, `must be <= ${node.maximum}, got ${value}`);
   }
 
   if (typeof value === 'string' && node.pattern && !new RegExp(node.pattern).test(value)) {
@@ -120,7 +122,7 @@ const ctxTokens = new Set(doc.meta.contexts.map(c => c.tokens));
 const seenIds = new Map();
 const seenColors = new Map();
 
-for (const rec of [...(doc.units ?? []), ...doc.platforms, ...(doc.builds ?? [])]) {
+for (const rec of [...(doc.units ?? []), ...doc.platforms, ...(doc.builds ?? []), ...(doc.lines ?? []), ...(doc.candidates ?? [])]) {
   const at = `id "${rec.id}"`;
   if (seenIds.has(rec.id)) fail(at, 'duplicate id');
   seenIds.set(rec.id, rec);
@@ -223,11 +225,66 @@ for (const id of costed) {
   }
 }
 
+// --- Lines and candidates ---------------------------------------------------
+// A line is only worth having if a reader can tell what it measured. These make
+// the omissions that quietly turn a number into folklore into errors.
+const checkRig = (rig, at) =>
+  (rig.units ?? []).forEach((c, i) => exists(c.unit, `${at} rig.units[${i}]`));
+
+const modelKnown = (id, at) => {
+  if (!MODEL_ARCH[id]) {
+    fail(at, `model "${id}" is not in MODEL_ARCH (assets/models.js) -- add its architecture, sourced, before measuring it`);
+  }
+};
+
+for (const l of doc.lines ?? []) {
+  const at = `line "${l.id}"`;
+  modelKnown(l.model, at);
+  checkRig(l.rig, at);
+
+  if (l.status === 'measured' && !l.results?.length) fail(at, 'is measured but has no results');
+  if (l.status === 'withdrawn' && !l.hazards?.length) fail(at, 'is withdrawn but hazards[] never says why');
+  if (['issue-report', 'forum'].includes(l.provenance.kind) && l.provenance.reproduced == null) {
+    fail(at, `a ${l.provenance.kind} must say whether anyone has reproduced it (provenance.reproduced)`);
+  }
+  if (l.provenance.kind === 'first-party' && !l.provenance.digest) {
+    warn(at, 'is first-party but pins no digest -- a reader cannot tell the receipts have not moved');
+  }
+
+  const seenPoints = new Set();
+  (l.results ?? []).forEach((r, i) => {
+    const pt = `${at} results[${i}]`;
+    if ((r.value == null) === (r.range == null)) fail(pt, 'needs exactly one of value or range');
+    if (r.range && r.range[0] > r.range[1]) fail(pt, `range ${JSON.stringify(r.range)} is reversed`);
+    if (r.streams === 1 && r.basis !== 'per-stream') {
+      fail(pt, 'one stream is per-stream by definition -- aggregate needs streams > 1');
+    }
+    if (r.metric === 'prefill' && !r.prefillBasis) {
+      fail(pt, 'a prefill rate must say whether it is cold or over new tokens only (prefillBasis)');
+    }
+    if (r.metric !== 'prefill' && r.prefillBasis) fail(pt, 'prefillBasis only applies to prefill points');
+    if (r.metric === 'prefill' && r.spec) fail(pt, 'spec only applies to decode points');
+    if (l.pool?.tokens && r.depth * r.streams > l.pool.tokens) {
+      warn(pt, `${r.streams} stream(s) at depth ${r.depth} is more than the ${l.pool.tokens}-token pool`);
+    }
+    const key = [r.metric, r.depth, r.streams, r.basis, r.spec ?? '-'].join('|');
+    if (seenPoints.has(key)) fail(pt, 'repeats an earlier point at the same metric, depth, streams, basis and spec');
+    seenPoints.add(key);
+  });
+}
+
+for (const c of doc.candidates ?? []) {
+  const at = `candidate "${c.id}"`;
+  checkRig(c.rig, at);
+  c.models.forEach(m => modelKnown(m, at));
+}
+
 // A catalog entry nothing refers to is either a typo in a reference or dead
 // weight; either way it will silently never render in a total.
 const referenced = new Set([
   ...doc.platforms.flatMap(p => (p.composition ?? []).map(c => c.unit)),
   ...(doc.builds ?? []).flatMap(b => (b.units ?? []).map(u => u.unit).filter(Boolean)),
+  ...[...(doc.lines ?? []), ...(doc.candidates ?? [])].flatMap(x => x.rig.units.map(c => c.unit)),
 ]);
 for (const u of doc.units ?? []) {
   if (!referenced.has(u.id)) {
@@ -271,5 +328,6 @@ const points = doc.platforms.reduce(
 for (const w of warnings) console.warn(`  ! ${w}`);
 console.log(
   `✓ ${rel} — ${(doc.units ?? []).length} catalog units, ${doc.platforms.length} platforms, ${(doc.builds ?? []).length} builds, ` +
-    `${doc.meta.archetypes.length} archetypes, ${points} datapoints`
+    `${doc.meta.archetypes.length} archetypes, ${points} datapoints, ` +
+    `${(doc.lines ?? []).length} lines, ${(doc.candidates ?? []).length} candidates`
 );
