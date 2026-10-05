@@ -179,7 +179,18 @@ export function normalize(doc) {
 
   // A rig is quantities of catalog units, so its price and capacity come from the
   // same sums as everything else on the page and cannot drift from the catalog.
-  const rigTotals = (rig, at) => sum(rig.units.map(c => unitTotals(c.unit, c.count, at)));
+  // A bridge or carrier board belongs to no card, so it is added here. A rig that
+  // declares an interconnect but not its price is flagged rather than totalled as
+  // if the bridge were free.
+  const rigTotals = (rig, at) => {
+    const t = sum(rig.units.map(c => unitTotals(c.unit, c.count, at)));
+    const link = rig.interconnect;
+    return {
+      ...t,
+      costUsd: t.costUsd == null ? null : t.costUsd + (link?.costUsd ?? 0),
+      linkPriced: link ? link.costUsd != null : null,
+    };
+  };
   const LINES = (doc.lines ?? []).map(l => ({ ...l, rigTotals: rigTotals(l.rig, `line "${l.id}"`) }));
   const CANDIDATES = (doc.candidates ?? []).map(c => ({ ...c, rigTotals: rigTotals(c.rig, `candidate "${c.id}"`) }));
 

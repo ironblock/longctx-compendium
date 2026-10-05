@@ -568,6 +568,7 @@
             "kind": { "type": "string", "description": "nvlink, infinity-fabric, xe-link, pcie ... free text on purpose, so a new fabric needs no schema change." },
             "bridge": { "type": "string" },
             "topology": { "type": "string" },
+            "costUsd": { "type": "number", "minimum": 0, "description": "Price of the bridge or carrier board itself, which belongs to no card. Absent means unpriced, and a rig total that leaves it out says so." },
             "p2p": { "type": "boolean", "description": "Whether peer-to-peer transfers were actually enabled for the run. A container or VM can disable them without anyone noticing." },
             "source": { "type": "string" },
             "note": { "type": "string" }

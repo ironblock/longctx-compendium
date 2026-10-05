@@ -1147,11 +1147,18 @@
           "fp4"
         ]
       },
+      "pricing": {
+        "street": {
+          "usd": 900,
+          "asOf": "2026-10",
+          "note": "The maintainer's observation of used listings, Oct 2026; not independently sourced."
+        }
+      },
       "sources": [
         "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/product-briefs/instinct-mi100-brochure.pdf",
         "https://www.amd.com/en/products/accelerators/instinct/mi100.html"
       ],
-      "note": "Taken from AMD's product brief. AMD's own product page disagrees with it on two figures -- FP32 Matrix 23.1 TFLOPS and INT8/INT4 92.3 TOPS, against the brief's 46.1 and 184.6 -- and the brief is the internally consistent one: its footnote computes 46.14 TFLOPS FP32 Matrix and 184.57 FP16, and its 'nearly 3.5x' claim over the MI50 matches 46.1. Bandwidth is 4,096 bit x 1.2 GHz x 2 = 1,228.8 GB/s; AMD states ~1.2 TB/s. tf32/fp8/fp4 are marked unsupported because AMD's list of supported precisions omits them, not from independent confirmation. PCIe Gen4 x16, full-height dual-slot, passively cooled, three Infinity Fabric links. No street price or measured inference draw recorded yet: unknown, not zero."
+      "note": "Taken from AMD's product brief. AMD's own product page disagrees with it on two figures -- FP32 Matrix 23.1 TFLOPS and INT8/INT4 92.3 TOPS, against the brief's 46.1 and 184.6 -- and the brief is the internally consistent one: its footnote computes 46.14 TFLOPS FP32 Matrix and 184.57 FP16, and its 'nearly 3.5x' claim over the MI50 matches 46.1. Bandwidth is 4,096 bit x 1.2 GHz x 2 = 1,228.8 GB/s; AMD states ~1.2 TB/s. tf32/fp8/fp4 are marked unsupported because AMD's list of supported precisions omits them, not from independent confirmation. PCIe Gen4 x16, full-height dual-slot, passively cooled, three Infinity Fabric links. No measured inference draw recorded yet: unknown, not zero."
     },
     {
       "id": "mi210",
@@ -3591,6 +3598,7 @@
         "interconnect": {
           "kind": "infinity-fabric",
           "bridge": "Infinity Fabric bridge (four-GPU hive)",
+            "costUsd": 650,
           "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/product-briefs/instinct-mi100-brochure.pdf",
           "note": "AMD: three Infinity Fabric links per GPU, up to 276 GB/s peer-to-peer per GPU and 552 GB/s for a four-GPU hive, all theoretical peaks; PCIe Gen4 x16 to the host."
         }

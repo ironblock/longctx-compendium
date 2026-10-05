@@ -116,7 +116,9 @@ check('points state their depth', /@2K/.test(lineText) && /@227K|@226K/.test(lin
 check('range figures render as a range', /129\.3–131\.3/.test(lineText), 'expected the Ada top rung 10K decode range');
 check('provenance chips rendered on every line', (await count('#lineTable .prov.first')) === 8, `got ${await count('#lineTable .prov.first')}`);
 check('every first-party line is attested', (await count('#lineTable .prov.witnessed')) === 8, `got ${await count('#lineTable .prov.witnessed')}`);
-check('the unpriced candidate says so', /unpriced/.test(await text('#candTable tbody')));
+const candText = await text('#candTable tbody');
+check('the MI100 rig totals its cards and bridge', candText.includes('$4,250') && /cards \+ bridge/.test(candText), 'expected 4 x $900 + $650');
+check('rigs whose bridge is unpriced say so', (candText.match(/bridge unpriced/g) ?? []).length === 2, `got ${(candText.match(/bridge unpriced/g) ?? []).length}`);
 check('legend entries', (await count('#pleg span')) >= 9);
 check('verdict rendered', (await text('#verdict')).length > 80);
 check('value verdict rendered', (await text('#valVerdict')).length > 80);
