@@ -445,11 +445,11 @@
       "compute": {
         "unit": "Tops",
         "note": "dense unless the key says :sparse; 10^12 ops/sec",
-        "source": "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
+        "source": "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf",
         "values": {
-          "fp64": 7.45,
-          "fp32": 14.9,
-          "fp16": 119.2
+          "fp64": 7.8,
+          "fp32": 15.7,
+          "fp16": 125
         },
         "unsupported": [
           "bf16",
@@ -472,9 +472,10 @@
       "memoryBandwidthGBs": 900,
       "tdpW": 300,
       "sources": [
+        "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf",
         "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla"
       ],
-      "note": "The Tesla table gives one row for the 16 GB and 32 GB SXM2 parts; clocks, bandwidth and throughput are identical across both, so only the capacity differs. FP16 is the tensor-core rate with FP32 accumulate \u2014 Volta has no structured-sparsity path. No INT8 figure recorded: Volta's Tensor Cores are hard-wired FP16-input/FP32-accumulate only -- NVIDIA's own current Tensor Core page attributes full FP32/FP16/INT8/INT4 inference precision support to Turing onward, not Volta. No official DP4A/integer-ALU INT8 figure was ever published for V100 either (the Volta architecture whitepaper gives an INT8 figure for sibling Pascal parts P40/P4 but conspicuously omits one for V100). Unsourced ~62-63 TOPS figures circulating on aggregator sites appear to be an unofficial 4x-of-FP32 estimate, not a published spec -- not used. Also lacks BF16 (arrived with Ampere, later still than Turing) -- the same FP16-input/FP32-accumulate-only tensor path that rules out INT8 rules out BF16 too."
+      "note": "Rated throughput is NVIDIA's own V100 datasheet for the SXM2 module -- 7.8 / 15.7 / 125 TFLOPS (FP64 / FP32 / Tensor, which implies a 1,530 MHz boost clock), 900 GB/s, 300 W, passively cooled, NVLink 300 GB/s. An earlier revision followed Wikipedia's Tesla template at a lower clock (7.45 / 14.9 / 119.2, about 5% below the datasheet). The Tesla table gives one row for the 16 GB and 32 GB SXM2 parts; clocks, bandwidth and throughput are identical across both, so only the capacity differs. FP16 is the tensor-core rate with FP32 accumulate \u2014 Volta has no structured-sparsity path. No INT8 figure recorded: Volta's Tensor Cores are hard-wired FP16-input/FP32-accumulate only -- NVIDIA's own current Tensor Core page attributes full FP32/FP16/INT8/INT4 inference precision support to Turing onward, not Volta. No official DP4A/integer-ALU INT8 figure was ever published for V100 either (the Volta architecture whitepaper gives an INT8 figure for sibling Pascal parts P40/P4 but conspicuously omits one for V100). Unsourced ~62-63 TOPS figures circulating on aggregator sites appear to be an unofficial 4x-of-FP32 estimate, not a published spec -- not used. Also lacks BF16 (arrived with Ampere, later still than Turing) -- the same FP16-input/FP32-accumulate-only tensor path that rules out INT8 rules out BF16 too."
     },
     {
       "id": "rtx_3090",
@@ -3578,10 +3579,13 @@
         "interconnect": {
           "kind": "nvlink",
           "bridge": "1CatAI SXM2 carrier board",
-            "linksPerGpu": 6,
-            "peakP2pGBsPerGpu": 300,
-            "source": "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf",
+          "linksPerGpu": 6,
+          "peakP2pGBsPerGpu": 300,
+          "source": "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf",
           "note": "NVIDIA rates the SXM2 V100 at 300 GB/s of NVLink 2.0 per GPU (six links). Whether the 1CatAI carrier wires all six per GPU, its topology, and whether peer-to-peer is enabled are not verified; the NVLink itself is taken from this page's own platform label (V100 NVLink x4)."
+        },
+        "host": {
+          "note": "A mostly self-contained, eGPU-like device (the maintainer's description): unlike the PCIe-card rigs it does not lean on the host for per-card slots, spacing or power in the same way. The board's price, uplink and power supply are not yet sourced."
         }
       },
       "models": [
@@ -3604,12 +3608,16 @@
         "interconnect": {
           "kind": "infinity-fabric",
           "bridge": "Infinity Fabric bridge (four-GPU hive)",
-            "costUsd": 650,
-            "linksPerGpu": 3,
-            "peakP2pGBsPerGpu": 276,
-            "hostLinkGBs": 64,
+          "costUsd": 650,
+          "linksPerGpu": 3,
+          "peakP2pGBsPerGpu": 276,
+          "hostLinkGBs": 64,
           "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/product-briefs/instinct-mi100-brochure.pdf",
-          "note": "AMD: three Infinity Fabric links per GPU, up to 276 GB/s peer-to-peer per GPU and 552 GB/s for a four-GPU hive, all theoretical peaks; PCIe Gen4 x16 (64 GB/s) to the host."
+          "note": "AMD: three Infinity Fabric links per GPU, up to 276 GB/s peer-to-peer per GPU and 552 GB/s for a four-GPU hive, all theoretical peaks; PCIe Gen4 x16 (64 GB/s) to the host. Bridges have been seen at $650 to $1,200; the low figure sets the main total.",
+          "costHighUsd": 1200
+        },
+        "host": {
+          "note": "PCIe cards, so the host supplies everything: a power supply for 4 x 300 W of passively cooled, full-height dual-slot cards and, ideally, four x16 slots of PCIe 4.0 or better with spacing for the Infinity Fabric bridge. Host requirements are the maintainer's; card power, slot size and cooling are AMD's brochure. The host is not priced."
         }
       },
       "models": [
@@ -3632,10 +3640,15 @@
         "interconnect": {
           "kind": "xe-link",
           "bridge": "Xe Link bridge",
-            "linksPerGpu": 6,
-            "hostLinkGBs": 128,
-            "source": "https://cdrdv2-public.intel.com/817799/817799_Intel%20Data%20Center%20GPU%20Max%201100%20Datasheet_Rev_1_0.pdf",
-          "note": "Intel datasheet 817799: each card has six 53 Gbps SerDes ports. The X2 bridge (99ARXG) joins two cards with six Xe Link connections between them; the X4 bridge (99ARXX) gives each pair of four cards two. The datasheet states no GB/s: whether a connection is one lane or several changes the aggregate about eightfold, so none is recorded. Host link is PCIe 5.0 x16 at 32 GT/s (128 GB/s counted AMD's way; about 63 GB/s per direction after encoding). A separate Xe Link Bridge Card Datasheet (788941) should state the bandwidth and could not be found."
+          "linksPerGpu": 6,
+          "hostLinkGBs": 128,
+          "source": "https://cdrdv2-public.intel.com/817799/817799_Intel%20Data%20Center%20GPU%20Max%201100%20Datasheet_Rev_1_0.pdf",
+          "note": "Intel datasheet 817799: each card has six 53 Gbps SerDes ports. The X2 bridge (99ARXG) joins two cards with six Xe Link connections between them; the X4 bridge (99ARXX) gives each pair of four cards two. The datasheet states no GB/s: whether a connection is one lane or several changes the aggregate about eightfold, so none is recorded. Host link is PCIe 5.0 x16 at 32 GT/s (128 GB/s counted AMD's way; about 63 GB/s per direction after encoding). A separate Xe Link Bridge Card Datasheet (788941) should state the bandwidth and could not be found. The two-card bridge usually ships with a pair of cards and costs about $70 when bought separately. The maintainer has never seen a four-card (X4) bridge for sale, so a four-card rig is not purchasable as far as is known.",
+          "costUsd": 0,
+          "costHighUsd": 70
+        },
+        "host": {
+          "note": "PCIe cards, so the host supplies everything: two x16 slots, ideally PCIe 5.0, spaced for the two-card Xe Link bridge, and a supply with a CEM 5.1 12V-2x6 auxiliary connector per card at up to 300 W each (Intel datasheet 817799). Slot and spacing needs are the maintainer's. The host is not priced."
         }
       },
       "models": [

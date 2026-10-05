@@ -366,7 +366,11 @@ not measurements, and any of them needs a `source`. A vendor that does not state
 GB/s gets no number: Intel's Max 1100 datasheet gives six 53 Gbps SerDes ports but
 no bandwidth, and guessing whether a port is one lane or several is an eightfold
 error. `costUsd` prices the bridge or carrier board, which belongs to no card; a rig
-that declares an interconnect without one is shown as "cards only".
+that declares an interconnect without one is shown as "cards only". Zero is a real
+answer (some bridges ship with the cards), and `costHighUsd` records the top of the
+observed range so the rig total reads as a range. `rig.host.note` says what the host
+must supply -- per-card power, x16 slots of a matching PCIe generation, spacing for
+the bridge -- which a self-contained board and a set of PCIe cards differ on.
 
 Peer bandwidth does not set single-stream decode, which follows per-card memory
 bandwidth. It matters for tensor-parallel prefill, concurrent streams, and anything

@@ -159,6 +159,12 @@ const CASES = [
   ['an interconnect rating with no source', 'no source', d => {
     delete candidate(d, 'c_mi100x4').rig.interconnect.source;
   }],
+  ['a bridge price range that runs backwards', 'is reversed', d => {
+    candidate(d, 'c_mi100x4').rig.interconnect.costHighUsd = 100;
+  }],
+  ['a high bridge price with no low one', 'no low one', d => {
+    delete candidate(d, 'c_mi100x4').rig.interconnect.costUsd;
+  }],
   ['a negative peer bandwidth', 'must be > 0', d => {
     candidate(d, 'c_mi100x4').rig.interconnect.peakP2pGBsPerGpu = -1;
   }],
@@ -197,6 +203,11 @@ ACCEPTED.push(
   }],
   ['a first-party measurement the maintainer did not personally see', null, d => {
     line(d, L).provenance.attestation = 'reported';
+  }],
+  ['a bridge that costs nothing because it ships with the cards', null, d => {
+    const ic = candidate(d, 'c_max1100x2').rig.interconnect;
+    ic.costUsd = 0;
+    delete ic.costHighUsd;
   }],
   ['an unreproduced issue report that says so', null, d => {
     line(d, L).provenance = { kind: 'issue-report', attestation: 'reported', source: 'https://example.invalid/issues/1', reproduced: false };

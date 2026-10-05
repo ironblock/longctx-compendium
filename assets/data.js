@@ -188,6 +188,9 @@ export function normalize(doc) {
     return {
       ...t,
       costUsd: t.costUsd == null ? null : t.costUsd + (link?.costUsd ?? 0),
+      // Bridges have been seen at very different prices; the top of the range is
+      // what a buyer who paid the most would owe.
+      costHighUsd: t.costUsd == null ? null : t.costUsd + (link?.costHighUsd ?? link?.costUsd ?? 0),
       linkPriced: link ? link.costUsd != null : null,
     };
   };

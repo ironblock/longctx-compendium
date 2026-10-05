@@ -527,8 +527,12 @@ export function renderCandidatesTable(model) {
       `<span style="display:block;font-size:10px;color:var(--dim);margin-top:3px">${esc(c.models.map(m => MODEL_ARCH[m]?.label ?? m).join(' · '))}</span></td>` +
       `<td class="num">${t.memoryGB ?? '—'} GB</td>` +
       `<td class="num">${u?.memoryBandwidthGBs ?? '—'}<span style="display:block;font-size:10px;color:var(--dim)">GB/s per card</span></td>` +
-      `<td class="num">${t.costUsd == null ? '—' : '$' + t.costUsd.toLocaleString()}<span style="display:block;font-size:10px;color:var(--dim)">${
-        t.costUsd == null ? 'unpriced' : t.linkPriced === false ? 'cards only · bridge unpriced' : t.linkPriced ? 'cards + bridge' : 'cards, street'
+      `<td class="num">${
+        t.costUsd == null
+          ? '—'
+          : '$' + t.costUsd.toLocaleString() + (t.costHighUsd > t.costUsd ? '–$' + t.costHighUsd.toLocaleString() : '')
+      }<span style="display:block;font-size:10px;color:var(--dim)">${
+        t.costUsd == null ? 'unpriced' : t.linkPriced === false ? 'cards only · bridge/board unpriced' : t.linkPriced ? 'cards + bridge' : 'cards, street'
       }</span></td>` +
       `<td class="lbl" style="white-space:normal;min-width:200px;font-size:11.5px">${esc(ic?.kind ?? 'unknown')}` +
       `<span style="display:block;font-size:10px;color:var(--dim)" title="${esc(ic?.note ?? '')}">${esc(ic?.bridge ?? '')}</span></td>` +
@@ -538,7 +542,9 @@ export function renderCandidatesTable(model) {
           : '<span class="num" style="color:var(--dim)" title="The vendor datasheet gives no GB/s figure">not stated</span>'
       }<span style="display:block;font-size:10px;color:var(--dim)">peak P2P per GPU${ic?.linksPerGpu ? ` · ${ic.linksPerGpu} links` : ''}</span>` +
       `<span style="display:block;font-size:10px;color:var(--dim)">${ic?.hostLinkGBs ? `host link ${ic.hostLinkGBs} GB/s` : 'host link unverified'}</span></td>` +
-      `<td class="lbl" style="white-space:normal;min-width:300px;font-size:11px;color:var(--muted)">${esc(c.note ?? '')}</td>` +
+      `<td class="lbl" style="white-space:normal;min-width:300px;font-size:11px;color:var(--muted)">${esc(c.note ?? '')}${
+        c.rig.host?.note ? `<span style="display:block;margin-top:5px"><b style="color:var(--text)">Host:</b> ${esc(c.rig.host.note)}</span>` : ''
+      }</td>` +
       `<td class="lbl" style="font-size:11px"><span class="prov weak">${c.status}</span></td>`;
     tb.appendChild(tr);
   }

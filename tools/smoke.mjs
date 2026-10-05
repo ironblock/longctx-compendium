@@ -117,10 +117,12 @@ check('range figures render as a range', /129\.3–131\.3/.test(lineText), 'expe
 check('provenance chips rendered on every line', (await count('#lineTable .prov.first')) === 8, `got ${await count('#lineTable .prov.first')}`);
 check('every first-party line is attested', (await count('#lineTable .prov.witnessed')) === 8, `got ${await count('#lineTable .prov.witnessed')}`);
 const candText = await text('#candTable tbody');
-check('the MI100 rig totals its cards and bridge', candText.includes('$4,250') && /cards \+ bridge/.test(candText), 'expected 4 x $900 + $650');
+check('the MI100 rig totals its cards and bridge as a range', /\$4,250–\$4,800/.test(candText), 'expected 4 x $900 + $650-$1,200');
+check('the Max pair totals cards plus a $0-$70 bridge', /\$4,000–\$4,070/.test(candText), 'expected 2 x $2,000 + $0-$70');
 check('peer bandwidth is shown where the vendor states it', /300 GB\/s/.test(candText) && /276 GB\/s/.test(candText), 'expected NVLink 2.0 and Infinity Fabric ratings');
 check('a missing peer bandwidth says so rather than showing a number', /not stated/.test(candText), 'expected the Max 1100 Xe Link entry');
-check('rigs whose bridge is unpriced say so', (candText.match(/bridge unpriced/g) ?? []).length === 2, `got ${(candText.match(/bridge unpriced/g) ?? []).length}`);
+check('the rig whose board is unpriced says so', (candText.match(/bridge\/board unpriced/g) ?? []).length === 1, `got ${(candText.match(/bridge\/board unpriced/g) ?? []).length}`);
+check('host requirements are shown with each candidate', (candText.match(/Host:/g) ?? []).length === 3, `got ${(candText.match(/Host:/g) ?? []).length}`);
 check('legend entries', (await count('#pleg span')) >= 9);
 check('verdict rendered', (await text('#verdict')).length > 80);
 check('value verdict rendered', (await text('#valVerdict')).length > 80);

@@ -235,6 +235,10 @@ const checkRig = (rig, at) => {
   if (ic && (ic.peakP2pGBsPerGpu != null || ic.hostLinkGBs != null || ic.linksPerGpu != null) && !ic.source) {
     fail(at, 'interconnect carries link figures but no source -- say where they came from');
   }
+  if (ic?.costHighUsd != null && ic.costUsd == null) fail(at, 'interconnect gives a high price but no low one (costUsd)');
+  if (ic?.costHighUsd != null && ic.costUsd != null && ic.costHighUsd < ic.costUsd) {
+    fail(at, `interconnect price range is reversed: ${ic.costUsd} to ${ic.costHighUsd}`);
+  }
 };
 
 const modelKnown = (id, at) => {
