@@ -532,7 +532,7 @@ export function renderCandidatesTable(model) {
           ? '—'
           : '$' + t.costUsd.toLocaleString() + (t.costHighUsd > t.costUsd ? '–$' + t.costHighUsd.toLocaleString() : '')
       }<span style="display:block;font-size:10px;color:var(--dim)">${
-        t.costUsd == null ? 'unpriced' : t.linkPriced === false ? 'cards only · bridge/board unpriced' : t.linkPriced ? 'cards + bridge' : 'cards, street'
+        t.costUsd == null ? 'unpriced' : t.linkPriced === false ? 'cards only · bridge/board unpriced' : t.linkPriced ? 'cards + bridge/board' : 'cards, street'
       }</span></td>` +
       `<td class="lbl" style="white-space:normal;min-width:200px;font-size:11.5px">${esc(ic?.kind ?? 'unknown')}` +
       `<span style="display:block;font-size:10px;color:var(--dim)" title="${esc(ic?.note ?? '')}">${esc(ic?.bridge ?? '')}</span></td>` +

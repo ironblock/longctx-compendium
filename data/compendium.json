@@ -2565,7 +2565,11 @@
           "platform": "v100",
           "count": 1
         }
-      ]
+      ],
+      "host": {
+        "costUsd": 800,
+        "note": "The 1CatAI four-slot SXM2 board, $800 (the maintainer's observation of multiple eBay listings; a cheaper source may exist). Its power draw is not recorded, so it counts as zero in the load and idle totals."
+      }
     },
     {
       "id": "b_spark",
@@ -3582,10 +3586,11 @@
           "linksPerGpu": 6,
           "peakP2pGBsPerGpu": 300,
           "source": "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf",
-          "note": "NVIDIA rates the SXM2 V100 at 300 GB/s of NVLink 2.0 per GPU (six links). Whether the 1CatAI carrier wires all six per GPU, its topology, and whether peer-to-peer is enabled are not verified; the NVLink itself is taken from this page's own platform label (V100 NVLink x4)."
+          "note": "NVIDIA rates the SXM2 V100 at 300 GB/s of NVLink 2.0 per GPU (six links). Whether the 1CatAI carrier wires all six per GPU, its topology, and whether peer-to-peer is enabled are not verified; the NVLink itself is taken from this page's own platform label (V100 NVLink x4). The board costs $800: the maintainer's observation of multiple eBay listings at that price, with a cheaper source possible.",
+          "costUsd": 800
         },
         "host": {
-          "note": "A mostly self-contained, eGPU-like device (the maintainer's description): unlike the PCIe-card rigs it does not lean on the host for per-card slots, spacing or power in the same way. The board's price, uplink and power supply are not yet sourced."
+          "note": "A mostly self-contained, eGPU-like device (the maintainer's description): unlike the PCIe-card rigs it does not lean on the host for per-card slots, spacing or power in the same way. Its uplink and power supply are not yet sourced."
         }
       },
       "models": [

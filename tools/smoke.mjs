@@ -121,7 +121,8 @@ check('the MI100 rig totals its cards and bridge as a range', /\$4,250–\$4,800
 check('the Max pair totals cards plus a $0-$70 bridge', /\$4,000–\$4,070/.test(candText), 'expected 2 x $2,000 + $0-$70');
 check('peer bandwidth is shown where the vendor states it', /300 GB\/s/.test(candText) && /276 GB\/s/.test(candText), 'expected NVLink 2.0 and Infinity Fabric ratings');
 check('a missing peer bandwidth says so rather than showing a number', /not stated/.test(candText), 'expected the Max 1100 Xe Link entry');
-check('the rig whose board is unpriced says so', (candText.match(/bridge\/board unpriced/g) ?? []).length === 1, `got ${(candText.match(/bridge\/board unpriced/g) ?? []).length}`);
+check('every candidate\'s bridge or board is priced', (candText.match(/bridge\/board unpriced/g) ?? []).length === 0, `got ${(candText.match(/bridge\/board unpriced/g) ?? []).length}`);
+check('the V100 rig totals cards and board', /\$3,600/.test(candText) && /cards \+ bridge\/board/.test(candText), 'expected 4 x $700 + $800');
 check('host requirements are shown with each candidate', (candText.match(/Host:/g) ?? []).length === 3, `got ${(candText.match(/Host:/g) ?? []).length}`);
 check('legend entries', (await count('#pleg span')) >= 9);
 check('verdict rendered', (await text('#verdict')).length > 80);
@@ -378,6 +379,16 @@ async function withPatchedData(patch) {
   await p.close();
 }
 
+// A rig whose bridge or board has no price must say so rather than total as if it were free.
+{
+  const { p } = await withPatchedData(doc => {
+    delete doc.candidates.find(c => c.id === 'c_v100x4_1cat').rig.interconnect.costUsd;
+  });
+  const t = await p.locator('#candTable tbody').textContent();
+  check('an unpriced board is flagged, not totalled as free', /bridge\/board unpriced/.test(t) && /\$2,800/.test(t), 'expected cards-only $2,800');
+  await p.close();
+}
+
 // The whole point of splitting v100 and b70 into single-card origins: the
 // four-card rig must track the card, not a stored total.
 {
@@ -386,7 +397,8 @@ async function withPatchedData(patch) {
   });
   const row = p.locator('#valTable tbody tr', { hasText: '4× V100' }).first();
   const cost = (await row.locator('td').nth(1).textContent()).trim();
-  check('four-card V100 platform tracks its card price', cost === '$6,000', `got ${cost}`);
+  // 4 cards at $1,500 plus the $800 board that the build's host carries.
+  check('four-card V100 platform tracks its card price', cost === '$6,800', `got ${cost}`);
   await p.close();
 }
 {
