@@ -63,61 +63,28 @@ export const PRECISION_MAP = {
 };
 
 /**
- * Which architecture generation each catalog unit's silicon actually is --
- * public, well-established hardware facts (die/generation names), not
- * re-derived by the dequant-path research above. Kept here rather than in
- * data/compendium.json because it's a classification the roofline model
- * needs, not a benchmarked or priced fact the rest of the page's schema is
- * built around.
+ * Which PRECISION_MAP column each chip generation in data/compendium.json's
+ * `architectures` reads from. The generations themselves are data (every unit
+ * names its own `arch`); this only says which kernel-dispatch finding applies.
+ *
+ * `approximate` marks a generation the research did not cover directly and is
+ * read through its nearest neighbour; callers flag the result as ungrounded.
+ * A generation absent from this table has no finding at all and falls back to
+ * FP16, labelled as such.
  */
-export const UNIT_ARCH_FAMILY = {
-  rtx_pro_6000: 'blackwell',
-  rtx_5090: 'blackwell',
-  dgx_spark: 'blackwell', // GB10 Superchip
-  b200: 'blackwell',
-  b300: 'blackwell',
-  radeon_r9700: 'rdna4', // Navi 48, same die generation as RX 9070
-  strix_halo: 'rdna3', // RDNA 3.5 -- no distinct bucket in PRECISION_MAP; treated as rdna3, which is where the research itself places the "RDNA3.5 sub-variant" Q6_K threshold
-  arc_b70: 'xe2', // Battlemage
-  arc_b65: 'xe2',
-  v100_sxm2: 'volta',
-  rtx_3090: 'ampere',
-  rtx_3090_ti: 'ampere',
-  rtx_a6000: 'ampere',
-  a100_80: 'ampere',
-  pg199_card: 'ampere', // DRIVE Orin/A100-class per its own catalog note
-  rtx_4090: 'ada',
-  rtx_6000_ada: 'ada',
-  l40s: 'ada',
-  h100_sxm: 'hopper',
-  h100_pcie: 'hopper',
-  h200: 'hopper',
-  mac_m3_ultra: 'apple',
-  mi300x: 'cdna3',
-  mi325x: 'cdna3',
-  mi355x: 'cdna3', // genuinely CDNA4 -- no CDNA4 bucket in PRECISION_MAP (a gap in this research pass's requested schema, not the silicon); approximated as cdna3, flagged low-confidence by callers
-  mi210: 'cdna2',
-  radeon_pro_w7900: 'rdna3',
-  rx_7900_xtx: 'rdna3',
+export const ARCH_TO_DEQUANT_FAMILY = {
+  volta: { family: 'volta' },
+  ampere: { family: 'ampere' },
+  ada: { family: 'ada' },
+  hopper: { family: 'hopper' },
+  blackwell: { family: 'blackwell' },
+  cdna2: { family: 'cdna2' },
+  cdna3: { family: 'cdna3' },
+  cdna4: { family: 'cdna3', approximate: 'no CDNA4 row in the dispatch research' },
+  rdna3: { family: 'rdna3' },
+  rdna4: { family: 'rdna4' },
+  apple_m3: { family: 'apple' },
+  apple_m4: { family: 'apple' },
+  apple_m5: { family: 'apple', approximate: 'M5 can take the newer tensor-ops path; precision unconfirmed' },
+  xe2: { family: 'xe2' },
 };
-
-/**
- * Compute precision a quant family executes at on a given catalog unit,
- * falling back to the documented-safe floor (dequant-to-fp16) when the
- * research has no grounded answer for that combination -- and saying so,
- * rather than silently assuming a faster path than what was confirmed.
- */
-export function dequantPrecisionFor(quantFamily, unitId) {
-  const archFamily = UNIT_ARCH_FAMILY[unitId];
-  const entry = archFamily ? PRECISION_MAP[quantFamily]?.[archFamily] : null;
-  if (entry) return { ...entry, archFamily, grounded: true };
-  return {
-    precision: 'fp16',
-    confidence: 'i',
-    note: archFamily
-      ? `No grounded finding for ${quantFamily} on ${archFamily} -- fp16 dequant-floor assumed (conservative: real ceiling may be higher).`
-      : `Unit "${unitId}" has no architecture-family classification -- fp16 dequant-floor assumed.`,
-    archFamily: archFamily ?? null,
-    grounded: false,
-  };
-}

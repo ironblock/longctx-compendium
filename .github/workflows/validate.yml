@@ -25,6 +25,8 @@ jobs:
         run: node tools/test-validate.mjs
       - name: Check the memory arithmetic against first-party measurements
         run: node tools/test-kv.mjs
+      - name: Check no reading claims more than its hardware can do
+        run: node tools/check-ceilings.mjs
 
   render:
     name: rendered page

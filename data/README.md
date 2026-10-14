@@ -1,45 +1,76 @@
 # Editing the data
 
-Everything the page renders lives in [`compendium.json`](./compendium.json).
-Nothing is duplicated into the HTML or the JavaScript, and anything that can be
-computed is computed rather than stored: build cost and power draw are summed
-from the units a build contains, and tokens/sec per watt, per $1,000,
-wall-clock, and the confidence tallies in the honesty banner are all derived at
-render time. Nothing on the page can disagree with the data behind it.
+Every hardware fact and every measured number the page shows lives in
+[`compendium.json`](./compendium.json); every model shape lives in
+[`../assets/models.js`](../assets/models.js). Nothing that can be computed is
+stored: rig totals, format support per card, ceilings and each reading's share
+of its ceiling are all derived at render time, so nothing on the page can
+disagree with the data behind it.
 
 After any edit:
 
 ```sh
 node tools/validate.mjs        # schema + cross-record checks
+node tools/check-ceilings.mjs  # no reading above its own ceiling
 node tools/coverage.mjs        # what the catalog is still missing
 ```
 
-## The three collections
+## The four collections
 
-| collection | what it is | example |
+| collection | what it is | changes when |
 |---|---|---|
-| `units` | a purchasable piece of hardware — what a datasheet describes | one Tesla V100 SXM2 32GB |
-| `platforms` | a benchmarked configuration, composed of units | `V100 NVLink ×4` = 4 units |
-| `builds` | a box you could buy, composed of platforms or units | `4× V100 32GB (1CATai)` |
+| `architectures` | a chip generation and which matrix formats its silicon takes | a whitepaper was misread |
+| `units` | a purchasable card or machine — what a datasheet describes | a price moves, a spec is corrected |
+| `lines` | the ledger: every reading, inside the serving line that produced it | someone measures something |
+| `candidates` | rigs under consideration that have no measured line yet | a rig is proposed or measured |
 
-Prices, power draw, capacity and release dates live on **units**, once. A
-platform or build says how many of what it contains, and its totals are summed
-at render time. Correct one card's street price and every platform and rig
-containing it moves with it.
+There is deliberately nothing between hardware and readings. The old page kept
+"platforms" with prefill curves drawn through one or two measured points and
+filled in by interpolation or spec-based modeling; none of that survives here.
+What the hardware *could* do is computed from the catalog (see Ceilings below);
+what it *did* do is a reading in a line. A number that is neither has no home.
 
-## Adding a device
+## Chip generations carry format support
 
-Append one object to `platforms`. Only `id`, `display` and `composition` are
-required — a device with nothing else renders as a row of em dashes and fills
-in over time.
+Whether a card's matrix units (tensor cores, MFMA, WMMA, XMX) take FP8, FP4,
+BF16 and so on is a property of its generation, not of the card, so it is
+recorded once:
 
-First describe the hardware once, in `units`:
+```json
+{
+  "id": "ampere",
+  "vendor": "NVIDIA",
+  "label": "Ampere",
+  "matrixUnits": "3rd-gen Tensor Cores",
+  "formats": { "tf32": "native", "bf16": "native", "fp16": "native", "fp8": "absent",
+               "fp6": "absent", "fp4": "absent", "int8": "native", "int4": "native" },
+  "sources": [{ "url": "https://…", "quote": "…", "supports": ["bf16", "fp8:absent"] }]
+}
+```
+
+Each format is `native` (the matrix units take that input type), `absent` (they
+do not — emulating it or upcasting to a wider type does not count), or
+`unknown` (no source either way). An `absent` needs a source as much as a
+`native` does; usually it is a document that lists every supported type.
+
+A card names its generation with `"arch": "ampere"` and inherits all of this.
+Where a card genuinely differs from its generation, `formatOverrides` says how,
+and the unit's `note` must say why. A card's rated figure for a format proves
+the matrix path exists, so a rated FP8 number on a generation marked FP8
+`absent` is rejected: one of the two is wrong.
+
+FP8 *storage* is a different question. Any card can hold FP8 weights and upcast
+them; that saves memory and bandwidth, and decode is bound by both, but it is
+not FP8 compute.
+
+## Adding a card
 
 ```json
 {
   "id": "some_card",
   "label": "Some Accelerator 48GB",
   "vendor": "NVIDIA",
+  "arch": "ada",
   "released": "2025-04",
   "memoryGB": 48,
   "memoryBandwidthGBs": 1008,
@@ -47,275 +78,118 @@ First describe the hardware once, in `units`:
   "process": "TSMC 4N",
   "compute": {
     "unit": "Tops",
-    "source": "https://en.wikipedia.org/wiki/…",
+    "source": "https://…",
     "values": { "fp32": 91.1, "bf16": 362.1, "fp8": 724.2, "fp8:sparse": 1448.4 }
   },
   "pricing": {
     "msrp":   { "usd": 4500, "asOf": "2025-04" },
     "street": { "usd": 6200, "asOf": "2026-07", "note": "memory-shortage inflated" }
   },
-  "power": { "loadW": 285, "idleW": 22, "confidence": "m", "note": "wall draw, capped at 300W" }
+  "sources": ["https://…"]
 }
 ```
 
-Then the benchmarked configuration, in `platforms`:
+Only `id` and `label` are required; a card with nothing else renders as a row of
+dashes with every format "not sourced". `compute.values` are **dense** rated
+figures in 10¹² ops/sec; suffix a key with `:sparse` for the 2:4
+structured-sparsity rate vendors often quote unlabelled. The ceilings use dense
+figures only.
 
-```json
-{
-  "id": "some_platform",
-  "display": {
-    "label": "Some Accelerator ×2 (96 GB)",
-    "short": "SomeAcc×2",
-    "color": "#7ec8ff",
-    "group": "NVIDIA"
-  },
-  "composition": [{ "unit": "some_card", "count": 2 }],
-  "perf": {
-    "moe": {
-      "note": "llama.cpp Vulkan Q4_K_XL, Qwen3.5-35B-A3B",
-      "prefill": { "512": [3100, "m"], "4096": [2900, "m"], "32768": [2100, "e"] },
-      "decode":  { "short": [142.0, "m"], "at32k": [96.4, "m"] }
-    }
-  }
-}
-```
+`memoryGB` is read as GiB, which is what vendors mean by "32 GB" of VRAM.
+`street` is what every price on the page is summed from; give it an `asOf`.
 
-`group` sections the tables (`NVIDIA`, `AMD`, `Unified`, `Value`, or a new one).
-`color` must be unique across platforms and builds, and is what identifies the
-device in every chart. The platform's price, power and 96 GB of capacity all
-come from `2 × some_card` — writing any of them on the platform is rejected.
+### Specifications need a source
 
-If it is also a box you would buy, add it to `builds`:
+A unit carrying `released`, `memoryBandwidthGBs`, `tdpW`, `process` or any
+`compute.values` must also carry `sources`. This is the one rule that exists
+because of what this page is: every number here was originally produced by a
+language model, and a plausible-looking specification with a real-looking
+citation is worse than a blank cell. If you cannot say where a figure came from,
+leave it out; `tools/coverage.mjs` will keep reminding you.
 
-```json
-{
-  "id": "b_someacc",
-  "display": { "label": "Some Accelerator ×2 workstation", "short": "SomeAcc×2", "color": "#7ec8ff" },
-  "units": [{ "platform": "some_platform", "count": 1 }],
-  "host": { "costUsd": 900, "loadW": 80, "idleW": 20, "note": "chassis + PSU" }
-}
-```
-
-## Why compositions
-
-Nothing that can be derived is stored. Cost, load draw, idle draw and capacity
-are summed from the catalog every time the page renders, so there is no second
-copy to fall out of date.
-
-A build reaches its hardware one of two ways:
-
-```json
-"units": [{ "platform": "v100", "count": 1 }]     // through a benchmarked platform
-"units": [{ "unit": "rtx_3090", "count": 4 }]     // straight from the catalog
-```
-
-Use `platform` when the box is a benchmarked configuration. Use `unit` when the
-hardware appears only inside a rig and was never benchmarked on its own — the
-RTX 3090 and A100 are in the catalog for exactly this reason, with no platform
-record because there is no benchmark data for them.
-
-`host` is for whatever the units do not account for — chassis, CPU, PSU,
-cooling. It exists so the residual stays visible rather than getting smuggled
-into a card price. The four-card PG199 entry is described in its source as
-"~$6,000 + host", and that "+ host" belongs here once someone prices it.
-
-A build with exactly one unit of one platform, and no `decode` of its own,
-inherits that platform's decode rate — one of a thing performs like that thing.
-Everything else states its own, because a four-card rig does not decode four
-times as fast as one card.
+A `note` is the right home for a figure that is real but measures something
+other than the field offered for it — a Server Edition number on a Workstation
+record, an NPU throughput beside GPU figures, a unified-memory machine whose GPU
+only gets part of the RAM by default.
 
 ### Unknown is not zero
 
-If a unit has no street price, the totals that depend on it come out **unknown**
-rather than zero. A silent zero would make a rig look free and infinitely
-efficient, which is worse than a blank. The validator names the unit and the
-missing field.
+A missing price makes every total that depends on it unknown, not zero; a
+missing bandwidth means no ceiling, not a slow one. Blanks sort last in both
+directions. There is no code for "no data" anywhere: leave the key out.
 
-Only units that a *build* reaches need a price and power figure. A platform that
-exists purely to be benchmarked — a 32GB card that never clears the 96GB bar and
-so never appears in the value tables — is legitimately unpriced. `rtx_5090` and
-`radeon_r9700` are both in that position today.
+`power` (`loadW`, `idleW`) is draw observed under inference, per unit, and
+deliberately not the datasheet `tdpW`. It is kept for future use; the page does
+not currently derive anything from it.
 
-### `power` is not `tdpW`
+## Adding a model
 
-`power.loadW` is the draw **observed under LLM inference**, per unit. It is
-deliberately not the datasheet TDP: inference is bandwidth-bound and does not
-reach the compute ceiling, and these cards are routinely power-capped. Summing
-TDPs would overstate a 4× 3090 rig by about 40% and reshuffle the efficiency
-rankings. Keep the datasheet figure in `tdpW` if you want it recorded; nothing
-derives from it.
+Ceilings need the model's shape, and it has to come from the published
+`config.json`, not memory. Add an entry to `MODELS` in `assets/models.js`:
 
-### Platforms are not all the same size
-
-`v100` and `b70` are four-card platforms — their labels say "×4" and their
-benchmarks were run on four cards — so their `composition` is `count: 4` of a
-single card, and the builds that contain them are `count: 1` of the platform.
-`pg199` is a single card, so its build is `count: 4` of the platform.
-
-Both spellings give the same totals. What matters is that the card is the thing
-with a price, and the multiplication happens in exactly one place.
-
-## Specifications need a source
-
-A unit carrying `released`, `memoryBandwidthGBs`, `tdpW`, `process` or any
-`compute.values` must also carry `sources` — at least one entry saying where
-those numbers came from:
-
-```json
-"sources": ["https://en.wikipedia.org/wiki/Nvidia_Tesla"]
+```js
+qwen3_32b: {
+  label: 'Qwen3-32B',
+  repo: 'Qwen/Qwen3-32B',
+  source: 'https://huggingface.co/Qwen/Qwen3-32B/raw/main/config.json',
+  revision: '<repo commit sha>',
+  params: { total: 32.8e9, active: 32.8e9, source: '<model card URL>', quote: '<the sentence it came from>' },
+  layers: 64,
+  layerTypes: { full_attention: 64 },
+  heads: 64, kvHeads: 8, headDim: 128,
+  maxPositions: 40960,
+},
 ```
 
-This is the one rule that exists because of what this page *is*. Every number
-here was originally produced by a language model, and a plausible-looking
-specification with a real-looking citation is worse than a blank cell: it
-launders a guess into a fact. If you cannot say where a figure came from, leave
-it out. `tools/coverage.mjs` will keep reminding you it is missing.
+- `layerTypes` counts `full_attention`, `sliding_attention`, `linear_attention`
+  and `ffn_only` layers, from the config's own `layer_types` list where it has
+  one. They must sum to `layers`. This is the field that decides how decode cost
+  grows with depth, and the one the old page got wrong: Qwen3.5/3.6/3.8-27B are
+  dense in weights but hybrid in attention (48 Gated DeltaNet layers to 16 full
+  ones), and comparing them with a full-attention 32B on raw tokens/sec mixes
+  two different slopes.
+- `slidingWindow` for sliding layers; `attention.full` / `attention.sliding`
+  where a model uses two attention shapes (Gemma 4); `mla` for multi-head latent
+  attention (GLM-4.7-Flash); `sparse.budget` for block-sparse "full" layers
+  that read at most that many positions (Qwen3.8-Flash-Next); `linear` for the
+  recurrent-state shape of linear-attention layers.
+- `params.total` excludes vision towers and MTP heads; `params.active` is what a
+  decoded token reads. Without `params`, a model can be named in a line but has
+  no ceiling.
 
-A `note` on the unit is the right home for a figure that is real but measures
-something other than the column offered for it — a system PSU rating quoted as a
-GPU TDP, a Server Edition number on a Workstation record, an NPU throughput
-beside iGPU figures. Recording it in prose loses nothing and keeps the column
-honest.
+`tools/test-kv.mjs` checks every entry's layer arithmetic and holds the KV
+formula against what first-party lines actually allocated.
 
-An entry may name something other than a URL when that is the truth —
-`dgx_spark` currently reads "inherited from this page's own Method note … not
-independently sourced", which is honest in a way that citing NVIDIA would not
-have been.
+## Ceilings
 
-## Measurements and confidence
+`assets/ceiling.js` computes, from catalog and model facts only:
 
-Any number that came from a benchmark is written as `[value, confidence]`:
+- **Decode** (one stream, one token per pass) = memory bandwidth ÷ the bytes a
+  step must read: active weights at the format's bits per weight, the whole KV
+  cache of every full-attention layer, the window of every sliding layer, the
+  budget of a sparse layer, and the recurrent state of every linear layer.
+  Under a layer split a single stream runs one card at a time and gets one
+  card's bandwidth; under tensor parallel it gets all of them.
+- **Prefill** = rated dense matrix throughput at the precision the engine
+  actually multiplies in ÷ FLOPs per token (2 per active weight plus attention
+  over the positions attended). The precision comes from `assets/dequant-map.js`,
+  which records llama.cpp's own kernel dispatch per quant family and chip
+  generation (`docs/roofline-dequant-paths.md`); anything ungrounded falls back
+  to FP16 and says so.
+- **Fit** = all weights + KV at depth + recurrent state against every card's
+  memory less 1 GiB each.
 
-| code | meaning |
-|---|---|
-| `m`  | measured, primary source |
-| `m~` | measured, but secondary or anecdotal |
-| `e`  | extrapolated from measured points |
-| `i`  | modeled from specifications only |
+Every simplification leans generous — perfect scaling, no launch or
+synchronization cost, one weight width throughout — so a ceiling is an upper
+bound. A reading above its own ceiling therefore means something in its
+attribution is wrong, and `tools/check-ceilings.mjs` fails on it. The one
+legitimate exception is speculative decoding, which can emit more than one token
+per pass; those readings are shown against the ceiling but not held to it.
 
-There is deliberately **no code for "no data"** — leave the key out. An absent
-context length is a gap in the chart; a zero would be a lie.
+## Readings: serving lines
 
-When a number needs provenance, use the long form instead:
-
-```json
-"512": { "value": 7640, "confidence": "m", "source": "llm-tracker.info", "note": "Q4_K_M" }
-```
-
-Specifications and prices are plain numbers — they are datasheet facts, not
-benchmarks, so they carry a `source` or `asOf` on their block rather than a
-confidence code.
-
-## Prefill is a per-event cost, not a per-turn cost
-
-Read this before writing prose about wall-clock, TTFT, or "how long a turn
-takes" anywhere on this page — it is easy to imply the wrong thing without
-meaning to.
-
-No inference server worth using re-prefills the whole context every turn in
-an active session. The KV cache from earlier turns stays hot, and only newly
-appended tokens get processed. That means the **cold-start** number this page
-computes as `context_length ÷ pp(context_length)` — the "wall-clock turn" that
-was the original framing — is what a session *start* costs, a cache eviction,
-or a context-mutating edit (anything that busts the cache). It is not what
-turn 50 of an otherwise-untouched session costs, and prose that implies
-otherwise is misleading even though the number itself is correct.
-
-What caching does **not** erase: for full/quadratic attention, each newly
-appended token still has to attend across the entire existing cache, so the
-marginal cost of the *next* turn keeps growing with session depth even though
-nothing is literally re-prefilled. That growth is exactly the slope of the
-prefill-falloff curve already on this page — `assets/derive.js`'s
-`marginalSegments()` derives it directly from the existing `pp(context)`
-checkpoints (differencing cumulative time, `tokens ÷ pp`, between consecutive
-context lengths) rather than needing a separate incremental-append benchmark
-that doesn't exist. `computeSteadyState()` uses that marginal rate to price
-"append N tokens onto a session already this deep, then generate" — the
-number an active agentic loop actually pays turn to turn.
-
-### Decode is not flat with depth either
-
-The same reasoning applies to the *generation* half of a turn, and it is worth
-stating separately because it is easy to get wrong in the opposite direction.
-Every generated token reads the whole KV cache, so a bandwidth-bound decode
-slows as the session grows. This repo's own data has it falling **29–53%**
-between the short-context rate and 32K.
-
-So `decode.short` is the rate at ~zero depth and nothing else. Using it to price
-generation at 16K understates every turn it describes. `decodeAtDepth()` in
-`derive.js` interpolates between `decode.short` and `decode.at32k` **in seconds
-per token, not tokens/sec** — KV bytes read per token grow linearly with depth,
-so time per token is what moves linearly; interpolating the rate directly bends
-the wrong way and flatters deep contexts, which is the exact bias being fixed.
-
-The catch is coverage: only 5 of 24 decode entries have `at32k`, and none has
-anything deeper. Entries without it fall back to the short-context rate, tagged
-`basis: 'shortOnly'`, and their bars are starred in the charts. **A starred bar
-is understated against an unstarred one**, so correcting the well-measured
-platforms makes them look worse than the under-measured ones. That asymmetry is
-a reason to add measurements, not a reason to revert the correction — but any
-prose comparing two platforms has to know which side of it each one is on.
-
-Adding `"at128k"` beside `"at32k"` on any device is the single highest-value
-datapoint this repo can currently gain. The interpolation extends to it with no
-code change.
-
-Linear/hybrid-attention architectures (Mamba2, Gated DeltaNet) are the one
-thing that genuinely escapes this scaling — their marginal rate stays close
-to flat regardless of session depth, which is the real payoff of that
-architecture class for long sessions, not just a nicer cold-start number. The
-Strix Halo method note already documents this directly: DeltaNet keeps
-long-context KV growth nearly flat, 4K→32K adding only 560 MB.
-
-If you're adding a new wall-clock-adjacent chart, table, or sentence: say
-which of the two you mean. "Wall-clock" alone is now ambiguous on this page.
-
-## Adding data points, not devices
-
-**A context length for one device** — add the key. It must already exist in
-`meta.contexts`:
-
-```json
-"prefill": { "512": [3100, "m"], "131072": [880, "e"] }
-```
-
-**A context length for everyone** — add it to `meta.contexts`. A column appears
-in the prefill table and a point on the x-axis; devices without that key show
-gaps.
-
-```json
-{ "tokens": 262144, "label": "256K" }
-```
-
-**A precision** — add a key under a unit's `compute.values`. A column appears in
-the hardware catalog table automatically, sortable, and a button appears on the
-precision chart. Suffix with `:sparse` for structured-sparsity figures. Sorting
-orders by the *dense* figure only: a cell showing just a sparse number has no
-dense figure to rank, and ranking it by its sparse twin would put it two-for-one
-ahead of every dense figure beside it. Blanks sort last in both directions, for
-the same reason unknown is not zero everywhere else here.
-
-If a real search for a figure came up empty, say so with `compute.unknown` rather
-than leaving the key out — the catalog renders that as a blue `?`, which is a
-different claim from the dash that means "confirmed unsupported"
-(`compute.unsupported`) or "nobody has looked yet" (absent from both).
-
-**A price kind** — add a key under a unit's `pricing`. `msrp` and `street` are
-rendered today, and `street` is what build costs are summed from; anything else
-is stored and ignored until something renders it.
-
-**A model archetype** — add it to `meta.archetypes`, then add a matching key
-under each device's `perf`. Note that the archetype toggle buttons and the
-value-section anchors are still spelled out in `index.html`, so a fourth
-archetype needs a button added there too.
-
-## Serving lines: named models, with the engine on the record
-
-`platforms[].perf` is the older layer: three proxy archetypes, no record of which
-engine, quant, cache type or draft method produced a number. Named-model results
-go in `lines` instead, one object per **serving line** -- a rig, an engine, a set
-of weights and the flags it ran with -- and every number belongs to exactly one.
-The two layers are never mixed in a chart.
+Every measured number belongs to exactly one **serving line**: a rig, an engine,
+a set of weights, a cache and the flags it ran with.
 
 ```json
 {
@@ -323,12 +197,13 @@ The two layers are never mixed in a chart.
   "label": "Qwen3.8 27B · IQ3_S · llama.cpp · MTP n=2",
   "model": "qwen38_27b",
   "rig": { "units": [{ "unit": "rtx_3090", "count": 1 }], "host": { "name": "linux-pc", "ramGB": 32 } },
-  "engine": { "name": "llama.cpp", "commit": "4ceb171…", "lineage": "upstream" },
-  "quant": { "format": "GSQ-RCO IQ3_S", "bpw": 3.4981, "sizeGB": 12.12,
+  "engine": { "name": "llama.cpp", "version": "…", "commit": "4ceb171…", "lineage": "upstream" },
+  "quant": { "format": "GSQ-RCO IQ3_S", "key": "iq", "bpw": 3.4981, "sizeGB": 12.12,
              "kld": { "code": 0.0542, "prose": 0.0860, "reference": "Q8_0 of the same model" } },
   "kvCache": { "k": "q8_0", "v": "q8_0" },
   "spec": { "method": "mtp", "draftN": 2 },
-  "pool": { "tokens": 229376, "slots": 2 },
+  "observed": "2026-09-29",
+  "recorded": "2026-10-05",
   "status": "measured",
   "results": [
     { "metric": "decode", "depth": 2236, "streams": 1, "basis": "per-stream", "value": 68.1, "confidence": "m" },
@@ -341,120 +216,81 @@ The two layers are never mixed in a chart.
 
 What the validator holds you to, and why:
 
-- **Every point states its depth, its stream count and its basis.** A bare tok/s
-  means three different things. One stream is always `per-stream`; `aggregate` is a
-  total across streams and needs `streams > 1`. Give either `value` or a `range`
-  (when the source reports one across repeated runs), never both.
-- **Prefill says what it covered.** `cold` is the whole prompt; `new-tokens` is the
-  rate over only the tokens not already cached, which can be far higher than a cold
-  rate at the same depth.
-- **Speculation is stated.** Draft acceptance flatters deep rows on easy text, so a
-  `spec: "off"` point is the clean reading at depth. Acceptance is not comparable
-  across engines; each defines it differently.
-- **`model` must exist in `assets/models.js` `MODEL_ARCH`**, with its architecture
-  read from the published `config.json` (layer types are counted from the config's
-  own `layer_types`, not assumed). That is what lets `kvBytesPerToken` size a context.
-- **Provenance is declared, and the question is vouching, not typing.** `kind` is the
-  sort of source (`first-party`, `issue-report`, `forum`, `vendor`, `modeled`).
-  `attestation` is the maintainer's own word: `witnessed` means they personally saw
-  this hardware produce these numbers, whoever ran the test and compiled the data;
-  `reported` is someone else's account, included because nothing gives a specific
-  reason to doubt it. Where there is a specific reason to doubt a claim, leave it out
-  rather than marking it. Only a `first-party` measurement can be `witnessed`, and a
-  first-party run the maintainer did not see is `reported`. An `issue-report` or
-  `forum` post must also say whether anyone has reproduced it, and a first-party
-  line should pin a `digest`.
+- **Only observations.** Confidence is `m` (measured, primary source) or `m~`
+  (measured, secondary or anecdotal). There is no code for an estimate because
+  an estimate has no place in the ledger.
+- **Dates.** `recorded` (required) is when the reading entered this page — the
+  latest it could have been observed. `observed` is the source's own date, when
+  it gave one. Readings are lagging indicators of one stack at one time; the
+  date is what lets a reader discount them.
+- **Every point states its depth**, its stream count and its basis. For a cold
+  prefill the depth is the prompt length. Where the source did not say, `depth`
+  is `null` and `depthNote` says what it did say; such a decode reading is
+  compared with the empty-context ceiling, so its share is a floor.
+  `aggregate` is a total across streams and needs `streams > 1`. Give either
+  `value` or a `range`, never both.
+- **Prefill says what it covered**: `cold` (the whole prompt) or `new-tokens`
+  (only tokens not already cached).
+- **Speculation is stated.** A `spec: "off"` point is the clean reading at depth.
+- **The model is named, or its absence is explained.** `model` is a key in
+  `MODELS`, or `null` with a `modelNote` quoting what the source did call it.
+- **The weights are described.** `quant.format` as the source names it ("not
+  recorded" is an honest value); `quant.key` names the family in
+  `WEIGHT_FORMATS` (`assets/ceiling.js`) so the ceiling knows the matrix
+  precision and a typical width; `quant.bpw` when the line knows its real width.
+- **Multi-card lines say how they split** (`parallel.mode`: `tensor` or
+  `layer`). Without it there is no single ceiling, and the page says so.
+- **Provenance is declared, and the question is vouching, not typing.** `kind`
+  is `first-party`, `issue-report` (GitHub issue, PR or discussion), `forum`,
+  `review` (independent articles, benchmark sites and benchmark repositories) or
+  `vendor`. `attestation` is the maintainer's own word: `witnessed` means they
+  personally saw this hardware produce these numbers; `reported` is someone
+  else's account, included because nothing gives a specific reason to doubt it.
+  Where there is a specific reason, leave the number out rather than marking
+  it. Only `first-party` can be `witnessed`. An `issue-report` or `forum` post
+  must say whether anyone reproduced it.
 - **A line that produced invalid numbers is `withdrawn`**, with the reason in
   `hazards`, rather than deleted or left looking measured.
 
-`kld` is the KL divergence of the quant against a stated reference, on code and on
-prose. It is quality, which tok/s is not: compare speed across lines only where the
-quality is comparable, and note that the same model name ships as 2-bit and 4-bit
-quants that are different products.
+`kld` is the KL divergence of the quant against a stated reference, on code and
+on prose. It is quality, which tok/s is not: compare speed across lines only
+where quality is comparable.
 
-`kvCache.kibPerToken`, where measured, is held against the config-derived figure by
-`tools/test-kv.mjs`. The derived figure is a **lower bound** on any engine's real
-cost (drafters, workspaces and padding add to it); on llama.cpp with an inline MTP
-head it lands on the measurement exactly.
+`kvCache.kibPerToken`, where measured, is held against the config-derived figure
+by `tools/test-kv.mjs`. The derived figure is a lower bound on any engine's real
+cost (drafters, workspaces and padding add to it).
 
-### Candidates
+## Candidates
 
 `candidates` are rigs under consideration with no measured line yet: units, an
-`interconnect` (kind, bridge, whether peer-to-peer is actually enabled), the models
-they are meant to serve, and a note. Price, capacity and bandwidth are derived from
-their units. Leave `interconnect` fields out rather than guessing; absent means
-nobody has looked.
+`interconnect`, the models they are meant to serve, and a note. Price and
+capacity are derived from their units; the page shows each listed model's fit
+and decode ceiling at the calculator's current settings. Leave `interconnect`
+fields out rather than guessing; absent means nobody has looked.
 
-`interconnect` can carry the vendor's numbers: `linksPerGpu`, `peakP2pGBsPerGpu`
-(peak GPU-to-GPU bandwidth per GPU, both directions summed over every link, as the
-vendor states it) and `hostLinkGBs` (line rate x lanes, both directions, encoding
-overhead not subtracted -- AMD's convention for its PCIe figures). All are ratings,
-not measurements, and any of them needs a `source`. A vendor that does not state
-GB/s gets no number: Intel's Max 1100 datasheet gives six 53 Gbps SerDes ports but
-no bandwidth, and guessing whether a port is one lane or several is an eightfold
-error. `costUsd` prices the bridge or carrier board, which belongs to no card; a rig
-that declares an interconnect without one is shown as "cards only". Zero is a real
-answer (some bridges ship with the cards), and `costHighUsd` records the top of the
-observed range so the rig total reads as a range. `rig.host.note` says what the host
-must supply -- per-card power, x16 slots of a matching PCIe generation, spacing for
-the bridge -- which a self-contained board and a set of PCIe cards differ on.
+`interconnect` can carry the vendor's numbers: `linksPerGpu`,
+`peakP2pGBsPerGpu` (peak GPU-to-GPU bandwidth per GPU, both directions summed)
+and `hostLinkGBs`. All are ratings, not measurements, and any of them needs a
+`source`. A vendor that does not state GB/s gets no number. `costUsd` prices the
+bridge or carrier board, which belongs to no card; `costHighUsd` records the top
+of an observed range.
 
-Peer bandwidth does not set single-stream decode, which follows per-card memory
-bandwidth. It matters for tensor-parallel prefill, concurrent streams, and anything
-streamed from host RAM or a spill tier.
-
-## Reference units
-
-A catalog entry does not have to be in anything. `h100_sxm`, `h100_pcie`,
-`mi300x` and `mi355x` are recorded so the 96–128 GB class has something to be
-measured against; none has a platform or a build, and none has benchmarks on
-this page. The validator warns about them, which is correct — an unused unit is
-worth mentioning and not worth blocking.
-
-Their `note` says "Reference only" and their "Used in" cell renders empty.
-
-## Devices that cannot run something
-
-Missing data and *impossible* are different, and the distinction is worth
-keeping:
-
-```json
-"oss120b": { "note": "32GB — cannot fit 120B (~63GB)", "unsupported": true }
-```
-
-An archetype entry with neither data nor `unsupported: true` is rejected — an
-empty block is almost always a half-finished edit.
-
-## Stashing data you have not decided how to show
-
-`extra` is an open object on any record. Nothing reads it, the schema permits
-anything inside it, and it exists so a half-researched figure has somewhere to
-live that is not a comment (JSON has none) or a dropped browser tab.
-
-```json
-"extra": { "pcieGen": 5, "nvlink": false, "notesToSelf": "recheck idle draw" }
-```
+Peer bandwidth does not set single-stream decode under a layer split, which
+follows one card's memory bandwidth. It decides how close tensor parallel gets
+to its ceiling, and matters for prefill, concurrent streams, and anything
+streamed from host RAM.
 
 ## What the checks catch
 
-`tools/validate.mjs` enforces the schema plus the things a schema cannot see:
-duplicate ids, colour collisions between unrelated devices, prefill keys that
-are not on the context axis, archetypes not declared in `meta`, build units
-pointing at platforms that do not exist or that lack the price and power a
-build's totals are summed from, and archetype entries that are empty for no
-stated reason.
+`tools/validate.mjs` enforces the schema plus what a schema cannot see:
+duplicate ids, units naming unknown generations, rated figures that contradict
+their generation, overrides without a reason, specifications without sources,
+lines naming models with no shape, readings with no depth and no explanation,
+dates out of order, multi-card lines with no split, and the provenance rules
+above. `tools/test-validate.mjs` breaks the data dozens of ways and asserts each
+is caught, and that the legitimate edge cases are still accepted.
 
-`tools/test-validate.mjs` breaks the data nineteen different ways and asserts
-each one is caught, so the validator cannot quietly stop working.
-
-`tools/smoke.mjs` loads the real page in Chromium, clicks every toggle, and
-asserts the charts actually painted — the one check that catches data which
-validates cleanly but throws during render.
-
-`tools/coverage.mjs` prints a grid of what each catalog unit has and is missing.
-It never fails; blanks are a legitimate state, and this just makes them visible.
-
-Not everything is an error. A catalog unit that nothing references produces a
-*warning*, because a reference entry — a card recorded for comparison with no
-benchmarks of its own — is a perfectly good reason to have one. Dangling
-references in the other direction stay hard errors, since those are typos.
+`tools/check-ceilings.mjs` holds every reading to its own ceiling.
+`tools/smoke.mjs` loads the real page in Chromium, drives every control and
+asserts the tables and charts match the data. `tools/coverage.mjs` prints what
+the catalog is missing; it never fails.

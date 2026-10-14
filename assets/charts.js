@@ -1,483 +1,263 @@
-// Chart.js configuration for the four views. Each builder is idempotent: it
-// mutates the existing chart when one exists so toggling a view never leaks a
-// canvas.
+// Chart.js configuration for the two charts. Colours are read from CSS custom
+// properties so the palette lives in one place (assets/styles.css), and every
+// value a chart shows is also in a table beside it.
 
-import {
-  computeWC,
-  computeSteadyState,
-  STEADY_STATE_AT_CTX,
-  STEADY_STATE_TOKENS,
-  fmtT,
-  hexA,
-  platColor,
-  buildDecode,
-  idleYr,
-  rankedBuilds,
-  vendorColor,
-  precisionRows,
-  precisionUnitLabel,
-} from './derive.js';
+/* global Chart */
 
-const GRID = 'rgba(255,255,255,.07)';
-const TICKC = '#5a6a7d';
-const MONO = { family: 'Space Mono', size: 11 };
-const MONO_S = { family: 'Space Mono', size: 10 };
-
-const TOOLTIP = {
-  backgroundColor: '#0d1724',
-  borderColor: '#1a2535',
-  borderWidth: 1,
-  titleColor: '#ccd6e0',
-  bodyColor: '#8898a9',
-  titleFont: MONO,
-  bodyFont: MONO,
-};
-
-const axis = (text, extra = {}) => ({
-  title: { display: true, text, color: TICKC, font: MONO },
-  grid: { color: GRID },
-  ticks: { color: TICKC, font: MONO_S },
-  ...extra,
-});
-
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const charts = {};
-
-function paint(key, canvasId, cfg, replaceOptions = false) {
-  if (charts[key]) {
-    charts[key].data = cfg.data;
-    if (replaceOptions) charts[key].options = cfg.options;
-    charts[key].update();
-  } else {
-    charts[key] = new Chart(document.getElementById(canvasId), cfg);
-  }
-  return charts[key];
+// Canvas text gets no CSS fallback, so name one; and keep chart text in the page's faces.
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.font.family = '"IBM Plex Sans", system-ui, sans-serif';
+  Chart.defaults.color = css('--muted');
 }
 
-// === Prefill falloff: throughput against context length ===
-export function renderPrefill(model, state) {
-  const data = model.PP[state.arch];
-  const datasets = model.PLAT.map(p => {
-    const d = data[p.id];
-    const vals = d.v.map((v, i) => (d.c[i] === 'n' ? null : v));
-    const allModeled = d.c.every(c => c === 'i' || c === 'n');
-    return {
-      label: p.short,
-      data: vals,
-      borderColor: p.color,
-      backgroundColor: p.color,
-      borderWidth: 2.2,
-      tension: 0.25,
-      spanGaps: false,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      // Hollow points mark anything that was not directly measured.
-      pointBackgroundColor: vals.map((v, i) => (d.c[i] === 'm' ? p.color : 'transparent')),
-      pointBorderColor: p.color,
-      pointBorderWidth: 2,
-      hidden: state.hidden.has(p.id),
-      borderDash: allModeled ? [2, 4] : undefined,
-      segment: allModeled
-        ? undefined
-        : {
-            borderDash: ctx => {
-              const ci = d.c[ctx.p0DataIndex];
-              return ci === 'm' ? undefined : ci === 'e' ? [5, 3] : [2, 4];
-            },
-          },
-    };
-  });
+function mount(id, config) {
+  charts[id]?.destroy();
+  charts[id] = new Chart(document.getElementById(id), config);
+  return charts[id];
+}
 
-  paint('pp', 'ppChart', {
-    type: 'line',
-    data: { labels: model.CTXL, datasets },
+const fmtNum = v => (v >= 1000 ? `${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}K` : String(Math.round(v * 10) / 10));
+/** Context depths are powers of two: 4096 is "4K", 262144 is "256K", 1048576 is "1M". */
+const fmtTokens = v => (v >= 1048576 ? `${v / 1048576}M` : v >= 1024 ? `${Math.round(v / 1024)}K` : String(v));
+
+function axisBase() {
+  return {
+    grid: { color: css('--line'), drawTicks: false },
+    border: { color: css('--line') },
+    ticks: { color: css('--muted'), font: { family: '"Space Mono", ui-monospace, monospace', size: 10 }, padding: 6 },
+    title: { display: true, color: css('--muted'), font: { family: '"Space Mono", ui-monospace, monospace', size: 10.5 } },
+  };
+}
+
+function tooltipBase() {
+  return {
+    backgroundColor: '#0b1019',
+    borderColor: css('--line'),
+    borderWidth: 1,
+    titleColor: css('--text'),
+    bodyColor: css('--muted'),
+    titleFont: { family: 'IBM Plex Sans', size: 12, weight: '600' },
+    bodyFont: { family: 'Space Mono', size: 11 },
+    padding: 10,
+    displayColors: false,
+  };
+}
+
+/**
+ * Direct labels for the highlighted points only, placed greedily so no two
+ * collide: right of the point, then left, above, below; a label with nowhere
+ * to go is dropped, and the tooltip and table still carry it.
+ */
+const pointLabels = {
+  id: 'pointLabels',
+  afterDatasetsDraw(chart) {
+    const ds = chart.data.datasets.findIndex(d => d.labelPoints);
+    if (ds < 0) return;
+    const { ctx, chartArea: a } = chart;
+    const meta = chart.getDatasetMeta(ds);
+    ctx.save();
+    ctx.font = '11px "IBM Plex Sans", system-ui, sans-serif';
+    ctx.fillStyle = css('--text');
+    ctx.textBaseline = 'middle';
+    const placed = [];
+    const hits = (r) => placed.some(p => r.x < p.x + p.w && r.x + r.w > p.x && r.y < p.y + p.h && r.y + r.h > p.y);
+    const pts = meta.data.map((el, i) => ({ el, d: chart.data.datasets[ds].data[i] })).sort((p, q) => q.d.y - p.d.y);
+    // markers themselves are obstacles too
+    for (const { el } of pts) placed.push({ x: el.x - 5, y: el.y - 5, w: 10, h: 10 });
+    for (const { el, d } of pts) {
+      const text = d.short ?? d.label;
+      const w = ctx.measureText(text).width + 4;
+      const h = 14;
+      const tries = [
+        { x: el.x + 8, y: el.y - h / 2 },
+        { x: el.x - 8 - w, y: el.y - h / 2 },
+        { x: el.x - w / 2, y: el.y - 10 - h },
+        { x: el.x - w / 2, y: el.y + 10 },
+      ];
+      const spot = tries.find(r => r.x >= a.left && r.x + w <= a.right && r.y >= a.top && r.y + h <= a.bottom && !hits({ ...r, w, h }));
+      if (!spot) continue;
+      placed.push({ ...spot, w, h });
+      ctx.fillText(text, spot.x + 2, spot.y + h / 2);
+    }
+    ctx.restore();
+  },
+};
+
+/**
+ * Bandwidth (what decode is bound by) against dense matrix throughput at one
+ * precision (what prefill is bound by), one point per unit. Emphasis rather
+ * than identity: units matching the hardware filter are the accent colour and
+ * labelled, everything else is a muted point that only the tooltip names.
+ */
+export function renderScatter(units, matchIds, precision) {
+  const point = u => ({
+    x: u.memoryBandwidthGBs,
+    y: u.compute.values[precision],
+    label: u.label,
+    short: u.short ?? u.label.replace(/\s*\d+GB$/, ''),
+    arch: u.archLabel,
+    mem: u.memoryGB,
+  });
+  const plotted = units.filter(u => u.memoryBandwidthGBs && u.compute?.values?.[precision] != null);
+  const on = plotted.filter(u => matchIds.has(u.id)).map(point);
+  const off = plotted.filter(u => !matchIds.has(u.id)).map(point);
+  const unit = precision.startsWith('int') ? 'TOPS' : 'TFLOPS';
+
+  mount('scatterChart', {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Other units',
+          data: off,
+          backgroundColor: css('--mute-mark'),
+          borderColor: css('--panel'),
+          borderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointHitRadius: 12,
+        },
+        {
+          label: 'Matches the filter',
+          data: on,
+          labelPoints: true,
+          backgroundColor: css('--s1'),
+          borderColor: css('--panel'),
+          borderWidth: 2,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          pointHitRadius: 12,
+        },
+      ],
+    },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
+      animation: false,
+      layout: { padding: { right: 8, top: 6 } },
       plugins: {
         legend: { display: false },
         tooltip: {
-          ...TOOLTIP,
+          ...tooltipBase(),
           callbacks: {
-            title: i => 'context: ' + model.CTXL[i[0].dataIndex],
-            label: c => `${c.dataset.label}: ${c.parsed.y ? Math.round(c.parsed.y) + ' t/s' : '—'}`,
+            title: items => items[0].raw.label,
+            label: it => [
+              `${it.raw.arch ?? 'generation not recorded'}`,
+              `${it.raw.x.toLocaleString()} GB/s · ${it.raw.mem ?? '?'} GB`,
+              `${it.raw.y.toLocaleString()} ${unit} dense ${precision.toUpperCase()}`,
+            ],
           },
         },
       },
       scales: {
-        x: axis('context length (tokens)'),
-        y: axis('prefill t/s', {
-          ticks: { color: TICKC, font: MONO_S, callback: v => (v >= 1000 ? v / 1000 + 'K' : v) },
-        }),
+        x: {
+          type: 'logarithmic',
+          ...axisBase(),
+          title: { ...axisBase().title, text: 'memory bandwidth, GB/s (log) → bounds decode' },
+          ticks: { ...axisBase().ticks, callback: v => ([250, 500, 1000, 2000, 4000, 8000].includes(v) ? fmtNum(v) : '') },
+        },
+        y: {
+          type: 'logarithmic',
+          ...axisBase(),
+          title: { ...axisBase().title, text: `dense ${precision.toUpperCase()} ${unit} (log) → bounds prefill` },
+          ticks: { ...axisBase().ticks, callback: v => (/^(1|2|5)/.test(String(v)) ? fmtNum(v) : '') },
+        },
       },
     },
+    plugins: [pointLabels],
   });
+  return { plotted: plotted.length, on: on.length };
 }
 
-// === Decode rate ===
-export function renderDecode(model, state) {
-  const data = model.TG[state.arch];
-  const sorted = model.PLAT.filter(p => data[p.id].v).sort((a, b) => data[b.id].v - data[a.id].v);
+export const LAYOUT_COLOR = () => ({ full: css('--s1'), sliding: css('--s2'), linear: css('--s3') });
 
-  paint('tg', 'tgChart', {
-    type: 'bar',
-    data: {
-      labels: sorted.map(p => p.short),
-      datasets: [
-        {
-          label: 'tg (short context)',
-          data: sorted.map(p => data[p.id].v),
-          backgroundColor: sorted.map(p => platColor(model, p.id, 0.85)),
-          borderColor: sorted.map(p => p.color),
-          borderWidth: 1.5,
-          borderRadius: 3,
-        },
-        {
-          label: 'tg @32K+ (measured)',
-          data: sorted.map(p => data[p.id].v32),
-          backgroundColor: sorted.map(p => platColor(model, p.id, 0.35)),
-          borderColor: sorted.map(p => p.color),
-          borderWidth: 1.5,
-          borderDash: [3, 3],
-          borderRadius: 3,
-        },
-      ],
-    },
+/**
+ * Share of the empty-context decode ceiling left at each depth, one line per
+ * model, coloured by attention layout -- the property that decides the slope.
+ * The selected model is drawn heavier and labelled at its end.
+ */
+export function renderDepth(series, selectedId) {
+  const colors = LAYOUT_COLOR();
+  const datasets = series
+    .slice()
+    .sort((a, b) => (a.id === selectedId) - (b.id === selectedId))
+    .map(s => {
+      const sel = s.id === selectedId;
+      return {
+        label: s.label,
+        layout: s.layout,
+        data: s.points,
+        borderColor: sel ? colors[s.layout] : colors[s.layout] + '73',
+        backgroundColor: colors[s.layout],
+        borderWidth: sel ? 3 : 1.5,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        pointHitRadius: 8,
+        tension: 0,
+        selected: sel,
+      };
+    });
+  mount('depthChart', {
+    type: 'line',
+    data: { datasets },
     options: {
-      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
+      animation: false,
+      parsing: false,
+      interaction: { mode: 'nearest', intersect: false },
+      layout: { padding: { right: 12 } },
       plugins: {
-        legend: {
-          display: true,
-          labels: {
-            color: '#8898a9',
-            font: MONO,
-            generateLabels: chart =>
-              chart.data.datasets.map((d, i) => ({
-                text: d.label,
-                fillStyle: i === 0 ? '#5fd97a' : 'rgba(95,217,122,.4)',
-                strokeStyle: 'transparent',
-                index: i,
-                hidden: !chart.isDatasetVisible(i),
-              })),
-          },
-        },
+        legend: { display: false },
         tooltip: {
-          ...TOOLTIP,
+          ...tooltipBase(),
           callbacks: {
-            label: c => (c.parsed.x ? `${c.dataset.label}: ${c.parsed.x.toFixed(1)} t/s` : '—'),
+            title: items => items[0].dataset.label,
+            label: it => `${fmtTokens(it.raw.x)} tokens deep: ${Math.round(it.raw.y)}% of the empty-context ceiling`,
           },
         },
       },
       scales: {
-        x: axis('decode t/s (single stream)'),
-        y: { grid: { color: 'rgba(0,0,0,0)' }, ticks: { color: TICKC, font: MONO } },
+        x: {
+          type: 'logarithmic',
+          min: 1024,
+          ...axisBase(),
+          title: { ...axisBase().title, text: 'context depth, tokens (log)' },
+          ticks: { ...axisBase().ticks, callback: v => ([1024, 4096, 16384, 65536, 262144, 1048576].includes(v) ? fmtTokens(v) : '') },
+          afterBuildTicks: axis => {
+            axis.ticks = [1024, 4096, 16384, 65536, 262144, 1048576].filter(v => v >= axis.min && v <= axis.max).map(v => ({ value: v }));
+          },
+        },
+        y: {
+          min: 0,
+          max: 100,
+          ...axisBase(),
+          title: { ...axisBase().title, text: '% of the empty-context decode ceiling' },
+          ticks: { ...axisBase().ticks, stepSize: 25, callback: v => `${v}%` },
+        },
       },
     },
+    plugins: [
+      {
+        id: 'endLabel',
+        afterDatasetsDraw(chart) {
+          const i = chart.data.datasets.findIndex(d => d.selected);
+          if (i < 0) return;
+          const el = chart.getDatasetMeta(i).data.at(-1);
+          if (!el) return;
+          const { ctx } = chart;
+          ctx.save();
+          ctx.font = '600 11px "IBM Plex Sans", system-ui, sans-serif';
+          ctx.fillStyle = css('--text');
+          const text = chart.data.datasets[i].label;
+          const w = ctx.measureText(text).width;
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(text, Math.min(el.x - w, chart.chartArea.right - w), el.y - 6);
+          ctx.restore();
+        },
+      },
+    ],
   });
-}
-
-// === Cold-start wall-clock: TTFT + generation, stacked ===
-// What a session START, a cache eviction, or a mid-prefix edit costs -- see
-// renderSteadyState below for what an already-warm turn costs instead.
-export function renderWallClock(model, state) {
-  const sorted = computeWC(model, state.arch)
-    .filter(x => x.total !== null)
-    .sort((a, b) => a.total - b.total);
-  const platMap = Object.fromEntries(model.PLAT.map(p => [p.id, p]));
-  // A star marks a bar whose generation was timed at the short-context decode
-  // rate because no depth measurement exists for it -- understated against the
-  // unstarred bars beside it, which is measurement coverage, not hardware.
-  const labels = sorted.map(x => platMap[x.id].short + (x.decode?.basis === 'shortOnly' ? ' \u2605' : ''));
-  const borders = sorted.map(x => platMap[x.id].color);
-
-  paint('wc', 'wcChart', {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'TTFT (16K cold prefill)',
-          data: sorted.map(x => x.ttft),
-          backgroundColor: sorted.map(x => platColor(model, x.id, 0.9)),
-          borderColor: borders,
-          borderWidth: 1.2,
-          borderRadius: 2,
-          stack: 's',
-        },
-        {
-          label: 'Generation (2K tokens)',
-          data: sorted.map(x => x.gen),
-          backgroundColor: sorted.map(x => platColor(model, x.id, 0.4)),
-          borderColor: borders,
-          borderWidth: 1.2,
-          borderRadius: 2,
-          borderDash: [2, 2],
-          stack: 's',
-        },
-      ],
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true,
-          labels: {
-            color: '#8898a9',
-            font: MONO,
-            generateLabels: chart =>
-              chart.data.datasets.map((d, i) => ({
-                text: d.label,
-                fillStyle: i === 0 ? 'rgba(95,217,122,.7)' : 'rgba(95,217,122,.3)',
-                strokeStyle: 'transparent',
-                index: i,
-                hidden: !chart.isDatasetVisible(i),
-              })),
-          },
-        },
-        tooltip: {
-          ...TOOLTIP,
-          callbacks: {
-            title: i => `${labels[i[0].dataIndex]} · total: ${fmtT(sorted[i[0].dataIndex].total)}`,
-            label: c => `${c.dataset.label}: ${fmtT(c.parsed.x)}${c.datasetIndex === 0 ? ' (TTFT)' : ' (gen)'}`,
-          },
-        },
-      },
-      scales: {
-        x: axis('wall-clock seconds (TTFT + generation, stacked)', {
-          stacked: true,
-          ticks: { color: TICKC, font: MONO_S, callback: v => (v < 60 ? v + 's' : (v / 60).toFixed(1) + 'm') },
-        }),
-        y: { stacked: true, grid: { color: 'rgba(0,0,0,0)' }, ticks: { color: TICKC, font: MONO } },
-      },
-    },
-  });
-}
-
-// === Steady-state turn: append + generate, once the session is already warm ===
-// Same 16K-deep / 2K-token turn size as the cold chart above, so the two are
-// directly comparable -- the only thing that changes is whether the prompt
-// is prefilled from empty or appended onto an already-hot KV cache. The gap
-// between the two IS the caching story: near-zero for linear/hybrid attention,
-// still substantial for full attention, because the marginal cost of new
-// tokens keeps scaling with how deep the session already is.
-export function renderSteadyState(model, state) {
-  const sorted = computeSteadyState(model, state.arch)
-    .filter(x => x.total !== null)
-    .sort((a, b) => a.total - b.total);
-  const platMap = Object.fromEntries(model.PLAT.map(p => [p.id, p]));
-  // A star marks a bar whose generation was timed at the short-context decode
-  // rate because no depth measurement exists for it -- understated against the
-  // unstarred bars beside it, which is measurement coverage, not hardware.
-  const labels = sorted.map(x => platMap[x.id].short + (x.decode?.basis === 'shortOnly' ? ' \u2605' : ''));
-  const borders = sorted.map(x => platMap[x.id].color);
-
-  paint('ss', 'ssChart', {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: `Append ${STEADY_STATE_TOKENS / 1024}K (warm, marginal rate)`,
-          data: sorted.map(x => x.ttft),
-          backgroundColor: sorted.map(x => platColor(model, x.id, 0.9)),
-          borderColor: borders,
-          borderWidth: 1.2,
-          borderRadius: 2,
-          stack: 's',
-        },
-        {
-          label: `Generation (${STEADY_STATE_TOKENS / 1024}K tokens)`,
-          data: sorted.map(x => x.gen),
-          backgroundColor: sorted.map(x => platColor(model, x.id, 0.4)),
-          borderColor: borders,
-          borderWidth: 1.2,
-          borderRadius: 2,
-          borderDash: [2, 2],
-          stack: 's',
-        },
-      ],
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true,
-          labels: {
-            color: '#8898a9',
-            font: MONO,
-            generateLabels: chart =>
-              chart.data.datasets.map((d, i) => ({
-                text: d.label,
-                fillStyle: i === 0 ? 'rgba(91,155,213,.7)' : 'rgba(91,155,213,.3)',
-                strokeStyle: 'transparent',
-                index: i,
-                hidden: !chart.isDatasetVisible(i),
-              })),
-          },
-        },
-        tooltip: {
-          ...TOOLTIP,
-          callbacks: {
-            title: i => `${labels[i[0].dataIndex]} · total: ${fmtT(sorted[i[0].dataIndex].total)}`,
-            label: c => `${c.dataset.label}: ${fmtT(c.parsed.x)}${c.datasetIndex === 0 ? ' (append)' : ' (gen)'}`,
-          },
-        },
-      },
-      scales: {
-        x: axis('wall-clock seconds (append + generation, stacked)', {
-          stacked: true,
-          ticks: { color: TICKC, font: MONO_S, callback: v => (v < 60 ? v + 's' : (v / 60).toFixed(1) + 'm') },
-        }),
-        y: { stacked: true, grid: { color: 'rgba(0,0,0,0)' }, ticks: { color: TICKC, font: MONO } },
-      },
-    },
-  });
-}
-
-// === Build value: efficiency under load, or standing idle cost ===
-export function renderValue(model, state, arch) {
-  const isLoad = state.valPower === 'load';
-  const rows = isLoad
-    ? rankedBuilds(model, arch, (b, v) => v / b.loadW)
-    : model.BUILDS.filter(b => buildDecode(model, b, arch).v)
-        .map(b => ({ b, m: b.idleW }))
-        .sort((x, y) => x.m - y.m);
-
-  paint(
-    'val',
-    'valChart',
-    {
-      type: 'bar',
-      data: {
-        labels: rows.map(r => r.b.short),
-        datasets: [
-          {
-            label: isLoad ? 'tok/s per W' : 'idle W',
-            data: rows.map(r => r.m),
-            backgroundColor: rows.map(r => hexA(r.b.color, 0.85)),
-            borderColor: rows.map(r => r.b.color),
-            borderWidth: 1.5,
-            borderRadius: 3,
-          },
-        ],
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            ...TOOLTIP,
-            callbacks: {
-              label: c => {
-                const r = rows[c.dataIndex];
-                return isLoad
-                  ? `${c.parsed.x.toFixed(3)} tok/s per W (load)`
-                  : `${r.b.idleW} W idle · ~$${Math.round(idleYr(model, r.b.idleW))}/yr if left on`;
-              },
-            },
-          },
-        },
-        scales: {
-          x: axis(
-            isLoad
-              ? 'tokens/sec per watt under load — higher better'
-              : 'idle watts — lower better'
-          ),
-          y: { grid: { color: 'rgba(0,0,0,0)' }, ticks: { color: TICKC, font: MONO } },
-        },
-      },
-    },
-    true
-  );
-}
-
-// === Compute throughput by precision: one precision at a time, vendor-colored ===
-// A single axis across every precision would put ~1 TFLOPS FP64 parts next to
-// ~10,000 TOPS INT4 parts, so this shows one precision per view rather than
-// grouping them all -- the precision toggle in the tbar is the "sort" the
-// user picks, this chart is what results. Units with nothing recorded for the
-// selected precision are absent from the chart entirely, never a zero bar.
-export function renderPrecision(model, state) {
-  if (!state.precision) return;
-  const rows = precisionRows(model.UNITS, state.precision).filter(r => !state.precHidden.has(r.u.vendor ?? 'Other'));
-  const unitLabel = precisionUnitLabel(state.precision);
-  const colors = rows.map(r => vendorColor(r.u.vendor));
-
-  // Chart.js does not grow a fixed-height container on its own, and this list
-  // can run much longer than the 9-platform charts elsewhere on the page.
-  const canvas = document.getElementById('precChart');
-  canvas.parentElement.style.height = `${Math.max(340, rows.length * 30 + 40)}px`;
-
-  paint(
-    'prec',
-    'precChart',
-    {
-      type: 'bar',
-      data: {
-        labels: rows.map(r => r.u.label),
-        datasets: [
-          {
-            label: 'dense',
-            data: rows.map(r => r.dense),
-            backgroundColor: colors.map(c => hexA(c, 0.85)),
-            borderColor: colors,
-            borderWidth: 1.5,
-            borderRadius: 3,
-          },
-          {
-            label: '2:4 structured sparsity',
-            data: rows.map(r => r.sparse),
-            backgroundColor: colors.map(c => hexA(c, 0.35)),
-            borderColor: colors,
-            borderWidth: 1.5,
-            borderDash: [3, 3],
-            borderRadius: 3,
-          },
-        ],
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: true,
-            labels: {
-              color: '#8898a9',
-              font: MONO,
-              generateLabels: chart =>
-                chart.data.datasets.map((d, i) => ({
-                  text: d.label,
-                  fillStyle: i === 0 ? 'rgba(118,185,0,.8)' : 'rgba(118,185,0,.35)',
-                  strokeStyle: 'transparent',
-                  index: i,
-                  hidden: !chart.isDatasetVisible(i),
-                })),
-            },
-          },
-          tooltip: {
-            ...TOOLTIP,
-            callbacks: {
-              label: c => (c.parsed.x ? `${c.dataset.label}: ${c.parsed.x.toLocaleString()} ${unitLabel}` : '—'),
-            },
-          },
-        },
-        scales: {
-          x: axis(`${state.precision.toUpperCase()} throughput (10¹² ops/sec, ${unitLabel})`, {
-            ticks: { color: TICKC, font: MONO_S, callback: v => (v >= 1000 ? v / 1000 + 'K' : v) },
-          }),
-          y: { grid: { color: 'rgba(0,0,0,0)' }, ticks: { color: TICKC, font: MONO_S } },
-        },
-      },
-    },
-    true
-  );
 }

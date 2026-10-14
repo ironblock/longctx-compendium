@@ -13,6 +13,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const doc = JSON.parse(fs.readFileSync(path.join(root, 'data/compendium.json'), 'utf8'));
 
 const FIELDS = [
+  ['arch', u => u.arch],
   ['released', u => u.released],
   ['memoryGB', u => u.memoryGB],
   ['bandwidth', u => u.memoryBandwidthGBs],
@@ -60,10 +61,24 @@ if (unsourced.length) {
   console.log(`\n${unsourced.length} unit(s) carry specs with no sources[]: ${unsourced.map(u => u.id).join(', ')}`);
 }
 
-// A precision column only appears in the rendered table once some unit has it.
+// Format support comes from the chip generation; an "unknown" there is a gap
+// every card of that generation inherits.
+const archs = doc.architectures ?? [];
+console.log('\nmatrix-format support by chip generation (+ native, - absent, ? not sourced):');
+const F = ['tf32', 'bf16', 'fp16', 'fp8', 'fp6', 'fp4', 'int8', 'int4'];
+const aw = Math.max(...archs.map(a => a.id.length));
+console.log(`${''.padEnd(aw)}  ${F.map(f => f.padStart(5)).join('')}   cards`);
+for (const a of archs) {
+  const cards = units.filter(u => u.arch === a.id).length;
+  const mark = { native: '+', absent: '-', unknown: '?' };
+  console.log(`${a.id.padEnd(aw)}  ${F.map(f => mark[a.formats[f] ?? 'unknown'].padStart(5)).join('')}   ${cards}`);
+}
+
+// A rated figure is per card; a generation saying "native" with no card rating
+// it means the throughput column will be blank for that format.
 const precisions = [...new Set(units.flatMap(u => Object.keys(u.compute?.values ?? {})))];
 console.log(
   precisions.length
-    ? `\nprecisions in the catalog: ${precisions.join(', ')}`
+    ? `\nprecisions with a rated figure somewhere: ${precisions.join(', ')}`
     : '\nno compute.values anywhere yet — the rated-throughput columns are empty'
 );

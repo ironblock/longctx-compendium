@@ -5,8 +5,8 @@ per GPU architecture generation — grounded in real kernel dispatch code from
 `llama.cpp`/`ggml` (upstream, current checkout) and cross-checked against the
 `beellama.cpp` production fork, not recalled or inferred from silicon
 capability alone. This is the source behind `assets/dequant-map.js`, which the
-roofline table (`assets/roofline-ui.js`) and outlier checker
-(`tools/roofline-check.mjs`) both read.
+prefill ceilings (`assets/ceiling.js`) and the ceiling check
+(`tools/check-ceilings.mjs`) both read.
 
 **Silicon capability and software support are different questions, and this
 whole exercise exists because they get conflated.** A GPU generation having
@@ -100,9 +100,11 @@ Confirmed absent, not a coverage gap. See the summary above.
 ## The map, as consumed by code
 
 `assets/dequant-map.js` — `PRECISION_MAP` (quantFamily × archFamily →
-precision/confidence/note, exactly as tabulated above) and `UNIT_ARCH_FAMILY`
-(which architecture generation each catalog unit's silicon actually is —
-public, well-established hardware facts, not re-derived from this research
-pass). Where a combination has no entry, callers fall back to FP16 explicitly
-labeled "not grounded" — never silently assume a faster path than what was
-actually confirmed.
+precision/confidence/note, exactly as tabulated above) and
+`ARCH_TO_DEQUANT_FAMILY`, which says which column each chip generation in
+`data/compendium.json`'s `architectures` reads (every unit names its own
+generation in the data). A generation the research did not cover directly is
+read through its nearest neighbour and flagged as such (CDNA4 through CDNA3,
+Apple M5 through the M1–M4 path). Where a combination has no entry, callers fall
+back to FP16 explicitly labelled "assumed" — never silently a faster path than
+what was actually confirmed.

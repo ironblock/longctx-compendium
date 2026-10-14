@@ -10,6 +10,9 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { normalize } from '../assets/data.js';
+import { unitMatch } from '../assets/tables.js';
+import { MODELS } from '../assets/models.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -80,390 +83,265 @@ page.on('requestfailed', r => {
   if (ours(r.url())) consoleErrors.push(`request failed: ${r.url()}`);
 });
 
-await page.goto(`${base}/index.html`, { waitUntil: 'networkidle' });
+// Expectations come from the data itself, through the same pure functions the
+// page uses, so adding a unit or a reading never means editing a count here.
+const doc = JSON.parse(fs.readFileSync(path.join(root, 'data/compendium.json'), 'utf8'));
+const model = normalize(doc);
+const NO_FILTER = { fmt: new Set(), fmtUnknownOk: false, bw: null, mem: null, price: null, vendorsOff: new Set() };
+const expectMatch = filter => model.UNITS.filter(u => unitMatch(u, { ...NO_FILTER, ...filter }).ok).map(u => u.label);
+const totalPoints = model.LINES.reduce((n, l) => n + l.points.length, 0);
+// A failed number renders as one of these. "Infinity Fabric" is AMD's interconnect, not a division by zero.
+const BROKEN = /\bNaN\b|\bundefined\b|\bnull\b|Infinity(?! Fabric)/;
+const brokenAt = t => t.match(new RegExp(`.{0,30}(${BROKEN.source}).{0,30}`))?.[0];
 
-const text = async sel => (await page.locator(sel).textContent())?.trim() ?? '';
-const count = async sel => await page.locator(sel).count();
-
-check('no console or page errors', consoleErrors.length === 0, consoleErrors.join(' | '));
-check('error banner stays hidden', await page.locator('#loadError').isHidden());
-
-// Confidence tally is computed from the data, so em dashes mean load failed.
-for (const id of ['cMeasured', 'cExtrap', 'cModeled', 'cArch']) {
-  const v = await text(`#${id}`);
-  check(`confidence tally #${id} populated`, /^\d+$/.test(v), `got "${v}"`);
-}
-
-// 9 platforms x 3 archetypes + 4 group header rows.
-check('prefill table rows', (await count('#ppTable tbody tr')) === 31, `got ${await count('#ppTable tbody tr')}`);
-check('decode table rows', (await count('#tgTable tbody tr')) === 13, `got ${await count('#tgTable tbody tr')}`);
-// 31 catalog units + 4 vendor group headers
-check('spec table rows', (await count('#specTable tbody tr')) === 35, `got ${await count('#specTable tbody tr')}`);
-check('value table rows', (await count('#valTable tbody tr')) === 9, `got ${await count('#valTable tbody tr')}`);
-// First-party lines are data-driven too: one row per line, one per candidate, and
-// nothing in either table may render as a missing value.
-check('first-party line rows', (await count('#lineTable tbody tr')) === 8, `got ${await count('#lineTable tbody tr')}`);
-check('runoff candidate rows', (await count('#candTable tbody tr')) === 3, `got ${await count('#candTable tbody tr')}`);
-for (const id of ['lineTable', 'candTable']) {
-  const t = await text(`#${id} tbody`);
-  check(`${id} renders no NaN/undefined/null`, !/NaN|undefined|null/.test(t), t.match(/.{0,30}(NaN|undefined|null).{0,30}/)?.[0]);
-}
-// Every line must say its engine and quant, and every deep point its depth: the
-// whole reason these rows exist is that a bare tok/s is not a fact.
-const lineText = await text('#lineTable tbody');
-check('lines name their engines', /ExLlamaV3/.test(lineText) && /llama\.cpp/.test(lineText));
-check('points state their depth', /@2K/.test(lineText) && /@227K|@226K/.test(lineText), 'expected depth suffixes on decode figures');
-check('range figures render as a range', /129\.3–131\.3/.test(lineText), 'expected the Ada top rung 10K decode range');
-check('provenance chips rendered on every line', (await count('#lineTable .prov.first')) === 8, `got ${await count('#lineTable .prov.first')}`);
-check('every first-party line is attested', (await count('#lineTable .prov.witnessed')) === 8, `got ${await count('#lineTable .prov.witnessed')}`);
-const candText = await text('#candTable tbody');
-check('the MI100 rig totals its cards and bridge as a range', /\$4,250–\$4,800/.test(candText), 'expected 4 x $900 + $650-$1,200');
-check('the Max pair totals cards plus a $0-$70 bridge', /\$4,000–\$4,070/.test(candText), 'expected 2 x $2,000 + $0-$70');
-check('peer bandwidth is shown where the vendor states it', /300 GB\/s/.test(candText) && /276 GB\/s/.test(candText), 'expected NVLink 2.0 and Infinity Fabric ratings');
-check('a missing peer bandwidth says so rather than showing a number', /not stated/.test(candText), 'expected the Max 1100 Xe Link entry');
-check('every candidate\'s bridge or board is priced', (candText.match(/bridge\/board unpriced/g) ?? []).length === 0, `got ${(candText.match(/bridge\/board unpriced/g) ?? []).length}`);
-check('the V100 rig totals cards and board', /\$3,600/.test(candText) && /cards \+ bridge\/board/.test(candText), 'expected 4 x $700 + $800');
-check('host requirements are shown with each candidate', (candText.match(/Host:/g) ?? []).length === 3, `got ${(candText.match(/Host:/g) ?? []).length}`);
-check('legend entries', (await count('#pleg span')) >= 9);
-check('verdict rendered', (await text('#verdict')).length > 80);
-check('value verdict rendered', (await text('#valVerdict')).length > 80);
-check('spec units note rendered', (await text('#specUnits')).length > 20);
-// Precision count grows as compute.values fills in -- a floor, not an exact
-// count, so backfilling data doesn't require touching this test.
-check('precision toggle buttons rendered', (await count('#precTg button')) >= 6, `got ${await count('#precTg button')}`);
-// Direct-child selector, not `#precLeg span` -- each entry nests a `.pdot`
-// color swatch span too, so the descendant selector would double-count.
-check('vendor legend entries', (await count('#precLeg > span')) === 4, `got ${await count('#precLeg > span')}`);
-check('catalog vendor filter entries', (await count('#specLeg > span')) === 4, `got ${await count('#specLeg > span')}`);
-
-// --- Catalog sorting and filtering ---------------------------------------
-// The catalog's columns are discovered from the data, so its sorting is too.
-// These assert the behaviour rather than a fixed column list, so backfilling a
-// precision doesn't break them.
-{
-  const unitIds = async () =>
-    (await page.locator('#specTable tbody tr td.lbl:first-child').allTextContents()).map(t => t.trim());
-
-  const grouped = await count('#specTable tbody tr');
-  const memHead = page.locator('#specTable thead th[data-sortkey="mem"]');
-  check('numeric columns are sortable', (await memHead.count()) === 1);
-  check('prose column is not sortable', (await page.locator('#specTable thead th[data-sortkey="usage"]').count()) === 0);
-
-  await memHead.click();
-  const descRows = await count('#specTable tbody tr');
-  // Group headers are gone once sorted, so the row count drops to unit count.
-  check('sorting drops the vendor group rows', descRows === grouped - 4, `got ${descRows} vs grouped ${grouped}`);
-  check('sorted header marked', (await page.locator('#specTable thead th.sorted').count()) === 1);
-  check('sort direction shown', (await memHead.textContent()).includes('↓'));
-
-  const memOf = async () => {
-    const cells = await page.locator('#specTable tbody tr td:nth-child(3)').allTextContents();
-    return cells.map(t => Number(t.trim())).filter(n => Number.isFinite(n) && n > 0);
-  };
-  const desc = await memOf();
-  check('descending really is descending', desc.every((v, i) => i === 0 || desc[i - 1] >= v), desc.slice(0, 6).join(','));
-  check('largest memory first', desc[0] === Math.max(...desc), `got ${desc[0]}`);
-
-  await memHead.click();
-  check('second click reverses', (await memHead.textContent()).includes('↑'));
-  const asc = await memOf();
-  check('ascending really is ascending', asc.every((v, i) => i === 0 || asc[i - 1] <= v), asc.slice(0, 6).join(','));
-
-  await memHead.click();
-  check('third click restores vendor grouping', (await count('#specTable tbody tr')) === grouped);
-  check('no header marked sorted after reset', (await page.locator('#specTable thead th.sorted').count()) === 0);
-
-  // Blanks last in both directions: an unknown figure is not a zero one, and a
-  // column of blanks floating to the top would bury the data being sorted for.
-  const idleHead = page.locator('#specTable thead th[data-sortkey="idleW"]');
-  await idleHead.click();
-  await idleHead.click(); // ascending -- the direction that would surface nulls first
-  const idleCells = await page.locator('#specTable tbody tr td:nth-child(7)').allTextContents();
-  const firstBlank = idleCells.findIndex(t => !Number.isFinite(Number(t.trim())) || !t.trim());
-  const lastFilled = idleCells.reduce((acc, t, i) => (Number.isFinite(Number(t.trim())) && t.trim() ? i : acc), -1);
-  check('blanks sort last even ascending', firstBlank === -1 || firstBlank > lastFilled, `blank@${firstBlank} filled@${lastFilled}`);
-  await idleHead.click(); // back to grouped
-
-  // Filtering by vendor
-  const before = await unitIds();
-  check('catalog lists NVIDIA parts before filtering', before.some(t => t.includes('rtx_pro_6000')));
-  await page.locator('#specLeg > span', { hasText: 'NVIDIA' }).first().click();
-  const after = await unitIds();
-  check('filtered vendor leaves the table', !after.some(t => t.includes('rtx_pro_6000')));
-  check('other vendors stay', after.some(t => t.includes('max_1100')));
-  check('filter reports what it hid', (await text('#specUnits')).includes('Showing'));
-  await page.locator('#specLeg > span', { hasText: 'NVIDIA' }).first().click();
-  check('unfiltering restores the table', (await count('#specTable tbody tr')) === grouped);
-}
-check('precision caption rendered', (await text('#precCap')).length > 10);
-
-const canvasPainted = async id =>
-  await page.evaluate(sel => {
+const text = async (sel, p = page) => (await p.locator(sel).first().textContent())?.trim() ?? '';
+const count = async (sel, p = page) => await p.locator(sel).count();
+const canvasPainted = async (id, p = page) =>
+  await p.evaluate(sel => {
     const c = document.querySelector(sel);
     if (!c || !c.width || !c.height) return false;
     const px = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
     for (let i = 3; i < px.length; i += 4) if (px[i] !== 0) return true;
     return false;
   }, `#${id}`);
+const settle = () => page.waitForTimeout(60);
+const hwLabels = async (p = page) =>
+  (await p.locator('#hwTable tbody tr td:first-child > span:first-child').allTextContents()).map(t => t.trim());
 
-check('prefill chart painted', await canvasPainted('ppChart'));
-check('precision chart painted', await canvasPainted('precChart'));
+await page.goto(`${base}/index.html`, { waitUntil: 'networkidle' });
 
-// Every toggle in every combination, asserting the page survives each click.
-for (const [group, ids] of [
-  ['#archTg', ['moe', 'dense', 'oss120b']],
-  ['#viewTg', ['pp', 'tg', 'wc', 'ss']],
-  ['#valModelTg', ['tg120', 'tgMoe']],
-  ['#valPowerTg', ['load', 'idle']],
-]) {
-  for (const v of ids) {
-    const before = consoleErrors.length;
-    await page.locator(`${group} button[data-${group === '#archTg' ? 'a' : group === '#viewTg' ? 'v' : group === '#valModelTg' ? 'vm' : 'vp'}="${v}"]`).click();
-    await page.waitForTimeout(120);
-    check(`${group} → ${v} renders cleanly`, consoleErrors.length === before, consoleErrors.slice(before).join(' | '));
-  }
-}
+check('no console or page errors', consoleErrors.length === 0, consoleErrors.join(' | '));
+check('error banner stays hidden', await page.locator('#loadError').isHidden());
 
-// Steady-state view: its own chart and its own verdict prose, not just the
-// cold wall-clock chart relabeled.
+// --- 1. Hardware -----------------------------------------------------------
+check('every unit is listed with no filter', (await count('#hwTable tbody tr')) === model.UNITS.length, `got ${await count('#hwTable tbody tr')} of ${model.UNITS.length}`);
+check('eight format chips', (await count('#fmtChips button')) === 8);
+check('format badges on every row', (await count('#hwTable tbody .fmt')) === model.UNITS.length * 8);
+check('scatter painted', await canvasPainted('scatterChart'));
+check('hardware summary rendered', /of \d+ units match/.test(await text('#hwSummary')));
+
+// The question this section exists for: FP8 matrix units and more than 1 TiB/s.
+await page.click('#fmtChips button:has-text("FP8")');
+await page.click('#bwChips button:has-text("1 TiB/s")');
+await settle();
 {
-  await page.locator('#viewTg button[data-v="ss"]').click();
-  await page.waitForTimeout(150);
-  check('steady-state chart painted', await canvasPainted('ssChart'));
-  check('steady-state caption rendered', (await text('#ssCap')).length > 10);
-  check('steady-state verdict rendered', (await text('#verdict')).length > 80);
-  check('steady-state verdict mentions warm/steady', /steady-state/i.test(await text('#verdict')));
-  check('steady-state caption flags depth-unmeasured decode', (await text('#ssCap')).includes('★'));
-  await page.locator('#viewTg button[data-v="pp"]').click();
-  await page.waitForTimeout(150);
+  const want = expectMatch({ fmt: new Set(['fp8']), bw: 1099.511627776 }).sort();
+  const got = (await hwLabels()).sort();
+  check('FP8 + 1 TiB/s lists exactly the matching units', JSON.stringify(got) === JSON.stringify(want), `got ${got.join(', ')}; want ${want.join(', ')}`);
+  check('the query found something', want.length > 0);
+  check('an Ampere card is not an FP8 match', !got.some(l => /3090|A6000|A100/.test(l)), got.join(', '));
+  check('the 4090 clears 1 TB/s but not 1 TiB/s', !got.some(l => /4090/.test(l)));
+  const hash = await page.evaluate(() => location.hash);
+  check('the filter is kept in the address', /fmt=fp8/.test(hash) && /bw=1099/.test(hash), hash);
+  check('the chart follows the format asked for', /FP8/.test(await text('#scatterCap')));
 }
-
-// Decode slows with context depth, and both turn charts must price generation
-// at the depth it runs at rather than at the short-context rate. Asserted
-// against derive.js directly: the browser charts render the result, but the
-// arithmetic is what can silently regress.
+// The same query arriving as a link.
 {
-  const { pathToFileURL } = await import('node:url');
-  const D = await import(pathToFileURL(path.join(root, 'assets/derive.js')).href);
-
-  const tg = { v: 234, c: 'm', v32: 110.7, c32: 'm' };
-  check('decode at zero depth is the short rate', D.decodeAtDepth(tg, 0).v === 234);
-  check('decode at the 32K anchor is the measured 32K rate', D.decodeAtDepth(tg, 32768).v === 110.7);
-
-  const mid = D.decodeAtDepth(tg, 16384);
-  check('mid-depth decode is interpolated', mid.basis === 'interpolated');
-  check('mid-depth decode sits between the anchors', mid.v < 234 && mid.v > 110.7, `got ${mid.v}`);
-  // Linear in seconds/token, so the midpoint rate is the harmonic mean of the
-  // anchors -- strictly below their arithmetic mean. Interpolating tokens/sec
-  // directly would land on the arithmetic mean and flatter deep contexts.
-  check(
-    'interpolation is linear in time, not rate',
-    Math.abs(mid.v - 2 / (1 / 234 + 1 / 110.7)) < 0.01 && mid.v < (234 + 110.7) / 2,
-    `got ${mid.v.toFixed(2)}, arithmetic mean would be ${((234 + 110.7) / 2).toFixed(2)}`,
-  );
-  check('past the anchor extrapolates', D.decodeAtDepth(tg, 65536).basis === 'extrapolated');
-  check('deeper is slower', D.decodeAtDepth(tg, 65536).v < D.decodeAtDepth(tg, 32768).v);
-
-  // No depth anchor: fall back to the short rate but never call it measured.
-  const flat = D.decodeAtDepth({ v: 100, c: 'm', v32: null }, 16384);
-  check('no depth measurement falls back to the short rate', flat.v === 100);
-  check('short-only fallback is flagged', flat.basis === 'shortOnly' && flat.est === true);
-
-  // The correction has to actually move the charts, or it is not applied.
-  const doc = JSON.parse(fs.readFileSync(path.join(root, 'data/compendium.json'), 'utf8'));
-  const { normalize } = await import(pathToFileURL(path.join(root, 'assets/data.js')).href);
-  const model = normalize(doc);
-  const wc = D.computeWC(model, 'dense');
-  const pro = wc.find(x => x.id === 'pro6000') ?? wc.find(x => model.PLAT.find(p => p.id === x.id)?.short?.includes('PRO'));
-  const proTg = model.TG.dense[pro.id];
-  check('a platform with a 32K anchor is slower than its short rate implies',
-    pro.gen > 2048 / proTg.v, `gen ${pro.gen?.toFixed(1)} vs naive ${(2048 / proTg.v).toFixed(1)}`);
-  const tally = D.decodeBasisTally(model, 'dense', 16384);
-  check('some platforms still lack a depth anchor', tally.shortOnly > 0, JSON.stringify(tally));
-  check('some platforms have one', tally.interpolated > 0, JSON.stringify(tally));
+  const p2 = await browser.newPage();
+  await p2.goto(`${base}/index.html#fmt=fp8&bw=1000`, { waitUntil: 'networkidle' });
+  const want = expectMatch({ fmt: new Set(['fp8']), bw: 1000 }).sort();
+  const got = (await hwLabels(p2)).sort();
+  check('a shared link restores the filter', JSON.stringify(got) === JSON.stringify(want), `got ${got.length}, want ${want.length}`);
+  check('at 1 TB/s the 4090 is in', got.some(l => /4090/.test(l)), got.join(', '));
+  await p2.close();
 }
+await page.click('#hwReset');
+await settle();
+check('clearing filters lists every unit again', (await count('#hwTable tbody tr')) === model.UNITS.length);
 
-// Precision toggle: buttons are rebuilt from data rather than hand-authored,
-// so read what actually rendered instead of a hardcoded id list.
+// Vendor chips hide and restore.
 {
-  const precButtons = await page.locator('#precTg button').all();
-  const precs = [];
-  for (const b of precButtons) precs.push(await b.getAttribute('data-prec'));
-  for (const p of precs) {
-    const before = consoleErrors.length;
-    await page.locator(`#precTg button[data-prec="${p}"]`).click();
-    await page.waitForTimeout(120);
-    check(`#precTg → ${p} renders cleanly`, consoleErrors.length === before, consoleErrors.slice(before).join(' | '));
-    check(`#precTg → ${p} chart painted`, await canvasPainted('precChart'));
-  }
+  const nv = model.UNITS.filter(u => u.vendor === 'NVIDIA').length;
+  await page.click('#vendorChips button:has-text("NVIDIA")');
+  await settle();
+  check('a vendor chip hides that vendor', (await count('#hwTable tbody tr')) === model.UNITS.length - nv);
+  await page.click('#vendorChips button:has-text("NVIDIA")');
+  await settle();
+  check('and brings it back', (await count('#hwTable tbody tr')) === model.UNITS.length);
 }
 
-// Vendor legend hide/show, mirroring the platform legend's click-to-filter.
+// Sorting: bandwidth descending is the default; a click reverses it, blanks last both ways.
 {
-  const before = consoleErrors.length;
-  await page.locator('#precLeg span').first().click();
-  await page.waitForTimeout(120);
-  check('vendor legend toggle renders cleanly', consoleErrors.length === before, consoleErrors.slice(before).join(' | '));
-  await page.locator('#precLeg span').first().click(); // restore
-  await page.waitForTimeout(120);
+  const bws = async () =>
+    (await page.locator('#hwTable tbody tr td:nth-child(3)').allTextContents()).map(t => (t.trim() === '—' ? null : Number(t.replace(/,/g, ''))));
+  const isSorted = (xs, dir) => {
+    const v = xs.filter(x => x != null);
+    const blanksLast = xs.indexOf(null) === -1 || xs.slice(xs.indexOf(null)).every(x => x == null);
+    return blanksLast && v.every((x, i) => i === 0 || (dir === 'desc' ? v[i - 1] >= x : v[i - 1] <= x));
+  };
+  check('bandwidth sorts high to low by default', isSorted(await bws(), 'desc'));
+  await page.click('#hwTable th[data-sortkey="bw"]');
+  await settle();
+  check('a second click sorts low to high, blanks still last', isSorted(await bws(), 'asc'));
+  await page.click('#hwTable th[data-sortkey="bw"]');
+  await settle();
 }
 
-// Back to the default view, then confirm the chart repainted rather than
-// leaving a dead canvas behind.
-await page.locator('#viewTg button[data-v="pp"]').click();
-await page.waitForTimeout(150);
-check('prefill chart repainted after view cycling', await canvasPainted('ppChart'));
+// "Not sourced" can be counted as a match when asked.
+{
+  const want = expectMatch({ fmt: new Set(['fp8']), fmtUnknownOk: true }).length;
+  await page.click('#fmtChips button:has-text("FP8")');
+  await page.check('#fmtUnknownOk');
+  await settle();
+  check('counting unsourced support as a match widens the list', (await count('#hwTable tbody tr')) === want);
+  await page.click('#hwReset');
+  await settle();
+}
 
-// --- Extensibility checks --------------------------------------------------
-// The point of the data format is that new fields and half-filled devices work
-// without code changes. Prove it by rewriting the response on the way in,
-// rather than parking speculative numbers in the real data file.
+// --- 2. Ceilings -----------------------------------------------------------
+const withParams = Object.keys(MODELS).filter(id => MODELS[id].params?.active);
+check('every model with a parameter count is selectable', (await count('#modelSelect option')) === withParams.length, `got ${await count('#modelSelect option')} of ${withParams.length}`);
+check('model card rendered', /parameters/.test(await text('#modelCard')));
+check('depth chart painted', await canvasPainted('depthChart'));
+await page.click('#scopeChips button:has-text("All units")');
+await settle();
+{
+  const rows = await count('#ceilTable tbody tr');
+  const withBw = model.UNITS.filter(u => u.memoryBandwidthGBs).length;
+  check('one ceiling row per unit with a bandwidth figure', rows === withBw, `got ${rows} of ${withBw}`);
+  const t = await text('#ceilTable tbody');
+  check('ceiling table renders no NaN/undefined/null', !BROKEN.test(t), brokenAt(t));
+}
 
-async function withPatchedData(patch) {
+// The physics, through the UI: going from 4K to 256K costs a full-attention
+// dense model far more decode ceiling than a hybrid with a quarter of its
+// layers on full attention.
+async function decodeAt(modelId, depthLabel) {
+  await page.selectOption('#modelSelect', modelId);
+  await page.click(`#depthChips button:text-is("${depthLabel}")`);
+  await page.click('#cardChips button:text-is("1")');
+  await settle();
+  const row = page.locator('#ceilTable tbody tr', { hasText: 'RTX PRO 6000' }).first();
+  return Number((await row.locator('.bar .v').first().textContent()).replace(/,/g, ''));
+}
+{
+  const fullId = withParams.find(id => MODELS[id].layerTypes.linear_attention == null && MODELS[id].layerTypes.sliding_attention == null && MODELS[id].params.active === MODELS[id].params.total);
+  const hybridId = withParams.find(id => MODELS[id].layerTypes.linear_attention > 0);
+  const f4 = await decodeAt(fullId, '4K');
+  const f256 = await decodeAt(fullId, '256K');
+  const h4 = await decodeAt(hybridId, '4K');
+  const h256 = await decodeAt(hybridId, '256K');
+  check(`decode ceiling falls with depth (${fullId})`, f256 < f4, `${f4} -> ${f256}`);
+  check(`a hybrid keeps more of its ceiling than a full-attention model (${hybridId} vs ${fullId})`, h256 / h4 > f256 / f4, `${(h256 / h4).toFixed(2)} vs ${(f256 / f4).toFixed(2)}`);
+  await page.click('#cardChips button:has-text("Fewest that fit")');
+  await page.click(`#depthChips button:text-is("128K")`);
+  await page.selectOption('#modelSelect', 'qwen38_27b');
+  await settle();
+}
+{
+  // Tensor parallel multiplies a single stream's bandwidth; a layer split does not.
+  await page.selectOption('#modelSelect', withParams.find(id => MODELS[id].params.total > 60e9) ?? 'qwen38_27b');
+  await page.click('#cardChips button:text-is("4")');
+  await page.click('#splitChips button:has-text("Tensor parallel")');
+  await settle();
+  const row = () => page.locator('#ceilTable tbody tr', { hasText: 'RTX 3090 24GB' }).first().locator('.bar .v').first();
+  const tp = Number((await row().textContent()).replace(/,/g, ''));
+  await page.click('#splitChips button:has-text("Layer split")');
+  await settle();
+  const layer = Number((await row().textContent()).replace(/,/g, ''));
+  check('four cards under tensor parallel get four cards of bandwidth', Math.abs(tp / layer - 4) < 0.01, `${tp} vs ${layer}`);
+  await page.click('#splitChips button:has-text("Tensor parallel")');
+  await page.click('#cardChips button:has-text("Fewest that fit")');
+  await page.selectOption('#modelSelect', 'qwen38_27b');
+  await page.click('#scopeChips button:has-text("Matching section 1")');
+  await settle();
+}
+
+// --- 3. Observations -------------------------------------------------------
+check('one group per serving line', (await count('#obsTable tr.line-head')) === model.LINES.length, `got ${await count('#obsTable tr.line-head')} of ${model.LINES.length}`);
+check('one row per reading', (await count('#obsTable tr.pt')) === totalPoints, `got ${await count('#obsTable tr.pt')} of ${totalPoints}`);
+{
+  const t = await text('#obsTable tbody');
+  check('observations render no NaN/undefined/null', !BROKEN.test(t), brokenAt(t));
+  check('ranges render as ranges', /129\.3–131\.3/.test(t), 'expected the Ada top rung 10K decode range');
+  check('every first-party line is attested', (await count('#obsTable .prov.witnessed')) === model.LINES.filter(l => l.provenance.attestation === 'witnessed').length);
+  check('readings with no depth say so', (t.match(/depth not recorded/g) ?? []).length >= model.LINES.reduce((n, l) => n + l.points.filter(p => p.depth == null).length, 0));
+  const shares = await count('#obsTable tr.pt .bar');
+  const expected = model.LINES.reduce((n, l) => n + l.points.filter(p => p.ratio != null).length, 0);
+  check('every reading with a ceiling shows its share', shares === expected, `got ${shares} of ${expected}`);
+  check('some readings can be compared', expected > 0);
+}
+{
+  await page.selectOption('#obsDevice', 'rtx_3090');
+  await settle();
+  const want = model.LINES.filter(l => l.rig.units.some(u => u.unit === 'rtx_3090')).length;
+  check('the device filter narrows to that device', (await count('#obsTable tr.line-head')) === want, `got ${await count('#obsTable tr.line-head')} of ${want}`);
+  await page.click('#obsMetricChips button:has-text("Prefill")');
+  await settle();
+  check('the metric filter leaves only prefill readings', (await page.locator('#obsTable tr.pt td:first-child').allTextContents()).every(t => t.startsWith('Prefill')));
+  await page.selectOption('#obsDevice', '');
+  await page.click('#obsMetricChips button:has-text("All")');
+  await settle();
+}
+
+// --- 4. Rigs ---------------------------------------------------------------
+check('one row per candidate rig, each with its notes beneath', (await count('#candTable tbody tr.cand-main')) === model.CANDIDATES.length && (await count('#candTable tbody tr.cand-notes')) === model.CANDIDATES.length);
+{
+  const t = await text('#candTable tbody');
+  check('the MI100 rig totals its cards and bridge as a range', /\$4,250–\$4,800/.test(t), 'expected 4 x $900 + $650-$1,200');
+  check('the Max pair totals cards plus a $0-$70 bridge', /\$4,000–\$4,070/.test(t), 'expected 2 x $2,000 + $0-$70');
+  check('the V100 rig totals cards and board', /\$3,600/.test(t) && /cards \+ bridge\/board/.test(t), 'expected 4 x $700 + $800');
+  check('peer bandwidth is shown where the vendor states it', /300 GB\/s/.test(t) && /276 GB\/s/.test(t));
+  check('a missing peer bandwidth says so', /not stated/.test(t));
+  check('host requirements are shown with each candidate', (t.match(/Host:/g) ?? []).length === model.CANDIDATES.length);
+  check('each rig shows ceilings for its models', (t.match(/TP decode/g) ?? []).length === model.CANDIDATES.reduce((n, c) => n + c.models.length, 0));
+  check('rigs render no NaN/undefined/null', !BROKEN.test(t), brokenAt(t));
+}
+
+check('still no console or page errors after every interaction', consoleErrors.length === 0, consoleErrors.join(' | '));
+
+// --- Data the page has not seen before -------------------------------------
+// Rewriting the response on the way in, rather than parking speculative
+// numbers in the real data file.
+async function withPatchedData(patch, hash = '') {
   const p = await browser.newPage();
   const errs = [];
   p.on('pageerror', e => errs.push(String(e)));
   p.on('console', m => m.type() === 'error' && ours(m.location()?.url) && errs.push(m.text()));
   await p.route('**/compendium.json', async route => {
     const res = await route.fetch();
-    const doc = JSON.parse(await res.text());
-    patch(doc);
-    await route.fulfill({ response: res, body: JSON.stringify(doc), headers: { 'content-type': 'application/json' } });
+    const d = JSON.parse(await res.text());
+    patch(d);
+    await route.fulfill({ response: res, body: JSON.stringify(d), headers: { 'content-type': 'application/json' } });
   });
-  await p.goto(`${base}/index.html`, { waitUntil: 'networkidle' });
+  await p.goto(`${base}/index.html${hash}`, { waitUntil: 'networkidle' });
   return { p, errs };
 }
 
-// A precision nobody has used before should grow its own column.
+// A new card from an existing generation inherits its formats with no code change.
 {
-  const { p, errs } = await withPatchedData(doc => {
-    const t = doc.units.find(x => x.id === 'rtx_pro_6000');
-    // A precision the catalog has never seen and the renderer has no ordering
-    // rule for -- the real extensibility case, not one that already has a column.
-    t.compute.values.fp6 = 1234;
-    t.pricing.msrp = { usd: 8565, asOf: '2025-04' };
-  });
-  const heads = await p.locator('#specTable thead th').allTextContents();
-  check('unknown precision key grows a column', heads.includes('FP6'), heads.join(','));
-  check('injected rated throughput renders', (await p.locator('#specTable tbody').textContent()).includes('1234'));
-  check('injected MSRP renders', (await p.locator('#specTable tbody').textContent()).includes('$8,565'));
-  // Sparsity figures pair into their dense column instead of doubling the width.
-  check('sparse figure renders beside its dense twin', (await p.locator('#specTable tbody').textContent()).includes('3352 sp'), 'expected the 5090 FP4 sparse rate');
-  // The same new precision should grow its own button in the precision toggle.
-  const precBtns = await p.locator('#precTg button').allTextContents();
-  check('unknown precision key grows a toggle button', precBtns.includes('FP6'), precBtns.join(','));
-  check('extensibility patch caused no errors', errs.length === 0, errs.join(' | '));
+  const { p, errs } = await withPatchedData(d => {
+    d.units.push({ id: 'test_card', label: 'Test Accelerator 64GB', vendor: 'NVIDIA', arch: 'hopper', memoryGB: 64, memoryBandwidthGBs: 3000, sources: ['test fixture'] });
+  }, '#fmt=fp8&bw=2500');
+  const got = await hwLabels(p);
+  check('a new card inherits FP8 from its generation', got.includes('Test Accelerator 64GB'), got.join(', '));
+  check('a card with no rated figures still renders', errs.length === 0, errs.join(' | '));
   await p.close();
 }
-
-// "Believed supported, no figure yet" must render as a distinct '?', not the
-// same blank dash as "confirmed unsupported" or "never checked".
+// A card with no generation at all degrades to "not sourced", not a crash.
 {
-  const { p, errs } = await withPatchedData(doc => {
-    const t = doc.units.find(x => x.id === 'rtx_pro_6000');
-    t.compute.unknown = ['fp8'];
-    // fp8 already has a value on this unit -- move it elsewhere so the '?'
-    // path (no value recorded at all) is what's actually under test.
-    delete t.compute.values.fp8;
-    delete t.compute.values['fp8:sparse'];
+  const { p, errs } = await withPatchedData(d => {
+    d.units.push({ id: 'blank_card', label: 'Blank Accelerator' });
   });
-  const cell = p.locator('#specTable tbody tr', { hasText: 'RTX PRO 6000' }).first().locator('td.c-u');
-  check('unknown precision renders a distinct "?" marker', (await cell.locator('.num').textContent()) === '?');
-  check('unknown-precision patch caused no errors', errs.length === 0, errs.join(' | '));
+  check('a card carrying only a name renders', errs.length === 0 && (await count('#hwTable tbody tr', p)) === model.UNITS.length + 1, errs.join(' | '));
   await p.close();
 }
-
-// A device added with nothing but a name must render as gaps, not a blank page.
+// A reading above its ceiling is drawn as one, not clipped into looking fine.
 {
-  const { p, errs } = await withPatchedData(doc => {
-    doc.platforms.push({
-      id: 'newthing',
-      display: { label: 'Brand New Accelerator', short: 'NewThing', color: '#8888ff', group: 'Value' },
-    });
+  const { p } = await withPatchedData(d => {
+    const l = d.lines.find(x => x.id === 'x_5090_qwen3_32b_llamacpp');
+    l.results.find(r => r.metric === 'decode' && r.depth === 32768).value = 900;
   });
-  check('minimal device does not break the page', errs.length === 0, errs.join(' | '));
-  check('minimal device appears in the legend', (await p.locator('#pleg').textContent()).includes('NewThing'));
-  check('minimal device appears in the prefill table', (await p.locator('#ppTable tbody').textContent()).includes('NewThing'));
-  check('minimal device renders em dashes', (await p.locator('#ppTable tbody tr').count()) === 34);
-  // A reference unit has no build behind it, so its "Used in" cell is empty
-  // rather than the row being dropped.
-  check('reference units appear in the catalog', (await p.locator('#specTable tbody').textContent()).includes('MI355X'));
+  check('an impossible reading is flagged over its ceiling', (await count('#obsTable .fill.over', p)) >= 1);
   await p.close();
 }
-
-// Correcting one card's street price must move every rig containing it, by
-// exactly the unit count. This is the whole point of composing builds.
+// A unit naming a generation that does not exist surfaces a readable error.
 {
-  const costOf = async (p, short) => {
-    const row = p.locator('#valTable tbody tr', { hasText: short }).first();
-    return (await row.locator('td').nth(1).textContent()).trim();
-  };
-  const { p: before } = await withPatchedData(() => {});
-  const base3090 = await costOf(before, '4× 3090');
-  const basePro = await costOf(before, 'PRO 6000');
-  await before.close();
-
-  const { p: after, errs } = await withPatchedData(doc => {
-    // +$300 on a card the 4x 3090 rig contains four of.
-    doc.units.find(u => u.id === 'rtx_3090').pricing.street.usd += 300;
-  });
-  check('four-card rig tracks its card price ×4', (await costOf(after, '4× 3090')) === '$6,192', `${base3090} → ${await costOf(after, '4× 3090')}`);
-  check('unrelated build is unaffected', (await costOf(after, 'PRO 6000')) === basePro);
-  check('price change caused no errors', errs.length === 0, errs.join(' | '));
-  await after.close();
-}
-
-// A single-card price must flow through the platform that composes it and into
-// the build that references that platform -- two levels of derivation.
-{
-  const { p } = await withPatchedData(doc => {
-    doc.units.find(u => u.id === 'pg199_card').pricing.street.usd = 2000;
-  });
-  const row = p.locator('#valTable tbody tr', { hasText: '4× PG199' }).first();
-  const cost = (await row.locator('td').nth(1).textContent()).trim();
-  check('card price flows through platform into build', cost === '$8,000', `got ${cost}`);
-  await p.close();
-}
-
-// A rig whose bridge or board has no price must say so rather than total as if it were free.
-{
-  const { p } = await withPatchedData(doc => {
-    delete doc.candidates.find(c => c.id === 'c_v100x4_1cat').rig.interconnect.costUsd;
-  });
-  const t = await p.locator('#candTable tbody').textContent();
-  check('an unpriced board is flagged, not totalled as free', /bridge\/board unpriced/.test(t) && /\$2,800/.test(t), 'expected cards-only $2,800');
-  await p.close();
-}
-
-// The whole point of splitting v100 and b70 into single-card origins: the
-// four-card rig must track the card, not a stored total.
-{
-  const { p } = await withPatchedData(doc => {
-    doc.units.find(u => u.id === 'v100_sxm2').pricing.street.usd = 1500;
-  });
-  const row = p.locator('#valTable tbody tr', { hasText: '4× V100' }).first();
-  const cost = (await row.locator('td').nth(1).textContent()).trim();
-  // 4 cards at $1,500 plus the $800 board that the build's host carries.
-  check('four-card V100 platform tracks its card price', cost === '$6,800', `got ${cost}`);
-  await p.close();
-}
-{
-  const { p } = await withPatchedData(doc => {
-    doc.units.find(u => u.id === 'arc_b70').power.idleW = 30;
-  });
-  const row = p.locator('#valTable tbody tr', { hasText: 'B70×4' }).first();
-  const idle = (await row.locator('td').nth(3).textContent()).trim();
-  check('four-card B70 platform tracks its card idle draw', idle === '120', `got ${idle}`);
-  await p.close();
-}
-
-// An unknown confidence code should surface a readable message, not a blank page.
-{
-  const { p } = await withPatchedData(doc => {
-    doc.platforms[0].perf.moe.prefill['512'] = [7640, 'bogus'];
+  const { p } = await withPatchedData(d => {
+    d.units[0].arch = 'nosuchgen';
   });
   const banner = await p.locator('#loadError').textContent();
-  check('bad confidence code surfaces an error banner', /unknown confidence code/.test(banner), banner.slice(0, 120));
+  check('a bad generation reference surfaces an error banner', /unknown architecture/.test(banner), banner.slice(0, 120));
   await p.close();
 }
 

@@ -1,7 +1,15 @@
 # Long Context Falloff Compendium
 
-An interactive visualization and data page examining long-context
-inference performance across GPU platforms and model architectures.
+An interactive page about single-stream, long-context LLM inference on
+hardware you could buy, in three layers ordered by how long they stay true:
+
+1. **Hardware** — one row per card, filterable by what its silicon can do
+   ("FP8 matrix units and at least 1 TiB/s" is a link you can share).
+2. **Ceilings** — what physics allows a given model at a given depth on that
+   hardware, computed from datasheet figures and the model's published shape.
+3. **Observations** — every measured number, as a dated reading from one rig,
+   engine, model, quant and cache, each compared with its own ceiling. Nothing
+   is interpolated or extrapolated.
 
 **⚠️ THIS IS A VIBE-CODING EXPERIMENT.**
 
@@ -24,30 +32,33 @@ produce in a collaborative loop.
 ```
 index.html              markup only
 assets/styles.css
-assets/app.js           entry point: load, wire toggles, own view state
-assets/data.js          fetch + normalize + load-time audit
-assets/derive.js        everything computed rather than stored
+assets/app.js           entry point: view state (mirrored into the URL), wiring
+assets/data.js          fetch + resolve: format support, rig totals, each reading's ceiling
+assets/ceiling.js       the physics: bytes and FLOPs per token, fit, decode/prefill ceilings
+assets/models.js        model shapes, transcribed from each model's config.json
+assets/dequant-map.js   which matrix precision llama.cpp multiplies each quant in, per chip generation
 assets/charts.js        Chart.js configuration
-assets/tables.js        table and legend rendering
-assets/verdicts.js      editorial copy
-assets/models.js        parameter counts (roofline) and MODEL_ARCH (shape facts for memory arithmetic)
+assets/tables.js        table rendering
 assets/chart.umd.js     vendored Chart.js 4.4.1 (MIT)
-data/compendium.json    ← every number on the page (units · platforms · builds)
+data/compendium.json    ← every hardware fact and every reading (architectures · units · lines · candidates)
 data/schema.json
-data/README.md          ← how to add a device or a datapoint
+data/README.md          ← how to add a card, a chip generation, a model or a reading
+docs/roofline-dequant-paths.md   the kernel-dispatch research behind dequant-map.js
 tools/validate.mjs      schema + cross-record checks, no dependencies
 tools/test-validate.mjs proves the validator rejects bad data
 tools/test-kv.mjs       holds the config-derived KV arithmetic against first-party measurements
-tools/smoke.mjs         renders the page in Chromium and asserts it drew
+tools/check-ceilings.mjs fails if any reading claims more than its hardware can do
+tools/smoke.mjs         renders the page in Chromium and drives every control
 tools/coverage.mjs      reports what the hardware catalog is still missing
 ```
 
-Hardware facts — price, power, capacity, release date, rated throughput — live
-once in the `units` catalog. Platforms and builds declare how many of what they
-contain, and their totals are summed at render time, so nothing on the page can
-disagree with the data behind it.
+Hardware facts — price, capacity, bandwidth, rated throughput — live once in
+the `units` catalog, and matrix-format support lives once per chip generation
+in `architectures`. Rigs declare how many of what they contain and their totals
+are summed at render time; ceilings are computed, never stored. Nothing on the
+page can disagree with the data behind it.
 
-To add a device or a data point, see [`data/README.md`](./data/README.md).
+To add a card, a model or a reading, see [`data/README.md`](./data/README.md).
 
 ## Running it locally
 
@@ -64,11 +75,12 @@ python3 -m http.server 8000    # then open http://localhost:8000
 node tools/validate.mjs        # data file: schema + semantic checks
 node tools/test-validate.mjs   # the validator's own tests
 node tools/test-kv.mjs         # memory arithmetic against first-party measurements
+node tools/check-ceilings.mjs  # no reading above its own ceiling (--table lists them all)
 node tools/smoke.mjs           # renders in Chromium (needs playwright)
 node tools/coverage.mjs        # what the catalog is still missing (never fails)
 ```
 
-The first three have no dependencies. CI runs all of them on every push.
+The first four have no dependencies. CI runs all but coverage on every push.
 
 ## Deployment
 

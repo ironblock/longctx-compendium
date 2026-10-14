@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Holds the config-derived memory arithmetic (assets/derive.js kvBytesPerToken)
+// Holds the config-derived memory arithmetic (assets/ceiling.js kvBytesPerToken)
 // against what the first-party lines actually measured, so a wrong layer count
 // or cache width fails here instead of quietly mis-sizing every "does it fit".
 //
@@ -13,8 +13,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MODEL_ARCH } from '../assets/models.js';
-import { kvBytesPerToken, recurrentStateBytes } from '../assets/derive.js';
+import { MODELS } from '../assets/models.js';
+import { kvBytesPerToken, kvBytesAt, recurrentStateBytes } from '../assets/ceiling.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const doc = JSON.parse(fs.readFileSync(path.join(root, 'data/compendium.json'), 'utf8'));
@@ -25,10 +25,20 @@ const check = (name, ok, detail = '') => {
   console.log(`${ok ? '✓' : '✗'} ${name}${detail ? ` -- ${detail}` : ''}`);
 };
 
-for (const [id, a] of Object.entries(MODEL_ARCH)) {
-  const { full_attention: full, linear_attention: linear } = a.layerTypes;
-  check(`${id}: layer types account for every layer`, full + linear === a.layers, `${full} + ${linear} vs ${a.layers}`);
+for (const [id, a] of Object.entries(MODELS)) {
+  const { full_attention: full = 0, sliding_attention: sliding = 0, linear_attention: linear = 0, ffn_only: ffn = 0 } = a.layerTypes;
+  check(`${id}: layer types account for every layer`, full + sliding + linear + ffn === a.layers, `${full} + ${sliding} + ${linear} + ${ffn} vs ${a.layers}`);
   check(`${id}: has a full-attention layer to hold a KV cache`, full > 0);
+  if (sliding) check(`${id}: sliding layers say how wide their window is`, a.slidingWindow > 0);
+  if (linear) check(`${id}: linear layers carry their head shape`, !!a.linear?.valueHeads && !!a.linear?.keyHeadDim && !!a.linear?.valueHeadDim);
+  check(`${id}: heads and head size are recorded`, a.heads > 0 && a.kvHeads > 0 && a.headDim > 0);
+  if (a.params) check(`${id}: active parameters do not exceed the total`, a.params.active <= a.params.total, `${a.params.active} vs ${a.params.total}`);
+  // A sliding layer stops growing at its window; the cache must stop with it.
+  if (sliding) {
+    const w = a.slidingWindow;
+    const growth = kvBytesAt(a, 4 * w) - kvBytesAt(a, 2 * w);
+    check(`${id}: past the window, only full-attention layers grow the cache`, growth === kvBytesPerToken(a) * 2 * w);
+  }
 }
 
 // The registry's own measurement: the 3.8 27B on llama.cpp with q8_0 K and V holds
@@ -37,14 +47,14 @@ for (const [id, a] of Object.entries(MODEL_ARCH)) {
 // 34/32 bytes per element -- the same number, to the byte.
 const REGISTRY_KV_MIB = 7616;
 const REGISTRY_POOL = 229376;
-const derived = (kvBytesPerToken(MODEL_ARCH.qwen38_27b, 'q8_0') * REGISTRY_POOL) / 2 ** 20;
+const derived = (kvBytesPerToken(MODELS.qwen38_27b, 'q8_0') * REGISTRY_POOL) / 2 ** 20;
 check('qwen38_27b q8_0 KV matches the registry measurement exactly', derived === REGISTRY_KV_MIB, `${derived} MiB vs ${REGISTRY_KV_MIB} MiB`);
 
 console.log('\nper line, measured KiB/token against the config-derived floor:');
 for (const l of doc.lines ?? []) {
   const kv = l.kvCache;
   if (!kv?.kibPerToken) continue;
-  const floor = kvBytesPerToken(MODEL_ARCH[l.model], kv.k, kv.v);
+  const floor = kvBytesPerToken(MODELS[l.model], kv.k, kv.v);
   if (floor == null) {
     check(`${l.id}: cache type is one the arithmetic knows`, false, `${kv.k}/${kv.v}`);
     continue;
@@ -57,8 +67,8 @@ for (const l of doc.lines ?? []) {
 }
 
 console.log('\nrecurrent state per sequence (an estimate, f32, conv state excluded):');
-for (const [id, a] of Object.entries(MODEL_ARCH)) {
-  console.log(`  ${id}: ${(recurrentStateBytes(a) / 2 ** 20).toFixed(0)} MiB`);
+for (const [id, a] of Object.entries(MODELS)) {
+  if (a.layerTypes.linear_attention) console.log(`  ${id}: ${(recurrentStateBytes(a) / 2 ** 20).toFixed(0)} MiB`);
 }
 
 if (failed) {

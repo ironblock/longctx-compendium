@@ -1,251 +1,105 @@
-// Loads data/compendium.json and normalizes the authored, device-major shape
-// into the flat lookup tables the render code wants.
-//
-// The authored file optimizes for editing (one object per device, everything
-// optional, keys instead of array positions). The runtime shape optimizes for
-// charting (dense arrays aligned to a context axis). Everything in between
-// happens here, so adding a field to the data file never means touching
-// chart code, and a half-filled device degrades to em dashes instead of
-// throwing.
+// Loads data/compendium.json and resolves what the page derives from it:
+// each unit's matrix-format support (from its chip generation), each rig's
+// totals (from its units), and each observation's ceiling (from the unit and
+// the model's shape). Nothing derived is stored in the data file, so nothing
+// on the page can disagree with it.
+
+import { ceilingFor, ratioOf } from './ceiling.js';
 
 const DATA_URL = new URL('../data/compendium.json', import.meta.url);
 
-/** Confidence code meaning "we have nothing here". Never authored; only synthesized. */
-const NO_DATA = 'n';
+/** The matrix formats the page tracks, widest first, as datasheets list them. */
+export const FORMATS = ['tf32', 'bf16', 'fp16', 'fp8', 'fp6', 'fp4', 'int8', 'int4'];
 
 /**
- * A measurement is authored as [value, confidence] or, when it needs
- * provenance, {value, confidence, source, note}. Both normalize to the same
- * pair so every consumer can treat them identically.
+ * A unit's support for one format: its own override if it has one (with a
+ * note saying why), else a rated figure (which proves the matrix path
+ * exists), else its generation's answer, else unknown.
  */
-export function measurement(raw) {
-  if (raw == null) return { v: null, c: NO_DATA };
-  if (Array.isArray(raw)) return { v: raw[0] ?? null, c: raw[1] ?? NO_DATA };
-  if (typeof raw === 'object') {
-    return {
-      v: raw.value ?? null,
-      c: raw.confidence ?? NO_DATA,
-      source: raw.source,
-      note: raw.note,
-    };
-  }
-  // Bare scalar: a specification, not a benchmark. Modeled-from-specs is the
-  // honest confidence for anything not actually run.
-  return { v: raw, c: 'i' };
-}
-
-function normalizePlatformPerf(platform, arch, contexts) {
-  const entry = platform.perf?.[arch];
-  const prefill = entry?.prefill ?? {};
-
-  // Absent context keys become nulls at the right index, so the value and
-  // confidence arrays cannot drift out of alignment the way hand-maintained
-  // parallel arrays could.
-  const v = [];
-  const c = [];
-  for (const { tokens } of contexts) {
-    const m = measurement(prefill[String(tokens)]);
-    v.push(m.v);
-    c.push(m.c);
-  }
-
-  const short = measurement(entry?.decode?.short);
-  const at32k = measurement(entry?.decode?.at32k);
-
-  return {
-    pp: { v, c, note: entry?.note ?? '' },
-    tg: {
-      v: short.v,
-      c: short.c,
-      v32: at32k.v,
-      // Kept so a depth-adjusted decode rate can report honest confidence
-      // rather than inheriting the short-context code.
-      c32: at32k.c,
-      note: entry?.decodeNote ?? entry?.note ?? '',
-    },
-  };
+export function formatSupport(unit, arch, f) {
+  if (unit.formatOverrides?.[f]) return { state: unit.formatOverrides[f], from: 'unit' };
+  const v = unit.compute?.values ?? {};
+  if (v[f] != null || v[`${f}:sparse`] != null) return { state: 'native', from: 'rated' };
+  const a = arch?.formats?.[f];
+  if (a) return { state: a, from: 'arch' };
+  return { state: 'unknown', from: 'none' };
 }
 
 export function normalize(doc) {
-  const contexts = doc.meta.contexts;
-  const archIds = doc.meta.archetypes.map(a => a.id);
+  const archById = Object.fromEntries((doc.architectures ?? []).map(a => [a.id, a]));
 
-  const CTX = contexts.map(c => c.tokens);
-  const CTXL = contexts.map(c => c.label);
-
-  const PLAT = doc.platforms.map(p => ({ id: p.id, ...p.display }));
-
-  const PP = {};
-  const TG = {};
-  for (const arch of archIds) {
-    PP[arch] = {};
-    TG[arch] = {};
-    for (const p of doc.platforms) {
-      const { pp, tg } = normalizePlatformPerf(p, arch, contexts);
-      PP[arch][p.id] = pp;
-      TG[arch][p.id] = tg;
-    }
-  }
-
-  // Cost, power and capacity are summed from the hardware catalog rather than
-  // stored, so correcting one card's street price corrects every platform and
-  // every rig that contains it.
-  const unitById = Object.fromEntries((doc.units ?? []).map(u => [u.id, u]));
-  const platformById = Object.fromEntries(doc.platforms.map(p => [p.id, p]));
-  const TOTALLED = ['costUsd', 'loadW', 'idleW', 'memoryGB'];
+  const UNITS = (doc.units ?? []).map(u => {
+    const arch = archById[u.arch] ?? null;
+    const support = Object.fromEntries(FORMATS.map(f => [f, formatSupport(u, arch, f)]));
+    return {
+      ...u,
+      archLabel: arch ? `${arch.label}` : null,
+      archRec: arch,
+      support,
+      formats: Object.fromEntries(FORMATS.map(f => [f, support[f].state])),
+      street: u.pricing?.street?.usd ?? null,
+    };
+  });
+  const unitById = Object.fromEntries(UNITS.map(u => [u.id, u]));
 
   /**
-   * Adds contributions, but only where every contributor knows its value. One
-   * unpriced card makes the whole total unknown rather than making the rig look
-   * free -- a silent zero here would read as "infinitely efficient".
+   * Cost, capacity and draw summed from the catalog. One unpriced card makes
+   * the total unknown rather than making the rig look free.
    */
-  function sum(parts) {
-    const out = {};
-    for (const key of TOTALLED) {
-      out[key] = parts.some(p => p[key] == null)
-        ? null
-        : parts.reduce((n, p) => n + p[key], 0);
-    }
-    return out;
-  }
-
-  const scale = (t, n) =>
-    Object.fromEntries(TOTALLED.map(k => [k, t[k] == null ? null : t[k] * n]));
-
-  function unitTotals(id, count, at) {
-    const u = unitById[id];
-    if (!u) throw new Error(`${at} references unknown unit "${id}"`);
-    return scale(
-      {
-        costUsd: u.pricing?.street?.usd ?? null,
-        loadW: u.power?.loadW ?? null,
-        idleW: u.power?.idleW ?? null,
-        memoryGB: u.memoryGB ?? null,
-      },
-      count
-    );
-  }
-
-  const platformTotals = p =>
-    sum((p.composition ?? []).map(c => unitTotals(c.unit, c.count ?? 1, `platform "${p.id}"`)));
-
-  // Cached because builds resolve through platforms and several share one.
-  const platformSpec = Object.fromEntries(doc.platforms.map(p => [p.id, platformTotals(p)]));
-
-  const BUILDS = (doc.builds ?? []).map(b => {
-    const parts = (b.units ?? []).map(u => {
-      const count = u.count ?? 1;
-      if (!u.platform) return unitTotals(u.unit, count, `build "${b.id}"`);
-      if (!platformById[u.platform]) {
-        throw new Error(`build "${b.id}" references unknown platform "${u.platform}"`);
-      }
-      return scale(platformSpec[u.platform], count);
-    });
-    // Anything the units do not account for -- chassis, CPU, PSU, cooling --
-    // goes in host, so the residual stays visible.
-    if (b.host) {
-      parts.push({
-        costUsd: b.host.costUsd ?? 0,
-        loadW: b.host.loadW ?? 0,
-        idleW: b.host.idleW ?? 0,
-        memoryGB: 0,
-      });
-    }
-    const totals = sum(parts);
-
-    const rec = {
-      id: b.id,
-      label: b.display.label,
-      short: b.display.short,
-      color: b.display.color,
-      cost: totals.costUsd,
-      loadW: totals.loadW,
-      idleW: totals.idleW,
-      memoryGB: totals.memoryGB,
-    };
-
-    // One unit of one platform performs exactly like that platform, so its
-    // decode rate is inherited. Anything else -- more units, or a rig that
-    // scales differently -- states its own.
-    const solo = b.units?.length === 1 && b.units[0].platform && (b.units[0].count ?? 1) === 1;
-    if (!b.decode && solo) {
-      rec.deriveFrom = b.units[0].platform;
-    } else {
-      for (const [arch, key] of [['oss120b', 'tg120'], ['moe', 'tgMoe']]) {
-        const m = measurement(b.decode?.[arch]);
-        rec[key] = m.v;
-        rec[`${key}c`] = m.c;
-      }
-    }
-    return rec;
-  });
-
-  // A rig is quantities of catalog units, so its price and capacity come from the
-  // same sums as everything else on the page and cannot drift from the catalog.
-  // A bridge or carrier board belongs to no card, so it is added here. A rig that
-  // declares an interconnect but not its price is flagged rather than totalled as
-  // if the bridge were free.
-  const rigTotals = (rig, at) => {
-    const t = sum(rig.units.map(c => unitTotals(c.unit, c.count, at)));
+  const rigTotals = rig => {
+    const parts = rig.units.map(c => ({ u: unitById[c.unit], n: c.count }));
+    const sum = get => (parts.some(p => get(p.u) == null) ? null : parts.reduce((t, p) => t + get(p.u) * p.n, 0));
+    const cards = sum(u => u?.pricing?.street?.usd);
     const link = rig.interconnect;
     return {
-      ...t,
-      costUsd: t.costUsd == null ? null : t.costUsd + (link?.costUsd ?? 0),
-      // Bridges have been seen at very different prices; the top of the range is
-      // what a buyer who paid the most would owe.
-      costHighUsd: t.costUsd == null ? null : t.costUsd + (link?.costHighUsd ?? link?.costUsd ?? 0),
+      memoryGB: sum(u => u?.memoryGB),
+      cards: parts.reduce((t, p) => t + p.n, 0),
+      costUsd: cards == null ? null : cards + (link?.costUsd ?? 0),
+      costHighUsd: cards == null ? null : cards + (link?.costHighUsd ?? link?.costUsd ?? 0),
       linkPriced: link ? link.costUsd != null : null,
     };
   };
-  const LINES = (doc.lines ?? []).map(l => ({ ...l, rigTotals: rigTotals(l.rig, `line "${l.id}"`) }));
-  const CANDIDATES = (doc.candidates ?? []).map(c => ({ ...c, rigTotals: rigTotals(c.rig, `candidate "${c.id}"`) }));
+
+  const LINES = (doc.lines ?? []).map(l => ({
+    ...l,
+    rigTotals: rigTotals(l.rig),
+    points: (l.results ?? []).map(r => {
+      const c = ceilingFor(l, r, unitById);
+      const value = r.value ?? (r.range ? r.range[1] : null);
+      return { ...r, ceiling: c, ratio: c.tps ? ratioOf(value, c.tps) : null };
+    }),
+  }));
+
+  const CANDIDATES = (doc.candidates ?? []).map(c => ({ ...c, rigTotals: rigTotals(c.rig) }));
 
   return {
-    CTX,
-    CTXL,
-    PLAT,
-    PP,
-    TG,
-    BUILDS,
+    UNITS,
+    unitById,
+    ARCHS: doc.architectures ?? [],
+    archById,
     LINES,
     CANDIDATES,
-    UNITS: doc.units ?? [],
-    // Capacity, price and draw for each benchmarked configuration, summed from
-    // the units it is made of.
-    PLATFORM_SPEC: platformSpec,
-    ARCHETYPES: doc.meta.archetypes,
-    ARCH_DESC: Object.fromEntries(doc.meta.archetypes.map(a => [a.id, a.desc])),
-    KWH: doc.meta.electricityUsdPerKwh,
-    CONFIDENCE: doc.meta.confidence,
+    KWH: doc.meta?.electricityUsdPerKwh,
     raw: doc,
   };
 }
 
 /**
- * Structural checks that a JSON Schema cannot express, run at page load so a
- * bad edit surfaces as a readable message rather than a blank page.
+ * Structural checks a JSON Schema cannot express, run at page load so a bad
+ * edit surfaces as a readable message rather than a blank page. The full set
+ * lives in tools/validate.mjs; these are the ones that would break rendering.
  */
 export function audit(model) {
   const problems = [];
   const seen = new Set();
-  for (const p of model.PLAT) {
-    if (seen.has(p.id)) problems.push(`duplicate platform id "${p.id}"`);
-    seen.add(p.id);
-    if (!p.short || !p.color) problems.push(`platform "${p.id}" is missing display.short or display.color`);
+  for (const u of model.UNITS) {
+    if (seen.has(u.id)) problems.push(`duplicate unit id "${u.id}"`);
+    seen.add(u.id);
+    if (u.arch && !model.archById[u.arch]) problems.push(`unit "${u.id}" names unknown architecture "${u.arch}"`);
   }
-  for (const b of model.BUILDS) {
-    if (b.deriveFrom && !seen.has(b.deriveFrom)) {
-      problems.push(`build "${b.id}" derives from unknown platform "${b.deriveFrom}"`);
-    }
-    if (!(b.cost > 0)) problems.push(`build "${b.id}" has no positive buildCostUsd`);
-    if (!(b.loadW > 0)) problems.push(`build "${b.id}" has no positive loadW`);
-  }
-  const codes = new Set([...Object.keys(model.CONFIDENCE), NO_DATA]);
-  for (const arch of Object.keys(model.PP)) {
-    for (const [id, d] of Object.entries(model.PP[arch])) {
-      for (const code of d.c) {
-        if (!codes.has(code)) problems.push(`unknown confidence code "${code}" in ${arch}/${id} prefill`);
-      }
+  for (const l of [...model.LINES, ...model.CANDIDATES]) {
+    for (const c of l.rig.units) {
+      if (!model.unitById[c.unit]) problems.push(`"${l.id}" references unknown unit "${c.unit}"`);
     }
   }
   return problems;

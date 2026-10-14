@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LLM Inference Falloff Compendium — 96–128 GB Class</title>
+<title>Long-Context Inference Compendium</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f1520'/%3E%3Cpath d='M4 8 L12 10 L20 20 L28 26' fill='none' stroke='%2337d6c6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,227 +18,195 @@
 <div class="wrap">
 
 <header>
-  <p class="kicker">Single-stream · agentic-coding primary · updated with 96–128 GB baselines</p>
-  <h1>Prefill Falloff, Wall-Clock &amp; Build Value<br><span class="sub">9 platforms · 3 model archetypes · cost + power</span></h1>
-  <p class="lead">Prefill throughput vs context length, decode rate, cold-start and steady-state wall-clock, and a 96–128GB build value analysis — hybrid-linear MoE, full-attention dense, and gpt-oss-120B compared across value builds, unified-memory boxes, and high-end NVIDIA single cards.</p>
+  <p class="kicker">Single-stream · long context · hardware first</p>
+  <h1>What the hardware allows<br><span class="sub">and what anyone has seen it do</span></h1>
+  <p class="lead">Three layers, ordered by how long they stay true. <b>Hardware</b> specifications change only when a datasheet was misread. <b>Ceilings</b> follow from those specifications and a model's published shape — physics, before any software. <b>Observations</b> are what one engine version did on one rig on one day; they age, so each is compared with its own ceiling instead of being extrapolated forward.</p>
 </header>
 
 <div class="loaderr hidden" id="loadError"></div>
 
-<div class="cbanner">
-  <b>Data honesty notice.</b> Confidence is encoded per cell: <b style="color:var(--m)">green</b> = measured primary source · <b style="color:var(--e)">amber/italic</b> = extrapolated from measured points · <b style="color:var(--i)">pink/italic</b> = modeled from specs only · <b style="color:var(--m)">green~</b> = secondary/anecdotal source (measured but not primary). Multi-point prefill curves are measured for B70, R9700, and RTX 5090 (MoE); M3 Ultra (dense). Most other platforms have 1–2 measured anchors with interpolation. Engine and exact model noted per row in tables.
-  <div class="cinv">
-    <div class="cm"><span class="v" id="cMeasured">—</span><span class="l">measured pp/tg datapoints</span></div>
-    <div class="ce"><span class="v" id="cExtrap">—</span><span class="l">interpolated/extrapolated</span></div>
-    <div class="ci"><span class="v" id="cModeled">—</span><span class="l">spec-modeled (V100, PG199, A100, M3 MoE pp)</span></div>
-    <div class=""><span class="v" id="cArch" style="color:var(--text)">—</span><span class="l">archetypes · 3 views + build-value</span></div>
+<div class="note-band">
+  <b>Read with care.</b> Every figure here was transcribed or computed by language models (see the <a href="https://github.com/ironblock/longctx-compendium#readme">README</a>). Sources are named where they exist and a blank means nobody has looked, not zero. Check anything before relying on it.
+</div>
+
+<nav class="toc" aria-label="Sections">
+  <a href="#hardware">1 · Hardware</a>
+  <a href="#ceilings">2 · Ceilings</a>
+  <a href="#observations">3 · Observations</a>
+  <a href="#rigs">4 · Rigs under consideration</a>
+  <a href="#method">Method</a>
+</nav>
+
+<!-- ===================================================================== 1 -->
+<section id="hardware">
+<h2>1 · Hardware <span class="tail">one row per purchasable unit · filter by what the silicon can do</span></h2>
+<p class="intro">Matrix-format support (tensor cores, MFMA, WMMA, XMX) comes from the chip generation and is the same for every card of it: <span class="fmt native">supported</span> <span class="fmt absent">not supported</span> <span class="fmt unknown">not sourced</span>. Throughput, bandwidth, capacity and price are per card, from datasheets and dated listings. Filters combine, and the page address keeps them, so a query can be shared as a link.</p>
+
+<div class="filters" id="hwFilters">
+  <div class="fgroup">
+    <div class="tglabel">Matrix formats required</div>
+    <div class="chips" id="fmtChips"></div>
+    <label class="check"><input type="checkbox" id="fmtUnknownOk"> count “not sourced” as a match</label>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">Memory bandwidth ≥</div>
+    <div class="chips" id="bwChips"></div>
+    <label class="numin">or <input type="number" id="bwInput" min="0" step="1" inputmode="decimal" placeholder="GB/s" aria-label="Minimum memory bandwidth in GB/s"> GB/s</label>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">Memory per card ≥</div>
+    <div class="chips" id="memChips"></div>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">Street price per card ≤</div>
+    <div class="chips" id="priceChips"></div>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">Vendors</div>
+    <div class="chips" id="vendorChips"></div>
+  </div>
+</div>
+<p class="summary" id="hwSummary"></p>
+
+<div class="chartbox">
+  <div class="cap">
+    <span id="scatterCap"></span>
+    <span class="chips mini" id="scatterPrecChips" aria-label="Throughput precision for the chart"></span>
+  </div>
+  <div class="ch ch-scatter"><canvas id="scatterChart" aria-label="Memory bandwidth against dense matrix throughput, one point per catalog unit" role="img"></canvas></div>
+  <div class="legend" id="scatterLegend"></div>
+</div>
+
+<div class="tscroll"><table id="hwTable">
+  <thead><tr></tr></thead>
+  <tbody></tbody>
+</table></div>
+<p class="src" id="hwNote"></p>
+</section>
+
+<!-- ===================================================================== 2 -->
+<section id="ceilings">
+<h2>2 · Ceilings <span class="tail">one model, one depth · what physics allows before any software</span></h2>
+<p class="intro"><b>Decode</b> (one stream, one token per pass) is bounded by memory bandwidth ÷ the bytes each step must read: the active weights, the whole KV cache of every full-attention layer, the window of every sliding-window layer, and the state of every linear-attention layer. That grows with depth at a rate set by the model's architecture — which is why a hybrid model and a dense one cannot be compared on raw tokens/sec, only each against its own ceiling. <b>Prefill</b> is bounded by rated matrix throughput at the precision the engine actually multiplies in; real prefill lands far below it, so read it as a bound, not a forecast.</p>
+
+<div class="filters" id="ceilControls">
+  <div class="fgroup wide">
+    <div class="tglabel">Model</div>
+    <select id="modelSelect" aria-label="Model"></select>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">Weights</div>
+    <div class="chips" id="weightChips"></div>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">KV cache</div>
+    <div class="chips" id="kvChips"></div>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">Depth</div>
+    <div class="chips" id="depthChips"></div>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">Cards</div>
+    <div class="chips" id="cardChips"></div>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">Split across cards</div>
+    <div class="chips" id="splitChips"></div>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">Devices</div>
+    <div class="chips" id="scopeChips"></div>
   </div>
 </div>
 
-<div class="cbanner" style="background:rgba(91,155,213,.06);border-color:rgba(91,155,213,.25);border-left-color:var(--u)">
-  <b style="color:var(--u)">Prefill is a per-event cost, not a per-turn cost.</b> No inference server worth using re-prefills the whole context every turn in an active session — the KV cache from earlier turns stays hot, and only newly appended tokens get processed. What caching does <i>not</i> erase: for full/quadratic attention, each new token still has to attend across the entire existing cache, so the marginal cost of the next turn keeps growing with session depth even though nothing is literally re-prefilled — that's the same slope as the <b>Prefill falloff</b> curve below, just read as a per-turn cost instead of a cold-start one. Linear/hybrid attention (Mamba2, Gated DeltaNet) is what actually escapes that scaling — see the Strix Halo note in Method &amp; sources. <b>Cold-start wall-clock</b> is what a session start, a cache eviction, or a mid-prefix edit costs. <b>Steady-state turn</b> is what turn 50 of an otherwise-untouched session costs — the number that actually governs an active agentic loop.
+<div class="modelcard" id="modelCard"></div>
+
+<div class="chartbox">
+  <div class="cap"><span id="depthCap"></span><span>KV and weights at the formats chosen above · higher stays faster at depth</span></div>
+  <div class="ch ch-line"><canvas id="depthChart" aria-label="Share of the empty-context decode ceiling remaining as depth grows, one line per model" role="img"></canvas></div>
+  <div class="legend" id="depthLegend"></div>
 </div>
 
-<div class="tbar">
-  <div>
-    <div class="tglabel" style="margin-bottom:5px">View</div>
-    <div class="tg" id="viewTg">
-      <button class="on" data-v="pp">Prefill falloff</button>
-      <button data-v="tg">Decode rate</button>
-      <button data-v="wc">Cold-start wall-clock</button>
-      <button data-v="ss">Steady-state turn</button>
-    </div>
-  </div>
-  <div>
-    <div class="tglabel" style="margin-bottom:5px">Archetype</div>
-    <div class="tg" id="archTg">
-      <button class="on" data-a="moe">Hybrid-linear MoE</button>
-      <button data-a="dense">Full-attention dense</button>
-      <button data-a="oss120b">gpt-oss-120B</button>
-    </div>
-  </div>
-</div>
-
-<!-- Prefill chart -->
-<div class="chartbox" id="ppBox">
-  <div class="cap"><span id="ppCap"></span><span>log x-scale · solid=measured · dashed=interpolated · dotted=modeled</span></div>
-  <div class="ch ch-line"><canvas id="ppChart"></canvas></div>
-</div>
-
-<!-- Decode chart -->
-<div class="chartbox hidden" id="tgBox">
-  <div class="cap"><span id="tgCap"></span><span>sorted fastest→slowest · open bar = tg@32K+ where measured</span></div>
-  <div class="ch ch-bar"><canvas id="tgChart"></canvas></div>
-</div>
-
-<!-- Cold-start wall-clock chart -->
-<div class="chartbox hidden" id="wcBox">
-  <div class="cap"><span id="wcCap"></span><span>cold prefill from empty · TTFT = 16K÷pp(16K) · Gen = 2K÷tg · stacked, linear</span></div>
-  <div class="ch ch-wc"><canvas id="wcChart"></canvas></div>
-</div>
-
-<!-- Steady-state turn chart -->
-<div class="chartbox hidden" id="ssBox">
-  <div class="cap"><span id="ssCap"></span><span>KV cache already 16K deep and hot · append = 2K÷(marginal rate) · Gen = 2K÷tg · stacked, linear</span></div>
-  <div class="ch ch-wc"><canvas id="ssChart"></canvas></div>
-</div>
-
-<div class="pleg" id="pleg"></div>
-<div class="conf-leg">
-  <span><span class="cline" style="border-top:2px solid var(--m)"></span>measured</span>
-  <span><span class="cline" style="border-top:2px solid var(--m)"></span><span style="font-size:11px">measured~</span><span class="cline" style="border-top:2px solid var(--m);margin-left:2px"></span></span>
-  <span><span class="cline" style="border-top:2px dashed var(--e)"></span>interpolated</span>
-  <span><span class="cline" style="border-top:2px dotted var(--i)"></span>spec-modeled</span>
-  <span style="color:var(--dim);font-size:11px">Click a platform to show/hide it in the prefill chart</span>
-</div>
-
-<div class="verdict" id="verdict"></div>
-
-<!-- ===== TABLES ===== -->
-<h2>Prefill throughput grid <span class="tail">pp t/s by context length · best measured engine per platform</span></h2>
-<div class="tscroll"><table id="ppTable">
+<div class="tscroll"><table id="ceilTable">
   <thead><tr>
-    <th class="lbl" style="min-width:180px">Platform · model · engine</th>
-    <th class="lbl">Arch</th>
-    <th>512</th><th>4K</th><th>16K</th><th>32K</th><th>64K</th><th>128K</th>
+    <th class="lbl">Device</th>
+    <th>Cards</th>
+    <th class="lbl">Memory</th>
+    <th class="lbl" style="min-width:150px">Decode ceiling</th>
+    <th class="lbl">Prefill ceiling</th>
+    <th>Price</th>
+    <th>Decode per $1k</th>
   </tr></thead>
   <tbody></tbody>
 </table></div>
+<p class="src" id="ceilNote"></p>
+</section>
 
-<h2>Decode rate &amp; wall-clock summary <span class="tail">single-stream tg t/s + cold-start wall-clock for a 16K+2K turn</span></h2>
-<p style="font-size:13px;color:var(--muted);margin:6px 0 8px">The WC columns here are the <b style="color:var(--text)">cold-start</b> number — see the callout above and the <b style="color:var(--text)">Steady-state turn</b> chart for what an already-warm session actually pays turn to turn.</p>
-<div class="tscroll"><table id="tgTable">
+<!-- ===================================================================== 3 -->
+<section id="observations">
+<h2>3 · Observations <span class="tail">what one stack did, on one date · each against its own ceiling</span></h2>
+<p class="intro">Each group is one serving line: a rig, an engine, a model, its weights and its cache. Every reading states its depth. Nothing is interpolated, extrapolated or modeled — if it was not seen, it is not here. <b>Share of ceiling</b> divides a reading by the ceiling for that exact configuration, so it measures how much of the hardware that software reached: the part that changes when someone writes a better kernel. A reading above its ceiling means its attribution is wrong somewhere, except under speculative decoding, which can emit more than one token per pass (marked <span class="specmark">spec</span>).</p>
+
+<div class="filters" id="obsFilters">
+  <div class="fgroup">
+    <div class="tglabel">Device</div>
+    <select id="obsDevice" aria-label="Device"></select>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">Model</div>
+    <select id="obsModel" aria-label="Model"></select>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">Metric</div>
+    <div class="chips" id="obsMetricChips"></div>
+  </div>
+  <div class="fgroup">
+    <div class="tglabel">Provenance</div>
+    <div class="chips" id="obsProvChips"></div>
+  </div>
+</div>
+<p class="summary" id="obsSummary"></p>
+
+<div class="tscroll"><table id="obsTable">
   <thead><tr>
-    <th class="lbl" style="min-width:200px">Platform</th>
-    <th>MoE tg</th><th>MoE tg@32K</th><th>Dense tg</th><th>Dense tg@32K</th>
-    <th>WC MoE 16K+2K (cold)</th><th>WC Dense 16K+2K (cold)</th>
+    <th class="lbl">Reading</th>
+    <th>Value</th>
+    <th>Ceiling</th>
+    <th class="lbl" style="min-width:170px">Share of ceiling</th>
     <th class="lbl">Notes</th>
   </tr></thead>
   <tbody></tbody>
 </table></div>
+<p class="src" id="obsNote"></p>
+</section>
 
-<h2>Hardware catalog <span class="tail">per-unit specs · release · price — columns follow the data</span></h2>
-<p style="font-size:13px;color:var(--muted);margin:6px 0 8px">One row per purchasable unit, which is what a datasheet describes. The platforms above and the builds below are <i>quantities</i> of these, and their cost, power and capacity are summed from this table rather than stored — so a price corrected here corrects everything containing it. Generated from whatever is present in <span class="num" style="font-size:12px">data/compendium.json</span>; every field is optional and a blank cell means untranscribed, not zero. <b style="color:var(--text)">Click any column heading to sort</b> (again to reverse, once more to return to vendor grouping), and click a vendor below to filter it out.</p>
-<div class="pleg" id="specLeg"></div>
-<div class="tscroll"><table id="specTable">
-  <thead><tr></tr></thead>
-  <tbody></tbody>
-</table></div>
-<p class="src" id="specUnits"></p>
-
-<h2>Compute throughput by precision <span class="tail">rated FLOPS/TOPS per unit · pick a precision · filter by vendor</span></h2>
-<p style="font-size:13px;color:var(--muted);margin:6px 0 8px">The same <span class="num" style="font-size:12px">compute.values</span> figures as the catalog table above, one precision at a time, so BF16/FP8/INT8/INT4 are actually comparable across vendors instead of collapsed to "double, single, half" the way some datasheets — Wikipedia's NVIDIA and AMD tables especially — report it. A unit with nothing recorded for the selected precision is simply absent from the chart, not a zero bar.</p>
-
-<div class="tbar">
-  <div>
-    <div class="tglabel" style="margin-bottom:5px">Precision</div>
-    <div class="tg" id="precTg"></div>
-  </div>
-</div>
-
-<div class="chartbox">
-  <div class="cap"><span id="precCap"></span><span>sorted highest→lowest · open bar = 2:4 structured sparsity where published</span></div>
-  <div class="ch ch-bar"><canvas id="precChart"></canvas></div>
-</div>
-<div class="pleg" id="precLeg"></div>
-
-<h2>Theoretical maximum: roofline ceiling <span class="tail">what the catalog's own OPS + bandwidth numbers say a unit COULD do — before any benchmark</span></h2>
-<p style="font-size:13px;color:var(--muted);margin:6px 0 8px">Every measured number above sits below some physical ceiling: for a chosen model and storage quant, prefill is bounded by the unit's rated compute throughput and decode is bounded by its memory bandwidth. This table computes both ceilings straight from the hardware catalog — no benchmark involved — assuming <b style="color:var(--text)">perfect (100%) utilization</b>, so nothing real should ever exceed it. A measurement that DOES exceed its own ceiling (see <code>tools/roofline-check.mjs</code>) means something in its attribution is wrong, not that the hardware is unusually fast. Compute-precision-per-quant is currently the documented-safe floor (dequantize to FP16) everywhere a per-architecture native fast-path hasn't been separately grounded — see <code>docs/roofline-dequant-paths.md</code> — so a quant/architecture combo with a real faster native path (e.g. NVFP4 on Blackwell) will show a ceiling here that is <i>lower</i> than the true one, never higher.</p>
-
-<div class="tbar">
-  <div>
-    <div class="tglabel" style="margin-bottom:5px">Model</div>
-    <div class="tg" id="roofModelTg"></div>
-  </div>
-  <div>
-    <div class="tglabel" style="margin-bottom:5px">Storage quant</div>
-    <div class="tg" id="roofQuantTg"></div>
-  </div>
-</div>
-
-<div class="tscroll"><table id="roofTable">
-  <thead><tr>
-    <th class="lbl" style="min-width:190px">Platform</th>
-    <th>Prefill (t/s)</th><th>Decode (t/s)</th><th class="lbl">Basis</th>
-  </tr></thead>
-  <tbody></tbody>
-</table></div>
-<p class="src" id="roofCap"></p>
-
-<h2>Bang-for-buck-per-watt <span class="tail">96–128GB builds · gpt-oss-120B anchor · cost + power</span></h2>
-<p style="font-size:13px;color:var(--muted);margin:6px 0 8px">Scoped to builds that clear 96GB — the 120B model needs ~63GB, so single 32GB cards can't play. <b style="color:var(--text)">Power figures are estimates</b> (you confirmed no measured data beyond the docs); decode is measured for PRO 6000, 4× 3090, DGX Spark, Strix Halo and M3 Ultra, and modeled for the SXM2 builds + A100 (PG199 is fully unmeasured on LLMs). Reframe applied: <b style="color:var(--text)">off-when-idle</b>, so idle is a cost-of-how-you-run-it, not a disqualifier.</p>
-
-<div class="tbar">
-  <div>
-    <div class="tglabel" style="margin-bottom:5px">Model anchor</div>
-    <div class="tg" id="valModelTg">
-      <button class="on" data-vm="tg120">gpt-oss-120B</button>
-      <button data-vm="tgMoe">35B-A3B MoE</button>
-    </div>
-  </div>
-  <div>
-    <div class="tglabel" style="margin-bottom:5px">Power basis</div>
-    <div class="tg" id="valPowerTg">
-      <button class="on" data-vp="load">Load (efficiency)</button>
-      <button data-vp="idle">Idle (standing cost)</button>
-    </div>
-  </div>
-</div>
-
-<div class="chartbox">
-  <div class="cap"><span id="valCap"></span><span id="valCap2"></span></div>
-  <div class="ch ch-bar"><canvas id="valChart"></canvas></div>
-</div>
-
-<div class="verdict" id="valVerdict" style="border-left-color:var(--ok);border-color:rgba(95,217,122,.25);background:rgba(95,217,122,.05)"></div>
-<div class="verdict b" style="border-left-color:var(--warn);border-color:rgba(255,160,64,.25);background:rgba(255,160,64,.05);font-size:13px"><b style="color:var(--warn)">Buck dimension (always-on in table):</b> best tokens/sec per $1,000 on 120B — <b style="color:#00e676">PRO 6000</b> now leads at <b>27.1</b> (230 t/s measured decode, up from previously understated 200). <b style="color:#4fc3f7">4× 3090</b> (25.8) and <b style="color:#ec5c9d">4× PG199</b> (25.0, modeled) follow. <b style="color:#ffd740">DGX Spark</b> is last (8.3) — it buys CUDA + capacity + low idle, not 120B throughput.</div>
-
-<p style="font-size:12.5px;color:var(--muted);margin:10px 0 0">Read this ranking with the <a href="#lineTable" style="color:var(--u)">first-party lines</a> below in mind: it is single-stream decode on one older anchor model, and no figure in it records an engine, a quant's quality, or a depth.</p>
-<div class="tscroll"><table id="valTable">
-  <thead><tr>
-    <th class="lbl" style="min-width:170px">Build (96–128GB)</th>
-    <th>$</th><th>Load W</th><th>Idle W</th><th>120B tg</th><th>MoE tg</th>
-    <th>tok-s/$1k</th><th>tok-s/W</th><th>idle $/yr</th>
-  </tr></thead>
-  <tbody></tbody>
-</table></div>
-<p style="font-size:11.5px;color:var(--dim);font-family:var(--mono);line-height:1.8">tok-s/$1k &amp; tok-s/W use the 120B decode anchor. idle $/yr = idleW × 8760h × $0.17/kWh (US avg) — upper bound under off-when-idle. <b>GPU-idle figures are rough estimates</b> (≈40W/card model-resident for 3090/V100; true idle can be ~20–30W/card, poorly-managed higher). PG199 perf modeled/unmeasured. Costs: 4×3090 $4,800 · PRO 6000 $8,500 · A100 80 ~$8,000 · 4×PG199 ~$6,000+host · M3 Ultra 96GB $3,600 · Strix Halo 128GB $2,566 · 4×V100 $3,600 (four cards + the 1CatAI board) · 4×B70 $3,800 · DGX Spark $4,699. All memory-shortage-inflated as of mid-2026.</p>
-
-<h2>First-party serving lines <span class="tail">named models · one rig, engine, quant and cache per row · from Discipline's measurement records</span></h2>
-<p style="font-size:13px;color:var(--muted);max-width:820px">These rows are <b style="color:var(--text)">not comparable with the platform tables above</b>, which use proxy models and record no engine, quant or cache type. Read across rows only where the model, the quant's quality (KLD) and the depth match. Every figure says its depth; two-stream figures are totals, not per-stream rates; spec-off is the clean reading at depth, because draft acceptance flatters deep rows. The RTX 3090 rows come from a water-cooled card that does not throttle, so their absolute rates do not transfer to a stock one.</p>
-<div class="tscroll"><table id="lineTable">
-  <thead><tr>
-    <th class="lbl">Line · provenance</th><th class="lbl">Rig</th><th class="lbl">Engine</th><th class="lbl">Quant · quality</th><th class="lbl">Spec · KV · pool</th>
-    <th class="lbl">Decode</th><th class="lbl">Spec off</th><th class="lbl">Aggregate</th><th class="lbl">Prefill</th><th>Free MiB</th><th class="lbl">State</th>
-  </tr></thead>
-  <tbody></tbody>
-</table></div>
-<p style="font-size:11.5px;color:var(--dim);font-family:var(--mono);line-height:1.8">† hover for the caveat. Prefill is either cold (the whole prompt) or over new tokens only after a cached prefix — each point says which. Free MiB is VRAM free at peak fill. "Admitted" and "unadmitted" are Discipline's own words, given only where its registry carries one. <b style="color:var(--m)">Witnessed</b> means the maintainer personally saw the hardware produce the numbers; <b style="color:var(--e)">reported</b> is someone else's account, included only where nothing gives a specific reason to doubt it.</p>
-
-<h2>Runoff candidates <span class="tail">rigs under consideration · no measured line yet</span></h2>
-<p style="font-size:12.5px;color:var(--muted);max-width:820px;margin:6px 0">Peer bandwidth is the vendor's peak rating per GPU, both directions summed, and only as good as what the board actually wires. Single-stream decode follows per-card memory bandwidth; peer links matter for tensor-parallel prefill, concurrent streams, and anything a card streams from host RAM or a spill tier over its host link.</p>
+<!-- ===================================================================== 4 -->
+<section id="rigs">
+<h2>4 · Rigs under consideration <span class="tail">no measured line yet · ceilings at the settings in section 2</span></h2>
+<p class="intro">Peer bandwidth is the vendor's peak rating per GPU, both directions summed, and only as good as what the board actually wires. Single-stream decode follows memory bandwidth — one card's under a layer split, all of them under tensor parallel; peer links decide how close tensor parallel gets to that, and matter for prefill, concurrent streams, and anything streamed from host RAM.</p>
 <div class="tscroll"><table id="candTable">
   <thead><tr>
-    <th class="lbl">Candidate · models</th><th>VRAM</th><th>Bandwidth</th><th>Price</th><th class="lbl">Interconnect</th><th class="lbl">Peer bandwidth · host link</th><th class="lbl">Notes</th><th class="lbl">Status</th>
+    <th class="lbl">Rig</th><th>VRAM</th><th>Bandwidth</th><th>Price</th><th class="lbl">Interconnect</th><th class="lbl">Peer bandwidth · host link</th><th class="lbl" style="min-width:230px">Ceilings for its models</th>
   </tr></thead>
   <tbody></tbody>
 </table></div>
+</section>
 
+<!-- ===================================================================== method -->
+<section id="method">
 <h2>Method &amp; sources</h2>
 <ul class="notes">
-  <li><b>Prefill curves:</b> B70 (llama.cpp SYCL, PMZFX/intel-arc-pro-b70-benchmarks) and AMD R9700 (ggml discussion #19890, Q4_K_XL, Q4_K_M) are the best-measured at ≥4 context points. RTX 5090 MoE (hardware-corner.net, Q4_K_XL) provides 4 points. Mac M3 Ultra dense (mlx discussions #3209, mlx_lm.benchmark) provides 3 points. DGX Spark (DandinPower/llama.cpp_bench; NVIDIA Dev Forums) and Strix Halo (Level1Techs; strix-halo-guide) have 2 anchors each; remainder extrapolated.</li>
-  <li><b>RTX PRO 6000:</b> pp512 7,640 and tg 251.6 from llm-tracker.info (Q4_K_M, 30B-A3B). NVFP4+MTP dual-card figures from loftllc.dev (~190 t/s tg) and theogravity/dual-rtx-6000-blackwell-qwen3.6-27b-fp8. Dense proxy from vaditaslim.com (Qwen2.5-32B Q4_K_M). JarvisLabs confirms 1.73× MTP gain on dense. vLLM issue #27649 warns of 55s TTFT footgun (misconfiguration; fix = correct BF16 flags). gpt-oss-120B prefill peaks at 4-8K (~24K t/s) then falls off — the rise from 512→4K is typical for vLLM MXFP4 where short-context kernel launch overhead dominates before memory bandwidth becomes the limiter.</li>
-  <li><b>DGX Spark:</b> gb10 community confirms 273 GB/s shared SoC bandwidth; dense 32B decode confirmed bandwidth-wall-limited at ~10.7 t/s (theoretical ~15). "~1 PFLOP" is sparsity figure (~500 effective dense TFLOPS). Qwen3.5-35B-A3B TTFT/tg from NVIDIA Dev Forums (claytantor, Apr 2026).</li>
-  <li><b>Strix Halo:</b> Use Vulkan/RADV, not ROCm (ROCm hangs on Qwen3.5 load_tensors). Set HSA_OVERRIDE_GFX_VERSION=11.5.1. Level1Techs/lhl thread and strix-halo-guide are primary sources. DeltaNet hybrid attention keeps long-context KV growth nearly flat: 4K→32K adds only 560 MB KV, tg drops 53.7→49.9 t/s.</li>
-  <li><b>Multi-GPU 3090:</b> 2-way NVLink gives ~48% TP throughput boost over PCIe-only; 4-way (two bridged pairs over PCIe) only ~8–10% and can lower single-request decode (71→53 t/s on QwQ-32B). dzombak.com: 2× 3090 TP-2 runs Qwen3.6-27B AWQ at ~100 t/s full 256K ctx. Medium/fzbcwvv: 1× 3090 + MTP on Qwen3.6-27B reaches 85–106 t/s at 230 W cap.</li>
-  <li><b>Decode is not flat with context depth.</b> Every generated token reads the whole KV cache, so a bandwidth-bound decode slows as the session grows — this page's own data has it falling <b style="color:var(--text)">29–53%</b> between the short-context rate and 32K (5090 MoE 234 → 110.7 t/s; PRO 6000 dense 56 → 33). Both turn charts below therefore price generation at the depth it actually runs at, interpolating in <i>seconds per token</i> rather than tokens/sec — KV bytes read per token grow linearly with depth, so time per token is the quantity that moves linearly, and interpolating the rate directly would bend the wrong way and flatter deep contexts. Only 5 of this page's 24 decode entries have a 32K measurement and <b style="color:var(--text)">none has one deeper</b>, so most platforms are still generating at their short-context rate: those bars carry a <b style="color:var(--text)">★</b> and are understated. Read a starred bar against an unstarred one carefully — part of that gap is measurement coverage, not hardware. This is the single biggest data gap on the page.</li>
-  <li><b>Cold-start wall-clock:</b> TTFT = context_length ÷ pp(context_length). Wall-clock for a 16K+2K turn = TTFT@16K + (2048 ÷ tg@16K-deep, see above). This is a cold (un-cached) monolithic prefill from empty — what a session <i>start</i> costs, a cache eviction, or a mid-prefix edit (anything that busts the KV cache). It is not what turn 50 of an otherwise-untouched session costs.</li>
-  <li><b>Steady-state turn:</b> an active session's KV cache stays hot turn to turn, so nothing re-prefills the existing context — but for full/quadratic attention, each newly appended token still attends across the entire existing cache, so the marginal cost of the next turn keeps growing with session depth even though nothing is literally re-prefilled. That marginal rate is derived from the same prefill-curve data already on this page: cumulative time to reach each context checkpoint (tokens ÷ pp) is differenced between consecutive checkpoints to get the local tokens/sec for appending within that range, rather than needing a separate incremental-append benchmark that doesn't exist yet. The steady-state chart appends 2K tokens onto a session already 16K deep (using the 16K→32K segment's marginal rate) and generates 2K more — same turn size as the cold chart, so the two are directly comparable. Linear/hybrid attention (Mamba2, Gated DeltaNet — see the Strix Halo note above) is the one thing that actually escapes this scaling; its marginal rate stays close to flat regardless of session depth.</li>
-  <li><b>AMD R9700 included as bonus:</b> Strong Qwen3.5-35B-A3B MoE numbers, R9700 single-card, Q4_K_XL (ggml #19890). Not in the user's original list but data quality warranted inclusion.</li>
-  <li><b>Compute throughput by precision:</b> each unit's <span class="num" style="font-size:12px">compute.values</span> entries come from vendor datasheets/whitepapers where available, with per-unit provenance in <span class="num" style="font-size:12px">compute.source</span> and <span class="num" style="font-size:12px">sources[]</span> — see the hardware catalog table above. Coverage is intentionally uneven: about half the catalog has a real multi-precision breakdown (RTX PRO 6000, RTX 5090, Radeon AI PRO R9700, MI300X, MI355X); several NVIDIA data-center units (V100, A100, H100) currently show only FP64/FP32/FP16 because the Wikipedia Tesla template they're sourced from doesn't publish more, not because the silicon lacks BF16/INT8 paths — exactly the "double, single, half" flattening this chart exists to see past. Filling in the rest is ongoing.</li>
-  <li><b>Editing this page:</b> every number lives in <span class="num" style="font-size:12px">data/compendium.json</span>. See <span class="num" style="font-size:12px">data/README.md</span> for how to add a device or a datapoint.</li>
+  <li><b>Format support</b> is recorded once per chip generation in <span class="code">data/compendium.json</span> → <span class="code">architectures</span>, each with the sources it rests on. “Native” means the matrix units take that input type; emulating it or upcasting to a wider type does not count. A card can override its generation only with a note saying why. FP8 weights can still be <i>stored</i> on a card without FP8 matrix units — that saves memory and bandwidth, not compute.</li>
+  <li><b>Decode ceiling</b> = bandwidth ÷ (active parameters × bits per weight ÷ 8 + KV bytes at depth + recurrent state). KV bytes = 2 × KV heads × head size × bytes per element, for every full-attention layer times the depth and every sliding-window layer times its window. Recurrent state is one key×value matrix per head per linear-attention layer at FP32. Under a layer split a single stream runs one card at a time, so it gets one card's bandwidth; under tensor parallel it gets all of them, with perfect scaling assumed.</li>
+  <li><b>Prefill ceiling</b> = rated dense matrix throughput ÷ FLOPs per token, where FLOPs per token = 2 × active parameters + 4 × attention heads × head size × positions attended on each softmax layer (a cold prompt attends over half itself on average). Every card counts under either split. The precision is the one the engine actually multiplies in: GGUF quants follow llama.cpp's own kernel dispatch (<span class="code">docs/roofline-dequant-paths.md</span>), FP8 checkpoints use FP8 only where the matrix units take it, and anything ungrounded falls back to FP16 and says so.</li>
+  <li><b>Fit</b> = all parameters × bits per weight + KV at depth + recurrent state, against every card's memory less 1 GiB each for the runtime. Catalog memory is read as GiB, which is what vendors mean. Under tensor parallel, a model with fewer KV heads than cards replicates them. Unified-memory machines give the GPU only part of their RAM by default; that is in each unit's note, not the arithmetic.</li>
+  <li><b>What the ceilings leave out on purpose:</b> kernel launch and synchronization cost, MoE routing, batching, interconnect time under tensor parallel, and any precision mix within a checkpoint (gpt-oss keeps attention in BF16, so its true ceiling is lower than one computed at MXFP4 throughout). Each omission makes the ceiling higher, never lower, so it stays an upper bound. Active-parameter counts are model-card figures and may include an input embedding table that a decode step reads one row of.</li>
+  <li><b>Model shapes</b> are transcribed from each model's published <span class="code">config.json</span> and model card, with the URL beside each entry in <span class="code">assets/models.js</span>. Bits per weight for GGUF recipes (Q4_K_M and similar) are typical averages; a line that records its own measured width uses that instead.</li>
+  <li><b>Observations</b> keep the source's own words where it gave a range, a caveat or no depth. “Recorded” is when a figure entered this page, which is the latest it could have been observed; “observed” is the source's own date where it gave one. <b>Witnessed</b> means the maintainer personally saw the hardware produce the numbers; <b>reported</b> is someone else's account, kept because nothing gives a specific reason to doubt it.</li>
+  <li><b>Editing:</b> every number lives in <span class="code">data/compendium.json</span>; <span class="code">data/README.md</span> says how to add a card, a chip generation or a reading, and <span class="code">tools/check-ceilings.mjs</span> fails if any reading claims more than its hardware can do.</li>
 </ul>
-<p class="src">SOURCES: DandinPower/llama.cpp_bench (DGX Spark) · NVIDIA Dev Forums/claytantor (DGX Spark Qwen3.5) · Level1Techs/lhl (Strix Halo) · strix-halo-guide/hogeheer499 (Strix Halo Qwen3.6) · lilting.ch (Strix Halo long-ctx) · mlx #3209 (M3 Ultra dense) · llm-tracker.info (PRO 6000) · vaditaslim.com (PRO 6000 dense) · jarvislabs.ai (PRO 6000 MTP) · loftllc.dev (dual PRO 6000 NVFP4+MTP) · hardware-corner.net (RTX 5090) · ggml #19890 (RTX 5090 vs R9700) · PMZFX/intel-arc-pro-b70-benchmarks (B70) · dzombak.com · medium/fzbcwvv (3090) · himeshp.blogspot (4× 3090 TP) · willitrunai.com (4090 TP) · CloudRift (multi-GPU serving)</p>
+</section>
 
 </div><!-- /wrap -->
 </body>
