@@ -27,6 +27,8 @@ jobs:
         run: node tools/test-kv.mjs
       - name: Check no reading claims more than its hardware can do
         run: node tools/check-ceilings.mjs
+      - name: Check the ceiling arithmetic against hand-worked cases
+        run: node tools/test-ceilings.mjs
 
   render:
     name: rendered page

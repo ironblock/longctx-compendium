@@ -379,7 +379,128 @@
           ]
         }
       ],
-      "note": "Covers GB202: RTX 5090, RTX PRO 6000 Blackwell; GB10: DGX Spark; GB100: B200; Blackwell Ultra: B300. Variant differences. (1) Datacenter GB100 (B200, CC 10.0) does FP4/FP6/FP8 through tcgen05.mma (.kind::f8f6f4, .kind::mxf8f6f4, .kind::mxf4, .kind::mxf4nvf4). Consumer/pro GB20x (RTX 5090, RTX PRO 6000; CC 12.0) and GB10 (DGX Spark; CC 12.1) have no tcgen05; they use warp-level mma.sync with .kind::f8f6f4 / .kind::mxf4nvf4 (sm_120a/sm_121a). The format set in CUDA Table 33 is the same for 10.0 and 12.x except FP64. (2) Blackwell Ultra B300 (CC 10.3): Table 33 still lists INT8 'Yes', but tcgen05.mma .kind::i8 is not supported on sm_103a, and HGX B300 is rated 3 POPS INT8 vs 72 POPS for HGX B200 (sparse, 8 GPUs). Treat B300 INT8 as present but heavily de-rated; NVIDIA does not say whether it is emulated. FP64 Tensor is also blank for 10.3. (3) INT4 is absent: Table 33 is blank for every Blackwell CC and tcgen05 has no int4 kind. Legacy PTX mma.sync .s4/.u4 still compiles for sm_80+ targets, but no INT4 Tensor Core path or rate is documented. (4) Rate note, not a format difference: on GeForce RTX 5090, FP16/BF16 with FP32 accumulate is half the FP16-accumulate rate (209.5 vs 419 dense TFLOPS). On RTX PRO 6000 both are 503.8."
+      "note": "Covers GB202 (RTX 5090, RTX PRO 6000 Blackwell, CC 12.0) and GB10 (DGX Spark, CC 12.1); B200 and B300 are under Blackwell (datacenter). Variant differences. (1) Datacenter GB100 (B200, CC 10.0) does FP4/FP6/FP8 through tcgen05.mma (.kind::f8f6f4, .kind::mxf8f6f4, .kind::mxf4, .kind::mxf4nvf4). Consumer/pro GB20x (RTX 5090, RTX PRO 6000; CC 12.0) and GB10 (DGX Spark; CC 12.1) have no tcgen05; they use warp-level mma.sync with .kind::f8f6f4 / .kind::mxf4nvf4 (sm_120a/sm_121a). The format set in CUDA Table 33 is the same for 10.0 and 12.x except FP64. (2) Blackwell Ultra B300 (CC 10.3): Table 33 still lists INT8 'Yes', but tcgen05.mma .kind::i8 is not supported on sm_103a, and HGX B300 is rated 3 POPS INT8 vs 72 POPS for HGX B200 (sparse, 8 GPUs). Treat B300 INT8 as present but heavily de-rated; NVIDIA does not say whether it is emulated. FP64 Tensor is also blank for 10.3. (3) INT4 is absent: Table 33 is blank for every Blackwell CC and tcgen05 has no int4 kind. Legacy PTX mma.sync .s4/.u4 still compiles for sm_80+ targets, but no INT4 Tensor Core path or rate is documented. (4) Rate note, not a format difference: on GeForce RTX 5090, FP16/BF16 with FP32 accumulate is half the FP16-accumulate rate (209.5 vs 419 dense TFLOPS). On RTX PRO 6000 both are 503.8."
+    },
+    {
+      "id": "blackwell_dc",
+      "vendor": "NVIDIA",
+      "label": "Blackwell (datacenter)",
+      "matrixUnits": "5th-gen Tensor Cores (tcgen05 / TMEM)",
+      "formats": {
+        "tf32": "native",
+        "bf16": "native",
+        "fp16": "native",
+        "fp8": "native",
+        "fp6": "native",
+        "fp4": "native",
+        "int8": "native",
+        "int4": "absent"
+      },
+      "sources": [
+        {
+          "url": "https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/compute-capabilities.html",
+          "quote": "Table 33 Input Data Types Supported by Tensor Core Acceleration per Compute Capability ... [columns: FP64 | TF32 | BF16 | FP16 | FP8 | FP6 | FP4 | INT8 | INT4] row 10.0: Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | (blank)",
+          "locator": "CUDA Programming Guide 5.1 Compute Capabilities, Table 33 (page 'Last updated on Sep 10, 2026'). Table cells transcribed in column order; '(blank)' = cell empty, i.e. not listed as a Tensor Core input type.",
+          "supports": [
+            "tf32",
+            "bf16",
+            "fp16",
+            "fp8",
+            "fp6",
+            "fp4",
+            "int8",
+            "int4:absent"
+          ]
+        },
+        {
+          "url": "https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/compute-capabilities.html",
+          "quote": "Table 33 Input Data Types Supported by Tensor Core Acceleration per Compute Capability ... [columns: FP64 | TF32 | BF16 | FP16 | FP8 | FP6 | FP4 | INT8 | INT4] row 10.3: (blank) | Yes | Yes | Yes | Yes | Yes | Yes | Yes | (blank)",
+          "locator": "CUDA Programming Guide 5.1 Compute Capabilities, Table 33 (page 'Last updated on Sep 10, 2026'). Table cells transcribed in column order; '(blank)' = cell empty, i.e. not listed as a Tensor Core input type.",
+          "supports": [
+            "tf32",
+            "bf16",
+            "fp16",
+            "fp8",
+            "fp6",
+            "fp4",
+            "int8",
+            "int4:absent"
+          ]
+        },
+        {
+          "url": "https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/compute-capabilities.html",
+          "quote": "Table 33 Input Data Types Supported by Tensor Core Acceleration per Compute Capability ... [columns: FP64 | TF32 | BF16 | FP16 | FP8 | FP6 | FP4 | INT8 | INT4] row 12.x: (blank) | Yes | Yes | Yes | Yes | Yes | Yes | Yes | (blank)",
+          "locator": "CUDA Programming Guide 5.1 Compute Capabilities, Table 33 (page 'Last updated on Sep 10, 2026'). Table cells transcribed in column order; '(blank)' = cell empty, i.e. not listed as a Tensor Core input type.",
+          "supports": [
+            "tf32",
+            "bf16",
+            "fp16",
+            "fp8",
+            "fp6",
+            "fp4",
+            "int8",
+            "int4:absent"
+          ]
+        },
+        {
+          "url": "https://developer.nvidia.com/cuda-gpus",
+          "quote": "12.1| NVIDIA GB10 (DGX Spark)| 12.0| ... NVIDIA RTX PRO 6000 Blackwell Workstation Edition| ... |GeForce RTX 5090| ... 10.3| NVIDIA GB300|NVIDIA B300| ... 10.0| NVIDIA GB200|NVIDIA B200",
+          "locator": "CUDA GPU Compute Capability table",
+          "supports": [
+            "mapping:GB10=12.1",
+            "mapping:RTX5090/RTXPRO6000=12.0",
+            "mapping:B300=10.3",
+            "mapping:B200=10.0"
+          ]
+        },
+        {
+          "url": "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/pdf/NVIDIA-RTX-Blackwell-PRO-GPU-Architecture-v1_1.pdf",
+          "quote": "The RTX Blackwell Tensor Cores support FP16, BF16, TF32, INT8, and Hopper’s FP8 Transformer Engine. RTX Blackwell adds new support for FP4 and FP6 Tensor Core operations, and the new Second-Generation FP8 Transformer Engine, similar to our datacenter-class Blackwell GPUs.",
+          "locator": "NVIDIA RTX PRO Blackwell GPU Architecture whitepaper v1.1 (same sentence in the GeForce RTX Blackwell whitepaper)",
+          "supports": [
+            "fp16",
+            "bf16",
+            "tf32",
+            "int8",
+            "fp8",
+            "fp4",
+            "fp6"
+          ]
+        },
+        {
+          "url": "https://docs.nvidia.com/cuda/parallel-thread-execution/index.html",
+          "quote": ".e3m2 , .e2m3 and .e2m1 alternate floating point type mma operation requires sm_120a and is supported on sm_120f from PTX ISA version 8.8. ... Qualifiers .kind::mxf4nvf4 and .kind::mxf4 are supported on following architectures: sm_120a sm_121a",
+          "locator": "PTX ISA 9.4, mma / mma.sp Target ISA Notes",
+          "supports": [
+            "fp6",
+            "fp4",
+            "variant:GB20x(sm_120)+GB10(sm_121) use mma.sync for FP6/FP4"
+          ]
+        },
+        {
+          "url": "https://docs.nvidia.com/cuda/parallel-thread-execution/index.html",
+          "quote": "Qualifier .kind::i8 is supported on following architectures: sm_100a sm_101a (Renamed to sm_110a from PTX ISA version 9.0) sm_110a",
+          "locator": "PTX ISA 9.4, tcgen05.mma Target ISA Notes (kinds enumerated in the tcgen05.mma kind table: .kind::tf32, .kind::f16, .kind::f8f6f4, .kind::mxf8f6f4, .kind::i8, .kind::mxf4, .kind::mxf4nvf4; no int4 kind)",
+          "supports": [
+            "int4:absent(tcgen05)",
+            "variant:B300(sm_103a) lacks tcgen05 .kind::i8"
+          ]
+        },
+        {
+          "url": "https://www.nvidia.com/en-us/data-center/hgx/",
+          "quote": "HGX B300 | HGX B200 ... INT8 Tensor Core 2 | 3 POPS | 72 POPS ... 2. Specification in Sparse. Dense is ½ sparse spec shown.",
+          "locator": "NVIDIA HGX page, HGX B300 vs HGX B200 spec table (8-GPU totals)",
+          "supports": [
+            "variant:B300 INT8 rate ~1/24 of B200"
+          ]
+        },
+        {
+          "url": "https://github.com/ggml-org/llama.cpp/blob/master/ggml/src/ggml-cuda/common.cuh",
+          "quote": "// While BW spans CC 1000, 1100 & 1200, we are integrating Tensor Core instructions available to 1200 family ... #define GGML_CUDA_CC_BLACKWELL 1200",
+          "locator": "ggml-cuda/common.cuh, checked 2026-10-14"
+        }
+      ],
+      "note": "Covers B200 (GB100, CC 10.0) and B300 (Blackwell Ultra, CC 10.3). Same matrix formats as the consumer and workstation parts, reached through tcgen05 rather than warp-level mma.sync. Kept apart because llama.cpp compiles its Blackwell tensor-core path only for compute capability 12.x (ggml-cuda/common.cuh: \"While BW spans CC 1000, 1100 & 1200, we are integrating Tensor Core instructions available to 1200 family\"), so these two take the Turing-to-Hopper paths. (2) Blackwell Ultra B300 (CC 10.3): Table 33 still lists INT8 'Yes', but tcgen05.mma .kind::i8 is not supported on sm_103a, and HGX B300 is rated 3 POPS INT8 vs 72 POPS for HGX B200 (sparse, 8 GPUs). Treat B300 INT8 as present but heavily de-rated; NVIDIA does not say whether it is emulated. FP64 Tensor is also blank for 10.3. (3) INT4 is absent: Table 33 is blank for every Blackwell CC and tcgen05 has no int4 kind. Legacy PTX mma.sync .s4/.u4 still compiles for sm_80+ targets, but no INT4 Tensor Core path or rate is documented. (4) Rate note, not a format difference: on GeForce RTX 5090, FP16/BF16 with FP32 accumulate is half the FP16-accumulate rate (209.5 vs 419 dense TFLOPS). On RTX PRO 6000 both are 503.8."
     },
     {
       "id": "cdna1",
@@ -710,50 +831,38 @@
       "label": "Apple M3 GPU",
       "matrixUnits": "None. No dedicated matrix units in the GPU (Apple added GPU 'Neural Accelerators' with M5)",
       "formats": {
-        "tf32": "absent",
-        "bf16": "absent",
-        "fp16": "absent",
-        "fp8": "absent",
-        "fp6": "absent",
-        "fp4": "absent",
-        "int8": "absent",
-        "int4": "absent"
+        "tf32": "unknown",
+        "bf16": "unknown",
+        "fp16": "unknown",
+        "fp8": "unknown",
+        "fp6": "unknown",
+        "fp4": "unknown",
+        "int8": "unknown",
+        "int4": "unknown"
       },
       "sources": [
         {
           "url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
           "quote": "Its up-to-80-core GPU, the most powerful Apple silicon GPU ever, brings Neural Accelerators to the Ultra chip for the first time, enabling up to 4.3x the peak AI compute performance when compared to M3 Ultra.",
-          "locator": "Apple Newsroom, Mac Studio with M5 Max and M5 Ultra (Aug 2026)",
-          "supports": [
-            "no-matrix-units:M3 Ultra"
-          ]
+          "locator": "Apple Newsroom, Mac Studio with M5 Max and M5 Ultra (Aug 2026)"
         },
         {
           "url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
           "quote": "Neural Accelerators in each GPU core deliver dramatically faster matrix multiplication.",
-          "locator": "Apple Newsroom, Mac Studio with M5 Max and M5 Ultra (Aug 2026)",
-          "supports": [
-            "definition:Neural Accelerators are the GPU matrix units"
-          ]
+          "locator": "Apple Newsroom, Mac Studio with M5 Max and M5 Ultra (Aug 2026)"
         },
         {
           "url": "https://www.apple.com/newsroom/2025/10/apple-unleashes-m5-the-next-big-leap-in-ai-performance-for-apple-silicon/",
           "quote": "With the introduction of Neural Accelerators in the GPU, M5 delivers a huge boost to AI workloads.",
-          "locator": "Apple Newsroom, 'Apple unleashes M5' (Oct 2025)",
-          "supports": [
-            "no-matrix-units:pre-M5 GPUs"
-          ]
+          "locator": "Apple Newsroom, 'Apple unleashes M5' (Oct 2025)"
         },
         {
           "url": "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/",
           "quote": "In fact, M3 Ultra is built for AI, including ML accelerators in the CPU, Apple’s most powerful GPU, the Neural Engine, and over 800GB/s of memory bandwidth.",
-          "locator": "Apple Newsroom, 'Apple reveals M3 Ultra' (Mar 2025). Matrix/ML accelerators are named for the CPU, not the GPU.",
-          "supports": [
-            "no-matrix-units:M3 Ultra GPU"
-          ]
+          "locator": "Apple Newsroom, 'Apple reveals M3 Ultra' (Mar 2025). Matrix/ML accelerators are named for the CPU, not the GPU."
         }
       ],
-      "note": "Covers Mac Studio M3 Ultra. The M3-generation GPU has no dedicated matrix units. Apple's GPU 'Neural Accelerators' (described as accelerating matrix multiplication) first appeared with M5 (Oct 2025) and reached the Ultra tier with M5 Ultra, which Apple compares against M3 Ultra. All formats are therefore 'absent' as a matrix-unit path. Metal's simdgroup_matrix API (half/float/bfloat) still runs on M3, but Apple does not document dedicated matrix hardware behind it, so it is not counted as native. Caveat: absence rests on Apple's statements that Neural Accelerators were introduced with M5. No Apple document I found says in so many words that 'M3 has no matrix units'. The M3 Ultra's 'ML accelerators' are in the CPU (AMX/SME-class), not the GPU."
+      "note": "Covers Mac Studio M3 Ultra. Every format is unknown, not absent: Apple says its GPU Neural Accelerators (matrix units) arrived with M5, which implies the M3 GPU has none, but no Apple document found says so directly. Metal's simdgroup_matrix operations (half, float, bfloat) run on M3 either way. The M3 Ultra's \"ML accelerators\" are CPU-side (AMX/SME-class), not GPU."
     },
     {
       "id": "xe2",
@@ -1429,7 +1538,7 @@
         "https://images.nvidia.com/aem-dam/en-zz/Solutions/data-center/nvidia-ampere-architecture-whitepaper.pdf",
         "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-nvidia-us-2188504-web.pdf"
       ],
-      "note": "The Tesla table collapses the 40 GB and 80 GB PCIe cards into one row. Its 1555 GB/s, 250 W and May-2020 launch all describe the 40 GB HBM2 part; the 80 GB HBM2e card differs on all three, so those fields are deliberately left unset here. The compute figures are shared — same GA100 die and clocks — so they are taken.",
+      "note": "The Tesla table collapses the 40 GB and 80 GB PCIe cards into one row; its 250 W and May-2020 launch describe the 40 GB HBM2 part, so they are left unset here. Bandwidth is NVIDIA's A100 datasheet figure for the 80 GB PCIe card (1,935 GB/s). The compute figures are shared (same GA100 die and clocks), so they are taken.",
       "arch": "ampere",
       "compute": {
         "unit": "Tops",
@@ -1610,7 +1719,7 @@
         "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
         "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/amd-instinct-mi355x-gpu-brochure.pdf"
       ],
-      "note": "Reference only — no benchmarks on this page. The Instinct table spans INT8 and INT4 with one figure (5.0332 POPS), so both are recorded at that rate.",
+      "note": "Reference only; no benchmarks on this page. FP8 (5.0332 PFLOPS dense, 10.0664 sparse) and MXFP6/MXFP4 (10.0663 PFLOPS) are from AMD's MI355X brochure; INT8 is the Instinct table's figure. An INT4 figure recorded here earlier was a copy of INT8 and was removed: CDNA 4 has no INT4 matrix instruction.",
       "arch": "cdna4",
       "compute": {
         "unit": "Tops",
@@ -2148,7 +2257,7 @@
         "https://nvdam.widen.net/s/wwnsxrhm2w/blackwell-datasheet-3384703"
       ],
       "note": "Reference only -- no benchmarks on this page. SXM-only (no PCIe); requires HGX/UBB baseboard, not a standalone purchase.",
-      "arch": "blackwell",
+      "arch": "blackwell_dc",
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
@@ -2191,7 +2300,7 @@
         "NVIDIA Blackwell Ultra Datasheet (official, GB300 1,400W variant; HGX B300 runs ~10% lower on most rows)"
       ],
       "note": "Per-GPU figures are the GB300 (1,400W) variant from NVIDIA's official Blackwell Ultra Datasheet, which runs ~10% above the HGX B300 SKU on most rows -- fp32/int8:sparse were previously approximated by dividing NVIDIA's published 72-GPU rack totals by 72 (int8:sparse landed within 1% of the real figure this way; fp32 landed within 4%), now replaced with the direct per-GPU spec. Genuinely notable: NVIDIA cut INT8 tensor throughput ~96% vs B200 (165 vs 4,500 TOPS) and FP64 similarly, reallocating die budget almost entirely to NVFP4 -- a deliberate product-strategy choice, not a documentation gap. No dense (non-sparse) BF16/FP16/INT8 breakout is published elsewhere on this page's other B300 citations, only combined sparse rack figures -- this datasheet is the first source with real dense numbers for those three. INT8: the CUDA guide still lists it for compute capability 10.3, but the tcgen05 INT8 instruction is not available on sm_103a and NVIDIA rates HGX B300 at 3 POPS INT8 against 72 for HGX B200. Whether what remains is a de-rated native path or emulation, NVIDIA does not say, so it is marked unknown here.",
-      "arch": "blackwell",
+      "arch": "blackwell_dc",
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
@@ -3391,7 +3500,8 @@
         "kind": "review",
         "attestation": "reported",
         "source": "vaditaslim.com"
-      }
+      },
+      "note": "JarvisLabs (jarvislabs.ai) reports a 1.73× decode gain from MTP on a dense model on this card; only the ratio was recorded, so it is not a reading here."
     },
     {
       "status": "measured",
@@ -3475,7 +3585,8 @@
         "kind": "review",
         "attestation": "reported",
         "source": "millstoneai (named in the original notes; no URL recorded)"
-      }
+      },
+      "note": "vLLM issue #27649 describes a 55 s time to first token on this card from misconfiguration, fixed with the correct BF16 flags."
     },
     {
       "status": "measured",
@@ -4213,7 +4324,7 @@
       }
     },
     {
-      "status": "measured",
+      "status": "withdrawn",
       "recorded": "2026-06-19",
       "id": "x_strix_27b_q8",
       "label": "A 27B dense model · Q8_0 · Strix Halo",
@@ -4254,7 +4365,15 @@
         "attestation": "reported",
         "source": "Level1Techs forum, lhl",
         "reproduced": false
-      }
+      },
+      "modelParams": {
+        "total": 27000000000,
+        "active": 27000000000,
+        "note": "From the label: a 27B dense model, every weight read per token."
+      },
+      "hazards": [
+        "Impossible as labelled: 27B weights at Q8_0 are about 28.7 GB per token, and 256 GB/s moves that at most 8.9 times a second, below the 10.9 top of this range. Speculative decoding, a smaller quant or a model that is not dense would each explain it; the source names none of them."
+      ]
     },
     {
       "status": "measured",
@@ -4932,7 +5051,9 @@
         "note": "llama-bench, CUDA, flash attention"
       },
       "quant": {
-        "format": "i1-Q4_K_M"
+        "format": "i1-Q4_K_M",
+        "key": "q4_k_m",
+        "note": "An imatrix Q4_K_M: the same block layout as Q4_K_M, quantized with an importance matrix."
       },
       "kvCache": {
         "k": "bf16",
@@ -4957,7 +5078,12 @@
       },
       "hazards": [
         "V100 has no BF16 matrix units; \"bf16\" is the label the source used for the cache and is kept as given."
-      ]
+      ],
+      "modelParams": {
+        "total": 40000000000,
+        "active": 40000000000,
+        "note": "From the source: a ~40B dense model."
+      }
     },
     {
       "status": "measured",
@@ -4979,7 +5105,9 @@
         "note": "llama-bench, CUDA, flash attention"
       },
       "quant": {
-        "format": "i1-Q4_K_M"
+        "format": "i1-Q4_K_M",
+        "key": "q4_k_m",
+        "note": "An imatrix Q4_K_M: the same block layout as Q4_K_M, quantized with an importance matrix."
       },
       "kvCache": {
         "k": "q4_0",
@@ -5001,6 +5129,11 @@
         "attestation": "reported",
         "source": "r/LocalLLaMA post relayed as screenshots of a benchmark artifact (Tesla V100-SXM2-32GB, llama-bench, CUDA, ngl 99, flash attention); no permalink captured",
         "reproduced": false
+      },
+      "modelParams": {
+        "total": 40000000000,
+        "active": 40000000000,
+        "note": "From the source: a ~40B dense model."
       }
     },
     {
@@ -5778,7 +5911,7 @@
       ]
     },
     {
-      "status": "measured",
+      "status": "withdrawn",
       "recorded": "2026-08-05",
       "id": "x_puget_deepseek_r1_distill_llama_8b_tp4",
       "label": "DeepSeek R1 Distill 8B · FP16 · vLLM (Intel LLM Scaler) · TP=4",
@@ -5832,7 +5965,10 @@
         "source": "https://www.pugetsystems.com/labs/articles/intel-arc-pro-b70-multi-gpu-ai-inference-performance (Puget Systems Labs, Dustin Moore, \"Intel Arc Pro B70 Multi-GPU AI Inference Performance,\" Jun 18 2026; site blocks automated fetch, retrieved as a static/PDF copy)"
       },
       "observed": "2026-06-18",
-      "note": "Lowest ITL in suite. Inter-token latency 7–9 ms."
+      "note": "Lowest ITL in suite. Inter-token latency 7–9 ms.",
+      "hazards": [
+        "The same attribution problem as the withdrawn single-card line: DeepSeek-R1-Distill-Llama-8B has the shape and parameter count of Llama 3.1 8B, yet every figure here is about 1.9× the article's Llama figure on the same rig (136 vs 70.3 per stream, 905 vs 472 for eight users). Kept visible, not held to a ceiling, and not to be read as unusually efficient software."
+      ]
     },
     {
       "status": "measured",
@@ -5947,6 +6083,269 @@
       },
       "observed": "2026-06-18",
       "note": "Sparse ~3B active params; beats dense 27B despite more total params. Power: 420 W average, 492 W peak across the cards (xe energy counters)."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-06-19",
+      "id": "x_3090x4_gpt_oss_120b",
+      "label": "gpt-oss-120B · 4× RTX 3090",
+      "model": "gpt_oss_120b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 4
+          }
+        ]
+      },
+      "engine": {
+        "name": "not recorded"
+      },
+      "quant": {
+        "format": "MXFP4 (as released; the old page defined its gpt-oss-120B figures that way)",
+        "key": "mxfp4"
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 124,
+          "confidence": "m",
+          "depthNote": "short context; the exact depth was not recorded"
+        }
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "not recorded per figure: the old page kept this on its 4× RTX 3090 build, and its sources list names himeshp.blogspot for 4× 3090 tensor parallel"
+      },
+      "note": "Restored after the first migration dropped it: it lived on the old \"builds\" record, not in the benchmark grid."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-06-19",
+      "id": "x_strix_deltanet_depth",
+      "label": "A Qwen3.5 Gated DeltaNet hybrid · Strix Halo · 4K and 32K",
+      "model": null,
+      "modelNote": "The old Method note says only \"DeltaNet hybrid attention\" on Qwen3.5. The 560 MB of cache it reports from 4K to 32K matches Qwen3.5-35B-A3B's shape at 16-bit (20 KiB per token), but the source does not name the model.",
+      "rig": {
+        "units": [
+          {
+            "unit": "strix_halo",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "not recorded",
+        "note": "The same note recommends llama.cpp on Vulkan (RADV) for this machine."
+      },
+      "quant": {
+        "format": "not recorded"
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 4096,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 53.7,
+          "confidence": "m~"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 49.9,
+          "confidence": "m~"
+        }
+      ],
+      "provenance": {
+        "kind": "forum",
+        "attestation": "reported",
+        "source": "Level1Techs forum (lhl) and strix-halo-guide, as cited by the old Method note",
+        "reproduced": false
+      },
+      "note": "From 4K to 32K the cache grew by only 560 MB, per the same note."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-06-19",
+      "id": "x_pro6000x2_nvfp4_mtp",
+      "label": "NVFP4 with MTP · 2× RTX PRO 6000",
+      "model": null,
+      "modelNote": "The old note does not name the model. The same sentence cites a dual-card Qwen3.6-27B FP8 repository (theogravity/dual-rtx-6000-blackwell-qwen3.6-27b-fp8) beside it.",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_pro_6000",
+            "count": 2
+          }
+        ]
+      },
+      "engine": {
+        "name": "not recorded"
+      },
+      "quant": {
+        "format": "NVFP4",
+        "key": "nvfp4"
+      },
+      "spec": {
+        "method": "mtp"
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 190,
+          "confidence": "m~",
+          "depthNote": "not recorded",
+          "note": "Given as \"~190\" in the old note."
+        }
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "loftllc.dev, as cited by the old Method note"
+      }
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-06-19",
+      "id": "x_3090_qwen36_27b_mtp",
+      "label": "Qwen3.6-27B · MTP · 1× RTX 3090 at 230 W",
+      "model": "qwen36_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "powerCapW": 230
+      },
+      "engine": {
+        "name": "not recorded"
+      },
+      "quant": {
+        "format": "not recorded"
+      },
+      "spec": {
+        "method": "mtp"
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            85,
+            106
+          ],
+          "confidence": "m~",
+          "depthNote": "not recorded"
+        }
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "Medium, fzbcwvv, as cited by the old Method note"
+      }
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-06-19",
+      "id": "x_3090x2_qwen36_27b_awq",
+      "label": "Qwen3.6-27B · AWQ · 2× RTX 3090, tensor parallel",
+      "model": "qwen36_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 2
+          }
+        ]
+      },
+      "parallel": {
+        "mode": "tensor",
+        "degree": 2
+      },
+      "engine": {
+        "name": "not recorded"
+      },
+      "quant": {
+        "format": "AWQ"
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 100,
+          "confidence": "m~",
+          "depthNote": "with a 256K context configured; the depth of the reading was not recorded",
+          "note": "Given as \"~100\" in the old note."
+        }
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "dzombak.com, as cited by the old Method note"
+      }
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-06-19",
+      "id": "x_3090x4_qwq_32b_tp",
+      "label": "QwQ-32B · 4× RTX 3090, tensor parallel over two NVLink pairs",
+      "model": null,
+      "modelNote": "QwQ-32B is not in the model table; it shares Qwen2.5-32B's architecture.",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 4
+          }
+        ],
+        "interconnect": {
+          "kind": "nvlink + pcie",
+          "bridge": "two NVLink-bridged pairs, joined over PCIe"
+        }
+      },
+      "parallel": {
+        "mode": "tensor",
+        "degree": 4
+      },
+      "engine": {
+        "name": "not recorded"
+      },
+      "quant": {
+        "format": "not recorded"
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 53,
+          "confidence": "m~",
+          "depthNote": "not recorded"
+        }
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "himeshp.blogspot, as cited by the old Method note"
+      },
+      "note": "The source sets this against 71 tok/s on an unstated smaller configuration, as an example of 4-way tensor parallel over PCIe lowering single-request decode. It puts 2-way NVLink at about +48% throughput over PCIe-only and 4-way at only +8-10%; those are ratios, not readings."
     }
   ],
   "candidates": [

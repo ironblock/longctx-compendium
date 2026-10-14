@@ -213,7 +213,7 @@
         },
         "note": {
           "type": "string",
-          "description": "Caveats — e.g. that a bandwidth figure is SoC-wide rather than a discrete card's."
+          "description": "Caveats \u2014 e.g. that a bandwidth figure is SoC-wide rather than a discrete card's."
         },
         "arch": {
           "type": "string",
@@ -736,6 +736,27 @@
           "type": "string",
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
           "description": "When the numbers entered this page -- the latest they could have been observed."
+        },
+        "modelParams": {
+          "description": "Only for a line whose source named no model but gave its size (\"a 27B dense model\"). Gives a weights-only ceiling, which can only be higher than the true one.",
+          "type": "object",
+          "required": [
+            "total"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "total": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "active": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "note": {
+              "type": "string"
+            }
+          }
         }
       }
     },
@@ -847,7 +868,7 @@
           "$ref": "#/definitions/formatSet"
         },
         "sources": {
-          "description": "Where the classification comes from. An \"absent\" needs a source too: usually one that lists every supported type.",
+          "description": "Where the classification comes from. Every native or absent state must be named by some source's `supports` list (\"fp8\" for native, \"fp8:absent\" for absent); a state no source supports is \"unknown\".",
           "type": "array",
           "minItems": 1,
           "items": {

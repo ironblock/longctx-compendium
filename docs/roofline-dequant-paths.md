@@ -81,12 +81,22 @@ Blackwell.
 |---|---|---|---|
 | Any NVIDIA (incl. Blackwell), decode (ne11≤8) | **int8** | m | MMVQ has no cc-gate (`mmvq.cu:280,324`); the 4-bit e2m1 code is looked up through an int8 table (`kvalues_mxfp4`, `ggml-common.h:1114-1119`) and dot-producted via `ggml_cuda_dp4a`. Even single-token decode on Blackwell does **not** get native fp4. |
 | Turing/Ampere/Ada/Hopper, prefill | **int8** | m | Same int8-lookup table feeds the identical int8 tensor-core MMA machinery as legacy Q8_0, gated by the non-Blackwell branch of `mmq_type_traits` (`mmq.cuh:3316-3340`). |
-| Blackwell, prefill | **fp4** | m | Genuinely native block-scaled FP4 MMA — literal PTX `mma.sync.aligned.kind::mxf4[nvf4].block_scale...e2m1.e2m1.f32.ue8m0/ue4m3` (`mma.cuh:1126-1154`), gated by `BLACKWELL_MMA_AVAILABLE` (`common.cuh:286-288`). |
+| Blackwell CC 12.x (RTX 50, RTX PRO, GB10), prefill | **fp4** | m | Genuinely native block-scaled FP4 MMA — literal PTX `mma.sync.aligned.kind::mxf4[nvf4].block_scale...e2m1.e2m1.f32.ue8m0/ue4m3` (`mma.cuh:1126-1154`), gated by `BLACKWELL_MMA_AVAILABLE` (`common.cuh:286-288`). |
 | AMD, Apple, Intel | — | — | **Not examined** — not proven absent, just never checked. |
 
 ## FP8 (e4m3/e5m2) as a GGUF weight-storage format
 
 Confirmed absent, not a coverage gap. See the summary above.
+
+## Datacenter Blackwell (B200, B300) is not the "Blackwell" above
+
+`ggml-cuda/common.cuh` defines `GGML_CUDA_CC_BLACKWELL` as 1200 and gates
+`BLACKWELL_MMA_AVAILABLE` on `>= 1200 && < RUBIN`, with the comment "While BW
+spans CC 1000, 1100 & 1200, we are integrating Tensor Core instructions
+available to 1200 family" (checked 2026-10-14). B200 (CC 10.0) and B300
+(CC 10.3) therefore take the Turing-to-Hopper paths: int8 for K-quants, Q8_0,
+IQ and the int8-emulated MXFP4/NVFP4. The page records them as their own
+generation, `blackwell_dc`, read through the Hopper column.
 
 ## Where this table should NOT be trusted yet
 

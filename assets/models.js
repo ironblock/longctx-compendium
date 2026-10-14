@@ -11,6 +11,11 @@
 //   params.total     every weight that has to be resident, excluding vision
 //                    towers and MTP heads, which a text decode does not run
 //   params.active    weights read per decoded token (all of them, for dense)
+//   params.inputEmbedding, params.tiedEmbeddings
+//                    vocab x hidden from the same config. A decode step reads one
+//                    row of an untied input embedding, so ceilings take it out of
+//                    the bytes and FLOPs per token; a tied one is read in full as
+//                    the output head, so it stays in
 //   layerTypes       full_attention / sliding_attention / linear_attention /
 //                    ffn_only -- how many of each; they sum to `layers`
 //   heads, kvHeads, headDim
@@ -34,7 +39,9 @@ export const MODELS = {
       total: 26895998464,
       active: 26895998464,
       source: "https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/README.md",
-      quote: "- Number of Parameters: 27B"
+      quote: "- Number of Parameters: 27B",
+      inputEmbedding: 1271398400,
+      tiedEmbeddings: false
     },
     layers: 64,
     layerTypes: {
@@ -63,7 +70,9 @@ export const MODELS = {
       total: 125000000000,
       active: 6000000000,
       source: "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/main/README.md",
-      quote: "- Number of Parameters: 125B with 6B activated, plus 51B n-gram embedding and 4B MTP"
+      quote: "- Number of Parameters: 125B with 6B activated, plus 51B n-gram embedding and 4B MTP",
+      inputEmbedding: 635699200,
+      tiedEmbeddings: false
     },
     layers: 48,
     layerTypes: {
@@ -100,7 +109,9 @@ export const MODELS = {
       total: 26895998464,
       active: 26895998464,
       source: "https://huggingface.co/Qwen/Qwen3.6-27B/blob/main/README.md",
-      quote: "- Number of Parameters: 27B"
+      quote: "- Number of Parameters: 27B",
+      inputEmbedding: 1271398400,
+      tiedEmbeddings: false
     },
     layers: 64,
     layerTypes: {
@@ -129,7 +140,9 @@ export const MODELS = {
       total: 26895998464,
       active: 26895998464,
       source: "https://huggingface.co/Qwen/Qwen3.5-27B/blob/main/README.md",
-      quote: "- Number of Parameters: 27B"
+      quote: "- Number of Parameters: 27B",
+      inputEmbedding: 1271398400,
+      tiedEmbeddings: false
     },
     layers: 64,
     layerTypes: {
@@ -158,7 +171,9 @@ export const MODELS = {
       total: 34660610688,
       active: 3000000000,
       source: "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/blob/main/README.md",
-      quote: "- Number of Parameters: 35B in total and 3B activated"
+      quote: "- Number of Parameters: 35B in total and 3B activated",
+      inputEmbedding: 508559360,
+      tiedEmbeddings: false
     },
     layers: 40,
     layerTypes: {
@@ -192,7 +207,9 @@ export const MODELS = {
       total: 34660610688,
       active: 3000000000,
       source: "https://huggingface.co/Qwen/Qwen3.5-35B-A3B/blob/main/README.md",
-      quote: "- Number of Parameters: 35B in total and 3B activated"
+      quote: "- Number of Parameters: 35B in total and 3B activated",
+      inputEmbedding: 508559360,
+      tiedEmbeddings: false
     },
     layers: 40,
     layerTypes: {
@@ -226,7 +243,9 @@ export const MODELS = {
       total: 8953803264,
       active: 8953803264,
       source: "https://huggingface.co/Qwen/Qwen3.5-9B/blob/main/README.md",
-      quote: "- Number of Parameters: 9B"
+      quote: "- Number of Parameters: 9B",
+      inputEmbedding: 1017118720,
+      tiedEmbeddings: false
     },
     layers: 32,
     layerTypes: {
@@ -255,7 +274,9 @@ export const MODELS = {
       total: 79674391296,
       active: 3000000000,
       source: "https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct/blob/main/README.md",
-      quote: "- Number of Parameters: 80B in total and 3B activated"
+      quote: "- Number of Parameters: 80B in total and 3B activated",
+      inputEmbedding: 311164928,
+      tiedEmbeddings: false
     },
     layers: 48,
     layerTypes: {
@@ -289,7 +310,9 @@ export const MODELS = {
       total: 79674391296,
       active: 3000000000,
       source: "https://huggingface.co/Qwen/Qwen3-Coder-Next/blob/main/README.md",
-      quote: "- Number of Parameters: 80B in total and 3B activated"
+      quote: "- Number of Parameters: 80B in total and 3B activated",
+      inputEmbedding: 311164928,
+      tiedEmbeddings: false
     },
     layers: 48,
     layerTypes: {
@@ -323,7 +346,9 @@ export const MODELS = {
       total: 31577940288,
       active: 3500000000,
       source: "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16/blob/main/README.md",
-      quote: "The model has 3.5B active parameters and 30B parameters in total."
+      quote: "The model has 3.5B active parameters and 30B parameters in total.",
+      inputEmbedding: 352321536,
+      tiedEmbeddings: false
     },
     layers: 52,
     layerTypes: {
@@ -357,7 +382,9 @@ export const MODELS = {
       total: 30700000000,
       active: 30700000000,
       source: "https://huggingface.co/google/gemma-4-31B-it/blob/main/README.md",
-      quote: "| **Total Parameters** | 2.3B effective <br> (5.1B with embeddings) | 4.5B effective <br> (8B with embeddings) | 11.95B | 30.7B |"
+      quote: "| **Total Parameters** | 2.3B effective <br> (5.1B with embeddings) | 4.5B effective <br> (8B with embeddings) | 11.95B | 30.7B |",
+      inputEmbedding: 1409286144,
+      tiedEmbeddings: true
     },
     layers: 60,
     layerTypes: {
@@ -393,7 +420,9 @@ export const MODELS = {
       total: 117000000000,
       active: 5100000000,
       source: "https://huggingface.co/openai/gpt-oss-120b/blob/main/README.md",
-      quote: "(117B parameters with 5.1B active parameters)"
+      quote: "(117B parameters with 5.1B active parameters)",
+      inputEmbedding: 579133440,
+      tiedEmbeddings: false
     },
     layers: 36,
     layerTypes: {
@@ -421,7 +450,9 @@ export const MODELS = {
       total: 29943393920,
       active: 3000000000,
       source: "https://huggingface.co/zai-org/GLM-4.7-Flash/blob/main/README.md",
-      quote: "GLM-4.7-Flash is a 30B-A3B MoE model."
+      quote: "GLM-4.7-Flash is a 30B-A3B MoE model.",
+      inputEmbedding: 317194240,
+      tiedEmbeddings: false
     },
     layers: 47,
     layerTypes: {
@@ -453,7 +484,9 @@ export const MODELS = {
       total: 30500000000,
       active: 3300000000,
       source: "https://huggingface.co/Qwen/Qwen3-30B-A3B/blob/main/README.md",
-      quote: "- Number of Parameters: 30.5B in total and 3.3B activated"
+      quote: "- Number of Parameters: 30.5B in total and 3.3B activated",
+      inputEmbedding: 311164928,
+      tiedEmbeddings: false
     },
     layers: 48,
     layerTypes: {
@@ -478,7 +511,9 @@ export const MODELS = {
       total: 30500000000,
       active: 3300000000,
       source: "https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct/blob/main/README.md",
-      quote: "- Number of Parameters: 30.5B in total and 3.3B activated"
+      quote: "- Number of Parameters: 30.5B in total and 3.3B activated",
+      inputEmbedding: 311164928,
+      tiedEmbeddings: false
     },
     layers: 48,
     layerTypes: {
@@ -503,7 +538,9 @@ export const MODELS = {
       total: 32800000000,
       active: 32800000000,
       source: "https://huggingface.co/Qwen/Qwen3-32B/blob/main/README.md",
-      quote: "- Number of Parameters: 32.8B"
+      quote: "- Number of Parameters: 32.8B",
+      inputEmbedding: 777912320,
+      tiedEmbeddings: false
     },
     layers: 64,
     layerTypes: {
@@ -523,7 +560,9 @@ export const MODELS = {
       total: 32500000000,
       active: 32500000000,
       source: "https://huggingface.co/Qwen/Qwen2.5-32B-Instruct/blob/main/README.md",
-      quote: "- Number of Parameters: 32.5B"
+      quote: "- Number of Parameters: 32.5B",
+      inputEmbedding: 778567680,
+      tiedEmbeddings: false
     },
     layers: 64,
     layerTypes: {
@@ -544,7 +583,9 @@ export const MODELS = {
       total: 23572403200,
       active: 23572403200,
       source: "https://huggingface.co/mistralai/Mistral-Small-24B-Instruct-2501/blob/main/README.md",
-      quote: "Mistral Small 3 ( 2501 ) sets a new benchmark in the \"small\" Large Language Models category below 70B, boasting 24B parameters and achieving state-of-the-art capabilities comparable to larger models!"
+      quote: "Mistral Small 3 ( 2501 ) sets a new benchmark in the \"small\" Large Language Models category below 70B, boasting 24B parameters and achieving state-of-the-art capabilities comparable to larger models!",
+      inputEmbedding: 671088640,
+      tiedEmbeddings: false
     },
     layers: 40,
     layerTypes: {
@@ -566,7 +607,9 @@ export const MODELS = {
       total: 70553706496,
       active: 70553706496,
       source: "https://huggingface.co/unsloth/Llama-3.3-70B-Instruct/blob/main/README.md",
-      quote: "The Meta Llama 3.3 multilingual large language model (LLM) is a pretrained and instruction tuned generative model in 70B (text in/text out)."
+      quote: "The Meta Llama 3.3 multilingual large language model (LLM) is a pretrained and instruction tuned generative model in 70B (text in/text out).",
+      inputEmbedding: 1050673152,
+      tiedEmbeddings: false
     },
     layers: 80,
     layerTypes: {
@@ -588,7 +631,9 @@ export const MODELS = {
       total: 8030261248,
       active: 8030261248,
       source: "https://huggingface.co/NousResearch/Meta-Llama-3.1-8B-Instruct/blob/main/README.md",
-      quote: "The Meta Llama 3.1 collection of multilingual large language models (LLMs) is a collection of pretrained and instruction tuned generative models in 8B, 70B and 405B sizes (text in/text out)."
+      quote: "The Meta Llama 3.1 collection of multilingual large language models (LLMs) is a collection of pretrained and instruction tuned generative models in 8B, 70B and 405B sizes (text in/text out).",
+      inputEmbedding: 525336576,
+      tiedEmbeddings: false
     },
     layers: 32,
     layerTypes: {
@@ -609,7 +654,9 @@ export const MODELS = {
       total: 8030261248,
       active: 8030261248,
       source: "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Llama-8B/blob/main/README.md",
-      quote: "We open-source distilled 1.5B, 7B, 8B, 14B, 32B, and 70B checkpoints based on Qwen2.5 and Llama3 series to the community."
+      quote: "We open-source distilled 1.5B, 7B, 8B, 14B, 32B, and 70B checkpoints based on Qwen2.5 and Llama3 series to the community.",
+      inputEmbedding: 525336576,
+      tiedEmbeddings: false
     },
     layers: 32,
     layerTypes: {
@@ -629,7 +676,9 @@ export const MODELS = {
       total: 3090000000,
       active: 3090000000,
       source: "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/README.md",
-      quote: "- Number of Parameters: 3.09B"
+      quote: "- Number of Parameters: 3.09B",
+      inputEmbedding: 311164928,
+      tiedEmbeddings: true
     },
     layers: 36,
     layerTypes: {

@@ -157,6 +157,7 @@ await settle();
   check('FP8 + 1 TiB/s lists exactly the matching units', JSON.stringify(got) === JSON.stringify(want), `got ${got.join(', ')}; want ${want.join(', ')}`);
   check('the query found something', want.length > 0);
   check('an Ampere card is not an FP8 match', !got.some(l => /3090|A6000|A100/.test(l)), got.join(', '));
+  check('the MI300X family is an FP8 match', ['AMD Instinct MI300X 192GB', 'AMD Instinct MI325X 256GB', 'AMD Instinct MI355X 288GB'].every(l => got.includes(l)), got.join(', '));
   check('the 4090 clears 1 TB/s but not 1 TiB/s', !got.some(l => /4090/.test(l)));
   const hash = await page.evaluate(() => location.hash);
   check('the filter is kept in the address', /fmt=fp8/.test(hash) && /bw=1099/.test(hash), hash);
@@ -169,6 +170,41 @@ await settle();
   check('the exact bound survives an edit to the other end', /bw=1099\.511627776/.test(await page.evaluate(() => location.hash)), await page.evaluate(() => location.hash));
   const lo = Number(await page.locator('#bwRange input.lo').inputValue());
   check('the slider handle moved to match the typed bound', lo > 60 && lo < 140, `position ${lo}`);
+}
+// A section link is an anchor, not a view: it must not reset anything.
+{
+  const p2 = await browser.newPage();
+  await p2.goto(`${base}/index.html#fmt=fp8&bw=1000&model=gemma4_31b&d=65536`, { waitUntil: 'networkidle' });
+  const before = await text('#hwSummary', p2);
+  await p2.click('nav.toc a[href="#ceilings"]');
+  await p2.waitForTimeout(150);
+  check('a section link keeps the filters', (await text('#hwSummary', p2)) === before, `${before} -> ${await text('#hwSummary', p2)}`);
+  check('a section link keeps the calculator settings', (await p2.locator('#modelSelect').inputValue()) === 'gemma4_31b' && (await text('#depthSlider output', p2)) === '64K');
+  check('and the view stays in the address', /fmt=fp8/.test(await p2.evaluate(() => location.hash)), await p2.evaluate(() => location.hash));
+  await p2.close();
+}
+// Hand-written addresses with odd values degrade, never blank the page.
+for (const [hash, what, test] of [
+  ['#sort=fmts:asc', 'a sort key with no column', async p => (await p.locator('#loadError').isHidden()) && (await count('#hwTable tbody tr', p)) === model.UNITS.length],
+  ['#d=300', 'a depth below the scale clamps to 1K', async p => (await text('#depthSlider output', p)) === '1K'],
+  ['#bw=2000&bwmax=500', 'a reversed range from an address', async p => /500[^,]*–2,000/.test(await text('#hwSummary', p))],
+]) {
+  const p2 = await browser.newPage();
+  await p2.goto(`${base}/index.html${hash}`, { waitUntil: 'networkidle' });
+  check(`${what} (${hash})`, await test(p2), await text('#hwSummary', p2));
+  await p2.close();
+}
+// The chart precision survives a reload even when a format filter would pick another.
+{
+  const p2 = await browser.newPage();
+  await p2.goto(`${base}/index.html#fmt=fp8`, { waitUntil: 'networkidle' });
+  await p2.click('#scatterPrecChips button:has-text("FP16")');
+  await p2.waitForTimeout(100);
+  const hash = await p2.evaluate(() => location.hash);
+  await p2.goto(`${base}/index.html${hash}`, { waitUntil: 'networkidle' });
+  await p2.reload({ waitUntil: 'networkidle' });
+  check('a chosen chart precision survives a reload', /FP16/.test(await text('#scatterCap', p2)), `${hash} -> ${await text('#scatterCap', p2)}`);
+  await p2.close();
 }
 // The same query arriving as a link.
 {
@@ -230,9 +266,11 @@ check('clearing filters empties the slider boxes', (await page.locator('#bwRange
   await page.click('#vendorChips button:has-text("NVIDIA")');
   await settle();
   check('a vendor chip hides that vendor', (await count('#hwTable tbody tr')) === model.UNITS.length - nv);
-  await page.click('#vendorChips button:has-text("NVIDIA")');
+  await page.focus('#vendorChips button:has-text("NVIDIA")');
+  await page.keyboard.press('Enter');
   await settle();
   check('and brings it back', (await count('#hwTable tbody tr')) === model.UNITS.length);
+  check('a pressed chip keeps keyboard focus', await page.evaluate(() => document.activeElement?.closest('#vendorChips') != null));
 }
 
 // Sorting: bandwidth descending is the default; a click reverses it, blanks last both ways.
@@ -297,7 +335,9 @@ async function decodeAt(modelId, tokens) {
   const h4 = await decodeAt(hybridId, 4096);
   const h256 = await decodeAt(hybridId, 262144);
   check('the depth readout names the depth', (await text('#depthSlider output')) === '256K', await text('#depthSlider output'));
-  check('a depth past the model\'s context window is flagged', MODELS[hybridId].maxPositions >= 262144 || /beyond/.test(await text('#ceilNote')));
+  // Qwen3-32B's window is 40,960 tokens; 256K is past it.
+  await decodeAt('qwen3_32b', 262144);
+  check('a depth past the model\'s context window is flagged', /beyond Qwen3-32B/.test(await text('#ceilNote')), await text('#ceilNote'));
   check(`decode ceiling falls with depth (${fullId})`, f256 < f4, `${f4} -> ${f256}`);
   check(`a hybrid keeps more of its ceiling than a full-attention model (${hybridId} vs ${fullId})`, h256 / h4 > f256 / f4, `${(h256 / h4).toFixed(2)} vs ${(f256 / f4).toFixed(2)}`);
   await setCards('auto');
@@ -356,6 +396,17 @@ check('one row per reading', (await count('#obsTable tr.pt')) === totalPoints, `
   await page.selectOption('#obsDevice', '');
   await page.click('#obsMetricChips button:has-text("All")');
   await settle();
+}
+
+{
+  await page.selectOption('#obsModel', '__none');
+  await settle();
+  const want = model.LINES.filter(l => l.model == null).length;
+  check('"Not recorded" isolates the lines with no model', (await count('#obsTable tr.line-head')) === want, `got ${await count('#obsTable tr.line-head')} of ${want}`);
+  await page.selectOption('#obsModel', '');
+  await settle();
+  const withdrawn = model.LINES.filter(l => l.status === 'withdrawn').length;
+  check('withdrawn lines stay visible and say so', (await page.locator('#obsTable tr.line-head .t-bad', { hasText: 'withdrawn' }).count()) === withdrawn && withdrawn > 0);
 }
 
 // --- 4. Rigs ---------------------------------------------------------------

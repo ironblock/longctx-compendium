@@ -78,6 +78,10 @@ export const ARCH_TO_DEQUANT_FAMILY = {
   ada: { family: 'ada' },
   hopper: { family: 'hopper' },
   blackwell: { family: 'blackwell' },
+  // llama.cpp compiles its Blackwell tensor-core path only for CC 12.x
+  // (GGML_CUDA_CC_BLACKWELL is 1200), so B200/B300 at CC 10.x take the
+  // Turing-to-Hopper int8 paths, MXFP4/NVFP4 included.
+  blackwell_dc: { family: 'hopper' },
   cdna2: { family: 'cdna2' },
   cdna3: { family: 'cdna3' },
   cdna4: { family: 'cdna3', approximate: 'no CDNA4 row in the dispatch research' },

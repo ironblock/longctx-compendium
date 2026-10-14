@@ -13,6 +13,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MODELS } from '../assets/models.js';
 import { WEIGHT_FORMATS } from '../assets/ceiling.js';
+import { FORMATS } from '../assets/data.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const docPath = process.argv[2] ?? path.join(root, 'data/compendium.json');
@@ -119,7 +120,6 @@ check(doc, schema, '');
 // mistakes that are easy to make by copy-paste, and the omissions that quietly
 // turn a number into folklore.
 
-const FORMATS = ['tf32', 'bf16', 'fp16', 'fp8', 'fp6', 'fp4', 'int8', 'int4'];
 const seenIds = new Map();
 for (const rec of [...(doc.architectures ?? []), ...(doc.units ?? []), ...(doc.lines ?? []), ...(doc.candidates ?? [])]) {
   if (seenIds.has(rec.id)) fail(`id "${rec.id}"`, 'duplicate id');
@@ -168,6 +168,14 @@ for (const u of doc.units ?? []) {
 
 for (const a of doc.architectures ?? []) {
   if (!Object.values(a.formats).some(v => v !== 'unknown')) warn(`architecture "${a.id}"`, 'classifies nothing yet');
+  // A classification is a claim like any other: some source has to make it.
+  const said = new Set((a.sources ?? []).flatMap(s => s.supports ?? []));
+  for (const [f, state] of Object.entries(a.formats)) {
+    const token = state === 'native' ? f : state === 'absent' ? `${f}:absent` : null;
+    if (token && !said.has(token)) {
+      fail(`architecture "${a.id}"`, `says ${f} is ${state}, but no source supports it (add "${token}" to a source's supports, or mark it unknown)`);
+    }
+  }
 }
 
 // --- Rigs
@@ -197,7 +205,10 @@ for (const l of doc.lines ?? []) {
   const at = `line "${l.id}"`;
   if (l.model == null) {
     if (!l.modelNote) fail(at, 'has no model and no modelNote saying what the source did call it');
-  } else modelKnown(l.model, at);
+  } else {
+    modelKnown(l.model, at);
+    if (l.modelParams) fail(at, 'gives modelParams for a named model -- its shape in MODELS already says this');
+  }
   checkRig(l.rig, at);
   if (l.quant.key && !WEIGHT_FORMATS[l.quant.key]) fail(at, `quant.key "${l.quant.key}" is not in WEIGHT_FORMATS (assets/ceiling.js)`);
   const cards = (l.rig.units ?? []).reduce((n, u) => n + u.count, 0);

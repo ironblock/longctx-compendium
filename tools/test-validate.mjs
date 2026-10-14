@@ -170,6 +170,12 @@ const CASES = [
   ['the old platforms collection coming back', 'unknown property', d => {
     d.platforms = [];
   }],
+  ['a format state no source supports', 'no source supports it', d => {
+    for (const s of arch(d, 'ampere').sources) s.supports = (s.supports ?? []).filter(x => x !== 'fp8:absent');
+  }],
+  ['a size hint on a named model', 'gives modelParams for a named model', d => {
+    line(d, R).modelParams = { total: 32e9 };
+  }],
 ];
 
 // Edits that must be ACCEPTED. A validator that rejects legitimate data is as
@@ -189,6 +195,16 @@ const ACCEPTED = [
     const u = unit(d, 'rtx_4090');
     u.formatOverrides = { fp4: 'native' };
     u.note = 'test fixture';
+  }],
+  ['an unnamed model with only its size', null, d => {
+    line(d, R).model = null;
+    line(d, R).modelNote = 'The source says only "a 32B".';
+    line(d, R).modelParams = { total: 32e9 };
+  }],
+  ['a generation marked unknown with no supporting source', null, d => {
+    const a = arch(d, 'ampere');
+    a.formats.fp8 = 'unknown';
+    for (const s of a.sources) s.supports = (s.supports ?? []).filter(x => x !== 'fp8:absent');
   }],
   ['a line from a source that did not name its model', null, d => {
     line(d, R).model = null;

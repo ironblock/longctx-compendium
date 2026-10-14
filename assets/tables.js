@@ -8,6 +8,7 @@ import {
   prefillCeiling,
   fit,
   cardsToFit,
+  splitsEvenly,
   fmtGiB,
   bpwOf,
   KV_BYTES_PER_ELEMENT,
@@ -35,7 +36,7 @@ export function formatBadges(u) {
   return FORMATS.map(f => {
     const s = u.support[f];
     const why = s.from === 'unit' ? 'set on this card' : s.from === 'rated' ? 'a rated figure exists' : s.from === 'arch' ? `from ${u.archLabel}` : 'no chip generation recorded';
-    return `<span class="fmt ${s.state}" title="${FMT_LABEL[f]}: ${STATE_WORD[s.state]} (${why})">${FMT_LABEL[f]}</span>`;
+    return `<span class="fmt ${s.state}" title="${esc(`${FMT_LABEL[f]}: ${STATE_WORD[s.state]} (${why})`)}">${FMT_LABEL[f]}</span>`;
   }).join('');
 }
 
@@ -113,7 +114,7 @@ function sortRows(rows, col, dir) {
 
 export function renderHardwareTable(model, state, matches) {
   const cols = HW_COLS(state.scatterPrec);
-  const active = cols.find(c => c.key === state.hwSort.key) ?? cols[2];
+  const active = cols.find(c => c.key === state.hwSort.key && c.sort) ?? cols.find(c => c.key === 'bw');
   el('hwTable').querySelector('thead tr').innerHTML = cols
     .map(c => {
       const on = c === active;
@@ -181,7 +182,7 @@ export function renderCeilingTable(model, state, units) {
     const pre = r.prefill.tps == null
       ? `<td class="lbl">${DASH}<span class="sub">no rated ${prec.precision.toUpperCase()} figure</span></td>`
       : `<td class="lbl"><span class="num">${n0(r.prefill.tps)}</span><span class="sub" title="${esc(prec.note)}">${prec.precision.toUpperCase()}${prec.grounded ? '' : ' · assumed'}</span></td>`;
-    const modeWord = r.n === 1 ? '' : r.mode === 'tensor' ? 'tensor parallel' : 'layer split';
+    const modeWord = r.n === 1 ? '' : r.mode === 'tensor' ? (splitsEvenly(m, r.n) ? 'tensor parallel' : `tensor parallel · ${m.heads} heads don't split ${r.n} ways`) : 'layer split';
     return (
       `<tr${f && !f.fits ? ' style="opacity:.55"' : ''}>` +
       `<td class="lbl">${esc(u.label)}<span class="sub">${esc(u.archLabel ?? '')}</span></td>` +
@@ -280,6 +281,7 @@ function pointRow(l, r) {
     r.confidence === 'm~' ? 'secondary or anecdotal source' : '',
     r.depthNote ?? '',
     c.assumedKv && r.metric === 'decode' ? 'KV format not recorded: 16-bit assumed' : '',
+    c.weightsOnly ? 'ceiling from the labelled size alone, weights only' : '',
     r.acceptance != null ? `draft acceptance ${r.acceptance}` : '',
     r.note ?? '',
   ].filter(Boolean);
@@ -296,7 +298,7 @@ function pointRow(l, r) {
 
 export function obsMatches(l, r, s) {
   if (s.obsDevice && !l.rig.units.some(u => u.unit === s.obsDevice)) return false;
-  if (s.obsModel && (l.model ?? '') !== s.obsModel) return false;
+  if (s.obsModel === '__none' ? l.model != null : s.obsModel && l.model !== s.obsModel) return false;
   if (s.obsMetric !== 'all' && r.metric !== s.obsMetric) return false;
   if (s.obsProv !== 'all' && l.provenance.attestation !== s.obsProv) return false;
   return true;

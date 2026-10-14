@@ -5,8 +5,8 @@
 // count, the model, the quant, the depth or the number itself -- not that the
 // hardware is unusually fast.
 //
-//   node tools/check-ceilings.mjs           fail on anything over its ceiling
-//   node tools/check-ceilings.mjs --table   also print every reading's share
+//   node tools/check-ceilings.mjs [data.json]          fail on anything over its ceiling
+//   node tools/check-ceilings.mjs [data.json] --table  also print every reading's share
 //
 // Exempt: decode under speculative decoding, which can emit several tokens per
 // pass and so can legitimately exceed a one-token-per-pass bound.
@@ -17,7 +17,8 @@ import { fileURLToPath } from 'node:url';
 import { normalize } from '../assets/data.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const doc = JSON.parse(fs.readFileSync(path.join(root, 'data/compendium.json'), 'utf8'));
+const file = process.argv.slice(2).find(a => !a.startsWith('--')) ?? path.join(root, 'data/compendium.json');
+const doc = JSON.parse(fs.readFileSync(file, 'utf8'));
 const model = normalize(doc);
 
 // 5% slack for the typical-average bits per weight of GGUF recipes.

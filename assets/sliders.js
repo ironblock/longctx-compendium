@@ -87,7 +87,9 @@ export function rangeSlider(host, { min, max, log = false, snap = v => v, unit =
       if (which === 'lo') lo.value = pl = ph;
       else hi.value = ph = pl;
     }
-    current = open([pl <= 0 ? null : snap(s.toVal(pl)), ph >= STEPS ? null : snap(s.toVal(ph))]);
+    // Only a handle at the very end is an open bound; one step in is a bound,
+    // even where rounding lands it on the scale's end value.
+    current = [pl <= 0 ? null : snap(s.toVal(pl)), ph >= STEPS ? null : snap(s.toVal(ph))];
     fill(pl, ph);
     boxes();
     onChange(current, live);

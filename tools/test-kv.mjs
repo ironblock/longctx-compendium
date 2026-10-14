@@ -61,7 +61,7 @@ for (const l of doc.lines ?? []) {
   }
   const floorKiB = floor / 1024;
   check(`${l.id}: measured is not below the floor`, kv.kibPerToken >= floorKiB * 0.995, `${kv.kibPerToken} vs floor ${floorKiB.toFixed(2)} KiB/token`);
-  if (/^llama\.cpp/.test(l.engine.name) && l.spec.method === 'mtp') {
+  if (/^llama\.cpp/.test(l.engine.name) && l.spec?.method === 'mtp') {
     check(`${l.id}: llama.cpp with an inline MTP head lands on the floor`, Math.abs(kv.kibPerToken - floorKiB) / floorKiB < 0.005);
   }
 }

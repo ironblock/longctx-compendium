@@ -197,6 +197,17 @@ export function bpwOf(formatKey, recordedBpw) {
   return { bpw: f.bpw, confidence: f.confidence, source: f.note };
 }
 
+/**
+ * Parameters a token actually has to touch. A decode step reads one row of an
+ * untied input embedding, not the table, so the table comes out; a tied one is
+ * also the output head and is read in full. Taking it out even where a model
+ * card's "active" count may already exclude it can only loosen the bound.
+ */
+export const readParams = m => m.params.active - (m.params.tiedEmbeddings ? 0 : (m.params.inputEmbedding ?? 0));
+
+/** Most engines need the attention heads to divide evenly across tensor-parallel cards. */
+export const splitsEvenly = (m, cards) => cards === 1 || m.heads % cards === 0;
+
 // --- Decode -----------------------------------------------------------------
 
 /**
@@ -206,7 +217,7 @@ export function bpwOf(formatKey, recordedBpw) {
  */
 export function decodeBytesPerStep(m, { bpw, depth, kvK = 'f16', kvV = kvK, streams = 1 }) {
   if (!m?.params?.active || bpw == null) return null;
-  const weights = (m.params.active * bpw) / 8;
+  const weights = (readParams(m) * bpw) / 8;
   const kv = kvReadBytesAt(m, depth, kvK, kvV);
   if (kv == null) return null;
   const state = recurrentStateBytes(m);
@@ -264,7 +275,7 @@ export function prefillFlopsPerToken(m, depth, { cold = false } = {}) {
   const linear = m.linear && t.linear_attention
     ? 4 * t.linear_attention * m.linear.valueHeads * m.linear.keyHeadDim * m.linear.valueHeadDim
     : 0;
-  return 2 * m.params.active + softmax + linear;
+  return 2 * readParams(m) + softmax + linear;
 }
 
 /**
@@ -283,9 +294,14 @@ export function computePrecision(unit, formatKey) {
       : { precision: 'fp16', grounded: true, note: 'no FP8 matrix units: weights upcast to 16-bit' };
   }
   if (family === 'bf16') {
-    return fmt.bf16 === 'native'
-      ? { precision: 'bf16', grounded: true, note: 'BF16 matrix units' }
-      : { precision: 'fp16', grounded: true, note: 'no BF16 matrix units: FP16 assumed' };
+    // An unquantized checkpoint may be FP16 or BF16; an upper bound takes the
+    // faster of the two the card's matrix units take natively.
+    const v = unit.compute?.values ?? {};
+    const native = ['bf16', 'fp16'].filter(p => fmt[p] === 'native' && v[p] != null);
+    const best = native.sort((a, b) => v[b] - v[a])[0];
+    return best
+      ? { precision: best, grounded: true, note: `16-bit weights at the faster of this card's native FP16 and BF16 rates (${best.toUpperCase()})` }
+      : { precision: 'fp16', grounded: false, note: 'no rated native 16-bit matrix figure: FP16 assumed' };
   }
   const dq = ARCH_TO_DEQUANT_FAMILY[unit.arch];
   const entry = family && dq ? PRECISION_MAP[family]?.[dq.family] : null;
@@ -336,12 +352,24 @@ export function prefillCeiling(m, unit, { cards = 1, formatKey, depth, cold = fa
 export function fit(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK = 'f16', kvV = kvK, streams = 1 }) {
   if (!m?.params?.total || bpw == null || !unit?.memoryGB) return null;
   const weights = (m.params.total * bpw) / 8;
-  const kv = kvBytesAt(m, depth, kvK, kvV);
-  if (kv == null) return null;
-  const replicate = mode === 'tensor' ? Math.max(1, cards / m.kvHeads) : 1;
-  const need = weights + streams * (kv * replicate + recurrentStateBytes(m));
+  const full = kvBytesPerPosition(m, 'full', kvK, kvV);
+  const slide = kvBytesPerPosition(m, 'sliding', kvK, kvV);
+  if (full == null) return null;
+  // Under tensor parallel each card holds the heads it computes, so a layer type
+  // with fewer KV heads than cards is copied onto the rest. MLA's compressed
+  // cache is one latent shared by every head, so every card holds all of it.
+  const copies = type => {
+    if (mode !== 'tensor') return 1;
+    if (type === 'full' && m.mla) return cards;
+    return Math.max(1, cards / attnShape(m, type).kvHeads);
+  };
+  const fullKv = (m.layerTypes.full_attention ?? 0) * full * depth;
+  const slideKv = (m.layerTypes.sliding_attention ?? 0) * slide * Math.min(depth, m.slidingWindow ?? depth);
+  const kv = fullKv * copies('full') + slideKv * copies('sliding');
+  const replicate = Math.max(copies('full'), (m.layerTypes.sliding_attention ? copies('sliding') : 1));
+  const need = weights + streams * (kv + recurrentStateBytes(m));
   const have = cards * (unit.memoryGB * GiB - RESERVE_BYTES_PER_CARD);
-  return { need, have, fits: need <= have, weights, kv: kv * streams * replicate, replicate };
+  return { need, have, fits: need <= have, weights, kv: kv * streams, replicate };
 }
 
 export const CARD_STEPS = [1, 2, 4, 8];
@@ -366,8 +394,21 @@ export const fmtGiB = b => (b == null ? '—' : b >= 10 * GiB ? `${Math.round(b 
  * far to trust a row needs to know whether "no ceiling" means "unknowable"
  * or "nobody recorded the quant".
  */
+/**
+ * A stand-in shape for a line whose source gave only a size ("a 27B dense
+ * model"): weights only, no cache counted, which can only raise the bound.
+ */
+const weightsOnly = p => ({
+  label: 'the model as labelled',
+  params: { total: p.total, active: p.active ?? p.total },
+  layerTypes: { full_attention: 0 },
+  heads: 1,
+  kvHeads: 1,
+  headDim: 1,
+});
+
 export function ceilingFor(line, point, unitById) {
-  const m = modelById(line.model);
+  const m = modelById(line.model) ?? (line.model == null && line.modelParams ? weightsOnly(line.modelParams) : null);
   if (!m) return { why: line.model ? `no shape recorded for ${line.model}` : 'the model was not recorded' };
   if (!m.params?.active) return { why: `no parameter count recorded for ${m.label}` };
 
@@ -391,7 +432,8 @@ export function ceilingFor(line, point, unitById) {
       tps: c.tps,
       bound: 'bandwidth',
       speculative: specOn,
-      assumedKv: !line.kvCache,
+      assumedKv: !line.kvCache && !!modelById(line.model),
+      weightsOnly: !modelById(line.model),
       bytes: c.bytes,
     };
   }

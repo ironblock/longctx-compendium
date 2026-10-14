@@ -13,6 +13,7 @@ import {
   LAYOUT_LABEL,
   decodeBytesPerStep,
   kvBytesAt,
+  kvBytesPerToken,
   recurrentStateBytes,
   bpwOf,
   fmtGiB,
@@ -33,6 +34,14 @@ const el = id => document.getElementById(id);
 
 const FMT_LABEL = { tf32: 'TF32', bf16: 'BF16', fp16: 'FP16', fp8: 'FP8', fp6: 'FP6', fp4: 'FP4', int8: 'INT8', int4: 'INT4' };
 const SCATTER_PRECS = ['fp16', 'bf16', 'fp8', 'int8', 'fp4'];
+const SORT_KEYS = ['label', 'mem', 'bw', 'prec', 'tdp', 'street', 'perGB', 'bwPerK'];
+/** The "Not recorded" choice in the observation model filter. */
+export const NO_MODEL = '__none';
+
+/** A section link (#ceilings) is an anchor, not a view; only key=value fragments carry state. */
+const isStateHash = h => h.includes('=');
+/** The chart precision a view gets when the address does not name one. */
+const inferredPrec = fmt => [...fmt].find(f => SCATTER_PRECS.includes(f)) ?? 'fp16';
 
 const DEFAULTS = {
   fmt: [],
@@ -65,30 +74,37 @@ const DEFAULTS = {
 // --- state <-> address --------------------------------------------------------
 
 function readState() {
-  const q = new URLSearchParams(location.hash.slice(1));
+  const raw = location.hash.slice(1);
+  const q = new URLSearchParams(isStateHash(raw) ? raw : '');
   const num = k => (q.has(k) && q.get(k) !== '' && Number.isFinite(Number(q.get(k))) ? Number(q.get(k)) : DEFAULTS[k]);
   const str = (k, allowed) => (q.has(k) && (!allowed || allowed.includes(q.get(k))) ? q.get(k) : DEFAULTS[k]);
   const list = k => (q.get(k) ? q.get(k).split(',').filter(Boolean) : DEFAULTS[k]);
   const [sk, sd] = str('sort').split(':');
+  // A range typed backwards in an address is read the right way round.
+  const span = (a, b) => (a != null && b != null && a > b ? [b, a] : [a, b]);
+  const [bwMin, bwMax] = span(num('bw'), num('bwmax'));
+  const [memMin, memMax] = span(num('mem'), num('memmax'));
+  const [priceMin, priceMax] = span(num('pricemin'), num('price'));
+  const d = q.has('d') && q.get('d') !== '' && Number.isFinite(Number(q.get('d'))) ? Number(q.get('d')) : DEFAULTS.depth;
   return {
     fmt: new Set(list('fmt').filter(f => FORMATS.includes(f))),
     fmtUnknownOk: q.get('unk') === '1',
     // Filters are [min, max] with null for an open end. "bw" and "price" keep
     // the meanings they had as single thresholds, so older links still work.
-    bwMin: num('bw'),
-    bwMax: num('bwmax'),
-    memMin: num('mem'),
-    memMax: num('memmax'),
-    priceMin: num('pricemin'),
-    priceMax: num('price'),
+    bwMin,
+    bwMax,
+    memMin,
+    memMax,
+    priceMin,
+    priceMax,
     vendorsOff: new Set(list('voff')),
     // With no chart precision in the address, the chart follows the first format asked for.
-    scatterPrec: q.has('prec') ? str('prec', SCATTER_PRECS) : list('fmt').find(f => SCATTER_PRECS.includes(f)) ?? DEFAULTS.scatterPrec,
-    hwSort: { key: sk, dir: sd === 'asc' ? 'asc' : 'desc' },
+    scatterPrec: q.has('prec') ? str('prec', SCATTER_PRECS) : inferredPrec(list('fmt')),
+    hwSort: SORT_KEYS.includes(sk) ? { key: sk, dir: sd === 'asc' ? 'asc' : 'desc' } : { key: 'bw', dir: 'desc' },
     model: str('model', Object.keys(MODELS)),
     weights: str('w', WEIGHT_CHOICES),
     kv: str('kv', KV_CHOICES.map(k => k.id)),
-    depth: Math.min(DEFAULTS.depthMax, Math.max(DEFAULTS.depthMin, Math.round(num('d') / 1024) * 1024 || DEFAULTS.depth)),
+    depth: Math.min(DEFAULTS.depthMax, Math.max(DEFAULTS.depthMin, Math.round(d / 1024) * 1024)),
     cards: str('n', ['auto', '1', '2', '3', '4', '5', '6', '7', '8']),
     split: str('split', ['tensor', 'layer']),
     scope: str('scope', ['filtered', 'all']),
@@ -115,7 +131,7 @@ function writeState(s) {
   put('pricemin', s.priceMin, null);
   put('price', s.priceMax, null);
   put('voff', [...s.vendorsOff].join(','), '');
-  put('prec', s.scatterPrec, DEFAULTS.scatterPrec);
+  put('prec', s.scatterPrec, inferredPrec(s.fmt));
   put('sort', `${s.hwSort.key}:${s.hwSort.dir}`, DEFAULTS.hwSort);
   put('model', s.model, DEFAULTS.model);
   put('w', s.weights, DEFAULTS.weights);
@@ -129,6 +145,8 @@ function writeState(s) {
   put('omet', s.obsMetric, 'all');
   put('oprov', s.obsProv, 'all');
   const hash = q.toString();
+  // A default view leaves a section anchor alone.
+  if (!hash && location.hash && !isStateHash(location.hash.slice(1))) return;
   history.replaceState(null, '', hash ? `#${hash}` : location.pathname + location.search);
 }
 
@@ -137,9 +155,12 @@ function writeState(s) {
 /** A row of chip buttons. `isOn(v)` decides the pressed state; `onPick(v)` handles a press. */
 function chips(id, items, isOn, onPick, cls = () => '') {
   const host = el(id);
+  // Rebuilding the row would drop keyboard focus to the page; put it back.
+  const focused = host.contains(document.activeElement) ? document.activeElement.dataset.i : null;
   host.innerHTML = items
     .map((it, i) => `<button type="button" data-i="${i}" class="${isOn(it.v) ? 'on' : ''} ${cls(it.v)}" aria-pressed="${isOn(it.v)}"${it.title ? ` title="${esc(it.title)}"` : ''}>${esc(it.label)}</button>`)
     .join('');
+  if (focused != null) host.querySelector(`[data-i="${focused}"]`)?.focus();
   host.onclick = e => {
     const b = e.target.closest('button');
     if (b) onPick(items[Number(b.dataset.i)].v);
@@ -272,8 +293,9 @@ try {
       `<div>${m.heads} attention heads, ${m.kvHeads} KV heads × ${m.headDim}</div>` +
       `<div style="margin-top:4px"><a href="${esc(m.source)}">config</a>${m.params.source ? ` · <a href="${esc(m.params.source)}">parameter count</a>` : ''}</div></div>` +
       `<div><div class="k">Attention layout</div><div class="big" style="color:${LAYOUT_COLOR()[layout]}">${esc(LAYOUT_LABEL[layout])}</div>` +
-      `<div>KV cache: ${fmtGiB(kvBytesAt(m, 1024, state.kv))} per 1K tokens at ${esc(state.kv)}` +
-      `${t.sliding_attention ? `; sliding layers stop growing at ${m.slidingWindow.toLocaleString()}` : ''}` +
+      `<div>KV cache grows ${fmtGiB(kvBytesPerToken(m, state.kv) * 1024)} per 1K tokens at ${esc(state.kv)}` +
+      `${t.sliding_attention ? `, plus a fixed ${fmtGiB(kvBytesAt(m, m.slidingWindow, state.kv) - kvBytesPerToken(m, state.kv) * m.slidingWindow)} for the sliding layers once past their ${m.slidingWindow.toLocaleString()}-token window` : ''}` +
+      `${m.sparse ? `; each step reads at most ${m.sparse.budget.toLocaleString()} positions of it` : ''}` +
       `${recurrentStateBytes(m) ? `; ${fmtGiB(recurrentStateBytes(m))} of fixed recurrent state` : ''}.</div>` +
       (m.note ? `<div style="margin-top:4px">${esc(m.note)}</div>` : '') +
       `</div>` +
@@ -362,7 +384,7 @@ try {
     };
     const models = [...new Set(model.LINES.map(l => l.model ?? ''))].sort((a, b) => (MODELS[a]?.label ?? 'zz').localeCompare(MODELS[b]?.label ?? 'zz'));
     const mod = el('obsModel');
-    mod.innerHTML = `<option value="">All models</option>` + models.map(id => `<option value="${id}">${esc(id ? MODELS[id]?.label ?? id : 'Not recorded')}</option>`).join('');
+    mod.innerHTML = `<option value="">All models</option>` + models.map(id => `<option value="${id || NO_MODEL}">${esc(id ? MODELS[id]?.label ?? id : 'Not recorded')}</option>`).join('');
     mod.value = state.obsModel;
     mod.onchange = () => {
       state.obsModel = mod.value;
@@ -473,7 +495,11 @@ try {
     update('hw');
   });
   window.addEventListener('hashchange', () => {
+    // A section link changes the fragment to an anchor: keep the view, and put
+    // it back in the address so a copied link still carries it.
+    if (!isStateHash(location.hash.slice(1))) return writeState(state);
     Object.assign(state, readState());
+    if (state.cards !== 'auto') lastCards = Number(state.cards);
     update();
   });
 
