@@ -12,8 +12,19 @@ if (typeof Chart !== 'undefined') {
   Chart.defaults.color = css('--muted');
 }
 
+/**
+ * Create a chart once, then update it in place: rebuilding a chart on every
+ * slider movement costs a canvas, a layout pass and an animation frame each.
+ */
 function mount(id, config) {
-  charts[id]?.destroy();
+  const c = charts[id];
+  if (c && c.config.type === config.type) {
+    c.data = config.data;
+    c.options = config.options;
+    c.update('none');
+    return c;
+  }
+  c?.destroy();
   charts[id] = new Chart(document.getElementById(id), config);
   return charts[id];
 }

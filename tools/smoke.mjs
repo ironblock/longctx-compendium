@@ -87,7 +87,7 @@ page.on('requestfailed', r => {
 // page uses, so adding a unit or a reading never means editing a count here.
 const doc = JSON.parse(fs.readFileSync(path.join(root, 'data/compendium.json'), 'utf8'));
 const model = normalize(doc);
-const NO_FILTER = { fmt: new Set(), fmtUnknownOk: false, bw: null, mem: null, price: null, vendorsOff: new Set() };
+const NO_FILTER = { fmt: new Set(), fmtUnknownOk: false, bwMin: null, bwMax: null, memMin: null, memMax: null, priceMin: null, priceMax: null, vendorsOff: new Set() };
 const expectMatch = filter => model.UNITS.filter(u => unitMatch(u, { ...NO_FILTER, ...filter }).ok).map(u => u.label);
 const totalPoints = model.LINES.reduce((n, l) => n + l.points.length, 0);
 // A failed number renders as one of these. "Infinity Fabric" is AMD's interconnect, not a division by zero.
@@ -105,6 +105,32 @@ const canvasPainted = async (id, p = page) =>
     return false;
   }, `#${id}`);
 const settle = () => page.waitForTimeout(60);
+// The numeric controls are range inputs: drive them the way a person would,
+// by typing into a slider's number box, or by moving its handle.
+async function setBox(sel, value, p = page) {
+  await p.locator(sel).fill(String(value));
+  await p.locator(sel).press('Tab');
+  await p.waitForTimeout(60);
+}
+async function setHandle(sel, pos, p = page) {
+  await p.locator(sel).evaluate((el, v) => {
+    el.value = String(v);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }, pos);
+  await p.waitForTimeout(60);
+}
+// Depth runs 1K to 256K on a log scale over 200 steps.
+const depthPos = tokens => Math.round((Math.log(tokens / 1024) / Math.log(256)) * 200);
+async function setCards(n) {
+  if (n === 'auto') {
+    if (!(await page.isChecked('#cardsAuto'))) await page.check('#cardsAuto');
+  } else {
+    if (await page.isChecked('#cardsAuto')) await page.uncheck('#cardsAuto');
+    await setHandle('#cardSlider input', n);
+  }
+  await page.waitForTimeout(60);
+}
 const hwLabels = async (p = page) =>
   (await p.locator('#hwTable tbody tr td:first-child > span:first-child').allTextContents()).map(t => t.trim());
 
@@ -120,12 +146,13 @@ check('format badges on every row', (await count('#hwTable tbody .fmt')) === mod
 check('scatter painted', await canvasPainted('scatterChart'));
 check('hardware summary rendered', /of \d+ units match/.test(await text('#hwSummary')));
 
-// The question this section exists for: FP8 matrix units and more than 1 TiB/s.
+// The question this section exists for: FP8 matrix units and more than 1 TiB/s,
+// typed exactly into the bandwidth slider's minimum box.
 await page.click('#fmtChips button:has-text("FP8")');
-await page.click('#bwChips button:has-text("1 TiB/s")');
+await setBox('#bwRange .lo-num', 1099.511627776);
 await settle();
 {
-  const want = expectMatch({ fmt: new Set(['fp8']), bw: 1099.511627776 }).sort();
+  const want = expectMatch({ fmt: new Set(['fp8']), bwMin: 1099.511627776 }).sort();
   const got = (await hwLabels()).sort();
   check('FP8 + 1 TiB/s lists exactly the matching units', JSON.stringify(got) === JSON.stringify(want), `got ${got.join(', ')}; want ${want.join(', ')}`);
   check('the query found something', want.length > 0);
@@ -134,12 +161,20 @@ await settle();
   const hash = await page.evaluate(() => location.hash);
   check('the filter is kept in the address', /fmt=fp8/.test(hash) && /bw=1099/.test(hash), hash);
   check('the chart follows the format asked for', /FP8/.test(await text('#scatterCap')));
+  check('the summary names 1 TiB/s', /1 TiB\/s/.test(await text('#hwSummary')), await text('#hwSummary'));
+  check('the box shows the bound to one decimal', (await page.locator('#bwRange .lo-num').inputValue()) === '1099.5');
+  // Editing the other end must not round the exact bound already typed here.
+  await setBox('#bwRange .hi-num', 9000);
+  await setBox('#bwRange .hi-num', '');
+  check('the exact bound survives an edit to the other end', /bw=1099\.511627776/.test(await page.evaluate(() => location.hash)), await page.evaluate(() => location.hash));
+  const lo = Number(await page.locator('#bwRange input.lo').inputValue());
+  check('the slider handle moved to match the typed bound', lo > 60 && lo < 140, `position ${lo}`);
 }
 // The same query arriving as a link.
 {
   const p2 = await browser.newPage();
   await p2.goto(`${base}/index.html#fmt=fp8&bw=1000`, { waitUntil: 'networkidle' });
-  const want = expectMatch({ fmt: new Set(['fp8']), bw: 1000 }).sort();
+  const want = expectMatch({ fmt: new Set(['fp8']), bwMin: 1000 }).sort();
   const got = (await hwLabels(p2)).sort();
   check('a shared link restores the filter', JSON.stringify(got) === JSON.stringify(want), `got ${got.length}, want ${want.length}`);
   check('at 1 TB/s the 4090 is in', got.some(l => /4090/.test(l)), got.join(', '));
@@ -148,6 +183,46 @@ await settle();
 await page.click('#hwReset');
 await settle();
 check('clearing filters lists every unit again', (await count('#hwTable tbody tr')) === model.UNITS.length);
+check('clearing filters empties the slider boxes', (await page.locator('#bwRange .lo-num').inputValue()) === '');
+
+// A two-ended range: cards priced between $1,000 and $2,000.
+{
+  await setBox('#priceRange .lo-num', 1000);
+  await setBox('#priceRange .hi-num', 2000);
+  await settle();
+  const want = expectMatch({ priceMin: 1000, priceMax: 2000 }).sort();
+  const got = (await hwLabels()).sort();
+  check('a min-max price range lists exactly the units inside it', JSON.stringify(got) === JSON.stringify(want), `got ${got.join(', ')}; want ${want.join(', ')}`);
+  const hash = await page.evaluate(() => location.hash);
+  check('both ends of a range are kept in the address', /pricemin=1000/.test(hash) && /price=2000/.test(hash), hash);
+  // Reversed boxes are put the right way round rather than matching nothing.
+  await setBox('#priceRange .lo-num', 2000);
+  await setBox('#priceRange .hi-num', 1000);
+  await settle();
+  check('a reversed range is read the right way round', (await hwLabels()).length === want.length);
+  // A bound typed at the very end of the scale is no bound at all.
+  await setBox('#priceRange .hi-num', '');
+  await setBox('#priceRange .lo-num', await page.locator('#priceRange .lo-num').getAttribute('min'));
+  await settle();
+  check('a minimum at the bottom of the scale is an open end', (await page.locator('#priceRange .lo-num').inputValue()) === '' && (await count('#hwTable tbody tr')) === model.UNITS.length);
+  // An emptied box is an open end.
+  await setBox('#priceRange .lo-num', '');
+  await setBox('#priceRange .hi-num', '');
+  await settle();
+  check('emptying both boxes removes the bound', (await count('#hwTable tbody tr')) === model.UNITS.length);
+}
+// Moving a handle by keyboard narrows the list, and the box follows the handle.
+{
+  await page.focus('#memRange input.lo');
+  for (let i = 0; i < 80; i++) await page.keyboard.press('ArrowRight');
+  await settle();
+  const boxed = Number(await page.locator('#memRange .lo-num').inputValue());
+  const want = expectMatch({ memMin: boxed }).length;
+  check('a keyboard-moved handle fills its box with a round number', boxed > 0 && Number.isInteger(boxed), `box ${boxed}`);
+  check('and the list matches that bound', (await count('#hwTable tbody tr')) === want && want < model.UNITS.length, `${await count('#hwTable tbody tr')} vs ${want}`);
+  await page.click('#hwReset');
+  await settle();
+}
 
 // Vendor chips hide and restore.
 {
@@ -206,10 +281,10 @@ await settle();
 // The physics, through the UI: going from 4K to 256K costs a full-attention
 // dense model far more decode ceiling than a hybrid with a quarter of its
 // layers on full attention.
-async function decodeAt(modelId, depthLabel) {
+async function decodeAt(modelId, tokens) {
   await page.selectOption('#modelSelect', modelId);
-  await page.click(`#depthChips button:text-is("${depthLabel}")`);
-  await page.click('#cardChips button:text-is("1")');
+  await setHandle('#depthSlider input', depthPos(tokens));
+  await setCards(1);
   await settle();
   const row = page.locator('#ceilTable tbody tr', { hasText: 'RTX PRO 6000' }).first();
   return Number((await row.locator('.bar .v').first().textContent()).replace(/,/g, ''));
@@ -217,21 +292,25 @@ async function decodeAt(modelId, depthLabel) {
 {
   const fullId = withParams.find(id => MODELS[id].layerTypes.linear_attention == null && MODELS[id].layerTypes.sliding_attention == null && MODELS[id].params.active === MODELS[id].params.total);
   const hybridId = withParams.find(id => MODELS[id].layerTypes.linear_attention > 0);
-  const f4 = await decodeAt(fullId, '4K');
-  const f256 = await decodeAt(fullId, '256K');
-  const h4 = await decodeAt(hybridId, '4K');
-  const h256 = await decodeAt(hybridId, '256K');
+  const f4 = await decodeAt(fullId, 4096);
+  const f256 = await decodeAt(fullId, 262144);
+  const h4 = await decodeAt(hybridId, 4096);
+  const h256 = await decodeAt(hybridId, 262144);
+  check('the depth readout names the depth', (await text('#depthSlider output')) === '256K', await text('#depthSlider output'));
+  check('a depth past the model\'s context window is flagged', MODELS[hybridId].maxPositions >= 262144 || /beyond/.test(await text('#ceilNote')));
   check(`decode ceiling falls with depth (${fullId})`, f256 < f4, `${f4} -> ${f256}`);
   check(`a hybrid keeps more of its ceiling than a full-attention model (${hybridId} vs ${fullId})`, h256 / h4 > f256 / f4, `${(h256 / h4).toFixed(2)} vs ${(f256 / f4).toFixed(2)}`);
-  await page.click('#cardChips button:has-text("Fewest that fit")');
-  await page.click(`#depthChips button:text-is("128K")`);
+  await setCards('auto');
+  await setHandle('#depthSlider input', depthPos(131072));
   await page.selectOption('#modelSelect', 'qwen38_27b');
   await settle();
+  check('depth comes back to 128K', (await text('#depthSlider output')) === '128K');
+  check('the card slider is disabled while the fewest-that-fit box decides', await page.locator('#cardSlider input').isDisabled() && (await text('#cardSlider output')) === 'fewest');
 }
 {
   // Tensor parallel multiplies a single stream's bandwidth; a layer split does not.
   await page.selectOption('#modelSelect', withParams.find(id => MODELS[id].params.total > 60e9) ?? 'qwen38_27b');
-  await page.click('#cardChips button:text-is("4")');
+  await setCards(4);
   await page.click('#splitChips button:has-text("Tensor parallel")');
   await settle();
   const row = () => page.locator('#ceilTable tbody tr', { hasText: 'RTX 3090 24GB' }).first().locator('.bar .v').first();
@@ -240,8 +319,13 @@ async function decodeAt(modelId, depthLabel) {
   await settle();
   const layer = Number((await row().textContent()).replace(/,/g, ''));
   check('four cards under tensor parallel get four cards of bandwidth', Math.abs(tp / layer - 4) < 0.01, `${tp} vs ${layer}`);
+  // Three cards is a count the old buttons could not ask for.
   await page.click('#splitChips button:has-text("Tensor parallel")');
-  await page.click('#cardChips button:has-text("Fewest that fit")');
+  await setCards(3);
+  await settle();
+  const three = Number((await row().textContent()).replace(/,/g, ''));
+  check('a three-card tensor-parallel split gets three cards of bandwidth', Math.abs(three / layer - 3) < 0.01, `${three} vs ${layer}`);
+  await setCards('auto');
   await page.selectOption('#modelSelect', 'qwen38_27b');
   await page.click('#scopeChips button:has-text("Matching section 1")');
   await settle();

@@ -4,7 +4,8 @@ An interactive page about single-stream, long-context LLM inference on
 hardware you could buy, in three layers ordered by how long they stay true:
 
 1. **Hardware** — one row per card, filterable by what its silicon can do
-   ("FP8 matrix units and at least 1 TiB/s" is a link you can share).
+   with range sliders ("FP8 matrix units and at least 1 TiB/s" is a link you
+   can share).
 2. **Ceilings** — what physics allows a given model at a given depth on that
    hardware, computed from datasheet figures and the model's published shape.
 3. **Observations** — every measured number, as a dated reading from one rig,
@@ -39,6 +40,7 @@ assets/models.js        model shapes, transcribed from each model's config.json
 assets/dequant-map.js   which matrix precision llama.cpp multiplies each quant in, per chip generation
 assets/charts.js        Chart.js configuration
 assets/tables.js        table rendering
+assets/sliders.js       the range sliders (two-handle filters, single-value settings)
 assets/chart.umd.js     vendored Chart.js 4.4.1 (MIT)
 data/compendium.json    ← every hardware fact and every reading (architectures · units · lines · candidates)
 data/schema.json

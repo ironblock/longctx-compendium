@@ -41,12 +41,18 @@ export function formatBadges(u) {
 
 // --- 1. Hardware ------------------------------------------------------------
 
-/** Does a unit pass the hardware filter? Also says which formats it passed only as "not sourced". */
+/**
+ * Does a unit pass the hardware filter? Also says which formats it passed only
+ * as "not sourced". Each numeric filter is [min, max] with null for an open
+ * end; a unit with no figure for a bounded quantity drops out, because an
+ * unknown bandwidth or price is not one that satisfies the bound.
+ */
+const within = (v, lo, hi) => (lo == null || (v != null && v >= lo)) && (hi == null || (v != null && v <= hi));
 export function unitMatch(u, s) {
   if (s.vendorsOff.has(u.vendor ?? 'Other')) return { ok: false };
-  if (s.bw != null && !(u.memoryBandwidthGBs >= s.bw)) return { ok: false };
-  if (s.mem != null && !(u.memoryGB >= s.mem)) return { ok: false };
-  if (s.price != null && !(u.street != null && u.street <= s.price)) return { ok: false };
+  if (!within(u.memoryBandwidthGBs, s.bwMin, s.bwMax)) return { ok: false };
+  if (!within(u.memoryGB, s.memMin, s.memMax)) return { ok: false };
+  if (!within(u.street, s.priceMin, s.priceMax)) return { ok: false };
   const unknown = [];
   for (const f of s.fmt) {
     const st = u.formats[f];
@@ -193,7 +199,11 @@ export function renderCeilingTable(model, state, units) {
     `<tr><td class="lbl" colspan="7" style="color:var(--muted);padding:16px">No unit in scope has a bandwidth figure.</td></tr>`;
 
   const w = WEIGHT_FORMATS[state.weights];
+  const beyond = m.maxPositions && state.depth > m.maxPositions
+    ? `${fmtDepth(state.depth)} is beyond ${m.label}'s ${m.maxPositions.toLocaleString()}-token context window, so these rows are arithmetic only. `
+    : '';
   el('ceilNote').textContent =
+    beyond +
     `Decode: tokens/sec for one stream, one token per pass, at ${fmtDepth(state.depth)} deep. ` +
     `Prefill: tokens/sec appended at that depth, at the precision shown (hover for the kernel finding; "assumed" means no grounded finding, FP16 used). ` +
     `Weights at ${w.label}${w.bpw ? ` ≈ ${w.bpw} bits per weight` : ''}; ${state.cards === 'auto' ? 'cards: the fewest of 1, 2, 4 or 8 that fit' : `${state.cards} card${state.cards === '1' ? '' : 's'} each`}. ` +

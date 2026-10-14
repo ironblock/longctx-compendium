@@ -48,25 +48,24 @@
     <div class="chips" id="fmtChips"></div>
     <label class="check"><input type="checkbox" id="fmtUnknownOk"> count “not sourced” as a match</label>
   </div>
-  <div class="fgroup">
-    <div class="tglabel">Memory bandwidth ≥</div>
-    <div class="chips" id="bwChips"></div>
-    <label class="numin">or <input type="number" id="bwInput" min="0" step="1" inputmode="decimal" placeholder="GB/s" aria-label="Minimum memory bandwidth in GB/s"> GB/s</label>
+  <div class="fgroup slide">
+    <div class="tglabel" id="bwLabel">Memory bandwidth, GB/s</div>
+    <div id="bwRange" role="group" aria-labelledby="bwLabel"></div>
   </div>
-  <div class="fgroup">
-    <div class="tglabel">Memory per card ≥</div>
-    <div class="chips" id="memChips"></div>
+  <div class="fgroup slide">
+    <div class="tglabel" id="memLabel">Memory per card, GB</div>
+    <div id="memRange" role="group" aria-labelledby="memLabel"></div>
   </div>
-  <div class="fgroup">
-    <div class="tglabel">Street price per card ≤</div>
-    <div class="chips" id="priceChips"></div>
+  <div class="fgroup slide">
+    <div class="tglabel" id="priceLabel">Street price per card, USD</div>
+    <div id="priceRange" role="group" aria-labelledby="priceLabel"></div>
   </div>
   <div class="fgroup">
     <div class="tglabel">Vendors</div>
     <div class="chips" id="vendorChips"></div>
   </div>
 </div>
-<p class="summary" id="hwSummary"></p>
+<p class="summary"><span id="hwSummary"></span> <button type="button" id="hwReset" hidden>Clear filters</button></p>
 
 <div class="chartbox">
   <div class="cap">
@@ -102,13 +101,14 @@
     <div class="tglabel">KV cache</div>
     <div class="chips" id="kvChips"></div>
   </div>
-  <div class="fgroup">
-    <div class="tglabel">Depth</div>
-    <div class="chips" id="depthChips"></div>
+  <div class="fgroup slide">
+    <div class="tglabel" id="depthLabel">Context depth, tokens</div>
+    <div id="depthSlider" role="group" aria-labelledby="depthLabel"></div>
   </div>
-  <div class="fgroup">
-    <div class="tglabel">Cards</div>
-    <div class="chips" id="cardChips"></div>
+  <div class="fgroup slide">
+    <div class="tglabel" id="cardLabel">Cards</div>
+    <div id="cardSlider" role="group" aria-labelledby="cardLabel"></div>
+    <label class="check"><input type="checkbox" id="cardsAuto"> the fewest of 1, 2, 4 or 8 that fit</label>
   </div>
   <div class="fgroup">
     <div class="tglabel">Split across cards</div>

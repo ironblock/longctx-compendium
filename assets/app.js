@@ -8,7 +8,6 @@ import {
   WEIGHT_FORMATS,
   WEIGHT_CHOICES,
   KV_CHOICES,
-  DEPTH_CHOICES,
   CARD_STEPS,
   attentionLayout,
   LAYOUT_LABEL,
@@ -19,6 +18,7 @@ import {
   fmtGiB,
 } from './ceiling.js';
 import { renderScatter, renderDepth, LAYOUT_COLOR } from './charts.js';
+import { rangeSlider, slider } from './sliders.js';
 import {
   unitMatch,
   renderHardwareTable,
@@ -32,24 +32,17 @@ import {
 const el = id => document.getElementById(id);
 
 const FMT_LABEL = { tf32: 'TF32', bf16: 'BF16', fp16: 'FP16', fp8: 'FP8', fp6: 'FP6', fp4: 'FP4', int8: 'INT8', int4: 'INT4' };
-const BW_PRESETS = [
-  { v: null, label: 'Any' },
-  { v: 500, label: '500 GB/s' },
-  { v: 1000, label: '1 TB/s' },
-  { v: 1099.511627776, label: '1 TiB/s' },
-  { v: 2000, label: '2 TB/s' },
-  { v: 4000, label: '4 TB/s' },
-];
-const MEM_PRESETS = [null, 24, 32, 48, 80, 128];
-const PRICE_PRESETS = [null, 1000, 2000, 5000, 10000];
 const SCATTER_PRECS = ['fp16', 'bf16', 'fp8', 'int8', 'fp4'];
 
 const DEFAULTS = {
   fmt: [],
   fmtUnknownOk: false,
-  bw: null,
-  mem: null,
-  price: null,
+  bwMin: null,
+  bwMax: null,
+  memMin: null,
+  memMax: null,
+  priceMin: null,
+  priceMax: null,
   vendorsOff: [],
   scatterPrec: 'fp16',
   hwSort: 'bw:desc',
@@ -58,6 +51,9 @@ const DEFAULTS = {
   kv: 'f16',
   depth: 131072,
   cards: 'auto',
+  // Context depth runs from 1K to 256K tokens, on a log scale, in 1K steps.
+  depthMin: 1024,
+  depthMax: 262144,
   split: 'tensor',
   scope: 'filtered',
   obsDevice: '',
@@ -77,9 +73,14 @@ function readState() {
   return {
     fmt: new Set(list('fmt').filter(f => FORMATS.includes(f))),
     fmtUnknownOk: q.get('unk') === '1',
-    bw: num('bw'),
-    mem: num('mem'),
-    price: num('price'),
+    // Filters are [min, max] with null for an open end. "bw" and "price" keep
+    // the meanings they had as single thresholds, so older links still work.
+    bwMin: num('bw'),
+    bwMax: num('bwmax'),
+    memMin: num('mem'),
+    memMax: num('memmax'),
+    priceMin: num('pricemin'),
+    priceMax: num('price'),
     vendorsOff: new Set(list('voff')),
     // With no chart precision in the address, the chart follows the first format asked for.
     scatterPrec: q.has('prec') ? str('prec', SCATTER_PRECS) : list('fmt').find(f => SCATTER_PRECS.includes(f)) ?? DEFAULTS.scatterPrec,
@@ -87,8 +88,8 @@ function readState() {
     model: str('model', Object.keys(MODELS)),
     weights: str('w', WEIGHT_CHOICES),
     kv: str('kv', KV_CHOICES.map(k => k.id)),
-    depth: DEPTH_CHOICES.includes(num('d')) ? num('d') : DEFAULTS.depth,
-    cards: str('n', ['auto', ...CARD_STEPS.map(String)]),
+    depth: Math.min(DEFAULTS.depthMax, Math.max(DEFAULTS.depthMin, Math.round(num('d') / 1024) * 1024 || DEFAULTS.depth)),
+    cards: str('n', ['auto', '1', '2', '3', '4', '5', '6', '7', '8']),
     split: str('split', ['tensor', 'layer']),
     scope: str('scope', ['filtered', 'all']),
     obsDevice: str('od'),
@@ -98,7 +99,7 @@ function readState() {
   };
 }
 // The keys DEFAULTS uses under their address names.
-Object.assign(DEFAULTS, { sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all' });
+Object.assign(DEFAULTS, { bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all' });
 
 function writeState(s) {
   const q = new URLSearchParams();
@@ -107,9 +108,12 @@ function writeState(s) {
   };
   put('fmt', [...s.fmt].join(','), '');
   if (s.fmtUnknownOk) q.set('unk', '1');
-  put('bw', s.bw, null);
-  put('mem', s.mem, null);
-  put('price', s.price, null);
+  put('bw', s.bwMin, null);
+  put('bwmax', s.bwMax, null);
+  put('mem', s.memMin, null);
+  put('memmax', s.memMax, null);
+  put('pricemin', s.priceMin, null);
+  put('price', s.priceMax, null);
   put('voff', [...s.vendorsOff].join(','), '');
   put('prec', s.scatterPrec, DEFAULTS.scatterPrec);
   put('sort', `${s.hwSort.key}:${s.hwSort.dir}`, DEFAULTS.hwSort);
@@ -150,11 +154,29 @@ function fail(err) {
   document.querySelectorAll('.chartbox, .tscroll').forEach(n => n.classList.add('hidden'));
 }
 
-const usdShort = v => (v >= 1000 ? `$${v / 1000}k` : `$${v}`);
+const usd = v => `$${Math.round(v).toLocaleString()}`;
+const gbs = v => `${(Math.round(v * 10) / 10).toLocaleString()} GB/s`;
+/** "≥ a", "≤ b" or "a–b" for a filter's [min, max]. */
+const spanText = ([a, b], f) => (a != null && b != null ? `${f(a)}–${f(b)}` : a != null ? `≥ ${f(a)}` : `≤ ${f(b)}`);
+
+/** Nice round numbers on a log scale: two significant figures, three above 1,000. */
+const roundTo = (v, step) => Math.round(v / step) * step;
+const snapBandwidth = v => (v < 1000 ? roundTo(v, 10) : roundTo(v, 50));
+const snapMemory = v => (v < 64 ? Math.round(v) : roundTo(v, 4));
+const snapPrice = v => (v < 2000 ? roundTo(v, 50) : v < 20000 ? roundTo(v, 250) : roundTo(v, 1000));
+const snapDepth = v => Math.max(1024, Math.round(v / 1024) * 1024);
+/** Round a catalog extent outward to 1, 2 or 5 times a power of ten. */
+function niceBound(v, up) {
+  const p = 10 ** Math.floor(Math.log10(v));
+  const steps = [1, 2, 5, 10];
+  const f = v / p;
+  return (up ? steps.find(x => x >= f - 1e-9) : steps.slice().reverse().find(x => x <= f + 1e-9)) * p;
+}
 
 try {
   const model = await load();
   const state = readState();
+
   const vendors = [...new Set(model.UNITS.map(u => u.vendor ?? 'Other'))];
 
   const matchesNow = () => new Map(model.UNITS.map(u => [u.id, unitMatch(u, state)]));
@@ -166,35 +188,25 @@ try {
       // The chart follows the first format asked for, when it can show it.
       const first = [...state.fmt].find(f => SCATTER_PRECS.includes(f));
       if (first) state.scatterPrec = first;
-      update();
+      update('hw');
     });
     el('fmtUnknownOk').checked = state.fmtUnknownOk;
-    chips('bwChips', BW_PRESETS, v => state.bw === v, v => {
-      state.bw = v;
-      update();
-    });
-    el('bwInput').value = state.bw != null && !BW_PRESETS.some(p => p.v === state.bw) ? state.bw : '';
-    chips('memChips', MEM_PRESETS.map(v => ({ v, label: v == null ? 'Any' : `${v} GB` })), v => state.mem === v, v => {
-      state.mem = v;
-      update();
-    });
-    chips('priceChips', PRICE_PRESETS.map(v => ({ v, label: v == null ? 'Any' : usdShort(v) })), v => state.price === v, v => {
-      state.price = v;
-      update();
-    });
+    sliders.bw.set([state.bwMin, state.bwMax]);
+    sliders.mem.set([state.memMin, state.memMax]);
+    sliders.price.set([state.priceMin, state.priceMax]);
     chips(
       'vendorChips',
       vendors.map(v => ({ v, label: v, title: 'Click to hide or show' })),
       v => !state.vendorsOff.has(v),
       v => {
         state.vendorsOff.has(v) ? state.vendorsOff.delete(v) : state.vendorsOff.add(v);
-        update();
+        update('hw');
       },
       v => (state.vendorsOff.has(v) ? 'off' : '')
     );
     chips('scatterPrecChips', SCATTER_PRECS.map(p => ({ v: p, label: FMT_LABEL[p] })), v => state.scatterPrec === v, v => {
       state.scatterPrec = v;
-      update();
+      update('hw');
     });
 
     const matches = matchesNow();
@@ -205,23 +217,21 @@ try {
     });
     const parts = [];
     if (state.fmt.size) parts.push(`${[...state.fmt].map(f => FMT_LABEL[f]).join(' + ')} matrix support`);
-    if (state.bw != null) {
-      const preset = BW_PRESETS.find(p => p.v === state.bw);
-      parts.push(preset && preset.label.includes('TiB') ? `≥ ${preset.label} (${state.bw.toFixed(1)} GB/s)` : `≥ ${Math.round(state.bw).toLocaleString()} GB/s`);
+    if (state.bwMin != null || state.bwMax != null) {
+      // 1 TiB/s is the one bandwidth people ask for by name.
+      const tib = state.bwMin != null && Math.abs(state.bwMin - 1099.511627776) < 0.05 ? ' (1 TiB/s)' : '';
+      parts.push(`bandwidth ${spanText([state.bwMin, state.bwMax], gbs)}${tib}`);
     }
-    if (state.mem != null) parts.push(`≥ ${state.mem} GB per card`);
-    if (state.price != null) parts.push(`≤ ${usdShort(state.price)} street (unpriced units drop out)`);
+    if (state.memMin != null || state.memMax != null) parts.push(`${spanText([state.memMin, state.memMax], v => `${v} GB`)} per card`);
+    if (state.priceMin != null || state.priceMax != null) parts.push(`street price ${spanText([state.priceMin, state.priceMax], usd)} (unpriced units drop out)`);
     if (state.vendorsOff.size) parts.push(`hiding ${[...state.vendorsOff].join(', ')}`);
     el('hwSummary').innerHTML =
       `<b>${ok.length}</b> of ${model.UNITS.length} units match${parts.length ? `: ${esc(parts.join(' · '))}` : ' (no filter set)'}.` +
       (almost.length
         ? ` ${almost.length} more would if their unsourced support were confirmed: ${almost.map(u => esc(u.label)).join(', ')}.`
         : '') +
-      (parts.length ? ' <button type="button" id="hwReset">Clear filters</button>' : '');
-    el('hwReset')?.addEventListener('click', () => {
-      Object.assign(state, { fmt: new Set(), fmtUnknownOk: false, bw: null, mem: null, price: null, vendorsOff: new Set() });
-      update();
-    });
+      '';
+    el('hwReset').hidden = !parts.length;
 
     const sc = renderScatter(model.UNITS, new Set(ok.map(u => u.id)), state.scatterPrec);
     el('scatterCap').textContent = `bandwidth vs dense ${FMT_LABEL[state.scatterPrec]} throughput · ${sc.plotted} of ${model.UNITS.length} units have both figures · ${sc.on} plotted match`;
@@ -288,7 +298,7 @@ try {
     });
   }
 
-  function renderCeilings(hwMatches) {
+  function renderCeilControls() {
     const sel = el('modelSelect');
     if (!sel.options.length) {
       const groups = { full: [], sliding: [], linear: [] };
@@ -299,34 +309,33 @@ try {
         .join('');
       sel.onchange = () => {
         state.model = sel.value;
-        update();
+        update('model');
       };
     }
     sel.value = state.model;
     chips('weightChips', WEIGHT_CHOICES.map(w => ({ v: w, label: WEIGHT_FORMATS[w].label, title: WEIGHT_FORMATS[w].note })), v => state.weights === v, v => {
       state.weights = v;
-      update();
+      update('model');
     });
     chips('kvChips', KV_CHOICES.map(k => ({ v: k.id, label: k.label })), v => state.kv === v, v => {
       state.kv = v;
-      update();
+      update('model');
     });
-    chips('depthChips', DEPTH_CHOICES.map(d => ({ v: d, label: fmtDepth(d) })), v => state.depth === v, v => {
-      state.depth = v;
-      update();
-    });
-    chips('cardChips', [{ v: 'auto', label: 'Fewest that fit', title: 'The fewest of 1, 2, 4 or 8 cards that hold the model at this depth' }, ...CARD_STEPS.map(n => ({ v: String(n), label: String(n) }))], v => state.cards === v, v => {
-      state.cards = v;
-      update();
-    });
+    sliders.depth.set(state.depth);
+    el('cardsAuto').checked = state.cards === 'auto';
+    sliders.cards.set(state.cards === 'auto' ? lastCards : Number(state.cards), state.cards === 'auto');
     chips('splitChips', [{ v: 'tensor', label: 'Tensor parallel' }, { v: 'layer', label: 'Layer split' }], v => state.split === v, v => {
       state.split = v;
-      update();
+      update('calc');
     });
     chips('scopeChips', [{ v: 'filtered', label: 'Matching section 1' }, { v: 'all', label: 'All units' }], v => state.scope === v, v => {
       state.scope = v;
-      update();
+      update('calc');
     });
+  }
+
+  // The model card and depth chart depend only on the model and its formats.
+  function renderModelSection() {
     renderModelCard();
     renderDepth(depthSeries(), state.model);
     el('depthCap').textContent = `share of the empty-context decode ceiling left as the context deepens · ${modelIds.length} models`;
@@ -334,6 +343,9 @@ try {
     el('depthLegend').innerHTML = Object.entries(LAYOUT_LABEL)
       .map(([k, label]) => `<span><span class="swatch line" style="border-color:${colors[k]}"></span>${esc(label)}</span>`)
       .join('') + `<span style="color:var(--text)">heavier line: ${esc(MODELS[state.model].label)}</span>`;
+  }
+
+  function renderCeilTable(hwMatches) {
     const units = state.scope === 'all' ? model.UNITS : model.UNITS.filter(u => hwMatches.has(u.id));
     renderCeilingTable(model, state, units);
   }
@@ -346,7 +358,7 @@ try {
     dev.value = state.obsDevice;
     dev.onchange = () => {
       state.obsDevice = dev.value;
-      update();
+      update('obs');
     };
     const models = [...new Set(model.LINES.map(l => l.model ?? ''))].sort((a, b) => (MODELS[a]?.label ?? 'zz').localeCompare(MODELS[b]?.label ?? 'zz'));
     const mod = el('obsModel');
@@ -354,43 +366,111 @@ try {
     mod.value = state.obsModel;
     mod.onchange = () => {
       state.obsModel = mod.value;
-      update();
+      update('obs');
     };
     chips('obsMetricChips', [{ v: 'all', label: 'All' }, { v: 'decode', label: 'Decode' }, { v: 'prefill', label: 'Prefill' }], v => state.obsMetric === v, v => {
       state.obsMetric = v;
-      update();
+      update('obs');
     });
     chips('obsProvChips', [{ v: 'all', label: 'All' }, { v: 'witnessed', label: 'Witnessed' }, { v: 'reported', label: 'Reported' }], v => state.obsProv === v, v => {
       state.obsProv = v;
-      update();
+      update('obs');
     });
     renderObservations(model, state);
   }
 
-  function update() {
-    const ok = renderHardware();
-    renderCeilings(new Set(ok.map(u => u.id)));
-    renderObs();
-    renderCandidates(model, state);
+  /**
+   * Re-render what a change can affect, and nothing else, so a slider drag
+   * stays smooth:
+   *   hw     hardware filters -- section 1, and the ceiling table it scopes
+   *   model  model, weights, cache -- section 2 entire, and the rigs' ceilings
+   *   calc   depth, cards, split, scope -- the ceiling table and the rigs
+   *   obs    the observation filters -- section 3
+   *   all    everything (first load, a pasted link)
+   */
+  let hwOk = new Set();
+  function update(scope = 'all') {
+    const all = scope === 'all';
+    if (all || scope === 'hw') hwOk = new Set(renderHardware().map(u => u.id));
+    if (all || scope !== 'obs') renderCeilControls();
+    if (all || scope === 'model') renderModelSection();
+    if (all || scope === 'hw' || scope === 'model' || scope === 'calc') renderCeilTable(hwOk);
+    if (all || scope === 'obs') renderObs();
+    if (all || scope === 'model' || scope === 'calc') renderCandidates(model, state);
     writeState(state);
   }
 
+  // A slider fires on every pixel of a drag; render at most once a frame.
+  const pending = new Set();
+  const updateSoon = scope => {
+    if (pending.has(scope)) return;
+    pending.add(scope);
+    if (pending.size > 1) return;
+    requestAnimationFrame(() => {
+      const scopes = [...pending];
+      pending.clear();
+      scopes.forEach(update);
+    });
+  };
+
+  // Slider scales come from the catalog's own extents, rounded outward, so a
+  // card added beyond today's range is still reachable.
+  const extent = (get, pad = 1) => {
+    const v = model.UNITS.map(get).filter(x => x > 0);
+    return [niceBound(Math.min(...v) / pad, false), niceBound(Math.max(...v) * pad, true)];
+  };
+  const [bwLo, bwHi] = extent(u => u.memoryBandwidthGBs);
+  const [memLo, memHi] = extent(u => u.memoryGB);
+  const [priceLo, priceHi] = extent(u => u.street);
+  let lastCards = state.cards === 'auto' ? 4 : Number(state.cards);
+  const sliders = {
+    bw: rangeSlider(el('bwRange'), { min: bwLo, max: bwHi, log: true, snap: snapBandwidth, unit: 'GB/s', label: 'memory bandwidth', onChange: ([a, b], live) => {
+      state.bwMin = a;
+      state.bwMax = b;
+      live ? updateSoon('hw') : update('hw');
+    } }),
+    mem: rangeSlider(el('memRange'), { min: memLo, max: memHi, log: true, snap: snapMemory, unit: 'GB', label: 'memory per card', onChange: ([a, b], live) => {
+      state.memMin = a;
+      state.memMax = b;
+      live ? updateSoon('hw') : update('hw');
+    } }),
+    price: rangeSlider(el('priceRange'), { min: priceLo, max: priceHi, log: true, snap: snapPrice, unit: 'USD', label: 'street price per card', onChange: ([a, b], live) => {
+      state.priceMin = a;
+      state.priceMax = b;
+      live ? updateSoon('hw') : update('hw');
+    } }),
+    depth: slider(el('depthSlider'), { min: DEFAULTS.depthMin, max: DEFAULTS.depthMax, log: true, snap: snapDepth, format: fmtDepth, label: 'context depth', onChange: (v, live) => {
+      state.depth = v;
+      live ? updateSoon('calc') : update('calc');
+    } }),
+    cards: slider(el('cardSlider'), { min: 1, max: CARD_STEPS.at(-1), step: 1, format: n => `${n} card${n === 1 ? '' : 's'}`, disabledText: 'fewest', label: 'cards', onChange: (v, live) => {
+      lastCards = v;
+      state.cards = String(v);
+      live ? updateSoon('calc') : update('calc');
+    } }),
+  };
+  el('cardsAuto').addEventListener('change', e => {
+    state.cards = e.target.checked ? 'auto' : String(lastCards);
+    update('calc');
+  });
+
   // Controls that are not chip rows.
+  // Built once and only shown or hidden: a button rebuilt by the render its own
+  // click triggers can vanish between mousedown and click.
+  el('hwReset').addEventListener('click', () => {
+    Object.assign(state, { fmt: new Set(), fmtUnknownOk: false, bwMin: null, bwMax: null, memMin: null, memMax: null, priceMin: null, priceMax: null, vendorsOff: new Set() });
+    update('hw');
+  });
   el('fmtUnknownOk').addEventListener('change', e => {
     state.fmtUnknownOk = e.target.checked;
-    update();
-  });
-  el('bwInput').addEventListener('change', e => {
-    const v = Number(e.target.value);
-    state.bw = e.target.value === '' || !(v > 0) ? null : v;
-    update();
+    update('hw');
   });
   // Headers are rebuilt on every render, so the click is delegated.
   el('hwTable').querySelector('thead').addEventListener('click', e => {
     const key = e.target.closest('th')?.dataset.sortkey;
     if (!key) return;
     state.hwSort = state.hwSort.key === key ? { key, dir: state.hwSort.dir === 'desc' ? 'asc' : 'desc' } : { key, dir: key === 'label' ? 'asc' : 'desc' };
-    update();
+    update('hw');
   });
   window.addEventListener('hashchange', () => {
     Object.assign(state, readState());

@@ -48,6 +48,32 @@ p{font-size:14px}
 select,input[type=number]{font-family:var(--mono);font-size:12px;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
 input[type=number]{width:96px}
 .check,.numin{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+
+/* range sliders: a thin track, the selected span in the accent, round thumbs.
+   Two inputs share one track; only their thumbs take the pointer, so either
+   handle can be grabbed wherever the other sits. */
+.fgroup.slide{flex:1 1 230px;min-width:0;max-width:340px}
+.slider{position:relative;height:28px;--lo:0%;--hi:100%}
+.slider .track{position:absolute;left:8px;right:8px;top:12px;height:4px;border-radius:2px;background:var(--line)}
+.slider .fill{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--s1);left:var(--lo);right:calc(100% - var(--hi))}
+.slider input[type=range]{position:absolute;inset:0;width:100%;height:28px;margin:0;background:none;pointer-events:none;-webkit-appearance:none;appearance:none;z-index:2}
+.slider input[type=range]::-webkit-slider-runnable-track{background:none;height:28px}
+.slider input[type=range]::-moz-range-track{background:none}
+.slider input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;pointer-events:auto;width:16px;height:16px;margin-top:6px;border-radius:50%;background:var(--text);border:2px solid var(--panel2);box-shadow:0 0 0 1px var(--s1);cursor:grab}
+.slider input[type=range]::-moz-range-thumb{pointer-events:auto;width:14px;height:14px;border-radius:50%;background:var(--text);border:2px solid var(--panel2);box-shadow:0 0 0 1px var(--s1);cursor:grab}
+.slider input[type=range]:active::-webkit-slider-thumb{cursor:grabbing}
+.slider input[type=range]:focus-visible{outline:none}
+.slider input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--u)}
+.slider input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 3px var(--u)}
+.range-vals{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.range-vals input[type=number]{width:96px;flex:0 1 auto;min-width:0;font-variant-numeric:tabular-nums}
+.range-vals input::placeholder{color:var(--dim)}
+.single{display:flex;align-items:center;gap:12px}
+.single .slider{flex:1 1 auto;min-width:0}
+.single .readout{font-family:var(--mono);font-size:12px;color:var(--text);min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
+.single.disabled .slider{opacity:.35}
+.single.disabled .readout{color:var(--muted)}
+.slider input[type=range]:disabled::-webkit-slider-thumb{cursor:default}
 .summary{font-size:13px;color:var(--muted);margin:4px 2px 0}
 .summary b{color:var(--text)}
 .summary button{font:inherit;color:var(--u);background:none;border:0;cursor:pointer;text-decoration:underline;padding:0}
