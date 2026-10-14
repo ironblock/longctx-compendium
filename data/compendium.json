@@ -142,7 +142,7 @@
           ]
         }
       ],
-      "note": "Covers GA100: A100 80GB PCIe, PG199/DRIVE A100; GA102: RTX 3090, 3090 Ti, RTX A6000. Format sets are identical on GA100 and GA102 for the eight types tracked here. GA100-only: FP64 Tensor Core (GA102 has none). Also, on GeForce GA102 (RTX 3090) FP16/BF16 with FP32 accumulate runs at half the FP16-accumulate rate. In the GA102 whitepaper's Appendix A, the RTX 3090 column lists FP16 Tensor at 142/284 TFLOPS (dense/sparse) with FP16 accumulate and 71/142 with FP32 accumulate. Binary/INT1 is also supported but not tracked. PG199 / DRIVE A100 is treated as A100-class as instructed; I did not independently verify which die it uses."
+      "note": "Covers GA100: A100 80GB PCIe, PG199/DRIVE A100; GA102: RTX 3090, 3090 Ti, RTX A6000. Format sets are identical on GA100 and GA102 for the eight types tracked here. GA100-only: FP64 Tensor Core (GA102 has none). Also, on GeForce GA102 (RTX 3090) FP16/BF16 with FP32 accumulate runs at half the FP16-accumulate rate. In the GA102 whitepaper's Appendix A, the RTX 3090 column lists FP16 Tensor at 142/284 TFLOPS (dense/sparse) with FP16 accumulate and 71/142 with FP32 accumulate. Binary/INT1 is also supported but not tracked. PG199 / DRIVE A100 is GA100: it carries HBM2, which no other Ampere die has, and its measured 16-bit matmul rate is more than twice what the largest GA102 could reach at the same clock (see the unit's note)."
     },
     {
       "id": "ada",
@@ -1371,21 +1371,26 @@
       },
       "power": {
         "loadW": 250,
-        "idleW": 50,
-        "confidence": "i"
+        "idleW": 42,
+        "confidence": "m~",
+        "source": "https://leikoe.github.io/posts/automotive-gpu-maxxxing",
+        "note": "Load is the post author's figure under a gpu-fryer matmul burn (not LLM inference) with the card held at 1,140 MHz, \"the lowest it accepts\"; the card has no power limit (\"the cards don't support power limiting AT ALL\"), so downclocking is the only cap, and the author says an unclocked card \"can draw 600W if it wants to\" (not measured on the page). Idle is the post's nvidia-smi screenshot: 40-45 W across four cards in P0 with Xorg attached."
       },
-      "note": "int8=900 is NVIDIA's own figure from an archived DRIVE Hyperion developer page (\"One A100 GPU ... Tensor core peak performance = 900 TOPS (INT8)\") -- dense-vs-sparse is unannotated on the source, and the page itself is gone (Wayback-only, single secondhand citation), so treat as high-but-not-absolute confidence. It sits between the datacenter A100's own dense (624) and sparse (1,248) INT8 figures, consistent with an unspecified operating point rather than an error. Do not substitute datacenter A100 SXM4 figures for this unit -- different memory (32GB HBM2 @ 1,433 GB/s vs 40/80GB @ 1,555/2,039 GB/s), no NVLink, SXM2 not SXM4.",
+      "note": "Bandwidth: the source table says \"1433Gbps\", read here as GB/s. 1,433 Gbit/s would be 179 GB/s, less than one HBM2 stack, and 32 GB of HBM2 as four 8 GB stacks (4,096 bits) at 2.8 Gbit/s per pin gives 1,433.6 GB/s; the post itself reads it as \"1.4TBps\". INT8: NVIDIA does not say whether 900 TOPS is dense or sparse, and the post's author flags the same doubt (\"sparsity??\"). It is filed as sparse because a dense 900 is out of reach for GA100: dense INT8 is 4,096 ops per clock per SM, so 900 TOPS needs about 2.0 GHz on 108 SMs or 1.7 GHz on all 128, against 1.41 GHz on every datacenter A100. That is an inference, not a published fact. No dense figure is recorded, so this card has no INT8 prefill ceiling. Measured: the post's gpu-fryer run reads 207 TFLOPS per card at 1,140 MHz (precision not shown; the author reports \"around 250TF\" at stock clocks, not shown). It must be a 16-bit rate, since GA100 TF32 cannot reach it, and it shows the die is not GA102. The same holds for HBM2, which among Ampere dies only GA100 has. A measurement is a floor, not a rating, so it is not stored as a ceiling. Board: SXM2-format with 36 mm heatsink holes, not the standard 32 mm. NVLink does not work: the GSP reports no NVLink support, and the author understands the board lacks the traces (\"the chip supports NVLINK but the pcb misses the NVLINK traces\"). Rated PCIe 4.0 x16; it ran at PCIe 3.0 on the post's AOM-SXMV carrier. Do not substitute datacenter A100 SXM4 figures: the memory, interconnect and form factor all differ. MLPerf Inference v2.0 (Edge, Closed, ID 2.0-112) lists an \"NVIDIA Drive-A100-PCIe\"; that is a PCIe variant running non-LLM benchmarks, so it is not used here.",
       "sources": [
-        "Archived NVIDIA DRIVE Hyperion page (Wayback Machine, captured 2022-05-27), quoted verbatim by an independent technical blog -- the live page is gone and was inaccessible even to the research pass that surfaced this citation"
+        "https://leikoe.github.io/posts/automotive-gpu-maxxxing -- the post's spec table transcribes NVIDIA's archived DRIVE Hyperion page: \"Tensor core peak performance | 900 TOPS (INT8) (sparsity??)\", \"PCI Express 4.0 x16\", \"Total frame buffer | 32GB\", \"Memory bandwidth | 1433Gbps\". Its nvidia-smi screenshot (driver 570.124.04) shows \"NVIDIA DRIVE-PG199-PROD\", 32768MiB, and a power cap of N/A.",
+        "Archived NVIDIA DRIVE Hyperion page (Wayback Machine, captured 2022-05-27) -- the original of the table above; the live page is gone."
       ],
       "arch": "ampere",
       "compute": {
         "unit": "Tops",
         "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
-          "int8": 900
+          "int8:sparse": 900
         }
-      }
+      },
+      "memoryGB": 32,
+      "memoryBandwidthGBs": 1433
     },
     {
       "id": "arc_b70",
