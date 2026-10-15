@@ -2390,6 +2390,48 @@
         "https://www.notebookcheck.net/Apple-M5-Max-Processor-Benchmarks-and-Specs.1244918.0.html"
       ],
       "note": "Unified memory, up to 128 GB. The 32-core GPU bin is reported at 460 GB/s, which Apple has not confirmed. The GPU gets only part of the RAM by default. Bandwidth facts carried over from the old Apple appendix."
+    },
+    {
+      "id": "cmp_170hx_64",
+      "label": "CMP 170HX 64GB (unlocked)",
+      "vendor": "NVIDIA",
+      "arch": "ampere",
+      "released": "2021-05",
+      "memoryGB": 64,
+      "memoryBandwidthGBs": 1769,
+      "process": "TSMC N7",
+      "pricing": {
+        "street": {
+          "usd": 1095,
+          "asOf": "2026-09",
+          "note": "Low confidence. A used stock 8 GB card, which the buyer unlocks in software. bytwork (updated 2026-09-28): \"On marketplaces the price started at $122–146 and settled at $1095 ... on eBay in the US from $150 to $1400\". Tested or x16-modded 64 GB boards ask about twice that ($2,706 on eBay per traictory, 2026-09-20). No dated sold-price series was found. The card launched around $4,300 in 2021 (press reports; NVIDIA never listed it)."
+        }
+      },
+      "sources": [
+        "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/board-and-variants.md -- \"Active stacks / bus width | 4 stacks, 4096-bit\" (8 GB card); \"Unlock target | 4 × 16 GB = 64 GB, stable\"; 70 SMs at compute capability 8.0",
+        "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/overview.md -- \"Sustained SM clock (stock) | 1410 MHz\"; \"Sustained SM clock at -pl 300 | 1470 MHz | 8 GB card with the OC VBIOS\"",
+        "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/vbios.md -- 92.00.67.00.01 (2021-05-14, 250 W, the stock production image) and 92.00.6D.00.0A (2022-04-07, 300 W)",
+        "https://github.com/asm64-hooligan/cmpunlocker/blob/master/overclocking/README.md -- \"8GB (0x20C2) | 250 W | 54 | 1458 MHz\" and \"8GB (0x20C2) | 300 W | 64 | 1728 MHz\"",
+        "https://github.com/cachenetics/170tune/blob/5eb4775063b6cc055607ee5affecd210b13f0156/docs/reference-matrices.md -- \"64 GB HBM2e, 4096-bit bus, stock 1728 MHz (NDIV 64)\"; \"Theoretical HBM peak at 1728 MHz | 1769 GB/s\"; read 1679.1 GB/s measured",
+        "https://github.com/satspace-cpu/cmp170hx-linux-p2p/blob/fbef1c3/docs/BENCHMARKS.md -- measured after the unlock: TF32 99.82, BF16 201.55 TFLOPS, INT8 409.77 TOPS; HBM read 1669.19 GB/s at 1728 MHz",
+        "https://images.nvidia.com/aem-dam/en-zz/Solutions/data-center/nvidia-ampere-architecture-whitepaper.pdf -- \"A100 has four Tensor Cores per SM, which together deliver 1024 dense FP16/FP32 FMA operations per clock\" (per-SM rates the compute figures scale)",
+        "https://niconiconi.neocities.org/tech-notes/nvidia-cmp-170hx-review/ -- a stock card's deviceQuery: \"Memory bus width: 4096 bits\", \"Memory bandwidth: 1492.99 GB/sec\"",
+        "https://bytwork.com/en/hw/videocards/cmp-170hx (street price)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "note": "Derived, not rated: NVIDIA never published a rating for this card. Each figure is A100's dense per-SM tensor rate (whitepaper) x 70 SMs x 1,470 MHz, the sustained clock of an 8 GB card on the 300 W VBIOS, the same configuration as the bandwidth. The unlocked cards' own mma throughput lands just under these (satspace: BF16 201.55, INT8 409.77, TF32 99.82). Through torch, cuBLAS or OpenCL, INT8 measured only 43-48 TOPS in July 2026, against 335-410 TOPS in mma microbenchmarks; that gap is unresolved. llama.cpp issues mma directly, so the higher figure is the bound. No FP8, FP6 or FP4 (sm_80). Sparse rates were never measured on this card, so none are recorded.",
+        "source": "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/overview.md",
+        "values": {
+          "fp32": 13.2,
+          "tf32": 105.4,
+          "bf16": 210.7,
+          "fp16": 210.7,
+          "int8": 421.5,
+          "int4": 843
+        }
+      },
+      "note": "A GA100 mining card that becomes a 64 GB inference card through a community unlock (cmpunlocker). The unlock patches the NVIDIA open kernel modules to address the HBM2e already on the card, 4 stacks of 16 GB on a 4096-bit bus, and to lift the compute throttle that left stock cards at 1/32 issue rate. Caveats: only the 8 GB card (PCI 10de:20c2) unlocks to 64 GB; the 10 GB card (10de:2082) reaches 40 GB, and nvidia-smi does not tell them apart. CUDA allocates about 63.4 GiB. Bandwidth depends on the card's VBIOS: 1,769 GB/s is the 300 W image (HBM at 1,728 MHz); the stock 250 W image runs 1,458 MHz for 1,493 GB/s. Both ship under the same ID, and the ceiling takes the faster. The patched driver pins exact versions (610.43.02/.03, 610.57.04, 615.71.09, 615.78.08 as of 2026-10-07), needs Secure Boot off and a cold power cycle, and is Linux-only. ECC is fused off; cmpunlocker reports it enabled since 2026-10-04, but nobody has shown it correcting errors, and one card needed a single-bit HBM page blacklisted by hand. The host link is PCIe Gen1 x4 stock. Gen2 comes from software, x16 from hand-soldering 24 missing capacitors, and Gen3 is unsolved. There is no NVLink. Memory and SM overclocks can corrupt data silently. Passively cooled, on a single EPS 8-pin."
     }
   ],
   "lines": [
@@ -6352,6 +6394,132 @@
         "source": "himeshp.blogspot, as cited by the old Method note"
       },
       "note": "The source sets this against 71 tok/s on an unstated smaller configuration, as an example of 4-way tensor parallel over PCIe lowering single-request decode. It puts 2-way NVLink at about +48% throughput over PCIe-only and 4-way at only +8-10%; those are ratios, not readings."
+    },
+    {
+      "id": "x_cmp170hx_qwen38_27b_bf16",
+      "label": "Qwen3.8 27B · BF16 · llama.cpp · 1× CMP 170HX",
+      "model": "qwen38_27b",
+      "engine": {
+        "name": "llama.cpp",
+        "note": "llama-bench; the build is not stated beyond \"the same llama-bench build\" for both runs"
+      },
+      "quant": {
+        "format": "BF16",
+        "key": "bf16",
+        "bpw": 16,
+        "sizeGB": 54.64,
+        "note": "50.89 GiB as the source gives it."
+      },
+      "status": "measured",
+      "observed": "2026-08-22",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/satspace-cpu/cmp170hx-linux-p2p/blob/fbef1c3/docs/BENCHMARKS.md (\"llama.cpp compute / multi-GPU A/B\"), published in commit 65df2b2 on 2026-08-22; the run date is not given"
+      },
+      "hazards": [
+        "The HBM clock for this run is not stated; the same page reports the cards at both 1,728 MHz (stock for the 300 W VBIOS) and an overclocked 1,890 MHz."
+      ],
+      "rig": {
+        "units": [
+          {
+            "unit": "cmp_170hx_64",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "Driver 610.43.03, CUDA userspace 13.3, kernel 7.0.0-29-generic; each card at PCIe Gen2 x16 after the capacitor mod."
+        }
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1141.23,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "depthNote": "llama-bench tg128; no depth flag is shown, so most likely an empty context",
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 24.72,
+          "confidence": "m~"
+        }
+      ]
+    },
+    {
+      "id": "x_cmp170hx2_qwen38_27b_bf16_layer",
+      "label": "Qwen3.8 27B · BF16 · llama.cpp · 2× CMP 170HX, layer split",
+      "model": "qwen38_27b",
+      "engine": {
+        "name": "llama.cpp",
+        "note": "llama-bench; the build is not stated beyond \"the same llama-bench build\" for both runs"
+      },
+      "quant": {
+        "format": "BF16",
+        "key": "bf16",
+        "bpw": 16,
+        "sizeGB": 54.64,
+        "note": "50.89 GiB as the source gives it."
+      },
+      "status": "measured",
+      "observed": "2026-08-22",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/satspace-cpu/cmp170hx-linux-p2p/blob/fbef1c3/docs/BENCHMARKS.md (\"llama.cpp compute / multi-GPU A/B\"), published in commit 65df2b2 on 2026-08-22; the run date is not given"
+      },
+      "hazards": [
+        "The HBM clock for this run is not stated; the same page reports the cards at both 1,728 MHz (stock for the 300 W VBIOS) and an overclocked 1,890 MHz."
+      ],
+      "rig": {
+        "units": [
+          {
+            "unit": "cmp_170hx_64",
+            "count": 2
+          }
+        ],
+        "interconnect": {
+          "kind": "pcie",
+          "hostLinkGBs": 20,
+          "source": "https://github.com/satspace-cpu/cmp170hx-linux-p2p/blob/fbef1c3/docs/BENCHMARKS.md",
+          "note": "PCIe Gen2 x16 per card (5 GT/s x 16 lanes, both directions). This run predates the page's verified peer-to-peer result, and its earlier mailbox P2P figures were later shown to be false, so peer traffic here most likely went through the host."
+        },
+        "host": {
+          "note": "Driver 610.43.03, CUDA userspace 13.3, kernel 7.0.0-29-generic; each card at PCIe Gen2 x16 after the capacitor mod."
+        }
+      },
+      "parallel": {
+        "mode": "layer",
+        "note": "-ts 50/50"
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1842.04,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "depthNote": "llama-bench tg128; no depth flag is shown, so most likely an empty context",
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 26.97,
+          "confidence": "m~"
+        }
+      ]
     }
   ],
   "candidates": [
