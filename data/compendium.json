@@ -1563,7 +1563,7 @@
           "usd": 15999,
           "asOf": "2026-10",
           "source": "https://gpuprix.com/us/gpus/rtx-pro-6000-blackwell",
-          "note": "New, asking: the lowest offer, a PNY Workstation Edition at Newegg, on gpuprix (2026-10-14), whose 3-month median is $14,750 and 12-month low $8,617. GPUDojo the next day: $16,000 new on eBay, $17,999 at Newegg; its lowest eBay ask was $14,400-$14,500 in late August. The rise tracks the GDDR7 shortage."
+          "note": "New, asking: the lowest offer, a PNY Workstation Edition at Newegg, on gpuprix (2026-10-14), whose 3-month median is $14,750 and 12-month low $8,617. GPUDojo the next day: $16,000 new on eBay, $17,999 at Newegg; its lowest eBay ask was $14,400-$14,500 in late August. The rise tracks the GDDR7 shortage. PCPartPicker on 2026-10-15: $16,999 (PNY) and $18,018.99 (NVIDIA); the 300 W Max-Q edition was $16,499.99."
         },
         "msrp": {
           "usd": 8565,
@@ -1593,7 +1593,8 @@
         "https://gpupoet.com/gpu/learn/card/nvidia-rtx-pro-6000-blackwell-server",
         "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/pdf/NVIDIA-RTX-Blackwell-PRO-GPU-Architecture-v1_1.pdf",
         "https://gpuprix.com/us/gpus/rtx-pro-6000-blackwell (street price, 2026-10-14)",
-        "https://gpudojo.com/rtx-pro-6000 (asking prices, 2026-10-15)"
+        "https://gpudojo.com/rtx-pro-6000 (asking prices, 2026-10-15)",
+        "https://pcpartpicker.com/products/video-card/#T=10,13,15,11,12&P=25769803776,103079215104 (first 100 of 260 results, 24-96 GB filter), clipped by the maintainer 2026-10-15 -- new retail prices"
       ],
       "note": "The 234 TFLOPS TF32 figure found is a Server Edition number; this record describes the 600 W Workstation Edition.",
       "arch": "blackwell",
@@ -1635,7 +1636,7 @@
         "street": {
           "usd": 7999,
           "asOf": "2026-10",
-          "note": "New: $7,999 at B&H (OEM) on gpuprix (2026-10-14), during the GDDR7 shortage; its 12-month low was $4,400. That is about half the RTX PRO 6000's price at the same date."
+          "note": "New: $7,999 at B&H (OEM) on gpuprix (2026-10-14), during the GDDR7 shortage; its 12-month low was $4,400. That is about half the RTX PRO 6000's price at the same date. PCPartPicker listed it at $7,985 the next day."
         }
       },
       "sources": [
@@ -1688,7 +1689,7 @@
         "street": {
           "usd": 9599,
           "asOf": "2026-10",
-          "note": "New: PNY card on Amazon at $9,599 (gpuprix, 2026-10-14); one tracker snapshot."
+          "note": "New: PNY card on Amazon at $9,599 (gpuprix, 2026-10-14); one tracker snapshot. PCPartPicker listed the same $9,599 the next day."
         }
       },
       "sources": [
@@ -1734,9 +1735,10 @@
           "asOf": "2025-01"
         },
         "street": {
-          "usd": 4300,
-          "asOf": "2026-08",
-          "note": "New $4,199-$5,000+ / used $3,680-$3,999 as of Aug 2026 -- ~2-2.5x the $1,999 launch MSRP on GDDR7 shortage. NVIDIA notified AIB partners of a ~$300 price increase effective ~May 13 2026 (per Board Channels via VideoCardz/Tom's Hardware)."
+          "usd": 4921,
+          "asOf": "2026-10",
+          "source": "https://gpudojo.com/rtx-5090",
+          "note": "New, asking: the lowest eBay offer on GPUDojo's tracker (2026-10-15), unchanged since mid-September; Amazon's lowest was $7,200. On PCPartPicker the same day, in-stock retail cards started at $7,249, and 20 more were out of stock at last-listed prices of $4,100-$5,600. About 2.5x the $1,999 launch price, during the GDDR7 shortage."
         }
       },
       "released": "2025-01",
@@ -1752,7 +1754,9 @@
         "https://forums.developer.nvidia.com/t/rtx-5090-specs-fp16-tensor-tflops-is-ambiguous/351063",
         "https://news.ycombinator.com/item?id=44997957",
         "https://forums.developer.nvidia.com/t/rtx-5090-peak-bf16-tensor-tflops/350543",
-        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)"
+        "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
+        "https://gpudojo.com/rtx-5090 (asking prices, 2026-10-15)",
+        "https://pcpartpicker.com/products/video-card/#T=10,13,15,11,12&P=25769803776,103079215104 (first 100 of 260 results, 24-96 GB filter), clipped by the maintainer 2026-10-15 -- new retail prices"
       ],
       "arch": "blackwell",
       "compute": {
@@ -1838,6 +1842,12 @@
         "msrp": {
           "usd": 1299,
           "asOf": "2025-10"
+        },
+        "street": {
+          "usd": 1700,
+          "asOf": "2026-10",
+          "source": "https://pcpartpicker.com/products/video-card/#T=10,13,15,11,12&P=25769803776,103079215104 (first 100 of 260 results, 24-96 GB filter), clipped by the maintainer 2026-10-15",
+          "note": "New: the ASRock Creator at $1,699.99, the lowest of three R9700 listings on PCPartPicker (the others were $1,959.99 and $1,999.99). The launch price was $1,299."
         }
       },
       "released": "2025-07",
@@ -1852,7 +1862,8 @@
         "https://www.geeks3d.com/20250521/amd-radeon-ai-pro-r9700-announced-32gb-vram-300w/",
         "https://www.techpowerup.com/342203/amd-radeon-ai-pro-r9700-gpu-arrives-october-27-at-usd-1-299-for-retail",
         "https://wccftech.com/amd-radeon-ai-pro-r9700-gpu-4x-more-tops-2x-ai-performance-vs-radeon-pro-w7800/",
-        "https://www.asus.com/motherboards-components/graphics-cards/turbo/turbo-ai-pro-r9700-32g/techspec/"
+        "https://www.asus.com/motherboards-components/graphics-cards/turbo/turbo-ai-pro-r9700-32g/techspec/",
+        "https://pcpartpicker.com/products/video-card/#T=10,13,15,11,12&P=25769803776,103079215104 (first 100 of 260 results, 24-96 GB filter), clipped by the maintainer 2026-10-15 -- new retail prices"
       ],
       "arch": "rdna4",
       "compute": {
@@ -2180,9 +2191,10 @@
       "memoryGB": 32,
       "pricing": {
         "street": {
-          "usd": 1200,
-          "asOf": "2026-08",
-          "note": "Memory-crunch premium over $949 MSRP. StorageReview: street \"pushed over $1,100\" as of its review. GPU Poet eBay tracking: avg $1,142-$1,415 across Apr 2026, listings up to $2,000."
+          "usd": 1300,
+          "asOf": "2026-10",
+          "source": "https://gpudojo.com/arc-pro-b70",
+          "note": "New: $1,299.99 at Newegg and at Amazon (GPUDojo, 2026-10-15); the lowest eBay offer was $1,999. PCPartPicker's first page that day listed only Intel's own card, at $2,059. MSRP $949."
         },
         "msrp": {
           "usd": 949,
@@ -2203,7 +2215,8 @@
         "Tom's Hardware / Puget Systems / StorageReview / igor'sLAB Arc Pro B70 reviews",
         "GPU Poet eBay price tracking (Apr 2026)",
         "AI Inference Hardware — Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026)",
-        "https://cdrdv2-public.intel.com/824434/2024_Intel_Tech%20Tour%20TW_Xe2%20and%20Lunar%20Lakes%20GPU.pdf -- p.9: \"XMX FP16 / BF16 8 16 2 4 2 2048\" / \"XMX INT8 8 16 4 4 2 4096\" ops per clock per Xe-core"
+        "https://cdrdv2-public.intel.com/824434/2024_Intel_Tech%20Tour%20TW_Xe2%20and%20Lunar%20Lakes%20GPU.pdf -- p.9: \"XMX FP16 / BF16 8 16 2 4 2 2048\" / \"XMX INT8 8 16 4 4 2 4096\" ops per clock per Xe-core",
+        "https://gpudojo.com/arc-pro-b70 (asking prices, 2026-10-15)"
       ],
       "note": "230W reference TDP (160-290W partner range). PCIe 5.0 x16, one GPU per card (unlike the dual-GPU B60's x8/x8 split). Software: SYCL/oneAPI is a valid current toolkit but immature -- llama.cpp SYCL backend and IPEX-LLM work today; vLLM requires Intel's maintained fork (mainline CUDA kernels won't run); no FP4/NVFP4 acceleration (XMX engines are FP16/INT8-optimized). StorageReview's verdict: \"the hardware is ready, the stack needs to catch up.\" FP8 and FP4/NVFP4 confirmed architecturally absent on this Battlemage Xe2 die (not merely undocumented) -- corroborates the earlier report's note that XMX engines here are FP16/INT8-optimized with no FP4 path.",
       "arch": "xe2",
@@ -2713,7 +2726,7 @@
         "street": {
           "usd": 1900,
           "asOf": "2026-08",
-          "note": "New $1,650-$3,765 (held 15-35% over $1,599 MSRP for 18+ months); used $1,500-$2,350. NOT independently re-verified the way RTX 3090/3090 Ti were -- the 4090 is also a donor board for the GA102/AD102 VRAM-transplant mod trade (e.g. RTX 4090 48GB mods) that contaminated the 3090 scrape, though the compiling analyst judged the effect \"smaller\" here. Treat with the same skepticism until spot-checked."
+          "note": "New $1,650-$3,765 (held 15-35% over $1,599 MSRP for 18+ months); used $1,500-$2,350. NOT independently re-verified the way RTX 3090/3090 Ti were -- the 4090 is also a donor board for the GA102/AD102 VRAM-transplant mod trade (e.g. RTX 4090 48GB mods) that contaminated the 3090 scrape, though the compiling analyst judged the effect \"smaller\" here. Treat with the same skepticism until spot-checked. October 2026 asks are far higher, so this figure is likely stale: in-stock new retail started at $4,399 on PCPartPicker, and Amazon's lowest used offer was $3,280 (GPUDojo, 2026-10-15). It needs a sold-price check."
         }
       },
       "sources": [
@@ -2955,15 +2968,18 @@
           "note": "$3,499 SEP for the Dual-Slot variant."
         },
         "street": {
-          "usd": 3300,
-          "asOf": "2026-08",
-          "note": "New $3,100-$3,650; used $3,000-$3,500."
+          "usd": 3550,
+          "asOf": "2026-10",
+          "source": "https://gpudojo.com/radeon-pro-w7900",
+          "note": "Used, asking: the lowest eBay offer on GPUDojo's tracker (2026-10-15), up from $3,000 in early September. New: $3,839 at Amazon, the same price PCPartPicker listed that day."
         }
       },
       "sources": [
         "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
         "https://gpuopen.com/learn/wmma_on_rdna3/",
-        "https://www.amd.com/en/products/graphics/workstations/radeon-pro/w7900-dual-slot.html"
+        "https://www.amd.com/en/products/graphics/workstations/radeon-pro/w7900-dual-slot.html",
+        "https://gpudojo.com/radeon-pro-w7900 (asking prices, 2026-10-15)",
+        "https://pcpartpicker.com/products/video-card/#T=10,13,15,11,12&P=25769803776,103079215104 (first 100 of 260 results, 24-96 GB filter), clipped by the maintainer 2026-10-15 -- new retail prices"
       ],
       "note": "ROCm on Linux. AMD claims ~38% better AI-perf/$ than RTX 6000 Ada.",
       "arch": "rdna3",
@@ -3067,7 +3083,7 @@
         "street": {
           "usd": 650,
           "asOf": "2026-10",
-          "note": "New: ASRock Arc Pro B60 Creator at $650 on Amazon (gpuprix, 2026-10-14); 12-month low $600."
+          "note": "New: ASRock Arc Pro B60 Creator at $650 on Amazon (gpuprix, 2026-10-14); 12-month low $600. PCPartPicker listed the same card at $649.99 the next day."
         }
       },
       "sources": [
