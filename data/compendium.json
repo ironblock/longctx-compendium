@@ -1560,12 +1560,15 @@
       "memoryGB": 96,
       "pricing": {
         "street": {
-          "usd": 8500,
-          "asOf": "2026-07"
+          "usd": 15999,
+          "asOf": "2026-10",
+          "source": "https://gpuprix.com/us/gpus/rtx-pro-6000-blackwell",
+          "note": "New, asking: the lowest offer, a PNY Workstation Edition at Newegg, on gpuprix (2026-10-14), whose 3-month median is $14,750 and 12-month low $8,617. GPUDojo the next day: $16,000 new on eBay, $17,999 at Newegg; its lowest eBay ask was $14,400-$14,500 in late August. The rise tracks the GDDR7 shortage."
         },
         "msrp": {
           "usd": 8565,
-          "asOf": "2025"
+          "asOf": "2025",
+          "note": "Not an NVIDIA MSRP (NVIDIA publishes none for RTX PRO cards): a US retailer's launch listing reported by Tom's Hardware."
         }
       },
       "power": {
@@ -1588,7 +1591,9 @@
         "https://www.nvidia.com/en-us/data-center/rtx-pro-6000-blackwell-server-edition/",
         "https://lenovopress.lenovo.com/lp2263-thinksystem-nvidia-rtx-pro-6000-blackwell-server-edition-pcie-gen5-gpu",
         "https://gpupoet.com/gpu/learn/card/nvidia-rtx-pro-6000-blackwell-server",
-        "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/pdf/NVIDIA-RTX-Blackwell-PRO-GPU-Architecture-v1_1.pdf"
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/pdf/NVIDIA-RTX-Blackwell-PRO-GPU-Architecture-v1_1.pdf",
+        "https://gpuprix.com/us/gpus/rtx-pro-6000-blackwell (street price, 2026-10-14)",
+        "https://gpudojo.com/rtx-pro-6000 (asking prices, 2026-10-15)"
       ],
       "note": "The 234 TFLOPS TF32 figure found is a Server Edition number; this record describes the 600 W Workstation Edition.",
       "arch": "blackwell",
@@ -1630,7 +1635,7 @@
         "street": {
           "usd": 7999,
           "asOf": "2026-10",
-          "note": "New: $7,999 at B&H (OEM) on gpuprix (2026-10-14), during the GDDR7 shortage; its 12-month low was $4,400. That puts it within about $500 of the RTX PRO 6000."
+          "note": "New: $7,999 at B&H (OEM) on gpuprix (2026-10-14), during the GDDR7 shortage; its 12-month low was $4,400. That is about half the RTX PRO 6000's price at the same date."
         }
       },
       "sources": [
@@ -2490,10 +2495,10 @@
       "process": "TSMC 4N",
       "pricing": {
         "street": {
-          "usd": 22000,
-          "asOf": "2026-08",
-          "source": "https://www.amcompute.com/appraisals/h100-nvl",
-          "note": "Used, reported sales, low confidence: American Compute puts used H100 NVL sales at $21,000-$23,000 over the 12 months to August 2026; the midpoint is shown. Asks are far higher: a reseller's pull of four US eBay listings in September 2026 found $29,500-$39,999. New cards were listed at $28,999-$36,299 in October 2026, out of stock, and Cisco discontinued its H100 NVL part in August 2026. NVIDIA published no price."
+          "usd": 29000,
+          "asOf": "2026-09",
+          "source": "eBay completed sales, collected by the maintainer (2026-10-15)",
+          "note": "The latest of two eBay sales of a 94 GB H100 NVL: $29,000 (2026-09-29); the other was $36,480 (2026-07-20). Two sales listed as \"H100 NVL 80GB\" at $24,500 (2026-08-13, 2026-09-03) are left out: no H100 NVL has 80 GB, so they are either H100 PCIe 80GB cards or mislabelled, and the listing cannot say which. American Compute reported $21,000-$23,000 for the 12 months to August 2026."
         }
       },
       "sources": [
@@ -2861,10 +2866,10 @@
       "process": "TSMC 4N",
       "pricing": {
         "street": {
-          "usd": 3599,
+          "usd": 3436,
           "asOf": "2026-10",
-          "source": "https://gpudojo.com/l4",
-          "note": "New, asking: the lowest Newegg offer on GPUDojo's tracker (2026-10-14). Used asks are higher right now: the lowest eBay offer was $4,599, up from $3,500 in August. Completed sales were far lower: American Compute puts used L4 sales at $2,100-$2,400 over the 12 months to August 2026 (amcompute.com/appraisals/l4-pcie). NVIDIA published no price."
+          "source": "eBay completed sales, collected by the maintainer (2026-10-15)",
+          "note": "Median of three eBay sales: $3,435.19 (2026-08-20), $3,436.28 and $3,950.00 (both 2026-10-08); condition not recorded. New, the lowest ask was $3,599 at Newegg on 2026-10-14 (GPUDojo). American Compute's $2,100-$2,400 for the 12 months to August 2026 is well below every sale here."
         }
       },
       "sources": [
@@ -3631,10 +3636,10 @@
       "process": "TSMC 12nm FFN",
       "pricing": {
         "street": {
-          "usd": 450,
+          "usd": 460,
           "asOf": "2026-10",
-          "source": "https://gpudojo.com/t4",
-          "note": "Used, asking: the lowest eBay offer on GPUDojo's tracker (2026-10-14); weekly lowest asks ran $395-$450 in September and October 2026, down from $600 in April. Completed sales were higher: American Compute puts used T4 sales at $510-$580 over the 12 months to August 2026 (amcompute.com/appraisals/tesla-t4). NVIDIA published no launch price; the \"$2,299 launch MSRP\" on some trackers traces to nothing verifiable."
+          "source": "eBay completed sales, collected by the maintainer (2026-10-15)",
+          "note": "Median of three eBay sales on 2026-10-14: $454.99, $459.99 and $460.00; condition not recorded. The lowest ask on GPUDojo's tracker the same day was $449.99. American Compute's $510-$580 for the 12 months to August 2026 is above every recent sale, consistent with asks falling since April."
         }
       },
       "sources": [
