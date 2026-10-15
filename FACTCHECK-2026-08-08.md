@@ -1,3 +1,5 @@
+> **Historical.** This fact-check describes the page as it stood on 2026-08-08, before the hardware-first redesign. Most of the structures it names (`platforms`, `builds`, `verdicts.js`) no longer exist; some of its data findings were fixed in the redesign and some may still apply, so check one against the current `data/compendium.json` before acting on it.
+
 # Fact-check: `longctx-compendium`
 
 Verified against `/Users/corey/git/me/longctx-compendium` at `5323733`. Every claim below was re-checked in the file; first-party evidence is from `/Users/corey/git/me/diet-inference` (RTX 3090, beellama preview-v0.3.2, source- and live-server-verified).

@@ -52,6 +52,11 @@ Each format is `native` (the matrix units take that input type), `absent` (they
 do not — emulating it or upcasting to a wider type does not count), or
 `unknown` (no source either way). An `absent` needs a source as much as a
 `native` does; usually it is a document that lists every supported type.
+The validator holds this literally: every `native` or `absent` must appear as a
+token in some source's `supports` list (`"fp16"` for native, `"fp8:absent"` for
+absent). A claim no source carries has to be `unknown`. Apple publishes no list
+of the types its GPUs multiply natively, so the Apple generations are all
+`unknown`.
 
 A card names its generation with `"arch": "ampere"` and inherits all of this.
 Where a card genuinely differs from its generation, `formatOverrides` says how,
@@ -92,8 +97,13 @@ not FP8 compute.
 Only `id` and `label` are required; a card with nothing else renders as a row of
 dashes with every format "not sourced". `compute.values` are **dense** rated
 figures in 10¹² ops/sec; suffix a key with `:sparse` for the 2:4
-structured-sparsity rate vendors often quote unlabelled. The ceilings use dense
-figures only.
+structured-sparsity rate vendors often quote unlabelled. A card with no matrix
+units at all (Vega 20, RDNA 2) records its shader-ALU rates with `:vector`
+(`"fp16:vector"` for packed FP16, `"int8:vector"` for dot-product INT8); a
+vector figure never proves a matrix path. The ceilings use dense figures, and
+fall back to the fastest vector figure only on a card whose generation has no
+matrix formats at all. A figure whose dense-or-sparse status nobody states is
+filed where the arithmetic puts it, with a note saying so (PG199's 900 TOPS).
 
 `memoryGB` is read as GiB, which is what vendors mean by "32 GB" of VRAM.
 `street` is what every price on the page is summed from; give it an `asOf`.
@@ -165,19 +175,24 @@ formula against what first-party lines actually allocated.
 `assets/ceiling.js` computes, from catalog and model facts only:
 
 - **Decode** (one stream, one token per pass) = memory bandwidth ÷ the bytes a
-  step must read: active weights at the format's bits per weight, the whole KV
-  cache of every full-attention layer, the window of every sliding layer, the
-  budget of a sparse layer, and the recurrent state of every linear layer.
-  Under a layer split a single stream runs one card at a time and gets one
-  card's bandwidth; under tensor parallel it gets all of them.
+  step must read: active weights at the format's bits per weight, less an
+  untied input embedding (a step reads one row of it), the whole KV cache of
+  every full-attention layer (one compressed latent per position for MLA), the
+  window of every sliding layer, the budget of a sparse layer, and the
+  recurrent state of every linear layer. Under a layer split a single stream
+  runs one card at a time and gets one card's bandwidth; under tensor parallel
+  it gets all of them.
 - **Prefill** = rated dense matrix throughput at the precision the engine
   actually multiplies in ÷ FLOPs per token (2 per active weight plus attention
   over the positions attended). The precision comes from `assets/dequant-map.js`,
   which records llama.cpp's own kernel dispatch per quant family and chip
   generation (`docs/roofline-dequant-paths.md`); anything ungrounded falls back
-  to FP16 and says so.
+  to FP16 and says so. Datacenter Blackwell (`blackwell_dc`: B200, B300) is
+  read through the Hopper column, because llama.cpp's Blackwell kernels target
+  CC 12.0 only.
 - **Fit** = all weights + KV at depth + recurrent state against every card's
-  memory less 1 GiB each.
+  memory less 1 GiB each. Under tensor parallel, KV heads fewer than the cards
+  are replicated, and an MLA latent cache is copied whole to every card.
 
 Every simplification leans generous — perfect scaling, no launch or
 synchronization cost, one weight width throughout — so a ceiling is an upper
@@ -234,12 +249,18 @@ What the validator holds you to, and why:
 - **Speculation is stated.** A `spec: "off"` point is the clean reading at depth.
 - **The model is named, or its absence is explained.** `model` is a key in
   `MODELS`, or `null` with a `modelNote` quoting what the source did call it.
+  Where the source gives only a size ("a dense 40B"), `modelParams`
+  (`{ "total": 40e9, "active"?: …, "note": "…" }`, allowed only with a null
+  `model`) buys a weights-only bound: it leaves out the cache, so it sits above
+  the true ceiling and the page says so.
 - **The weights are described.** `quant.format` as the source names it ("not
   recorded" is an honest value); `quant.key` names the family in
   `WEIGHT_FORMATS` (`assets/ceiling.js`) so the ceiling knows the matrix
   precision and a typical width; `quant.bpw` when the line knows its real width.
-- **Multi-card lines say how they split** (`parallel.mode`: `tensor` or
-  `layer`). Without it there is no single ceiling, and the page says so.
+- **Multi-card lines should say how they split** (`parallel.mode`: `tensor`
+  or `layer`). Without it there is no single ceiling, and the page says so. This
+  is a warning, not a failure, because many sources never say; a single-card
+  line that states a split is rejected.
 - **Provenance is declared, and the question is vouching, not typing.** `kind`
   is `first-party`, `issue-report` (GitHub issue, PR or discussion), `forum`,
   `review` (independent articles, benchmark sites and benchmark repositories) or
@@ -272,8 +293,9 @@ fields out rather than guessing; absent means nobody has looked.
 `peakP2pGBsPerGpu` (peak GPU-to-GPU bandwidth per GPU, both directions summed)
 and `hostLinkGBs`. All are ratings, not measurements, and any of them needs a
 `source`. A vendor that does not state GB/s gets no number. `costUsd` prices the
-bridge or carrier board, which belongs to no card; `costHighUsd` records the top
-of an observed range.
+bridge or carrier board, which belongs to no card, plus parts an SXM carrier
+cannot run without (cables, heatsinks, its power supply) when the note itemises
+them; `costHighUsd` records the top of an observed range.
 
 Peer bandwidth does not set single-stream decode under a layer split, which
 follows one card's memory bandwidth. It decides how close tensor parallel gets
@@ -284,13 +306,28 @@ streamed from host RAM.
 
 `tools/validate.mjs` enforces the schema plus what a schema cannot see:
 duplicate ids, units naming unknown generations, rated figures that contradict
-their generation, overrides without a reason, specifications without sources,
-lines naming models with no shape, readings with no depth and no explanation,
-dates out of order, multi-card lines with no split, and the provenance rules
-above. `tools/test-validate.mjs` breaks the data dozens of ways and asserts each
+their generation, generation claims no source supports, overrides without a
+reason, specifications without sources, lines naming models with no shape,
+readings with no depth and no explanation, dates out of order, and the
+provenance rules above; it warns on multi-card lines with no split.
+`tools/test-ceilings.mjs` holds the ceiling arithmetic to hand-worked cases. `tools/test-validate.mjs` breaks the data dozens of ways and asserts each
 is caught, and that the legitimate edge cases are still accepted.
 
 `tools/check-ceilings.mjs` holds every reading to its own ceiling.
 `tools/smoke.mjs` loads the real page in Chromium, drives every control and
 asserts the tables and charts match the data. `tools/coverage.mjs` prints what
 the catalog is missing; it never fails.
+
+## Left out on purpose
+
+Figures the old page carried that are deliberately not readings here:
+
+- **gpt-oss-120B's ~24K-token prefill peak.** The old page coded it as an
+  estimate, and an estimate has no place in the ledger.
+- **Ratios without absolutes.** JarvisLabs' 1.73× MTP decode gain on the RTX PRO
+  6000, and one source's +48% (2-way NVLink) and +8–10% (4-way) over PCIe-only,
+  survive only as notes on the lines they qualify: a ratio with no measured
+  baseline cannot be held to a ceiling.
+- **Modelled performance tables** (the old `platforms[].perf` and `builds`
+  estimates). Their measured figures became readings; the modelled ones did
+  not, because the ceilings now do that job from the hardware's own specs.

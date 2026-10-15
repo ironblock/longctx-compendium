@@ -130,6 +130,7 @@ export function renderHardwareTable(model, state, matches) {
     : `<tr><td class="lbl" colspan="${cols.length}" style="color:var(--muted);padding:16px">No unit passes every filter. Loosen one above.</td></tr>`;
   el('hwNote').textContent =
     `Throughput in 10¹² ops/sec at the precision chosen for the chart; "sparse" is the 2:4 structured-sparsity rate vendors often quote unlabelled, and "vector" is a shader-ALU rate on a card with no matrix units. ` +
+    `GeForce cards' FP16 figures assume FP16 accumulate; with FP32 accumulate they run at half that rate, so read them as the generous case. ` +
     `$ per GB and GB/s per $1k use the dated street price. Blanks sort last in both directions. Click a heading to sort.`;
 }
 
