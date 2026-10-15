@@ -1654,7 +1654,7 @@
         },
         "note": "Only two figures are NVIDIA's: 2,064 AI TOPS (\"Effective FP4 TOPS with sparsity\") and 65 TFLOPS FP32. The rest are derived: dense FP4 is half the sparse figure (NVIDIA's convention), and the other precisions follow the RTX PRO 6000 whitepaper's fixed per-SM ratios to FP4 (FP8 and INT8 half, FP16/BF16 a quarter, TF32 an eighth). The 16-bit figures assume full-rate FP32 accumulate, as on the PRO 6000, which NVIDIA does not state for this card; if it is half rate, the ceiling is generous. NVIDIA's 72GB launch blog says 2,142 TOPS, but later datasheet revisions still print 2,064, which is used."
       },
-      "note": "GB202 with 110 SMs (14,080 CUDA cores). Announced 2025-03-18 for availability \"in the summer\"; the exact first-ship month is not sourced. With FP8 matrix units and 1.25 TiB/s, it is the cheapest card in the catalog that meets both of those bars."
+      "note": "GB202 with 110 SMs (14,080 CUDA cores). Announced 2025-03-18 for availability \"in the summer\"; the exact first-ship month is not sourced. It has FP8 matrix units and 1.25 TiB/s; at October 2026 street prices the RTX 5090 meets both for less, with a third of the memory."
     },
     {
       "id": "rtx_pro_5000_72",
