@@ -74,6 +74,9 @@ export const PRECISION_MAP = {
  */
 export const ARCH_TO_DEQUANT_FAMILY = {
   volta: { family: 'volta' },
+  // The research groups Turing with Ampere, Ada and Hopper: llama.cpp's int8
+  // MMQ path is unconditional once turing_mma_available(cc), i.e. CC >= 7.5.
+  turing: { family: 'ampere' },
   ampere: { family: 'ampere' },
   ada: { family: 'ada' },
   hopper: { family: 'hopper' },

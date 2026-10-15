@@ -50,9 +50,120 @@
             "tf32:absent",
             "bf16:absent"
           ]
+        },
+        {
+          "url": "https://docs.nvidia.com/cuda/archive/13.0.0/cuda-toolkit-release-notes/index.html",
+          "quote": "Architecture support for Maxwell, Pascal, and Volta is considered feature-complete. Offline compilation and library support for these architectures have been removed in CUDA Toolkit 13.0 major version release. The use of CUDA Toolkits through the 12.x series to build applications for these architectures will continue to be supported, but newer toolkits will be unable to target these architectures.",
+          "locator": "CUDA 13.0 release notes, 2.6.2 Deprecated Architectures",
+          "supports": [
+            "note:CUDA 13 drops Volta"
+          ]
+        },
+        {
+          "url": "https://docs.nvidia.com/datacenter/tesla/drivers/cuda-toolkit-driver-and-architecture-matrix.html",
+          "quote": "Volta | 7.0 | CUDA 9.0 | CUDA 12.x | R580",
+          "locator": "CUDA and Architecture Matrix (Architecture | CUDA Capability | First CUDA Toolkit Support | Last CUDA Toolkit Support | Last Driver Support)",
+          "supports": [
+            "note:last toolkit 12.x, last driver R580"
+          ]
         }
       ],
-      "note": "Covers GV100, Tesla V100 SXM2. Volta Tensor Cores take FP16 inputs only. INT8/INT4 Tensor Core modes arrived with Turing, TF32/BF16 with Ampere, so on V100 they are absent. V100 INT8 uses DP4A on the CUDA cores, which is not a matrix-unit path. CC 7.0 is not in the current CUDA guide's Table 33 (it starts at 7.5), so this entry rests on the two NVIDIA whitepapers."
+      "note": "Covers GV100, Tesla V100 SXM2. Volta Tensor Cores take FP16 inputs only. INT8/INT4 Tensor Core modes arrived with Turing, TF32/BF16 with Ampere, so on V100 they are absent. V100 INT8 uses DP4A on the CUDA cores, which is not a matrix-unit path. CC 7.0 is not in the current CUDA guide's Table 33 (it starts at 7.5), so this entry rests on the two NVIDIA whitepapers. CUDA 13.0 removed \"offline compilation and library support\" for Maxwell, Pascal and Volta (CUDA 13.0 release notes, 2.6.2); the 12.x series is the last toolkit that targets sm_70 (12.9 Update 2 as of 2026-10), and R580 is the last driver branch, supported to June 2028 (NVIDIA data center CUDA/architecture matrix). PyTorch 2.14 is the last release with prebuilt wheels for Volta, and upstream vLLM needs compute capability 7.5 or higher, so V100 serving runs on pinned stacks or SM70 forks."
+    },
+    {
+      "id": "turing",
+      "vendor": "NVIDIA",
+      "label": "Turing",
+      "matrixUnits": "2nd-gen Tensor Cores (Turing Tensor Cores)",
+      "formats": {
+        "tf32": "absent",
+        "bf16": "absent",
+        "fp16": "native",
+        "fp8": "absent",
+        "fp6": "absent",
+        "fp4": "absent",
+        "int8": "native",
+        "int4": "native"
+      },
+      "sources": [
+        {
+          "url": "https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/compute-capabilities.html",
+          "quote": "Table 33 Input Data Types Supported by Tensor Core Acceleration per Compute Capability ... [columns: FP64 | TF32 | BF16 | FP16 | FP8 | FP6 | FP4 | INT8 | INT4] row 7.5: (blank) | (blank) | (blank) | Yes | (blank) | (blank) | (blank) | Yes | Yes",
+          "locator": "CUDA Programming Guide 5.1 Compute Capabilities, Table 33 (page 'Last updated on Sep 10, 2026'). In the HTML the 7.5 row is <td colspan=\"3\"></td> (FP64/TF32/BF16), Yes (FP16), <td colspan=\"3\"></td> (FP8/FP6/FP4), Yes (INT8), Yes (INT4).",
+          "supports": [
+            "fp16",
+            "int8",
+            "int4",
+            "tf32:absent",
+            "bf16:absent",
+            "fp8:absent",
+            "fp6:absent",
+            "fp4:absent"
+          ]
+        },
+        {
+          "url": "https://developer.nvidia.com/cuda-gpus",
+          "quote": "7.5 | NVIDIA T4 | QUADRO RTX 8000 QUADRO RTX 6000 QUADRO RTX 5000 QUADRO RTX 4000 ... NVIDIA TITAN RTX GeForce RTX 2080 Ti GeForce RTX 2080 GeForce RTX 2070 GeForce RTX 2060",
+          "locator": "CUDA GPU Compute Capability table (product-to-CC mapping; the table now starts at 7.5, no 7.0 row)",
+          "supports": [
+            "mapping:QuadroRTX8000/RTX2080Ti/T4=7.5"
+          ]
+        },
+        {
+          "url": "https://images.nvidia.com/aem-dam/en-zz/Solutions/design-visualization/technologies/turing-architecture/NVIDIA-Turing-Architecture-Whitepaper.pdf",
+          "quote": "The Turing Tensor Core design adds INT8 and INT4 precision modes for inferencing workloads that can tolerate quantization. FP16 is also fully supported for workloads that require higher precision. ... Each Tensor Core can perform up to 64 floating point fused multiply-add (FMA) operations per clock using FP16 inputs. Eight Tensor Cores in an SM perform a total of 512 FP16 multiply and accumulate operations per clock, or 1024 total FP operations per clock. The new INT8 precision mode works at double this rate, or 2048 integer operations per clock.",
+          "locator": "Turing whitepaper WP-09183-001_v01, 'Turing Tensor Cores', doc p.15 (PDF p.21)",
+          "supports": [
+            "fp16",
+            "int8",
+            "int4"
+          ]
+        },
+        {
+          "url": "https://images.nvidia.com/aem-dam/en-zz/Solutions/data-center/nvidia-ampere-architecture-whitepaper.pdf",
+          "quote": "In addition to FP16 precision introduced on the Volta Tensor Core, and the INT8, INT4 and binary 1-bit precisions added in the Turing Tensor Core, the A100 Tensor Core adds support for TF32, BF16 and FP64 formats.",
+          "locator": "A100 whitepaper, 'A100 Tensor Cores Support All DL Data Types', p.26",
+          "supports": [
+            "fp16",
+            "int8",
+            "int4",
+            "tf32:absent",
+            "bf16:absent"
+          ]
+        },
+        {
+          "url": "https://docs.nvidia.com/cuda/parallel-thread-execution/index.html",
+          "quote": ".f16 floating point type mma operation with .m16n8k8 shape requires sm_75 or higher. .u8/.s8 integer type mma operation with .m8n8k16 shape requires sm_75 or higher. .u4/.s4 integer type mma operation with .m8n8k32 shape sm_75 or higher. .b1 single-bit integer type mma operation with .m8n8k128 shape sm_75 or higher. ... .bf16 alternate floating point type mma operation with .m16n8k8 and .m16n8k16 shapes requires sm_80 or higher. .tf32 alternate floating point type mma operation with .m16n8k4 and .m16n8k8 shapes requires sm_80 or higher. ... .e4m3 and .e5m2 alternate floating point type mma operation requires sm_89 or higher.",
+          "locator": "PTX ISA 9.4, mma Target ISA Notes",
+          "supports": [
+            "fp16",
+            "int8",
+            "int4",
+            "bf16:absent",
+            "tf32:absent",
+            "fp8:absent"
+          ]
+        },
+        {
+          "url": "https://www.nvidia.com/content/apac/gtc/ja/pdf/2018/2040.pdf",
+          "quote": "Tensor Core new Instruction 8xSuperHMMA (Matrix Multiply and Accumulate) FP 16xIMMA (Integer Matrix Multiply and Accumulate) Int4 and 1-bit MMA (Bit Matrix Multiply and Accumulate)",
+          "locator": "NVIDIA GTC Japan 2018 session 2040 (Quadro RTX), PDF p.15",
+          "supports": [
+            "fp16",
+            "int8",
+            "int4"
+          ]
+        },
+        {
+          "url": "https://images.nvidia.com/aem-dam/en-zz/Solutions/data-center/nvidia-ampere-architecture-whitepaper.pdf",
+          "quote": "With the A100 GPU, NVIDIA introduces Fine-Grained Structured Sparsity, a novel approach which doubles compute throughput for deep neural networks.",
+          "locator": "A100 whitepaper, 'A100 Introduces Fine-Grained Structured Sparsity', p.31",
+          "supports": [
+            "note:no structured sparsity before Ampere"
+          ]
+        }
+      ],
+      "note": "Covers TU102 (CC 7.5): Quadro RTX 8000, GeForce RTX 2080 Ti (and its aftermarket 22GB rework); the same tensor types apply to the rest of CC 7.5 (T4, RTX 2080/2070). Turing Tensor Cores take FP16, INT8, INT4 and INT1 (binary, not tracked). No TF32 or BF16 (Ampere), no FP8 (Ada/Hopper), no FP6/FP4 (Blackwell), no structured sparsity (Ampere). Per SM: 512 FP16 FMA per clock, INT8 twice that, INT4 four times. GeForce Turing runs FP16 with FP32 accumulate at half rate (2080 Ti: 53.8 vs 107.6 TFLOPS); the Quadro RTX 6000/8000 run both at full rate. In practice BF16 checkpoints run as FP16, and upstream FlashAttention-2 does not support Turing. Turing is the oldest generation CUDA 13 still targets."
     },
     {
       "id": "ampere",
@@ -1460,7 +1571,7 @@
         "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf",
         "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla"
       ],
-      "note": "Rated throughput is NVIDIA's own V100 datasheet for the SXM2 module -- 7.8 / 15.7 / 125 TFLOPS (FP64 / FP32 / Tensor, which implies a 1,530 MHz boost clock), 900 GB/s, 300 W, passively cooled, NVLink 300 GB/s. An earlier revision followed Wikipedia's Tesla template at a lower clock (7.45 / 14.9 / 119.2, about 5% below the datasheet). The Tesla table gives one row for the 16 GB and 32 GB SXM2 parts; clocks, bandwidth and throughput are identical across both, so only the capacity differs. The release date is the 32 GB part's (announced March 2018), not the 16 GB module's May 2017; the shared row dates the product line. FP16 is the tensor-core rate with FP32 accumulate — Volta has no structured-sparsity path. No INT8 figure recorded: Volta's Tensor Cores are hard-wired FP16-input/FP32-accumulate only -- NVIDIA's own current Tensor Core page attributes full FP32/FP16/INT8/INT4 inference precision support to Turing onward, not Volta. No official DP4A/integer-ALU INT8 figure was ever published for V100 either (the Volta architecture whitepaper gives an INT8 figure for sibling Pascal parts P40/P4 but conspicuously omits one for V100). Unsourced ~62-63 TOPS figures circulating on aggregator sites appear to be an unofficial 4x-of-FP32 estimate, not a published spec -- not used. Also lacks BF16 (arrived with Ampere, later still than Turing) -- the same FP16-input/FP32-accumulate-only tensor path that rules out INT8 rules out BF16 too.",
+      "note": "Rated throughput is NVIDIA's own V100 datasheet for the SXM2 module -- 7.8 / 15.7 / 125 TFLOPS (FP64 / FP32 / Tensor, which implies a 1,530 MHz boost clock), 900 GB/s, 300 W, passively cooled, NVLink 300 GB/s. An earlier revision followed Wikipedia's Tesla template at a lower clock (7.45 / 14.9 / 119.2, about 5% below the datasheet). The Tesla table gives one row for the 16 GB and 32 GB SXM2 parts; clocks, bandwidth and throughput are identical across both, so only the capacity differs. The release date is the 32 GB part's (announced March 2018), not the 16 GB module's May 2017; the shared row dates the product line. FP16 is the tensor-core rate with FP32 accumulate — Volta has no structured-sparsity path. No INT8 figure recorded: Volta's Tensor Cores are hard-wired FP16-input/FP32-accumulate only -- NVIDIA's own current Tensor Core page attributes full FP32/FP16/INT8/INT4 inference precision support to Turing onward, not Volta. No official DP4A/integer-ALU INT8 figure was ever published for V100 either (the Volta architecture whitepaper gives an INT8 figure for sibling Pascal parts P40/P4 but conspicuously omits one for V100). Unsourced ~62-63 TOPS figures circulating on aggregator sites appear to be an unofficial 4x-of-FP32 estimate, not a published spec -- not used. Also lacks BF16 (arrived with Ampere, later still than Turing) -- the same FP16-input/FP32-accumulate-only tensor path that rules out INT8 rules out BF16 too. Software support is ending: CUDA 13 cannot target Volta, R580 is its last driver branch (supported to June 2028), and PyTorch 2.14 is the last release with Volta wheels; see the volta generation.",
       "arch": "volta",
       "compute": {
         "unit": "Tops",
@@ -2432,6 +2543,83 @@
         }
       },
       "note": "A GA100 mining card that becomes a 64 GB inference card through a community unlock (cmpunlocker). The unlock patches the NVIDIA open kernel modules to address the HBM2e already on the card, 4 stacks of 16 GB on a 4096-bit bus, and to lift the compute throttle that left stock cards at 1/32 issue rate. Caveats: only the 8 GB card (PCI 10de:20c2) unlocks to 64 GB; the 10 GB card (10de:2082) reaches 40 GB, and nvidia-smi does not tell them apart. CUDA allocates about 63.4 GiB. Bandwidth depends on the card's VBIOS: 1,769 GB/s is the 300 W image (HBM at 1,728 MHz); the stock 250 W image runs 1,458 MHz for 1,493 GB/s. Both ship under the same ID, and the ceiling takes the faster. The patched driver pins exact versions (610.43.02/.03, 610.57.04, 615.71.09, 615.78.08 as of 2026-10-07), needs Secure Boot off and a cold power cycle, and is Linux-only. ECC is fused off; cmpunlocker reports it enabled since 2026-10-04, but nobody has shown it correcting errors, and one card needed a single-bit HBM page blacklisted by hand. The host link is PCIe Gen1 x4 stock. Gen2 comes from software, x16 from hand-soldering 24 missing capacitors, and Gen3 is unsolved. There is no NVLink. Memory and SM overclocks can corrupt data silently. Passively cooled, on a single EPS 8-pin."
+    },
+    {
+      "id": "quadro_rtx_8000",
+      "label": "Quadro RTX 8000 48GB",
+      "vendor": "NVIDIA",
+      "arch": "turing",
+      "released": "2018-08",
+      "memoryGB": 48,
+      "memoryBandwidthGBs": 672,
+      "tdpW": 260,
+      "process": "TSMC 12nm FFN",
+      "pricing": {
+        "msrp": {
+          "usd": 10000,
+          "asOf": "2018-08",
+          "note": "NVIDIA's \"estimated street price\" at announcement; cut to $5,500 by March 2019 (Techgage)."
+        },
+        "street": {
+          "usd": 1875,
+          "asOf": "2026-10",
+          "note": "Used, asking: the lowest eBay offer on GPUDojo's tracker (2026-10-14); RunAIHome saw $1,975-$2,650 in September 2026. Asks, not sold averages, so a typical sale is probably nearer $1,900-$2,300. Listings may not distinguish the passive server variant."
+        }
+      },
+      "sources": [
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/quadro-rtx-8000-us-nvidia-946977-r1-web.pdf -- \"GPU Memory 48 GB GDDR6 | Memory Interface 384-bit | Memory Bandwidth 672 GB/s\"; \"Tensor Performance 130.5 TFLOPS\"; total graphics power 260 W",
+        "https://www.nvidia.com/content/apac/gtc/ja/pdf/2018/2040.pdf -- NVIDIA GTC Japan 2018, p.14: \"FP16 130.5 TFLOPS / INT8 261 TOPS / INT4 522 TOPS\"",
+        "https://images.nvidia.com/aem-dam/en-zz/Solutions/design-visualization/technologies/turing-architecture/NVIDIA-Turing-Architecture-Whitepaper.pdf -- Table 1, Quadro RTX 6000 (same TU102 configuration): boost 1,770 MHz; FP16 tensor 130.5 TFLOPS with FP16 or FP32 accumulate",
+        "https://nvidianews.nvidia.com/news/nvidia-unveils-quadro-rtx-worlds-first-ray-tracing-gpu -- \"Quadro RTX 8000 with 48GB memory: $10,000 estimated street price\"",
+        "https://gpudojo.com/quadro-rtx-8000 (street price, 2026-10-14)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/quadro-rtx-8000-us-nvidia-946977-r1-web.pdf",
+        "values": {
+          "fp32": 16.3,
+          "fp16": 130.5,
+          "int8": 261,
+          "int4": 522
+        },
+        "note": "Dense, at the 1,770 MHz boost. FP16 runs at full rate with FP16 or FP32 accumulate on this Quadro. INT8 and INT4 come from NVIDIA's GTC Japan 2018 deck and the whitepaper's identical-configuration Quadro RTX 6000 column; the RTX 8000 datasheet itself gives only the 130.5 tensor figure. PNY's page lists INT8 at 206.1 TOPS, which contradicts NVIDIA. No sparsity on Turing."
+      },
+      "note": "A passive server variant exists with lower figures (14.9 TFLOPS FP32, 119.4 tensor, up to 624 GB/s, 250 W); third-party pages and used listings often mix the two, and these are the active card's. 260 W is graphics power; the 295 W board figure adds 35 W for the VirtualLink port. NVLink bridges pair two cards; PCIe 3.0 x16 to the host. No BF16: BF16 checkpoints run as FP16."
+    },
+    {
+      "id": "rtx_2080_ti_22gb",
+      "label": "RTX 2080 Ti 22GB (memory mod)",
+      "vendor": "NVIDIA",
+      "arch": "turing",
+      "released": "2018-09",
+      "memoryGB": 22,
+      "memoryBandwidthGBs": 616,
+      "tdpW": 250,
+      "process": "TSMC 12nm FFN",
+      "pricing": {
+        "street": {
+          "usd": 499,
+          "asOf": "2026-08",
+          "note": "Modded card, asking: Hardware Busters (2026-08-08) \"A 22GB RTX 2080 Ti Is $499 on eBay\"; the cheapest pre-modded unit it found later that month was $428. A Japanese shop converts a customer's card for about $282. The stock card launched at $999 (Founders Edition $1,199) in 2018."
+        }
+      },
+      "sources": [
+        "https://images.nvidia.com/aem-dam/en-zz/Solutions/design-visualization/technologies/turing-architecture/NVIDIA-Turing-Architecture-Whitepaper.pdf -- Table 1, GeForce RTX 2080 Ti reference / Founders Edition: boost 1,545 / 1,635 MHz; FP16 tensor 107.6 / 113.8 TFLOPS with FP16 accumulate, 53.8 / 56.9 with FP32 accumulate; INT8 215.2 / 227.7; INT4 430.3 / 455.4; 616 GB/s",
+        "https://hwbusters.com/news/an-rtx-2080-ti-vram-upgrade-to-22gb-costs-282-in-japan-and-200-samsung-chips-just-landed/ -- \"Turing's TU102 addresses memory over a 352-bit bus ... 22GB on the same bus, at the same bandwidth\"",
+        "https://hwbusters.com/news/a-22gb-rtx-2080-ti-is-499-on-ebay-and-you-dont-get-to-pick-the-brand/ (street price)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://images.nvidia.com/aem-dam/en-zz/Solutions/design-visualization/technologies/turing-architecture/NVIDIA-Turing-Architecture-Whitepaper.pdf",
+        "values": {
+          "fp32": 13.4,
+          "fp16": 107.6,
+          "int8": 215.2,
+          "int4": 430.3
+        },
+        "note": "Dense, at the reference 1,545 MHz boost: modded cards are rebuilt on assorted donor boards, so the reference column is the safer default (Founders Edition figures are about 6% higher). FP16 is the FP16-accumulate rate; with FP32 accumulate this GeForce part runs at half (53.8). The memory mod does not change compute. No sparsity on Turing."
+      },
+      "note": "Not an NVIDIA product. NVIDIA only shipped the 2080 Ti with 11 GB; this is an aftermarket rework replacing each 1 GB GDDR6 package with a 2 GB one, changing the density straps and flashing a matching VBIOS. Bandwidth is the stock card's 616 GB/s, which every source says is unchanged on the same 352-bit bus, but nobody has published a measurement on a modded card. Released is the stock card's date. Donor boards (often blower \"Turbo\" cards) vary in clocks and power limits, and seller claims about drivers and firmware are untested. No BF16 or FP8: FP8 checkpoints run as 16-bit weights."
     }
   ],
   "lines": [
@@ -6595,6 +6783,432 @@
           "note": "per request under 6-way concurrent load, MTP on"
         }
       ]
+    },
+    {
+      "id": "x_rtx8000_llama33_70b_llamacpp",
+      "label": "Llama 3.3 70B · Q4_K_M · llama.cpp · 1× Quadro RTX 8000",
+      "model": "llama33_70b",
+      "rig": {
+        "units": [
+          {
+            "unit": "quadro_rtx_8000",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "Ubuntu 22.04, NVIDIA driver 560.35.03; requests through OpenWebUI."
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "note": "version not stated"
+      },
+      "quant": {
+        "format": "Q4_K_M",
+        "key": "q4_k_m"
+      },
+      "status": "measured",
+      "observed": "2025-06-17",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://www.hardware-corner.net/guides/quadro-rtx-8000-for-llm/ (page \"Last updated: Jun 17, 2025\"; measured on the author's card): \"With an 8K context (8077 prompt tokens), prompt processing was 231.53 t/s, and generation speed was 7.59 t/s.\""
+      },
+      "hazards": [
+        "Flash attention and KV-cache settings are not stated; about 42.5 GB of weights on a 48 GB card leaves little room for cache."
+      ],
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 46,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 187.98,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "decode",
+          "depth": 46,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 10.43,
+          "confidence": "m~",
+          "note": "after a 46-token prompt"
+        },
+        {
+          "metric": "prefill",
+          "depth": 8077,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 231.53,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "decode",
+          "depth": 8077,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 7.59,
+          "confidence": "m~",
+          "note": "after an 8,077-token prompt"
+        }
+      ]
+    },
+    {
+      "id": "x_rtx8000_llama33_70b_exl2",
+      "label": "Llama 3.3 70B · EXL2 5.0 bpw · ExLlama · 1× Quadro RTX 8000",
+      "model": "llama33_70b",
+      "rig": {
+        "units": [
+          {
+            "unit": "quadro_rtx_8000",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "Ubuntu 22.04, NVIDIA driver 560.35.03; requests through OpenWebUI."
+        }
+      },
+      "engine": {
+        "name": "ExLlamaV2",
+        "note": "the source says \"Exllama\"; V2 is implied by the EXL2 quant; version not stated"
+      },
+      "quant": {
+        "format": "EXL2 5.0 bpw",
+        "bpw": 5
+      },
+      "status": "measured",
+      "observed": "2025-06-17",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://www.hardware-corner.net/guides/quadro-rtx-8000-for-llm/ (page \"Last updated: Jun 17, 2025\"; measured on the author's card): \"Finally, at a demanding 25K context, the RTX 8000 managed 324.46 t/s for prompt processing and 1.8 t/s for generation.\""
+      },
+      "hazards": [
+        "Contexts are given as 8K, 16K and 25K, not exact token counts. Deep-context decode is far below what bandwidth allows, and the author does not diagnose why."
+      ],
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 439.79,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "\"8K\""
+        },
+        {
+          "metric": "decode",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 5.09,
+          "confidence": "m~",
+          "note": "\"8K\""
+        },
+        {
+          "metric": "prefill",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 387.13,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "\"16K\""
+        },
+        {
+          "metric": "decode",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 2.65,
+          "confidence": "m~",
+          "note": "\"16K\""
+        },
+        {
+          "metric": "prefill",
+          "depth": 25000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 324.46,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "\"25K\""
+        },
+        {
+          "metric": "decode",
+          "depth": 25000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1.8,
+          "confidence": "m~",
+          "note": "\"25K\""
+        }
+      ]
+    },
+    {
+      "id": "x_2080ti22x2_qwen38_27b_fp8_vllm",
+      "label": "Qwen3.8 27B · FP8 · vLLM-2080Ti fork · 2× RTX 2080 Ti 22GB, TP2",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_2080_ti_22gb",
+            "count": 2
+          }
+        ],
+        "interconnect": {
+          "kind": "nvlink",
+          "bridge": "NVLink bridge (nvidia-smi topology NV2)",
+          "source": "https://github.com/weicj/vLLM-2080Ti-Definitive/blob/93c9013e375b1ecbf2da88179d2a31175a0d5c99/profiles/2x2080Ti/README.md"
+        },
+        "host": {
+          "note": "2× Xeon E5-2673 v4, 60 GiB RAM; driver 595.91.07, CUDA 13.0, torch 2.13.0+cu130."
+        }
+      },
+      "engine": {
+        "name": "vLLM-2080Ti-Definitive",
+        "version": "v0.2.1",
+        "lineage": "fork",
+        "note": "a vLLM fork for SM75; upstream baseline b23433088b (v0.29.1rc0-33)"
+      },
+      "quant": {
+        "format": "FP8 (Qwen/Qwen3.8-27B-FP8), W8A16",
+        "key": "fp8",
+        "note": "FP8 weights with 16-bit activations; Turing has no FP8 matrix units."
+      },
+      "kvCache": {
+        "k": "f16",
+        "v": "f16"
+      },
+      "pool": {
+        "tokens": 179940,
+        "slots": 1
+      },
+      "status": "measured",
+      "observed": "2026-09-19",
+      "recorded": "2026-10-15",
+      "parallel": {
+        "mode": "tensor",
+        "degree": 2
+      },
+      "hazards": [
+        "Self-reported by the fork's author; the raw logs are said to be in an unpublished audit directory. The 4K figures are medians of three requests, the 32K figures single runs, with the prefix cache off and warm-up excluded."
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/weicj/vLLM-2080Ti-Definitive/blob/93c9013e375b1ecbf2da88179d2a31175a0d5c99/profiles/2x2080Ti/README.md (profile nomtp-fp16kv-1x176K-text-only; validated 2026-09-19)"
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 4096,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1694.94,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "decode",
+          "depth": 4096,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 33.17,
+          "confidence": "m~",
+          "note": "over 128 output tokens after a 4,096-token prompt"
+        },
+        {
+          "metric": "prefill",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1483.04,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 30.8,
+          "confidence": "m~",
+          "note": "over 512 output tokens after a 32,768-token prompt"
+        }
+      ]
+    },
+    {
+      "id": "x_2080ti22x2_qwen38_27b_fp8_mtp4_vllm",
+      "label": "Qwen3.8 27B · FP8 · vLLM-2080Ti fork · MTP n=4 · 2× RTX 2080 Ti 22GB, TP2",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_2080_ti_22gb",
+            "count": 2
+          }
+        ],
+        "interconnect": {
+          "kind": "nvlink",
+          "bridge": "NVLink bridge (nvidia-smi topology NV2)",
+          "source": "https://github.com/weicj/vLLM-2080Ti-Definitive/blob/93c9013e375b1ecbf2da88179d2a31175a0d5c99/profiles/2x2080Ti/README.md"
+        },
+        "host": {
+          "note": "2× Xeon E5-2673 v4, 60 GiB RAM; driver 595.91.07, CUDA 13.0, torch 2.13.0+cu130."
+        }
+      },
+      "engine": {
+        "name": "vLLM-2080Ti-Definitive",
+        "version": "v0.2.1",
+        "lineage": "fork",
+        "note": "a vLLM fork for SM75; upstream baseline b23433088b (v0.29.1rc0-33)"
+      },
+      "quant": {
+        "format": "FP8 (Qwen/Qwen3.8-27B-FP8), W8A16",
+        "key": "fp8"
+      },
+      "kvCache": {
+        "k": "fp8",
+        "v": "fp8"
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 4
+      },
+      "status": "measured",
+      "observed": "2026-09-19",
+      "recorded": "2026-10-15",
+      "parallel": {
+        "mode": "tensor",
+        "degree": 2
+      },
+      "hazards": [
+        "Self-reported by the fork's author; the raw logs are said to be in an unpublished audit directory. The 4K figures are medians of three requests, the 32K figures single runs, with the prefix cache off and warm-up excluded."
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/weicj/vLLM-2080Ti-Definitive/blob/93c9013e375b1ecbf2da88179d2a31175a0d5c99/profiles/2x2080Ti/README.md (profile mtp4-fp8kv-1x262K-text-only; validated 2026-09-19)"
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1393.94,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 92.47,
+          "confidence": "m~",
+          "note": "over 512 output tokens after a 32,768-token prompt"
+        }
+      ]
+    },
+    {
+      "id": "x_2080ti22x2_qwen36_35b_a3b_fp8_vllm",
+      "label": "Qwen3.6 35B-A3B · FP8 · vLLM-2080Ti fork · 2× RTX 2080 Ti 22GB, TP2",
+      "model": "qwen36_35b_a3b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_2080_ti_22gb",
+            "count": 2
+          }
+        ],
+        "interconnect": {
+          "kind": "nvlink",
+          "bridge": "NVLink bridge (nvidia-smi topology NV2)",
+          "source": "https://github.com/weicj/vLLM-2080Ti-Definitive/blob/93c9013e375b1ecbf2da88179d2a31175a0d5c99/profiles/2x2080Ti/README.md"
+        },
+        "host": {
+          "note": "2× Xeon E5-2673 v4, 60 GiB RAM; driver 595.91.07, CUDA 13.0, torch 2.13.0+cu130."
+        }
+      },
+      "engine": {
+        "name": "vLLM-2080Ti-Definitive",
+        "version": "v0.2.1",
+        "lineage": "fork",
+        "note": "a vLLM fork for SM75; upstream baseline b23433088b (v0.29.1rc0-33)"
+      },
+      "quant": {
+        "format": "FP8 (Qwen3.6-35B-A3B-FP8), W8A16",
+        "key": "fp8"
+      },
+      "kvCache": {
+        "k": "f16",
+        "v": "f16"
+      },
+      "pool": {
+        "tokens": 284760,
+        "slots": 1
+      },
+      "status": "measured",
+      "observed": "2026-09-19",
+      "recorded": "2026-10-15",
+      "parallel": {
+        "mode": "tensor",
+        "degree": 2
+      },
+      "hazards": [
+        "Self-reported by the fork's author; the raw logs are said to be in an unpublished audit directory. The 4K figures are medians of three requests, the 32K figures single runs, with the prefix cache off and warm-up excluded."
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/weicj/vLLM-2080Ti-Definitive/blob/93c9013e375b1ecbf2da88179d2a31175a0d5c99/profiles/2x2080Ti/README.md (profile nomtp-fp16kv-1x262K-text-only; validated 2026-09-19)"
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 4096,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 6690.07,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "decode",
+          "depth": 4096,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 113.63,
+          "confidence": "m~",
+          "note": "over 128 output tokens after a 4,096-token prompt"
+        },
+        {
+          "metric": "prefill",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 5941.16,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 105.92,
+          "confidence": "m~",
+          "note": "over 512 output tokens after a 32,768-token prompt"
+        }
+      ]
     }
   ],
   "candidates": [
@@ -6626,7 +7240,7 @@
         "qwen38_flash_next"
       ],
       "status": "preregistered",
-      "note": "The engine in play is 1Cat-vLLM, a one-team vLLM fork for SM70. The only report so far is one unreproduced GitHub issue (1CatAI/1Cat-vLLM#746), which describes a different variant: four PCIe cards, no NVLink, 200 W caps."
+      "note": "The engine in play is 1Cat-vLLM, a one-team vLLM fork for SM70. The only report so far is one unreproduced GitHub issue (1CatAI/1Cat-vLLM#746), which describes a different variant: four PCIe cards, no NVLink, 200 W caps. The stack is a dead end upstream: CUDA 13, PyTorch after 2.14 and upstream vLLM all exclude Volta, so this rig stays on CUDA 12.x, the R580 driver branch (supported to June 2028) and SM70 forks."
     },
     {
       "id": "c_mi100x4",
