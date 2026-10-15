@@ -1366,7 +1366,8 @@
       "pricing": {
         "street": {
           "usd": 1500,
-          "asOf": "2026-07"
+          "asOf": "2026-07",
+          "note": "The maintainer's observation, July 2026; prices for this card are all over the place. The reference post (2025) cites one Bilibili buyer at 2,200 yuan (about $305 then), and its author bought four on eBay at an unstated \"bargain\" price."
         }
       },
       "power": {
@@ -6446,6 +6447,36 @@
       ],
       "status": "preregistered",
       "note": "Two cards split two KV heads cleanly under tensor parallel. The catalog unit records that no public Max 1100 llama.cpp datapoints existed as of Aug 2026; engines in play include llama.cpp SYCL and vLLM-XPU."
+    },
+    {
+      "id": "c_pg199x4_aomsxmv",
+      "label": "4× PG199 / DRIVE A100 on a Supermicro AOM-SXMV",
+      "rig": {
+        "units": [
+          {
+            "unit": "pg199_card",
+            "count": 4
+          }
+        ],
+        "interconnect": {
+          "kind": "pcie",
+          "bridge": "Supermicro AOM-SXMV 4× SXM2 carrier (PCIe switches; NVLink unused)",
+          "costUsd": 1110,
+          "costHighUsd": 1520,
+          "hostLinkGBs": 32,
+          "source": "https://leikoe.github.io/posts/automotive-gpu-maxxxing",
+          "note": "Cost covers the carrier and the parts it cannot run without, at the post's 2025 prices before VAT, shipping and buying-agent fees. The carrier is about $690 (no AOM-SXMV below 5,000 yuan on Xianyu when the author came to buy, down from about 2,000 yuan earlier) to $900 (a Supermicro refurbished-parts quote, two-unit minimum). On top of that: a case with fans and a 1,400 W power supply (about $300), two JPCIE-to-PCIe cables (about $20 each) and four heatsinks (about $20 each). The high end adds four $50 brackets for the PG199's 36 mm heatsink-hole spacing, which the author avoided by filing the heatsinks by hand. NVLink does not work on these cards, so peers talk over PCIe. The post's cards ran at PCIe 3.0 x16 at best, two GPUs sharing each of the carrier's switches, and slower behind a bifurcated host slot. The host link is therefore PCIe 3.0 x16, not the card's rated 4.0."
+        },
+        "host": {
+          "note": "Two host x16 slots feed the carrier, one per switch. The post's Ryzen 9 7950X has 24 CPU lanes, which forced bifurcation and slowed the second pair (\"I should have at least 32\"). The case supplies the GPUs' power independently of the host. The host is not priced."
+        }
+      },
+      "models": [
+        "qwen38_27b",
+        "qwen38_flash_next"
+      ],
+      "status": "preregistered",
+      "note": "One person's documented build, used for RL work, not LLM serving, so there are no inference figures. The cards have no power limit: the author holds them at 1,140 MHz, the lowest clock they accept, for about 250 W each, and says an unclocked card \"can draw 600W if it wants to\". The four cards on the 1,400 W supply only fit with the downclock. The author also suspects dried thermal paste under the heat spreader, and Xianyu sellers list delidded cards. Card supply and prices vary widely."
     }
   ]
 }

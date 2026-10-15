@@ -213,7 +213,7 @@
         },
         "note": {
           "type": "string",
-          "description": "Caveats \u2014 e.g. that a bandwidth figure is SoC-wide rather than a discrete card's."
+          "description": "Caveats — e.g. that a bandwidth figure is SoC-wide rather than a discrete card's."
         },
         "arch": {
           "type": "string",
@@ -297,7 +297,7 @@
             "costUsd": {
               "type": "number",
               "minimum": 0,
-              "description": "Price of the bridge or carrier board itself, which belongs to no card. Absent means unpriced, and a rig total that leaves it out says so. Zero is a real answer: some bridges ship with the cards."
+              "description": "Price of the bridge or carrier board itself, which belongs to no card, plus parts a carrier cannot run without (an SXM carrier's cables and heatsinks, say) when a note itemises them. Absent means unpriced, and a rig total that leaves it out says so. Zero is a real answer: some bridges ship with the cards."
             },
             "costHighUsd": {
               "type": "number",
