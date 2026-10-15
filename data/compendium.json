@@ -942,38 +942,75 @@
       "label": "Apple M3 GPU",
       "matrixUnits": "None. No dedicated matrix units in the GPU (Apple added GPU 'Neural Accelerators' with M5)",
       "formats": {
-        "tf32": "unknown",
-        "bf16": "unknown",
-        "fp16": "unknown",
-        "fp8": "unknown",
-        "fp6": "unknown",
-        "fp4": "unknown",
-        "int8": "unknown",
-        "int4": "unknown"
+        "tf32": "absent",
+        "bf16": "absent",
+        "fp16": "absent",
+        "fp8": "absent",
+        "fp6": "absent",
+        "fp4": "absent",
+        "int8": "absent",
+        "int4": "absent"
       },
       "sources": [
         {
-          "url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
-          "quote": "Its up-to-80-core GPU, the most powerful Apple silicon GPU ever, brings Neural Accelerators to the Ultra chip for the first time, enabling up to 4.3x the peak AI compute performance when compared to M3 Ultra.",
-          "locator": "Apple Newsroom, Mac Studio with M5 Max and M5 Ultra (Aug 2026)"
-        },
-        {
-          "url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
-          "quote": "Neural Accelerators in each GPU core deliver dramatically faster matrix multiplication.",
-          "locator": "Apple Newsroom, Mac Studio with M5 Max and M5 Ultra (Aug 2026)"
+          "url": "https://developer.apple.com/videos/play/tech-talks/111432/",
+          "quote": "The API is portable. The same code runs across Apple's entire GPU family from M1 to M5. On older GPUs without neural accelerators, TensorOps falls back to optimized shader implementations.",
+          "locator": "Apple Tech Talk 111432 transcript, TensorOps overview",
+          "supports": [
+            "tf32:absent",
+            "bf16:absent",
+            "fp16:absent",
+            "fp8:absent",
+            "fp6:absent",
+            "fp4:absent",
+            "int8:absent",
+            "int4:absent"
+          ]
         },
         {
           "url": "https://www.apple.com/newsroom/2025/10/apple-unleashes-m5-the-next-big-leap-in-ai-performance-for-apple-silicon/",
           "quote": "With the introduction of Neural Accelerators in the GPU, M5 delivers a huge boost to AI workloads.",
-          "locator": "Apple Newsroom, 'Apple unleashes M5' (Oct 2025)"
+          "locator": "Apple Newsroom 'Apple unleashes M5' (2025-10-15)",
+          "supports": [
+            "note:NA-introduced-with-M5"
+          ]
         },
         {
-          "url": "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/",
-          "quote": "In fact, M3 Ultra is built for AI, including ML accelerators in the CPU, Apple’s most powerful GPU, the Neural Engine, and over 800GB/s of memory bandwidth.",
-          "locator": "Apple Newsroom, 'Apple reveals M3 Ultra' (Mar 2025). Matrix/ML accelerators are named for the CPU, not the GPU."
+          "url": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/",
+          "quote": "Its up-to-80-core GPU, the most powerful Apple silicon GPU ever, brings Neural Accelerators to the Ultra chip for the first time",
+          "locator": "Apple Newsroom 2026-08-25 (=> the M3 Ultra GPU had none)",
+          "supports": [
+            "note:M3-Ultra-has-no-NA"
+          ]
+        },
+        {
+          "url": "https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf",
+          "quote": "Metal supports the following SIMD-group matrix type names, where T is half, bfloat (in Metal 3.1 and later) or float and Cols and Rows are 8",
+          "locator": "MSL v4.1 section 2.4 SIMD-group Matrix Data Types. API ACCEPTANCE only (no integer simdgroup_matrix); Feature Set Tables list 'SIMD-scoped matrix multiply operations' from Apple7 (M1); M3 = Apple9.",
+          "supports": [
+            "fp16:api-alu",
+            "bf16:api-alu",
+            "note:fp32-api-alu"
+          ]
+        },
+        {
+          "url": "https://github.com/philipturner/metal-benchmarks",
+          "quote": "Apple's \"tensor core\" is the `simdgroup_matrix` instruction",
+          "locator": "philipturner/metal-benchmarks, Operations per Second (M1/A15 era): matrix FFMA16 ~102.5 vs FFMA32 ~101.7 per core-cycle, i.e. no FP16 speedup, consistent with ALU execution. Forum tier; M3 not measured.",
+          "supports": [
+            "note:simdgroup_matrix-runs-at-FMA-rate"
+          ]
+        },
+        {
+          "url": "https://github.com/ggml-org/llama.cpp/blob/a0e6dc7384edb8f5d927155e1d26c10b4a310e6d/ggml/src/ggml-metal/ggml-metal-device.m",
+          "quote": "note: disable the tensor API by default for old chips because with the current implementation it is not useful - M2 Ultra: ~5% slower - M4, M4 Max: no significant difference",
+          "locator": "llama.cpp ggml-metal-device.m @a0e6dc7, tensor API enabled only for M5/M6/A19/A20",
+          "supports": [
+            "note:no-tensor-speedup-pre-M5"
+          ]
         }
       ],
-      "note": "Covers Mac Studio M3 Ultra. Every format is unknown, not absent: Apple says its GPU Neural Accelerators (matrix units) arrived with M5, which implies the M3 GPU has none, but no Apple document found says so directly. Metal's simdgroup_matrix operations (half, float, bfloat) run on M3 either way. The M3 Ultra's \"ML accelerators\" are CPU-side (AMX/SME-class), not GPU."
+      "note": "Covers the Mac Studio M3 Ultra in every memory configuration. All eight types are absent because Apple now says so directly: pre-M5 GPUs are \"older GPUs without neural accelerators\", where TensorOps \"falls back to optimized shader implementations\". The APIs still accept types (simdgroup_matrix takes half, bfloat and float; TensorOps take everything in the Metal spec's Table 7.3), but they run on the ALUs at the FMA rate. Unlike RDNA 3's WMMA, no Apple ISA document shows a matrix instruction, and llama.cpp found its tensor path no faster on M2 Ultra, M4 or M4 Max. The M3 Ultra's \"ML accelerators\" are on the CPU side."
     },
     {
       "id": "xe2",
@@ -1142,21 +1179,67 @@
       "vendor": "Apple",
       "label": "Apple M4 (GPU)",
       "formats": {
-        "tf32": "unknown",
-        "bf16": "unknown",
-        "fp16": "unknown",
-        "fp8": "unknown",
-        "fp6": "unknown",
-        "fp4": "unknown",
-        "int8": "unknown",
-        "int4": "unknown"
+        "tf32": "absent",
+        "bf16": "absent",
+        "fp16": "absent",
+        "fp8": "absent",
+        "fp6": "absent",
+        "fp4": "absent",
+        "int8": "absent",
+        "int4": "absent"
       },
       "sources": [
         {
-          "url": "https://www.apple.com/newsroom/2024/10/apple-introduces-m4-pro-and-m4-max/"
+          "url": "https://developer.apple.com/videos/play/tech-talks/111432/",
+          "quote": "On older GPUs without neural accelerators, TensorOps falls back to optimized shader implementations.",
+          "locator": "Apple Tech Talk 111432 transcript",
+          "supports": [
+            "tf32:absent",
+            "bf16:absent",
+            "fp16:absent",
+            "fp8:absent",
+            "fp6:absent",
+            "fp4:absent",
+            "int8:absent",
+            "int4:absent"
+          ]
+        },
+        {
+          "url": "https://www.apple.com/newsroom/2026/03/apple-debuts-m5-pro-and-m5-max-to-supercharge-the-most-demanding-pro-workflows/",
+          "quote": "With a Neural Accelerator in each GPU core and higher unified memory bandwidth, M5 Pro and M5 Max are over 4x the peak GPU compute for AI compared to the previous generation.",
+          "locator": "Apple Newsroom 2026-03-03 (previous generation = M4 Pro/M4 Max)",
+          "supports": [
+            "note:NA-new-in-M5"
+          ]
+        },
+        {
+          "url": "https://arxiv.org/abs/2606.12765",
+          "quote": "matmul2d executes entirely on the GPU shader cores with no dedicated matrix datapath and no evidence of Apple Neural Engine routing ... the Metal 4.1 fp8 (E4M3) matmul2d is emulated, not accelerated: it sustains 0.94x the throughput of fp16 despite reading half the operand bytes",
+          "locator": "Kumaresan, 'Rigel: Reverse-Engineering the Metal 4.1 Tensor Compute Path on the Apple M4 Max GPU', arXiv 2606.12765 (2026-06-11); abstract (verbatim, via export.arxiv.org). Single-author preprint, not peer reviewed. The abstract also says: 'The specification states which data-type rows are supported, never whether they are hardware-accelerated'.",
+          "supports": [
+            "fp8:absent",
+            "fp16:absent",
+            "note:no-matrix-datapath-M4-Max"
+          ]
+        },
+        {
+          "url": "https://github.com/ggml-org/llama.cpp/blob/a0e6dc7384edb8f5d927155e1d26c10b4a310e6d/ggml/src/ggml-metal/ggml-metal-device.m",
+          "quote": "M4, M4 Max: no significant difference",
+          "locator": "llama.cpp ggml-metal-device.m: tensor API vs simdgroup kernels on M4",
+          "supports": [
+            "note:no-tensor-speedup-M4"
+          ]
+        },
+        {
+          "url": "https://developer.apple.com/metal/Metal-Feature-Set-Tables.pdf",
+          "quote": "M4-series Metal 3 & 4 Apple9",
+          "locator": "Metal Feature Set Tables 2026-05-21 (same family as M3)",
+          "supports": [
+            "note:Apple9"
+          ]
         }
       ],
-      "note": "No matrix-format support has been sourced for this generation yet."
+      "note": "Same reasoning as apple_m3 (Metal GPU family Apple9). An independent reverse-engineering paper on the M4 Max found no matrix datapath, with FP8 matmul emulated at about FP16 speed."
     },
     {
       "id": "apple_m5",
@@ -1165,19 +1248,132 @@
       "formats": {
         "tf32": "unknown",
         "bf16": "unknown",
-        "fp16": "unknown",
+        "fp16": "native",
         "fp8": "unknown",
-        "fp6": "unknown",
+        "fp6": "absent",
         "fp4": "unknown",
-        "int8": "unknown",
+        "int8": "native",
         "int4": "unknown"
       },
       "sources": [
         {
-          "url": "https://www.apple.com/newsroom/2026/03/apple-debuts-m5-pro-and-m5-max-to-supercharge-the-most-demanding-pro-workflows/"
+          "url": "https://developer.apple.com/videos/play/tech-talks/111432/",
+          "quote": "Neural accelerators are dedicated hardware and M5 purpose built for matrix multiplication. They're built into each shader core right alongside the other GPU pipelines such as ALU, raytracing, and so on.",
+          "locator": "Apple Tech Talk 111432 'Accelerate your machine learning workloads with the M5 and A19 GPUs', transcript (auto-captions; 'and M5' = 'in M5')",
+          "supports": [
+            "matrixUnit:per-GPU-core"
+          ]
+        },
+        {
+          "url": "https://developer.apple.com/videos/play/tech-talks/111432/",
+          "quote": "Matrix multiplication operations, often called gems, are up to 4 to 8 times faster, depending on precision.",
+          "locator": "Tech Talk 111432 transcript ('gems' = GEMMs); no per-type breakdown given",
+          "supports": [
+            "note:speedup-varies-by-precision-unspecified"
+          ]
+        },
+        {
+          "url": "https://developer.apple.com/videos/play/tech-talks/111432/",
+          "quote": "Here we're creating three tensors with fp16 precision.",
+          "locator": "Tech Talk 111432: the tiled GEMM example Apple then profiles, showing Neural Accelerator utilization 'close to 100%' for the TensorOps variants",
+          "supports": [
+            "fp16"
+          ]
+        },
+        {
+          "url": "https://tzakharko.github.io/apple-neural-accelerators-benchmark/",
+          "quote": "Hardware-accelerated data formats include FP16 (with FP16 or FP32 output) and INT8 (with INT32 output).",
+          "locator": "tzakharko, 'Investigating the GPU Neural Accelerators on Apple A19/M5' (2025-10-15), measured on A19 (same Apple10 GPU family as M5): ~7.5 TFLOPS FP16 and ~13.5 TOPS INT8 on 5 cores. Independent (forum tier).",
+          "supports": [
+            "fp16",
+            "int8"
+          ]
+        },
+        {
+          "url": "https://tzakharko.github.io/apple-neural-accelerators-benchmark/",
+          "quote": "Although undocumented, FP32 is supported as well, but appears to run using the general-purpose SIMD pipe on the A19.",
+          "locator": "tzakharko 2025-10-15; same page: 'A notable omission is the bfloat16 format' (bf16 TensorOps arrived later, in OS 26.1); precision flag 'appears to have no effect on A19'",
+          "supports": [
+            "tf32:unknown",
+            "note:fp32-on-SIMD-pipe-A19"
+          ]
+        },
+        {
+          "url": "https://developer.apple.com/videos/play/tech-talks/111432/",
+          "quote": "In 26.1, we added bfloat tensor support, critical for modern ML models that use Bfloat16 ... And in 26.4, we added four bit and eight bit integer tensors, so quantized map models can fully leverage neural accelerators.",
+          "locator": "Tech Talk 111432 transcript (Apple's auto-captions; wording as published, including 'quantized map models')",
+          "supports": [
+            "bf16:api",
+            "int8",
+            "int4:api"
+          ]
+        },
+        {
+          "url": "https://machinelearning.apple.com/research/exploring-llms-mlx-m5",
+          "quote": "The GPU Neural Accelerators introduced with the M5 chip provides dedicated matrix-multiplication operations",
+          "locator": "Apple Machine Learning Research, 'Exploring LLMs with MLX and the Neural Accelerators in the M5 GPU' (2025-11-19); table rows 'Qwen3-1.7B-MLX-bf16 BF16 TTFT speedup 3.57' and 'Qwen3-8B-MLX-bf16 BF16 3.62' (M5 vs M4, 4096-token prompt, macOS 26.2+)",
+          "supports": [
+            "note:dedicated matrix-multiplication operations"
+          ]
+        },
+        {
+          "url": "https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf",
+          "quote": "Table 7.3. MatMul2D data type supported ... Metal 4 half half float ... Metal 4 char char int ... Metal 4 and OS 26.1 bfloat bfloat float ... Metal 4 and OS 26.4 half int4b_format half ... Metal 4.1 metal_fp8_e4m3_format metal_fp8_e4m3_format float ... Metal 4.1 metal_fp4_e2m1_format metal_fp4_e2m1_format float",
+          "locator": "Metal Shading Language Specification v4.1 (2026-06-04), section 7.2.1, Table 7.3 (complete list). API ACCEPTANCE ONLY: the same TensorOps run on M1-M4 (Feature Set Tables: Tensors = Apple7+). No fp6 type; no tf32 type (float with relaxed_precision instead); int4 only as the B operand (A = half/bfloat/char/uchar), never int4 x int4.",
+          "supports": [
+            "fp6:absent",
+            "fp8:api",
+            "fp4:api",
+            "int4:api-weight-only",
+            "tf32:api-relaxed-float-only"
+          ]
+        },
+        {
+          "url": "https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf",
+          "quote": "relaxed_precision Specifies if the operation can use relaxed precision for float data type. Relaxed precision allows the operation to truncate the mantissa before the multiplication.",
+          "locator": "MSL 4.1, Table 7.4 MatMul2D descriptor parameters (TF32-like mode; whether hardware uses it is unknown)",
+          "supports": [
+            "tf32:unknown"
+          ]
+        },
+        {
+          "url": "https://developer.apple.com/videos/play/wwdc2026/330/",
+          "quote": "In addition to 16- and 32-bit floating point types, TensorOps now natively supports quantized data types. We added a support for 4- and 8-bit integer types in an update to macOS and iOS 26, and we're extending support to even more data types in macOS and iOS 27. This includes 4- and 8-bit floating point types and 2-bit integer types.",
+          "locator": "WWDC26 session 330 'Optimize custom machine learning operations with Metal tensors', transcript. 'Natively supports' here means the API takes the type, not that the hardware multiplies it; the same session says TensorOps 'automatically uses any available hardware acceleration across all Apple Silicon GPU generations'.",
+          "supports": [
+            "fp8:api",
+            "fp4:api",
+            "int4:api"
+          ]
+        },
+        {
+          "url": "https://arxiv.org/abs/2607.19438",
+          "quote": "Apple's M5 generation introduces a redesigned GPU architecture in which every core carries a dedicated Neural Accelerator: on-die matrix units exposed through the Metal~4 tensor API.",
+          "locator": "BaseRT, arXiv 2607.19438 (2026-07-21) abstract; no per-dtype data",
+          "supports": [
+            "matrixUnit:per-GPU-core"
+          ]
+        },
+        {
+          "url": "https://developer.apple.com/metal/Metal-Feature-Set-Tables.pdf",
+          "quote": "Tensors Metal 4 Apple7 ... M5-series Metal 3 & 4 Apple10",
+          "locator": "Metal Feature Set Tables (2026-05-21): Tensors (and so every TensorOps type) are available from Apple7 (M1); M5 = Apple10. The tables have no Apple10-only matrix-format row.",
+          "supports": [
+            "note:api-availability-not-hardware"
+          ]
+        },
+        {
+          "url": "https://github.com/ml-explore/mlx/blob/36969c094354086e15d2a327a9c50feb20b9cf11/mlx/backend/metal/matmul.cpp",
+          "quote": "bool use_nax = metal::is_nax_available() && !issubdtype(a.dtype(), complexfloating) && (env::enable_tf32() || a.dtype() != float32);",
+          "locator": "MLX (Apple) mlx/backend/metal/matmul.cpp @36969c0; is_nax_available() requires macOS 26.2+ and GPU gen >= 17 (M5/A19) in device.cpp. MLX sends fp16/bf16 GEMMs to the Neural Accelerator path, and fp32 only when TF32 is enabled (MLX_ENABLE_TF32, default 1); quantized weights are dequantized to fp16/bf16 first.",
+          "supports": [
+            "fp16",
+            "note:MLX routes BF16 and FP16 to the Neural Accelerators",
+            "tf32:unknown"
+          ]
         }
       ],
-      "note": "Apple adds a Neural Accelerator to each GPU core; which input types it takes has not been sourced yet."
+      "note": "M5, M5 Pro, M5 Max and M5 Ultra share this GPU generation (Metal family Apple10), with a Neural Accelerator in every GPU core. Apple has never published a native-type table. FP16 and INT8 rest on Apple's own Neural Accelerator example and an independent A19 microbenchmark measuring INT8 at about 1.8x the FP16 rate, which a conversion path could not do. BF16 stays unknown: the API takes bfloat since OS 26.1 and MLX routes BF16 to the accelerators, but nothing shows the hardware multiplies BF16 rather than converting it. FP8, FP4 and INT4 are accepted by the Metal 4.1 / OS 26.4 API on every GPU from M1 up, so the API says nothing about M5 hardware. FP6 is absent from every Apple API, an API-level absence rather than a hardware finding. TF32 has no type; reports on whether M5 accelerates relaxed-precision float conflict."
     }
   ],
   "units": [
@@ -1393,8 +1589,9 @@
       "memoryGB": 96,
       "pricing": {
         "street": {
-          "usd": 3600,
-          "asOf": "2026-07"
+          "usd": 4525,
+          "asOf": "2026-10",
+          "note": "Used: eBay sold prices of $4,000-$5,049 between 2026-09-10 and 2026-10-06, per one reseller's guide (MacPro-LA); low confidence. Apple raised the new price to $5,299 on about 2026-06-25, and the M5 Ultra replaced this machine on 2026-08-25."
         },
         "msrp": {
           "usd": 3999,
@@ -1415,9 +1612,10 @@
         "https://www.cpu-monkey.com/en/cpu-apple_m3_ultra_28_cpu_60_gpu",
         "https://lowendmac.com/1234/apple-silicon-m3-ultra-chip-specs/",
         "https://www.iclarified.com/p624/mac-studio-m3-ultra-28core-cpu-60core-gpu-96gb-ram-1tb-ssd",
-        "https://www.eatyourbytes.com/applecpu-detail/apple-m3-ultra-60-core-gpu/"
+        "https://www.eatyourbytes.com/applecpu-detail/apple-m3-ultra-60-core-gpu/",
+        "https://macpro-la.com/blogs/news/mac-studio-price-guide-2026 (used prices, Sep-Oct 2026)"
       ],
-      "note": "Apple publishes 480 W 'maximum continuous power' for the Mac Studio — a PSU rating for the whole machine, not a GPU TDP. Apple does not publish formal per-precision GPU compute figures the way NVIDIA/AMD/Intel do (no FP16/BF16/INT8 TFLOPS/TOPS spec exists in any official Apple material) -- this entry stays FP32-only for that reason, not for lack of searching.",
+      "note": "Apple publishes 480 W 'maximum continuous power' for the Mac Studio — a PSU rating for the whole machine, not a GPU TDP. Apple does not publish formal per-precision GPU compute figures the way NVIDIA/AMD/Intel do (no FP16/BF16/INT8 TFLOPS/TOPS spec exists in any official Apple material) -- this entry stays FP32-only for that reason, not for lack of searching. Apple dropped the 512GB option around 2026-03-05 and the 256GB one on 2026-05-05, leaving this 96GB model until the M5 Ultra replaced it; every M3 Ultra is now a used purchase.",
       "arch": "apple_m3",
       "compute": {
         "unit": "Tops",
@@ -1427,6 +1625,137 @@
         },
         "source": "https://www.eatyourbytes.com/applecpu-detail/apple-m3-ultra-60-core-gpu/"
       }
+    },
+    {
+      "id": "mac_m3_ultra_256",
+      "label": "Mac Studio M3 Ultra 256GB",
+      "vendor": "Apple",
+      "arch": "apple_m3",
+      "released": "2025-03",
+      "memoryGB": 256,
+      "memoryBandwidthGBs": 819,
+      "process": "TSMC N3B (3 nm)",
+      "pricing": {
+        "msrp": {
+          "usd": 5599,
+          "asOf": "2025-03",
+          "note": "Computed from Apple's line items ($3,999 base + $1,600 for 256GB, 28-core CPU / 60-core GPU, 1TB); no published total for this configuration was found. Apple raised the upgrade to $2,000 in March 2026 and dropped the option on 2026-05-05."
+        },
+        "street": {
+          "usd": 8650,
+          "asOf": "2026-10",
+          "note": "Used: eBay sold $7,300-$9,999 (Sep-Oct 2026) per one reseller's guide; low confidence. The midpoint is shown."
+        }
+      },
+      "sources": [
+        "https://support.apple.com/en-us/122211 -- \"M3 Ultra with 32-core CPU, 80-core GPU, and 32-core Neural Engine (819GB/s memory bandwidth)\"",
+        "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/ -- \"Starting at 96GB, it can be configured up to 512GB, or over half a terabyte.\"",
+        "https://www.cultofmac.com/news/apple-quietly-kills-512gb-m3-ultra-mac-studio-option -- \"You can no longer buy an M3 Ultra Mac Studio with 512GB of unified memory from Apple.\"",
+        "https://www.macrumors.com/2026/05/05/apple-mac-studio-mac-mini-ram-cuts -- \"The M3 Ultra Mac Studio is now available only in a 96GB RAM configuration.\"",
+        "https://macpro-la.com/blogs/news/mac-studio-price-guide-2026 (used prices, Sep-Oct 2026)",
+        "https://theregister.com/2025/03/05/apple_m3_ultra_mac_studio (launch prices)"
+      ],
+      "note": "Bandwidth is 819 GB/s on both GPU bins. Apple no longer sells it new. The GPU gets only part of the RAM by default. Apple publishes no per-precision GPU compute figures."
+    },
+    {
+      "id": "mac_m3_ultra_512",
+      "label": "Mac Studio M3 Ultra 512GB (80-core GPU)",
+      "vendor": "Apple",
+      "arch": "apple_m3",
+      "released": "2025-03",
+      "memoryGB": 512,
+      "memoryBandwidthGBs": 819,
+      "process": "TSMC N3B (3 nm)",
+      "pricing": {
+        "msrp": {
+          "usd": 9499,
+          "asOf": "2025-03",
+          "note": "The Register: \"bringing the total to $9,499 before you even upgrade the storage\" (32-core CPU / 80-core GPU, 512GB, 1TB); 512GB was offered only with the 80-core chip. Discontinued around 2026-03-05."
+        },
+        "street": {
+          "usd": 17875,
+          "asOf": "2026-10",
+          "note": "Used: eBay sold $16,000-$19,750 (Sep-Oct 2026) per one reseller's guide; low confidence. Unobtainable new since March 2026, so used prices are far above launch. The midpoint is shown."
+        }
+      },
+      "sources": [
+        "https://support.apple.com/en-us/122211 -- \"M3 Ultra with 32-core CPU, 80-core GPU, and 32-core Neural Engine (819GB/s memory bandwidth)\"",
+        "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/ -- \"Starting at 96GB, it can be configured up to 512GB, or over half a terabyte.\"",
+        "https://www.cultofmac.com/news/apple-quietly-kills-512gb-m3-ultra-mac-studio-option -- \"You can no longer buy an M3 Ultra Mac Studio with 512GB of unified memory from Apple.\"",
+        "https://www.macrumors.com/2026/05/05/apple-mac-studio-mac-mini-ram-cuts -- \"The M3 Ultra Mac Studio is now available only in a 96GB RAM configuration.\"",
+        "https://macpro-la.com/blogs/news/mac-studio-price-guide-2026 (used prices, Sep-Oct 2026)",
+        "https://theregister.com/2025/03/05/apple_m3_ultra_mac_studio -- \"bringing the total to $9,499 before you even upgrade the storage\""
+      ],
+      "note": "The baseline for Apple's M5 Ultra AI claims. Bandwidth is the same 819 GB/s as every M3 Ultra; the 512GB buys capacity, not speed. The GPU gets only part of the RAM by default. Apple publishes no per-precision GPU compute figures."
+    },
+    {
+      "id": "mac_m5_ultra_96",
+      "label": "Mac Studio M5 Ultra 96GB (64-core GPU)",
+      "vendor": "Apple",
+      "arch": "apple_m5",
+      "released": "2026-09",
+      "memoryGB": 96,
+      "memoryBandwidthGBs": 1200,
+      "pricing": {
+        "msrp": {
+          "usd": 5499,
+          "asOf": "2026-08",
+          "note": "Apple: \"starts at $5,499 (U.S.)\" (30-core CPU, 64-core GPU, 96GB, 1TB). The 80-core GPU with 96GB is $6,799."
+        },
+        "street": {
+          "usd": 5499,
+          "asOf": "2026-10",
+          "note": "New at Apple's list price; too new for used-market data, and no discounts were seen."
+        }
+      },
+      "sources": [
+        "https://www.apple.com/mac-studio/specs/ -- M5 Ultra \"30-core CPU ... 64-core GPU | Neural Accelerators ... 1.2TB/s memory bandwidth\"; \"Configurable to: M5 Ultra with 36-core CPU, 80-core GPU, and 32-core Neural Engine (1.2TB/s memory bandwidth)\"; \"96GB unified memory | Configurable to: 256GB or 512GB (M5 Ultra with 36-core CPU and 80-core GPU)\"",
+        "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Combined with up to 512GB of unified memory and 1.2TB/s of memory bandwidth, 50 percent higher than before\"; \"Mac Studio with M5 Ultra starts at $5,499 (U.S.)\"; \"Mac Studio with 512GB of unified memory is coming in late October.\"",
+        "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)"
+      ],
+      "note": "Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default."
+    },
+    {
+      "id": "mac_m5_ultra_256",
+      "label": "Mac Studio M5 Ultra 256GB (80-core GPU)",
+      "vendor": "Apple",
+      "arch": "apple_m5",
+      "released": "2026-09",
+      "memoryGB": 256,
+      "memoryBandwidthGBs": 1200,
+      "pricing": {
+        "msrp": {
+          "usd": 10799,
+          "asOf": "2026-08",
+          "note": "36-core CPU / 80-core GPU / 256GB / 1TB, from configurator line items (aicybr; Daring Fireball's $6,800 chip + $4,000 memory), consistent with Macworld's $18,299 for the same with 16TB. Apple publishes only the starting price."
+        },
+        "street": {
+          "usd": 10799,
+          "asOf": "2026-10",
+          "note": "New at Apple's list price; too new for used-market data."
+        }
+      },
+      "sources": [
+        "https://www.apple.com/mac-studio/specs/ -- M5 Ultra \"30-core CPU ... 64-core GPU | Neural Accelerators ... 1.2TB/s memory bandwidth\"; \"Configurable to: M5 Ultra with 36-core CPU, 80-core GPU, and 32-core Neural Engine (1.2TB/s memory bandwidth)\"; \"96GB unified memory | Configurable to: 256GB or 512GB (M5 Ultra with 36-core CPU and 80-core GPU)\"",
+        "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Combined with up to 512GB of unified memory and 1.2TB/s of memory bandwidth, 50 percent higher than before\"; \"Mac Studio with M5 Ultra starts at $5,499 (U.S.)\"; \"Mac Studio with 512GB of unified memory is coming in late October.\"",
+        "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)",
+        "https://aicybr.com/blog/mac-studio-m5-max-m5-ultra-2026-price-specs-mac-mini-m6-comparison -- \"M5 Ultra, 36-core CPU / 80-core GPU | 256GB | 1TB | $10,799\""
+      ],
+      "note": "Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default."
+    },
+    {
+      "id": "mac_m5_ultra_512",
+      "label": "Mac Studio M5 Ultra 512GB (80-core GPU)",
+      "vendor": "Apple",
+      "arch": "apple_m5",
+      "memoryGB": 512,
+      "memoryBandwidthGBs": 1200,
+      "sources": [
+        "https://www.apple.com/mac-studio/specs/ -- M5 Ultra \"30-core CPU ... 64-core GPU | Neural Accelerators ... 1.2TB/s memory bandwidth\"; \"Configurable to: M5 Ultra with 36-core CPU, 80-core GPU, and 32-core Neural Engine (1.2TB/s memory bandwidth)\"; \"96GB unified memory | Configurable to: 256GB or 512GB (M5 Ultra with 36-core CPU and 80-core GPU)\"",
+        "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Combined with up to 512GB of unified memory and 1.2TB/s of memory bandwidth, 50 percent higher than before\"; \"Mac Studio with M5 Ultra starts at $5,499 (U.S.)\"; \"Mac Studio with 512GB of unified memory is coming in late October.\"",
+        "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)"
+      ],
+      "note": "Announced, not shipping: Apple says the 512GB Mac Studio is \"coming in late October\" (2026) and has published no price. Every M5 Ultra benchmark so far is on a 96GB or 256GB machine. Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default."
     },
     {
       "id": "strix_halo",
@@ -2498,9 +2827,23 @@
       "memoryBandwidthGBs": 614,
       "sources": [
         "https://www.apple.com/newsroom/2026/03/apple-debuts-m5-pro-and-m5-max-to-supercharge-the-most-demanding-pro-workflows/",
-        "https://www.notebookcheck.net/Apple-M5-Max-Processor-Benchmarks-and-Specs.1244918.0.html"
+        "https://www.notebookcheck.net/Apple-M5-Max-Processor-Benchmarks-and-Specs.1244918.0.html",
+        "https://www.apple.com/mac-studio/specs/ -- \"32-core GPU ... 460GB/s memory bandwidth\"; \"M5 Max with 18-core CPU, 40-core GPU, and 16-core Neural Engine (614GB/s memory bandwidth)\"; \"36GB unified memory | Configurable to: 48GB, 64GB, or 128GB (M5 Max with 18-core CPU and 40-core GPU)\"",
+        "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)"
       ],
-      "note": "Unified memory, up to 128 GB. The 32-core GPU bin is reported at 460 GB/s, which Apple has not confirmed. The GPU gets only part of the RAM by default. Bandwidth facts carried over from the old Apple appendix."
+      "note": "Unified memory, up to 128 GB, which needs the 40-core GPU (614 GB/s); the 32-core bin is 36GB-only at 460 GB/s (Apple's spec pages). Released is the MacBook Pro launch; the Mac Studio M5 Max shipped on 2026-09-22. The GPU gets only part of the RAM by default.",
+      "pricing": {
+        "msrp": {
+          "usd": 5099,
+          "asOf": "2026-08",
+          "note": "Mac Studio M5 Max, 40-core GPU, 128GB, 512GB SSD, computed from Daring Fireball's configurator line items (40-core chip with 48GB $3,099, +$2,000 for 128GB). The base Mac Studio M5 Max (32-core GPU, 36GB) is $2,499."
+        },
+        "street": {
+          "usd": 5099,
+          "asOf": "2026-10",
+          "note": "New at Apple's list price."
+        }
+      }
     },
     {
       "id": "cmp_170hx_64",
@@ -7207,6 +7550,379 @@
           "value": 105.92,
           "confidence": "m~",
           "note": "over 512 output tokens after a 32,768-token prompt"
+        }
+      ]
+    },
+    {
+      "id": "x_m3ultra512_flashnext_omlx",
+      "label": "Qwen3.8 Flash-Next · oQ4e · oMLX 0.7.0.dev2 · MTP 3 · M3 Ultra 512GB",
+      "model": "qwen38_flash_next",
+      "rig": {
+        "units": [
+          {
+            "unit": "mac_m3_ultra_512",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "oMLX",
+        "version": "0.7.0.dev2",
+        "note": "macOS 27.0 (26A428) as printed in the review"
+      },
+      "quant": {
+        "format": "oQ4e (MLX, 4-bit default with selected 5-, 6- and 8-bit weights)",
+        "key": "mlx4",
+        "note": "Mixed widths, so the true average is above the nominal 4.5 bits; the ceiling computed at 4.5 is generous."
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 3,
+        "note": "MTP depth 3, thinking off"
+      },
+      "status": "measured",
+      "observed": "2026-09-21",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://www.macstories.net/stories/m5-ultra-mac-studio-review-the-dream-mac-for-local-ai-agents/ (MacStories, Federico Viticci; same models, prompts and oMLX build on the M3 Ultra and the M5 Ultra)"
+      },
+      "hazards": [
+        "Prefill rows are medians of three passes; decode rows are one run per size, with MTP on, and the 128K decode is below the 256K one, so they are noisy."
+      ],
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 65235,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1114,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "prefill",
+          "depth": 130781,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1097,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "prefill",
+          "depth": 261856,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1070,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "decode",
+          "depth": 65005,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 45.3,
+          "confidence": "m~",
+          "note": "512-token answer, MTP on"
+        },
+        {
+          "metric": "decode",
+          "depth": 130522,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 37,
+          "confidence": "m~",
+          "note": "512-token answer, MTP on"
+        },
+        {
+          "metric": "decode",
+          "depth": 261597,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 38.6,
+          "confidence": "m~",
+          "note": "512-token answer, MTP on"
+        }
+      ]
+    },
+    {
+      "id": "x_m5ultra256_flashnext_omlx",
+      "label": "Qwen3.8 Flash-Next · oQ4e · oMLX 0.7.0.dev2 · MTP 3 · M5 Ultra 256GB",
+      "model": "qwen38_flash_next",
+      "rig": {
+        "units": [
+          {
+            "unit": "mac_m5_ultra_256",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "oMLX",
+        "version": "0.7.0.dev2",
+        "note": "macOS 27.0 (26A428) as printed in the review"
+      },
+      "quant": {
+        "format": "oQ4e (MLX, 4-bit default with selected 5-, 6- and 8-bit weights)",
+        "key": "mlx4",
+        "note": "Mixed widths, so the true average is above the nominal 4.5 bits; the ceiling computed at 4.5 is generous."
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 3,
+        "note": "MTP depth 3, thinking off"
+      },
+      "status": "measured",
+      "observed": "2026-09-21",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://www.macstories.net/stories/m5-ultra-mac-studio-review-the-dream-mac-for-local-ai-agents/ (MacStories, Federico Viticci; same models, prompts and oMLX build on the M3 Ultra and the M5 Ultra)"
+      },
+      "hazards": [
+        "Prefill rows are medians of three passes; decode rows are one run per size, with MTP on, and the 128K decode is below the 256K one, so they are noisy."
+      ],
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 65235,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 2732,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "prefill",
+          "depth": 130781,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 2654,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "prefill",
+          "depth": 261856,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 2544,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "decode",
+          "depth": 65005,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 83.8,
+          "confidence": "m~",
+          "note": "512-token answer, MTP on"
+        },
+        {
+          "metric": "decode",
+          "depth": 130522,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 60.6,
+          "confidence": "m~",
+          "note": "512-token answer, MTP on"
+        },
+        {
+          "metric": "decode",
+          "depth": 261597,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 74.7,
+          "confidence": "m~",
+          "note": "512-token answer, MTP on"
+        }
+      ]
+    },
+    {
+      "id": "x_m5ultra256_flashnext_llamacpp",
+      "label": "Qwen3.8 Flash-Next · Q8_0 · llama.cpp · M5 Ultra 256GB",
+      "model": "qwen38_flash_next",
+      "rig": {
+        "units": [
+          {
+            "unit": "mac_m5_ultra_256",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "macOS 27.0.1; iogpu.wired_limit_mb=245760"
+        }
+      },
+      "status": "measured",
+      "observed": "2026-10-02",
+      "recorded": "2026-10-15",
+      "hazards": [
+        "The README says \"30-core CPU, 64-core GPU, 256 GB\", a combination Apple does not sell (256GB needs the 80-core GPU); the 240 GiB wired limit points to a 256GB machine, so the core count is the likelier error.",
+        "Context sizes are the README's approximate labels (\"100k\", \"250k\")."
+      ],
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "19e28a2",
+        "note": "Metal, -fa on, -b 2048 -ub 2048"
+      },
+      "quant": {
+        "format": "Q8_0 (unsloth GGUF)",
+        "key": "q8_0"
+      },
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/fireside-labs/m5-ultra-llm-benchmarks (README at bb725d3, 2026-10-02)"
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 250000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1069,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "\"250k\""
+        },
+        {
+          "metric": "decode",
+          "depth": 100000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 30,
+          "confidence": "m~",
+          "note": "\"100k\", MTP off"
+        },
+        {
+          "metric": "decode",
+          "depth": 250000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 17,
+          "confidence": "m~",
+          "note": "\"250k\", MTP off"
+        }
+      ]
+    },
+    {
+      "id": "x_m5ultra256_flashnext_omlx_q8",
+      "label": "Qwen3.8 Flash-Next · oQ8e · oMLX 0.7.0 · M5 Ultra 256GB",
+      "model": "qwen38_flash_next",
+      "rig": {
+        "units": [
+          {
+            "unit": "mac_m5_ultra_256",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "macOS 27.0.1; iogpu.wired_limit_mb=245760"
+        }
+      },
+      "status": "measured",
+      "observed": "2026-10-02",
+      "recorded": "2026-10-15",
+      "hazards": [
+        "The README says \"30-core CPU, 64-core GPU, 256 GB\", a combination Apple does not sell (256GB needs the 80-core GPU); the 240 GiB wired limit points to a 256GB machine, so the core count is the likelier error.",
+        "Context sizes are the README's approximate labels (\"100k\", \"250k\")."
+      ],
+      "engine": {
+        "name": "oMLX",
+        "version": "0.7.0",
+        "note": "source build with OMLX_WITH_CUSTOM_KERNEL=1"
+      },
+      "quant": {
+        "format": "oQ8e (MLX, 8-bit)",
+        "bpw": 8.5,
+        "note": "An 8-bit MLX format with group scales; 8.5 bits per weight is assumed, as for Q8_0."
+      },
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/fireside-labs/m5-ultra-llm-benchmarks (README at bb725d3, 2026-10-02)"
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 250000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 4235,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "\"250k\""
+        },
+        {
+          "metric": "decode",
+          "depth": 250000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 63,
+          "confidence": "m~",
+          "note": "\"250k\", MTP off"
+        }
+      ]
+    },
+    {
+      "id": "x_m5max_gptoss120b_llamacpp_tensor",
+      "label": "gpt-oss-120B · MXFP4 · llama.cpp b9592 · M5 Max 128GB",
+      "model": "gpt_oss_120b",
+      "rig": {
+        "units": [
+          {
+            "unit": "apple_m5_max",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "MacBook Pro, macOS 26.5 (25F71)"
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "version": "b9592",
+        "note": "llama-bench -fa 1 -p 2048 -n 128 -r 2; Metal tensor API on"
+      },
+      "quant": {
+        "format": "MXFP4 (as released)",
+        "key": "mxfp4"
+      },
+      "status": "measured",
+      "observed": "2026-06-11",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues/2040 (LM Studio bug tracker #2040, 2026-06-11)"
+      },
+      "note": "With the Neural Accelerators off (GGML_METAL_TENSOR_DISABLE=1) the same run gave 877 tok/s prefill and 104.9 decode: the accelerators double prefill and leave decode alone.",
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 2048,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1833,
+          "confidence": "m~",
+          "prefillBasis": "cold"
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "depthNote": "llama-bench tg128; no depth flag, so most likely an empty context",
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 105.1,
+          "confidence": "m~"
         }
       ]
     }
