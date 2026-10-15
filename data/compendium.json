@@ -1594,7 +1594,7 @@
       "arch": "blackwell",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec Dense and sparse figures from the NVIDIA RTX PRO Blackwell architecture whitepaper v1.1, Appendix A (FP32 accumulate).",
+        "note": "Dense and sparse figures from the NVIDIA RTX PRO Blackwell architecture whitepaper v1.1, Appendix A (FP32 accumulate).",
         "values": {
           "fp32": 125,
           "fp16": 503.8,
@@ -1652,7 +1652,15 @@
           "bf16": 258,
           "tf32": 129
         },
-        "note": "Only two figures are NVIDIA's: 2,064 AI TOPS (\"Effective FP4 TOPS with sparsity\") and 65 TFLOPS FP32. The rest are derived: dense FP4 is half the sparse figure (NVIDIA's convention), and the other precisions follow the RTX PRO 6000 whitepaper's fixed per-SM ratios to FP4 (FP8 and INT8 half, FP16/BF16 a quarter, TF32 an eighth). The 16-bit figures assume full-rate FP32 accumulate, as on the PRO 6000, which NVIDIA does not state for this card; if it is half rate, the ceiling is generous. NVIDIA's 72GB launch blog says 2,142 TOPS, but later datasheet revisions still print 2,064, which is used."
+        "note": "Only two figures are NVIDIA's: 2,064 AI TOPS (\"Effective FP4 TOPS with sparsity\") and 65 TFLOPS FP32. The rest are derived: dense FP4 is half the sparse figure (NVIDIA's convention), and the other precisions follow the RTX PRO 6000 whitepaper's fixed per-SM ratios to FP4 (FP8 and INT8 half, FP16/BF16 a quarter, TF32 an eighth). The 16-bit figures assume full-rate FP32 accumulate, as on the PRO 6000, which NVIDIA does not state for this card; if it is half rate, the ceiling is generous. NVIDIA's 72GB launch blog says 2,142 TOPS, but later datasheet revisions still print 2,064, which is used.",
+        "unofficial": [
+          "fp4",
+          "fp8",
+          "int8",
+          "fp16",
+          "bf16",
+          "tf32"
+        ]
       },
       "note": "GB202 with 110 SMs (14,080 CUDA cores). Announced 2025-03-18 for availability \"in the summer\"; the exact first-ship month is not sourced. It has FP8 matrix units and 1.25 TiB/s; at October 2026 street prices the RTX 5090 meets both for less, with a third of the memory."
     },
@@ -1698,7 +1706,15 @@
           "bf16": 258,
           "tf32": 129
         },
-        "note": "Only two figures are NVIDIA's: 2,064 AI TOPS (\"Effective FP4 TOPS with sparsity\") and 65 TFLOPS FP32. The rest are derived: dense FP4 is half the sparse figure (NVIDIA's convention), and the other precisions follow the RTX PRO 6000 whitepaper's fixed per-SM ratios to FP4 (FP8 and INT8 half, FP16/BF16 a quarter, TF32 an eighth). The 16-bit figures assume full-rate FP32 accumulate, as on the PRO 6000, which NVIDIA does not state for this card; if it is half rate, the ceiling is generous. NVIDIA's 72GB launch blog says 2,142 TOPS, but later datasheet revisions still print 2,064, which is used."
+        "note": "Only two figures are NVIDIA's: 2,064 AI TOPS (\"Effective FP4 TOPS with sparsity\") and 65 TFLOPS FP32. The rest are derived: dense FP4 is half the sparse figure (NVIDIA's convention), and the other precisions follow the RTX PRO 6000 whitepaper's fixed per-SM ratios to FP4 (FP8 and INT8 half, FP16/BF16 a quarter, TF32 an eighth). The 16-bit figures assume full-rate FP32 accumulate, as on the PRO 6000, which NVIDIA does not state for this card; if it is half rate, the ceiling is generous. NVIDIA's 72GB launch blog says 2,142 TOPS, but later datasheet revisions still print 2,064, which is used.",
+        "unofficial": [
+          "fp4",
+          "fp8",
+          "int8",
+          "fp16",
+          "bf16",
+          "tf32"
+        ]
       },
       "note": "The same GPU, bandwidth and power as the 48GB card; NVIDIA says only the memory differs. General availability through distributors from 2025-12-18."
     },
@@ -1736,7 +1752,6 @@
       "arch": "blackwell",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec",
         "values": {
           "fp32": 104.8,
           "fp64": 1.64,
@@ -1796,7 +1811,16 @@
           "bf16": 47.4,
           "tf32": 23.7
         },
-        "note": "NVIDIA publishes only 759 AI TOPS, which on GeForce Blackwell is the sparse FP4 figure (the RTX 5070's 988 AI TOPS is its whitepaper's sparse FP4). The whitepaper has no 5060 Ti table, so the rest are derived from the 5070's per-SM ratios, and they cross-check: 36 SMs x 2.572 GHz x 4,096 x 2 = 758.5. Catalog convention for GeForce: FP16 and FP8 at the FP16-accumulate rate, BF16 at the half-rate FP32-accumulate one. FP32 23.7 is Club386's figure."
+        "note": "NVIDIA publishes only 759 AI TOPS, which on GeForce Blackwell is the sparse FP4 figure (the RTX 5070's 988 AI TOPS is its whitepaper's sparse FP4). The whitepaper has no 5060 Ti table, so the rest are derived from the 5070's per-SM ratios, and they cross-check: 36 SMs x 2.572 GHz x 4,096 x 2 = 758.5. Catalog convention for GeForce: FP16 and FP8 at the FP16-accumulate rate, BF16 at the half-rate FP32-accumulate one. FP32 23.7 is Club386's figure.",
+        "unofficial": [
+          "fp32",
+          "fp4",
+          "fp8",
+          "int8",
+          "fp16",
+          "bf16",
+          "tf32"
+        ]
       },
       "note": "GB206, 36 SMs. Bandwidth (28 Gb/s on 128 bits) comes from reviews; NVIDIA's page lists the bus but not the bandwidth."
     },
@@ -1828,7 +1852,6 @@
       "arch": "rdna4",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec",
         "values": {
           "fp32": 47.8,
           "fp16": 191.4,
@@ -1884,7 +1907,6 @@
       "arch": "blackwell",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec",
         "values": {
           "fp4:sparse": 1000,
           "fp4": 500,
@@ -1932,7 +1954,6 @@
       "arch": "apple_m3",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec",
         "values": {
           "fp32": 21.5
         },
@@ -2101,7 +2122,6 @@
       "arch": "rdna3",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec",
         "values": {
           "fp32": 14.85,
           "fp16": 59.4,
@@ -2138,10 +2158,10 @@
       "arch": "ampere",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "int8:sparse": 900
-        }
+        },
+        "note": "Whether 900 TOPS is dense or sparse is not stated; it is filed as sparse for the reason given in the unit note, so this card has no dense figure and no prefill ceiling."
       },
       "memoryGB": 32,
       "memoryBandwidthGBs": 1433
@@ -2182,14 +2202,18 @@
       "arch": "xe2",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys. The 45.88 TFLOPS FP16 figure recorded here before is exactly twice the FP32 rate, i.e. the vector-engine rate, not the XMX matrix rate a prefill ceiling needs; it is kept in this note rather than the FP16 column. FP16 and BF16 are derived, not rated: Intel publishes no XMX FP16 figure for this card, but its Xe2 table (\"Key Peak Metrics for 2nd Gen Xe-core\", Tech Tour 2024, p.9) gives 2,048 XMX FP16/BF16 ops per clock per Xe-core against 4,096 for INT8, so they are half the rated INT8.",
+        "note": "The 45.88 TFLOPS FP16 figure recorded here before is exactly twice the FP32 rate, i.e. the vector-engine rate, not the XMX matrix rate a prefill ceiling needs; it is kept in this note rather than the FP16 column. FP16 and BF16 are derived, not rated: Intel publishes no XMX FP16 figure for this card, but its Xe2 table (\"Key Peak Metrics for 2nd Gen Xe-core\", Tech Tour 2024, p.9) gives 2,048 XMX FP16/BF16 ops per clock per Xe-core against 4,096 for INT8, so they are half the rated INT8.",
         "values": {
           "fp32": 22.94,
           "int8": 367,
           "fp16": 183.5,
           "bf16": 183.5
         },
-        "source": "Intel Arc Pro B70 datasheet (BMG-G31 Battlemage die, launched 2026-03-25); corroborated by Tom's Hardware, Puget Systems, StorageReview, igor'sLAB reviews"
+        "source": "Intel Arc Pro B70 datasheet (BMG-G31 Battlemage die, launched 2026-03-25); corroborated by Tom's Hardware, Puget Systems, StorageReview, igor'sLAB reviews",
+        "unofficial": [
+          "fp16",
+          "bf16"
+        ]
       }
     },
     {
@@ -2220,7 +2244,6 @@
       "arch": "volta",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec",
         "source": "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf",
         "values": {
           "fp64": 7.8,
@@ -2255,7 +2278,6 @@
       "arch": "ampere",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "fp32": 35.6,
           "fp16": 142,
@@ -2304,7 +2326,6 @@
       "arch": "ampere",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec",
         "source": "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
         "values": {
           "fp64": 9.7,
@@ -2351,7 +2372,6 @@
       "arch": "hopper",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec",
         "source": "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
         "values": {
           "fp64": 33.5,
@@ -2398,7 +2418,6 @@
       "arch": "hopper",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec",
         "source": "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
         "values": {
           "fp64": 25.6,
@@ -2454,7 +2473,15 @@
           "fp8": 296,
           "int8": 296
         },
-        "note": "No NVIDIA source: NVIDIA publishes no H20 datasheet. FP8 is LMSYS's; FP16, TF32 and INT8 come from a Wccftech table credited to NVIDIA; BF16 only from a spec database. No source says dense or sparse; dense is assumed because LMSYS sets its FP8 beside B300's dense figures. If they are sparse, the prefill ceiling is generous."
+        "note": "No NVIDIA source: NVIDIA publishes no H20 datasheet. FP8 is LMSYS's; FP16, TF32 and INT8 come from a Wccftech table credited to NVIDIA; BF16 only from a spec database. No source says dense or sparse; dense is assumed because LMSYS sets its FP8 beside B300's dense figures. If they are sparse, the prefill ceiling is generous.",
+        "unofficial": [
+          "fp32",
+          "tf32",
+          "fp16",
+          "bf16",
+          "fp8",
+          "int8"
+        ]
       },
       "note": "Hopper cut down for export to China: about 4 TB/s of HBM3 with roughly a sixth of an H100's matrix throughput, so its decode ceiling is H100-class while its prefill ceiling is far lower. As of 2026-10 it is exportable under licence but commercially stalled: NVIDIA reported no Hopper data-center shipments to China in Q1 FY27, though a large installed base remains. A 141GB HBM3e variant exists (NVIDIA release notes); its bandwidth is reported as 4.8 TB/s by LMSYS and 4.0 TB/s elsewhere, so it is not recorded. Released is the pre-order month (Reuters)."
     },
@@ -2487,7 +2514,6 @@
       "arch": "cdna3",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec",
         "source": "https://en.wikipedia.org/wiki/AMD_Instinct",
         "values": {
           "fp64": 81.7,
@@ -2528,7 +2554,6 @@
       "arch": "cdna4",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec",
         "source": "https://en.wikipedia.org/wiki/AMD_Instinct",
         "values": {
           "fp64": 78.6,
@@ -2569,7 +2594,6 @@
       "arch": "ampere",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "fp32": 40,
           "fp16:sparse": 320
@@ -2597,7 +2621,6 @@
       "arch": "ada",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "fp32": 82.6,
           "fp16": 330.3,
@@ -2640,7 +2663,6 @@
       "arch": "ampere",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "fp32": 38.7,
           "fp16": 154.8,
@@ -2679,7 +2701,6 @@
       "arch": "ada",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "fp32": 91.1,
           "fp16": 364.2,
@@ -2717,7 +2738,6 @@
       "arch": "ada",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "fp32": 91.6,
           "fp16": 362.05,
@@ -2765,7 +2785,10 @@
           "fp16:vector": 40.55,
           "int8:vector": 81.1
         },
-        "note": "All vector: this card has no matrix units. FP32 and packed FP16 are AMD's figures at the 2.2 GHz peak clock. INT8 is derived, not rated: 4,608 lanes x 4 multiply-adds (dot4) x 2 x 2.2 GHz, i.e. four times FP32, the rate AMD rates gfx906's dot4 at. AMD publishes no INT8 rate for any RDNA 2 card, so this is the most the hardware could do, not a measured or rated figure. It is recorded because llama.cpp's quantized prefill runs on that dot4, and a ceiling from FP16 alone could sit below real runs."
+        "note": "All vector: this card has no matrix units. FP32 and packed FP16 are AMD's figures at the 2.2 GHz peak clock. INT8 is derived, not rated: 4,608 lanes x 4 multiply-adds (dot4) x 2 x 2.2 GHz, i.e. four times FP32, the rate AMD rates gfx906's dot4 at. AMD publishes no INT8 rate for any RDNA 2 card, so this is the most the hardware could do, not a measured or rated figure. It is recorded because llama.cpp's quantized prefill runs on that dot4, and a ceiling from FP16 alone could sit below real runs.",
+        "unofficial": [
+          "int8:vector"
+        ]
       },
       "note": "A data-center and cloud part (it ran in Azure NGads V620 VMs), so used cards are presumably ex-cloud. Passive, full-height, dual-slot, 2x 8-pin; it needs server airflow. Same Navi 21 configuration as the RX 6800 XT, with 32 GB and ECC. ROCm supports it (Ubuntu only). Known llama.cpp problems: HIP flash attention can assert on RDNA 2 at head size 256, which Qwen3.x 27B uses (discussion #23310, open), and Vulkan flash attention slows sharply with depth (issue #25207). AMD's spec page gives a 2023-09-01 launch date against the November 2021 announcement; general availability may explain it."
     },
@@ -2796,7 +2819,6 @@
       "arch": "rdna3",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "fp32": 61.3,
           "fp16": 123,
@@ -2829,7 +2851,6 @@
       "arch": "rdna3",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "fp32": 61.4,
           "fp16": 123,
@@ -2863,14 +2884,18 @@
       "arch": "xe2",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec FP16 and BF16 are derived, not rated: Intel publishes no XMX FP16 figure for this card, but its Xe2 table (\"Key Peak Metrics for 2nd Gen Xe-core\", Tech Tour 2024, p.9) gives 2,048 XMX FP16/BF16 ops per clock per Xe-core against 4,096 for INT8, so they are half the rated INT8.",
+        "note": "FP16 and BF16 are derived, not rated: Intel publishes no XMX FP16 figure for this card, but its Xe2 table (\"Key Peak Metrics for 2nd Gen Xe-core\", Tech Tour 2024, p.9) gives 2,048 XMX FP16/BF16 ops per clock per Xe-core against 4,096 for INT8, so they are half the rated INT8.",
         "values": {
           "int8": 197,
           "fp32": 12.28,
           "fp16": 98.5,
           "bf16": 98.5
         },
-        "source": "AI Inference Hardware — Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026) -- Intel official spec sheet, per CraftRigs reporting"
+        "source": "AI Inference Hardware — Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026) -- Intel official spec sheet, per CraftRigs reporting",
+        "unofficial": [
+          "fp16",
+          "bf16"
+        ]
       }
     },
     {
@@ -2910,7 +2935,11 @@
           "fp16": 98.5,
           "bf16": 98.5
         },
-        "note": "INT8 is Intel's rated dense XMX figure (datasheet footnote). FP16 and BF16 are derived, not rated: Intel publishes no XMX FP16 figure for this card, but its Xe2 table (\"Key Peak Metrics for 2nd Gen Xe-core\", Tech Tour 2024, p.9) gives 2,048 XMX FP16/BF16 ops per clock per Xe-core against 4,096 for INT8, so they are half the rated INT8."
+        "note": "INT8 is Intel's rated dense XMX figure (datasheet footnote). FP16 and BF16 are derived, not rated: Intel publishes no XMX FP16 figure for this card, but its Xe2 table (\"Key Peak Metrics for 2nd Gen Xe-core\", Tech Tour 2024, p.9) gives 2,048 XMX FP16/BF16 ops per clock per Xe-core against 4,096 for INT8, so they are half the rated INT8.",
+        "unofficial": [
+          "fp16",
+          "bf16"
+        ]
       },
       "note": "Same compute as the Arc Pro B65 (20 Xe-cores, 160 XMX engines) on the 24GB, 192-bit BMG-G21, with PCIe 5.0 x8 electrical. Released is the Computex announcement (May 2025); the first US retail listing was September 2025. Dual-GPU boards (Maxsun Arc Pro B60 Dual 48G) shipped in August 2025: they are two separate 24GB GPUs, each on PCIe x8, needing host bifurcation, so a rig counts them as two of this unit."
     },
@@ -2943,7 +2972,7 @@
       "arch": "xe_hpc",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec. fp64/fp32 are non-systolic (vector-engine) rated throughput -- Ponte Vecchio runs FP64 and FP32 at the same native 1:1 rate (unlike the usual 1:2), which Intel called out as a deliberate design choice and is how it targeted 2 exaFLOPS peak FP64 for the Aurora supercomputer. Both are the boost-clock figure and reproduce exactly from the shader count: 7168 ALUs x 2 FLOP/clock x 1.55 GHz = 22.22. bf16 is the same template's own Bfloat16 column. tf32/fp16/int8/int4 also execute on the systolic (XMX) matrix engines per Intel's datasheet, but no published per-SKU figure exists for them on this part -- Intel's 419 TFLOPS TF32 headline is the 1550, and scaling it by core count and clock would be deriving a number, not sourcing one. WHICH precisions the XMX engines accept is now sourced: Intel's own SYCL matrix extension (intel/llvm, see sources) lists signed and unsigned INT8, FP16 (FP32 or FP16 accumulate), BF16 and TF32 as supported on intel_gpu_pvc, with no INT4, FP8 or FP4 entry. That is an API support list, not a rate, so the figures stay unknown. A second Intel source agrees: oneDNN's per-microarchitecture data-type table (Xe-HPC row, which it names as the Max Series, formerly Ponte Vecchio) marks f64, f32, bf16, f16 and s8/u8 as hardware-native and f8, f4_e2m1 and s4/u4/u2 as conversion-only, with s4/u4/u2 usable only as weight-only-quantization storage -- so INT4 and FP8 are storage formats on this part, not compute rates. Correction to the sentence above: Intel's platform datasheet (817799) lists no precisions at all, so that claim rests on the product brief, which refused an automated fetch when this was rechecked (as did ARK).",
+        "note": "FP64/FP32 are non-systolic (vector-engine) rated throughput -- Ponte Vecchio runs FP64 and FP32 at the same native 1:1 rate (unlike the usual 1:2), which Intel called out as a deliberate design choice and is how it targeted 2 exaFLOPS peak FP64 for the Aurora supercomputer. Both are the boost-clock figure and reproduce exactly from the shader count: 7168 ALUs x 2 FLOP/clock x 1.55 GHz = 22.22. bf16 is the same template's own Bfloat16 column. tf32/fp16/int8/int4 also execute on the systolic (XMX) matrix engines per Intel's datasheet, but no published per-SKU figure exists for them on this part -- Intel's 419 TFLOPS TF32 headline is the 1550, and scaling it by core count and clock would be deriving a number, not sourcing one. WHICH precisions the XMX engines accept is now sourced: Intel's own SYCL matrix extension (intel/llvm, see sources) lists signed and unsigned INT8, FP16 (FP32 or FP16 accumulate), BF16 and TF32 as supported on intel_gpu_pvc, with no INT4, FP8 or FP4 entry. That is an API support list, not a rate, so the figures stay unknown. A second Intel source agrees: oneDNN's per-microarchitecture data-type table (Xe-HPC row, which it names as the Max Series, formerly Ponte Vecchio) marks f64, f32, bf16, f16 and s8/u8 as hardware-native and f8, f4_e2m1 and s4/u4/u2 as conversion-only, with s4/u4/u2 usable only as weight-only-quantization storage -- so INT4 and FP8 are storage formats on this part, not compute rates. Correction to the sentence above: Intel's platform datasheet (817799) lists no precisions at all, so that claim rests on the product brief, which refused an automated fetch when this was rechecked (as did ARK).",
         "source": "https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series (boost-clock row, itself citing Intel's official product brief and ARK specification page)",
         "values": {
           "fp64": 22.2,
@@ -2973,7 +3002,7 @@
       "arch": "xe_hpc",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec. fp64/fp32 are non-systolic (vector-engine) throughput at the 1:1 rate Ponte Vecchio is unusual for; tf32/bf16 are systolic (XMX) matrix-engine figures. Note that Wikipedia's Max-series template gives 54.423 in this row, which is a typo: its base-clock figure (29.491) reproduces exactly from 16384 ALUs x 2 FLOP/clock x 0.9 GHz, and the same arithmetic at the 1.6 GHz boost clock gives 52.43, not 54.42 -- the 1100 and 1350 rows of that same table are internally exact, so only this cell is wrong. Intel's own 52 TFLOPS headline is used here instead. The tf32 and bf16 figures corroborate each other independently: Intel's 419 TF32 doubled is 838 against the template's 832 bf16, 0.7% apart, and the template's bf16:fp32 ratio is a consistent 15.84x across all three SKUs.",
+        "note": "FP64/FP32 are non-systolic (vector-engine) throughput at the 1:1 rate Ponte Vecchio is unusual for; tf32/bf16 are systolic (XMX) matrix-engine figures. Note that Wikipedia's Max-series template gives 54.423 in this row, which is a typo: its base-clock figure (29.491) reproduces exactly from 16384 ALUs x 2 FLOP/clock x 0.9 GHz, and the same arithmetic at the 1.6 GHz boost clock gives 52.43, not 54.42 -- the 1100 and 1350 rows of that same table are internally exact, so only this cell is wrong. Intel's own 52 TFLOPS headline is used here instead. The tf32 and bf16 figures corroborate each other independently: Intel's 419 TF32 doubled is 838 against the template's 832 bf16, 0.7% apart, and the template's bf16:fp32 ratio is a consistent 15.84x across all three SKUs.",
         "source": "Intel via https://www.theregister.com/2022/08/23/intel_ponte_vecchio/ (fp64/fp32/tf32, Intel's own SC22 launch figures) and https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series (bf16)",
         "values": {
           "fp64": 52.4,
@@ -3042,7 +3071,7 @@
       "arch": "cdna1",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec. fp64 and fp32 are the vector rates and fp16/bf16/int8 the Matrix Core rates, as on the other units; AMD also lists FP32 Matrix at 46.1 TFLOPS.",
+        "note": "FP64 and FP32 are the vector rates and fp16/bf16/int8 the Matrix Core rates, as on the other units; AMD also lists FP32 Matrix at 46.1 TFLOPS.",
         "values": {
           "fp64": 11.5,
           "fp32": 23.1,
@@ -3076,7 +3105,6 @@
       "arch": "cdna2",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "fp64": 22.6,
           "fp32": 45.3,
@@ -3104,7 +3132,6 @@
       "arch": "cdna3",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "fp64": 81.7,
           "fp32": 163.4,
@@ -3141,7 +3168,6 @@
       "arch": "hopper",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "tf32": 495,
           "tf32:sparse": 989,
@@ -3179,7 +3205,6 @@
       "arch": "blackwell_dc",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "fp32": 75,
           "tf32": 1100,
@@ -3222,7 +3247,6 @@
       "arch": "blackwell_dc",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys",
         "values": {
           "fp4": 15000,
           "fp4:sparse": 20000,
@@ -3265,7 +3289,11 @@
           "int8": 233,
           "fp16": 116.5,
           "bf16": 116.5
-        }
+        },
+        "unofficial": [
+          "fp16",
+          "bf16"
+        ]
       },
       "pricing": {
         "msrp": {
@@ -3359,7 +3387,15 @@
           "fp16": 210.7,
           "int8": 421.5,
           "int4": 843
-        }
+        },
+        "unofficial": [
+          "fp32",
+          "tf32",
+          "bf16",
+          "fp16",
+          "int8",
+          "int4"
+        ]
       },
       "note": "A GA100 mining card that becomes a 64 GB inference card through a community unlock (cmpunlocker). The unlock patches the NVIDIA open kernel modules to address the HBM2e already on the card, 4 stacks of 16 GB on a 4096-bit bus, and to lift the compute throttle that left stock cards at 1/32 issue rate. Caveats: only the 8 GB card (PCI 10de:20c2) unlocks to 64 GB; the 10 GB card (10de:2082) reaches 40 GB, and nvidia-smi does not tell them apart. CUDA allocates about 63.4 GiB. Bandwidth depends on the card's VBIOS: 1,769 GB/s is the 300 W image (HBM at 1,728 MHz); the stock 250 W image runs 1,458 MHz for 1,493 GB/s. Both ship under the same ID, and the ceiling takes the faster. The patched driver pins exact versions (610.43.02/.03, 610.57.04, 615.71.09, 615.78.08 as of 2026-10-07), needs Secure Boot off and a cold power cycle, and is Linux-only. ECC is fused off; cmpunlocker reports it enabled since 2026-10-04, but nobody has shown it correcting errors, and one card needed a single-bit HBM page blacklisted by hand. The host link is PCIe Gen1 x4 stock. Gen2 comes from software, x16 from hand-soldering 24 missing capacitors, and Gen3 is unsolved. There is no NVLink. Memory and SM overclocks can corrupt data silently. Passively cooled, on a single EPS 8-pin."
     },

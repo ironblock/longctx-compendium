@@ -147,6 +147,10 @@ for (const u of doc.units ?? []) {
     const state = u.formatOverrides?.[f] ?? arch?.formats?.[f];
     if (state === 'absent') fail(at, `has a rated ${key} figure, but ${u.formatOverrides?.[f] ? 'its own override' : `its generation (${u.arch})`} says ${f} is absent`);
   }
+  for (const key of u.compute?.unofficial ?? []) {
+    if (!(key in (u.compute.values ?? {}))) fail(at, `marks ${key} unofficial, but has no ${key} figure`);
+  }
+  if (u.compute?.unofficial?.length && !u.compute.note) fail(at, 'marks figures unofficial without a compute note saying where they come from');
   for (const [f, state] of Object.entries(u.formatOverrides ?? {})) {
     if (arch?.formats?.[f] === state) warn(at, `overrides ${f} to "${state}", which is what its generation already says`);
   }

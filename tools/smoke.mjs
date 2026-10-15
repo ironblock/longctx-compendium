@@ -145,6 +145,15 @@ check('eight format chips', (await count('#fmtChips button')) === 8);
 check('format badges on every row', (await count('#hwTable tbody .fmt')) === model.UNITS.length * 8);
 check('scatter painted', await canvasPainted('scatterChart'));
 check('hardware summary rendered', /of \d+ units match/.test(await text('#hwSummary')));
+{
+  // Every FP16 figure the vendor never published carries its mark, and no other.
+  const p = await browser.newPage();
+  await p.goto(`${base}/index.html#prec=fp16`, { waitUntil: 'networkidle' });
+  const want = model.UNITS.reduce((n, u) => n + ['fp16', 'fp16:sparse', 'fp16:vector'].filter(k => u.compute?.values?.[k] != null && u.compute.unofficial?.includes(k)).length, 0);
+  const got = await count('#hwTable tbody td span[title^="Not the vendor"]', p);
+  check('unofficial FP16 figures are marked', want > 0 && got === want, `${got} marks for ${want} unofficial figures`);
+  await p.close();
+}
 
 // The question this section exists for: FP8 matrix units and more than 1 TiB/s,
 // typed exactly into the bandwidth slider's minimum box.

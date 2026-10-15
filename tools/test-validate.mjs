@@ -74,6 +74,12 @@ const CASES = [
   ['release date that is not a date', 'does not match', d => {
     unit(d, 'rtx_pro_6000').released = 'spring 2025';
   }],
+  ['an unofficial mark on a figure the card does not have', 'has no int4 figure', d => {
+    unit(d, 'h20').compute.unofficial.push('int4');
+  }],
+  ['unofficial figures with no note saying where they come from', 'without a compute note', d => {
+    delete unit(d, 'h20').compute.note;
+  }],
   ['unknown precision key shape', 'does not match', d => {
     unit(d, 'rtx_pro_6000').compute.values['FP 16'] = 250;
   }],

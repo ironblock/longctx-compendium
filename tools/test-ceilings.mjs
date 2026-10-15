@@ -56,9 +56,19 @@ const q32KvPerPos = 64 * 8 * 128 * 2 * 2;
   const noMatrix = unit(1024, { formats: absent, compute: { values: { 'fp16:vector': 26.5, 'int8:vector': 53 } } });
   const vec = C.prefillCeiling(q32, noMatrix, { formatKey: 'q4_k_m', depth: 32768 });
   near('No matrix units: Q4_K_M prefill bounded by the fastest vector rate', vec.tps, 53e12 / flops);
-  const vecOk = vec.precision.vector === true && vec.precision.precision === 'int8';
+  const vecOk = vec.precision.vector === true && vec.precision.precision === 'int8' && !vec.precision.unofficial;
   if (!vecOk) failed++;
   console.log(`${vecOk ? '✓' : '✗'} No matrix units: the bound says it is a vector INT8 rate`);
+  // The same bound from a figure the vendor never published says so.
+  const derived = C.prefillCeiling(q32, { ...noMatrix, compute: { ...noMatrix.compute, unofficial: ['int8:vector'] } }, { formatKey: 'q4_k_m', depth: 32768 });
+  const offOk = derived.precision.unofficial === true && derived.tps === vec.tps;
+  if (!offOk) failed++;
+  console.log(`${offOk ? '✓' : '✗'} An unofficial vector rate still bounds, and says it is unofficial`);
+  // An unofficial figure the ceiling does not use leaves the label alone.
+  const other = C.prefillCeiling(q32, unit(936, { compute: { values: { fp16: 100, bf16: 100 }, unofficial: ['fp16'] } }), { formatKey: 'bf16', depth: 32768 });
+  const otherOk = other.precision.unofficial !== true && other.tps != null;
+  if (!otherOk) failed++;
+  console.log(`${otherOk ? '✓' : '✗'} An unofficial figure the ceiling does not rest on is not reported`);
   // A card with a matrix path but no rating for it must not fall back: its
   // matrix units may beat the vector rate, so no bound is the honest answer.
   const unrated = unit(1024, { formats: { ...absent, fp16: 'native' }, compute: { values: { 'fp16:vector': 26.5 } } });

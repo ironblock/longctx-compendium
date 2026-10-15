@@ -67,6 +67,8 @@ export function unitMatch(u, s) {
   return { ok: true, unknown };
 }
 
+const UNOFFICIAL_TIP = "Not the vendor's rating for this card: worked out from other figures, or a third party's. The card's compute note in data/compendium.json says which.";
+
 const HW_COLS = (prec) => [
   { key: 'label', label: 'Unit', cls: 'lbl', sort: u => u.label, cell: u => `<td class="lbl"><span>${esc(u.label)}</span><span class="sub">${esc(u.archLabel ?? 'generation not recorded')}${u.released ? ` · ${u.released}` : ''}</span></td>` },
   { key: 'mem', label: 'Memory GB', sort: u => u.memoryGB, cell: u => `<td class="num">${u.memoryGB ?? DASH}</td>` },
@@ -81,7 +83,8 @@ const HW_COLS = (prec) => [
       const sp = u.compute?.values?.[`${prec}:sparse`];
       const vec = u.compute?.values?.[`${prec}:vector`];
       if (d == null && sp == null && vec == null) return `<td class="num">${DASH}</td>`;
-      return `<td class="num">${d ?? DASH}${sp != null ? `<span class="sub">${sp} sparse</span>` : ''}${vec != null ? `<span class="sub" title="Shader-ALU rate: this card has no matrix units">${vec} vector</span>` : ''}</td>`;
+      const off = k => (u.compute.unofficial?.includes(k) ? `<span title="${esc(UNOFFICIAL_TIP)}">*</span>` : '');
+      return `<td class="num">${d ?? DASH}${d != null ? off(prec) : ''}${sp != null ? `<span class="sub">${sp}${off(`${prec}:sparse`)} sparse</span>` : ''}${vec != null ? `<span class="sub" title="Shader-ALU rate: this card has no matrix units">${vec}${off(`${prec}:vector`)} vector</span>` : ''}</td>`;
     },
   },
   { key: 'tdp', label: 'TDP W', sort: u => u.tdpW, cell: u => `<td class="num">${u.tdpW ?? DASH}</td>` },
@@ -130,6 +133,7 @@ export function renderHardwareTable(model, state, matches) {
     : `<tr><td class="lbl" colspan="${cols.length}" style="color:var(--muted);padding:16px">No unit passes every filter. Loosen one above.</td></tr>`;
   el('hwNote').textContent =
     `Throughput in 10¹² ops/sec at the precision chosen for the chart; "sparse" is the 2:4 structured-sparsity rate vendors often quote unlabelled, and "vector" is a shader-ALU rate on a card with no matrix units. ` +
+    `* marks a figure the vendor never published for that card, worked out from its other figures or taken from a third party; ceilings resting on one say "unofficial". ` +
     `GeForce cards' FP16 figures assume FP16 accumulate; with FP32 accumulate they run at half that rate, so read them as the generous case. ` +
     `$ per GB and GB/s per $1k use the dated street price. Blanks sort last in both directions. Click a heading to sort.`;
 }
@@ -183,7 +187,7 @@ export function renderCeilingTable(model, state, units) {
     const prec = r.prefill.precision;
     const pre = r.prefill.tps == null
       ? `<td class="lbl">${DASH}<span class="sub">no rated ${prec.precision.toUpperCase()} figure</span></td>`
-      : `<td class="lbl"><span class="num">${n0(r.prefill.tps)}</span><span class="sub" title="${esc(prec.note)}">${prec.precision.toUpperCase()}${prec.vector ? ' vector' : ''}${prec.grounded ? '' : ' · assumed'}</span></td>`;
+      : `<td class="lbl"><span class="num">${n0(r.prefill.tps)}</span><span class="sub" title="${esc(prec.note)}">${prec.precision.toUpperCase()}${prec.vector ? ' vector' : ''}${prec.grounded ? '' : ' · assumed'}${prec.unofficial ? ' · unofficial' : ''}</span></td>`;
     const modeWord = r.n === 1 ? '' : r.mode === 'tensor' ? (splitsEvenly(m, r.n) ? 'tensor parallel' : `tensor parallel · ${m.heads} heads don't split ${r.n} ways`) : 'layer split';
     return (
       `<tr${f && !f.fits ? ' style="opacity:.55"' : ''}>` +
@@ -208,7 +212,7 @@ export function renderCeilingTable(model, state, units) {
   el('ceilNote').textContent =
     beyond +
     `Decode: tokens/sec for one stream, one token per pass, at ${fmtDepth(state.depth)} deep. ` +
-    `Prefill: tokens/sec appended at that depth, at the precision shown (hover for the kernel finding; "assumed" means no grounded finding, FP16 used). ` +
+    `Prefill: tokens/sec appended at that depth, at the precision shown (hover for the kernel finding; "assumed" means no grounded finding, FP16 used; "unofficial" means the rate is not the vendor's own figure for that card). ` +
     `Weights at ${w.label}${w.bpw ? ` ≈ ${w.bpw} bits per weight` : ''}; ${state.cards === 'auto' ? 'cards: the fewest of 1, 2, 4 or 8 that fit' : `${state.cards} card${state.cards === '1' ? '' : 's'} each`}. ` +
     `Price is the cards alone at their dated street price — no host, bridge or board.`;
 }
@@ -291,7 +295,7 @@ function pointRow(l, r) {
     `<tr class="pt">` +
     `<td class="lbl">${what} ${at}${streams}${spec}</td>` +
     `<td class="num">${value}</td>` +
-    `<td class="num">${c.tps ? sig(c.tps) : DASH}${c.precision ? `<span class="sub">${c.precision.precision.toUpperCase()}${c.precision.vector ? ' vector' : ''}${c.precision.grounded ? '' : ' assumed'}</span>` : ''}</td>` +
+    `<td class="num">${c.tps ? sig(c.tps) : DASH}${c.precision ? `<span class="sub">${c.precision.precision.toUpperCase()}${c.precision.vector ? ' vector' : ''}${c.precision.grounded ? '' : ' assumed'}${c.precision.unofficial ? ' unofficial' : ''}</span>` : ''}</td>` +
     share +
     `<td class="lbl wrap" style="min-width:220px;max-width:380px;font-size:11.5px;color:var(--muted)">${notes.map(esc).join('<br>')}</td>` +
     `</tr>`

@@ -55,8 +55,9 @@ do not — emulating it or upcasting to a wider type does not count), or
 The validator holds this literally: every `native` or `absent` must appear as a
 token in some source's `supports` list (`"fp16"` for native, `"fp8:absent"` for
 absent). A claim no source carries has to be `unknown`. Apple publishes no list
-of the types its GPUs multiply natively, so the Apple generations are all
-`unknown`.
+of the types its GPUs multiply natively, but it does say GPUs before M5 have no
+neural accelerators, so M3 and M4 are all `absent`; M5 is `native` only where
+a source shows it.
 
 A card names its generation with `"arch": "ampere"` and inherits all of this.
 Where a card genuinely differs from its generation, `formatOverrides` says how,
@@ -104,6 +105,11 @@ vector figure never proves a matrix path. The ceilings use dense figures, and
 fall back to the fastest vector figure only on a card whose generation has no
 matrix formats at all. A figure whose dense-or-sparse status nobody states is
 filed where the arithmetic puts it, with a note saying so (PG199's 900 TOPS).
+A figure the vendor never published for that card -- worked out from its
+other ratings (the RTX PRO 5000's per-SM ratios, Arc's XMX FP16) or taken from
+a third party (H20) -- goes in `values` like any other, its key listed in
+`compute.unofficial`, with `compute.note` saying how it was arrived at. The
+page marks it, and any ceiling resting on it says "unofficial".
 
 `memoryGB` is read as GiB, which is what vendors mean by "32 GB" of VRAM.
 `street` is what every price on the page is summed from; give it an `asOf`.

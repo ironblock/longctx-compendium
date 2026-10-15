@@ -339,14 +339,18 @@ export function computePrecision(unit, formatKey) {
 export function prefillCeiling(m, unit, { cards = 1, formatKey, depth, cold = false }) {
   const flops = prefillFlopsPerToken(m, depth, { cold });
   let prec = computePrecision(unit, formatKey);
-  let ops = unit.compute?.values?.[prec.precision];
+  let key = prec.precision;
+  let ops = unit.compute?.values?.[key];
   if (ops == null) {
     const v = vectorBound(unit);
     if (v) {
       prec = { precision: v.precision, vector: true, grounded: true, note: `no matrix units: the fastest rate on the shader ALUs (${v.precision.toUpperCase()}) bounds any kernel` };
+      key = `${v.precision}:vector`;
       ops = v.ops;
     }
   }
+  // A ceiling resting on a figure the vendor never published says so.
+  if (ops != null && unit.compute?.unofficial?.includes(key)) prec = { ...prec, unofficial: true };
   if (!flops || ops == null) return { tps: null, precision: prec, flopsPerToken: flops };
   return { tps: (ops * 1e12 * cards) / flops, precision: prec, flopsPerToken: flops, opsPerSec: ops * cards };
 }

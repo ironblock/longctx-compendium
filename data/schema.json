@@ -191,6 +191,15 @@
                 "type": "number",
                 "minimum": 0
               }
+            },
+            "unofficial": {
+              "description": "Keys of values that are not the vendor's rating for this card: worked out from other figures, or taken from a third party. The note says which and how. The page marks them, and a ceiling resting on one says so.",
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(:sparse|:vector)?$"
+              }
             }
           }
         },
