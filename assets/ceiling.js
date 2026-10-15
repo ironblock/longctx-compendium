@@ -67,6 +67,9 @@ export const WEIGHT_FORMATS = {
   q5_k_m: { label: 'Q5_K_M', bpw: 5.69, confidence: 'e', family: 'kquant', note: 'GGUF recipe; a typical average' },
   q6_k: { label: 'Q6_K', bpw: 6.5625, confidence: 'm', family: 'kquant', note: 'ggml block_q6_K: (2+16+192) B per 256 weights' },
   q8_0: { label: 'Q8_0', bpw: 8.5, confidence: 'm', family: 'legacy8bit', note: 'ggml block_q8_0: 34 B per 32 weights' },
+  // The dispatch research groups the legacy quants with Q8_0 ("Legacy/K-quants
+  // ... execute at INT8"), so Q4_0 shares its family.
+  q4_0: { label: 'Q4_0', bpw: 4.5, confidence: 'm', family: 'legacy8bit', note: 'ggml block_q4_0: 18 B per 32 weights' },
   q3_k_m: { label: 'Q3_K_M', bpw: 3.91, confidence: 'e', family: 'kquant', note: 'GGUF recipe; a typical average' },
   iq: { label: 'IQ-series', bpw: null, confidence: 'i', family: 'iq', note: 'width depends on the IQ type and recipe' },
   mxfp4: { label: 'MXFP4', bpw: 4.25, confidence: 'm', family: 'mxfp4', note: 'ggml block_mxfp4: 17 B per 32 weights' },

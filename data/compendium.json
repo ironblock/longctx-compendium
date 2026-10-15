@@ -614,6 +614,96 @@
       "note": "Covers B200 (GB100, CC 10.0) and B300 (Blackwell Ultra, CC 10.3). Same matrix formats as the consumer and workstation parts, reached through tcgen05 rather than warp-level mma.sync. Kept apart because llama.cpp compiles its Blackwell tensor-core path only for compute capability 12.x (ggml-cuda/common.cuh: \"While BW spans CC 1000, 1100 & 1200, we are integrating Tensor Core instructions available to 1200 family\"), so these two take the Turing-to-Hopper paths. (2) Blackwell Ultra B300 (CC 10.3): Table 33 still lists INT8 'Yes', but tcgen05.mma .kind::i8 is not supported on sm_103a, and HGX B300 is rated 3 POPS INT8 vs 72 POPS for HGX B200 (sparse, 8 GPUs). Treat B300 INT8 as present but heavily de-rated; NVIDIA does not say whether it is emulated. FP64 Tensor is also blank for 10.3. (3) INT4 is absent: Table 33 is blank for every Blackwell CC and tcgen05 has no int4 kind. Legacy PTX mma.sync .s4/.u4 still compiles for sm_80+ targets, but no INT4 Tensor Core path or rate is documented. (4) Rate note, not a format difference: on GeForce RTX 5090, FP16/BF16 with FP32 accumulate is half the FP16-accumulate rate (209.5 vs 419 dense TFLOPS). On RTX PRO 6000 both are 503.8."
     },
     {
+      "id": "gcn5_1",
+      "vendor": "AMD",
+      "label": "GCN 5.1 / Vega 20 (gfx906)",
+      "matrixUnits": "None. No MFMA/WMMA or other matrix instructions. ML acceleration is limited to vector packed-FP16 math (VOP3P V_PK_*) and dot-product instructions (V_DOT2_F32_F16, V_DOT2_{I32_I16,U32_U16}, V_DOT4_{I32_I8,U32_U8}, V_DOT8_{I32_I4,U32_U4}) on the ordinary SIMDs.",
+      "formats": {
+        "tf32": "absent",
+        "bf16": "absent",
+        "fp16": "absent",
+        "fp8": "absent",
+        "fp6": "absent",
+        "fp4": "absent",
+        "int8": "absent",
+        "int4": "absent"
+      },
+      "sources": [
+        {
+          "url": "https://gpuopen.com/download/Vega_7nm_Shader_ISA_26November2019.pdf",
+          "quote": "The table below lists the complete VALU instruction set by microcode encoding, except for VOP3P instructions which are listed in a later section.",
+          "locator": "'Vega' 7nm ISA Reference Guide (26-November-2019), 6.3 Instructions, Table 20 'VALU Instruction Set' (pp. 40-41). No matrix (MFMA/MAI) instruction appears in the complete list, and the document has no VOP3P-MAI microcode format (chapter 13 formats: SOP2...VOP3A, VOP3B, VOP3P, SDWA, SDWAB, DPP, VINTRP, DS, MTBUF, MUBUF, MIMG, FLAT/GLOBAL/SCRATCH, EXP).",
+          "supports": [
+            "tf32:absent",
+            "bf16:absent",
+            "fp16:absent",
+            "fp8:absent",
+            "fp6:absent",
+            "fp4:absent",
+            "int8:absent",
+            "int4:absent"
+          ]
+        },
+        {
+          "url": "https://gpuopen.com/download/Vega_7nm_Shader_ISA_26November2019.pdf",
+          "quote": "Table 77. VOP3P Opcodes ... 0 V_PK_MAD_I16 ... 14 V_PK_FMA_F16 15 V_PK_ADD_F16 16 V_PK_MUL_F16 17 V_PK_MIN_F16 18 V_PK_MAX_F16 32 V_MAD_MIX_F32 33 V_MAD_MIXLO_F16 34 V_MAD_MIXHI_F16 35 V_DOT2_F32_F16 38 V_DOT2_I32_I16 39 V_DOT2_U32_U16 40 V_DOT4_I32_I8 41 V_DOT4_U32_U8 42 V_DOT8_I32_I4 43 V_DOT8_U32_U4",
+          "locator": "'Vega' 7nm ISA, 13.3.6 VOP3P, Table 77 'VOP3P Opcodes' (complete list, opcodes 0-43, p. 264-265). On CDNA the MFMA ops live in this encoding space (VOP3P-MAI). Here it ends at the packed-math and DOT ops.",
+          "supports": [
+            "note:only packed-FP16 and DOT2/DOT4/DOT8 vector ops",
+            "fp16:absent",
+            "int8:absent",
+            "int4:absent",
+            "bf16:absent"
+          ]
+        },
+        {
+          "url": "https://gpuopen.com/download/Vega_7nm_Shader_ISA_26November2019.pdf",
+          "quote": "Vega 7nm includes the additional instructions listed below: V_FMAC_F32 V_XNOR_B32 V_DOT2_F32_F16 V_DOT2_I32_I16 V_DOT2_U32_U16 V_DOT4_I32_I8 V_DOT4_U32_U8 V_DOT8_I32_I4 V_DOT8_U32_U4",
+          "locator": "'Vega' 7nm ISA, Preface, 'New Instructions' (p. 2). A text search of the whole manual finds no occurrence of 'MFMA', 'matrix', 'BF16' or 'bfloat'.",
+          "supports": [
+            "note:dot-product (not matrix) instructions are the gfx906 ML additions",
+            "bf16:absent"
+          ]
+        },
+        {
+          "url": "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/white-papers/amd-cdna-white-paper.pdf",
+          "quote": "These Matrix Core Engines add a new family of wavefront-level instructions, the Matrix Fused Multiply-Add or MFMA. ... Matrix bf16 ... MI50 CU N/A ... * MI50 does not have specialized hardware and performs matrix operations on the vector execution units.",
+          "locator": "AMD CDNA Architecture white paper (MI100), 'Matrix Core Engines' section and Table 1 'Generational comparison of numerical formats and peak throughput between MI100 and MI50', footnote *",
+          "supports": [
+            "fp16:absent",
+            "bf16:absent",
+            "int8:absent",
+            "note:MFMA first arrived with CDNA1 (gfx908, MI100)"
+          ]
+        },
+        {
+          "url": "https://github.com/ROCm/rocWMMA/blob/develop/README.md",
+          "quote": "rocWMMA currently supports the following AMD GPU architectures: * CDNA class GPU featuring matrix core support: gfx908, gfx90a, gfx942, gfx950 as 'gfx9' * RDNA class GPU featuring AI acceleration support: gfx1100, gfx1101, gfx1102, gfx1150, gfx1151, gfx1152, gfx1153 as 'gfx11'; gfx1200, gfx1201 as 'gfx12'",
+          "locator": "rocWMMA README, supported architectures (gfx906 not listed)",
+          "supports": [
+            "note:AMD's matrix library excludes gfx906"
+          ]
+        },
+        {
+          "url": "https://rocm.docs.amd.com/en/latest/reference/gpu-arch-specs.html",
+          "quote": "MI60 | GCN5.1 | gfx906 ... MI50 (32GB) | GCN5.1 | gfx906 ... MI50 (16GB) | GCN5.1 | gfx906",
+          "locator": "ROCm GPU hardware specifications table (AMD Instinct)",
+          "supports": [
+            "mapping:MI50/MI60=GCN5.1=gfx906"
+          ]
+        },
+        {
+          "url": "https://github.com/ggml-org/llama.cpp/blob/a0e6dc7384edb8f5d927155e1d26c10b4a310e6d/ggml/src/ggml-cuda/common.cuh",
+          "quote": "#define GGML_CUDA_CC_VEGA20     (GGML_CUDA_CC_OFFSET_AMD + 0x906)  // MI50/Radeon VII, minimum for dp4a ... #define GGML_CUDA_CC_CDNA1      (GGML_CUDA_CC_OFFSET_AMD + 0x908)  // MI100, minimum for MFMA, acc registers",
+          "locator": "llama.cpp master a0e6dc7 (2026-10-14), ggml-cuda/common.cuh lines 72-75 (community corroboration, not vendor)",
+          "supports": [
+            "note:llama.cpp treats gfx906 as dp4a-capable, MFMA-less"
+          ]
+        }
+      ],
+      "note": "Covers gfx906: Instinct MI50 (16GB and 32GB), MI60, Radeon VII and Radeon Pro VII. No matrix instructions of any kind: MFMA arrived with CDNA 1 (gfx908, MI100) and WMMA with RDNA 3. AMD's CDNA white paper: the \"MI50 does not have specialized hardware and performs matrix operations on the vector execution units\", so all eight formats are absent. What gfx906 does have is packed FP16 (V_PK_FMA_F16, twice the FP32 rate) and dot products (V_DOT2_F32_F16, V_DOT4_I32_I8, V_DOT8_I32_I4), recorded on units as vector rates; llama.cpp uses the INT8 dot4 for quantized matrix multiplies. There is no BF16 instruction at all. AMD support: ROCm 5.7 was the last fully supported release, 6.0-6.3 deprecated it, and 6.4 onward lists it unsupported, though people still run it on ROCm 7 with workarounds."
+    },
+    {
       "id": "cdna1",
       "vendor": "AMD",
       "label": "CDNA 1",
@@ -820,6 +910,92 @@
         }
       ],
       "note": "Covers gfx950, Instinct MI355X. XF32/TF32 MFMA was removed in CDNA4, and TF32 is emulated with BF16. The ROCm precision page still shows a ✅ for tensorfloat32 on CDNA4, but that page defines ✅ as 'natively or with hardware emulation', so it does not contradict this. FP6/FP4 come through the F8F6F4 MFMA, which takes block-scaled MX formats via V_MFMA_SCALE_*. CDNA4 adds OCP FP8 alongside FP8/BF8. The ISA has no INT4 MFMA."
+    },
+    {
+      "id": "rdna2",
+      "vendor": "AMD",
+      "label": "RDNA 2",
+      "matrixUnits": "None. No WMMA/MFMA (WMMA arrived with RDNA 3). ML acceleration is vector dot-product instructions (V_DOT2_F32_F16 / V_DOT2C_F32_F16, V_DOT2_{I32_I16,U32_U16}, V_DOT4_I32_I8 / V_DOT4C_I32_I8, V_DOT4_U32_U8, V_DOT8_{I32_I4,U32_U4}) plus packed FP16 (V_PK_*) on the SIMD32s.",
+      "formats": {
+        "tf32": "absent",
+        "bf16": "absent",
+        "fp16": "absent",
+        "fp8": "absent",
+        "fp6": "absent",
+        "fp4": "absent",
+        "int8": "absent",
+        "int4": "absent"
+      },
+      "sources": [
+        {
+          "url": "https://gpuopen.com/download/rdna2-shader-instruction-set-architecture.pdf",
+          "quote": "The table below lists the complete VALU instruction set by microcode encoding, except for VOP3P instructions which are listed in a later section.",
+          "locator": "'RDNA 2' ISA Reference Guide (291 pp.), 6.3 Instructions, Table 22 'VALU Instruction Set' (p. 45-46). The complete list contains no WMMA/MFMA/matrix instruction. A text search of the whole manual finds no 'WMMA', 'MFMA', 'matrix', 'BF16' or 'bfloat'.",
+          "supports": [
+            "tf32:absent",
+            "bf16:absent",
+            "fp16:absent",
+            "fp8:absent",
+            "fp6:absent",
+            "fp4:absent",
+            "int8:absent",
+            "int4:absent"
+          ]
+        },
+        {
+          "url": "https://gpuopen.com/download/rdna2-shader-instruction-set-architecture.pdf",
+          "quote": "Table 87. VOP3P Opcodes ... 0 V_PK_MAD_I16 ... 14 V_PK_FMA_F16 15 V_PK_ADD_F16 16 V_PK_MUL_F16 17 V_PK_MIN_F16 18 V_PK_MAX_F16 19 V_DOT2_F32_F16 20 V_DOT2_I32_I16 21 V_DOT2_U32_U16 22 V_DOT4_I32_I8 23 V_DOT4_U32_U8 24 V_DOT8_I32_I4 25 V_DOT8_U32_U4 32 V_FMA_MIX_F32 33 V_FMA_MIXLO_F16 34 V_FMA_MIXHI_F16",
+          "locator": "'RDNA 2' ISA, 13.3.6 VOP3P, Table 87 'VOP3P Opcodes' (complete list, opcodes 0-34, p. 264). On RDNA3 the WMMA instructions are VOP3P opcodes. Here there are none.",
+          "supports": [
+            "note:only packed-FP16 and DOT ops",
+            "fp16:absent",
+            "bf16:absent",
+            "int8:absent",
+            "int4:absent"
+          ]
+        },
+        {
+          "url": "https://gpuopen.com/download/rdna2-shader-instruction-set-architecture.pdf",
+          "quote": "Feature Changes in RDNA2 Devices ... Dot product ALU operations added accelerate inferencing and deep-learning: V_DOT2_F32_F16 / V_DOT2C_F32_F16 V_DOT2_I32_I16 / V_DOT2_U32_U16 V_DOT4_I32_I8 / V_DOT4C_I32_I8 V_DOT4_U32_U8 V_DOT8_I32_I4 V_DOT8_U32_U4",
+          "locator": "'RDNA 2' ISA, Preface 'Feature Changes in RDNA2 Devices' (p. 2-3)",
+          "supports": [
+            "note:RDNA2's ML additions are vector dot products, not matrix ops"
+          ]
+        },
+        {
+          "url": "https://gpuopen.com/learn/wmma_on_rdna3/",
+          "quote": "Our latest RDNA™ 3 GPUs provide the ability to accelerate Generalized Matrix Multiplication (GEMM) operations. This means that you can now get hardware-accelerated matrix multiplications that take maximum advantage of our new RDNA 3 architecture. This new feature is called Wave Matrix Multiply Accumulate (WMMA).",
+          "locator": "GPUOpen, 'How to accelerate AI applications on RDNA 3 using WMMA' (Jan 10, 2023; updated Feb 6, 2024), intro. The same page cites 'a performance uplift of roughly 2x from RDNA 2' from WMMA.",
+          "supports": [
+            "note:WMMA is new in RDNA3, so absent on RDNA2"
+          ]
+        },
+        {
+          "url": "https://github.com/ROCm/rocWMMA/blob/develop/README.md",
+          "quote": "RDNA class GPU featuring AI acceleration support: gfx1100, gfx1101, gfx1102, gfx1150, gfx1151, gfx1152, gfx1153 as 'gfx11'; gfx1200, gfx1201 as 'gfx12'",
+          "locator": "rocWMMA README, supported architectures (gfx1030 not listed)",
+          "supports": [
+            "note:AMD's matrix library excludes gfx1030"
+          ]
+        },
+        {
+          "url": "https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html",
+          "quote": "AMD Radeon PRO W6800 | RDNA2 | gfx1030 | ✅ [7] AMD Radeon PRO V620 | RDNA2 | gfx1030 | ✅ [8]",
+          "locator": "ROCm 7.14.0 system requirements, Radeon PRO table",
+          "supports": [
+            "mapping:V620/W6800=RDNA2=gfx1030"
+          ]
+        },
+        {
+          "url": "https://github.com/ggml-org/llama.cpp/blob/a0e6dc7384edb8f5d927155e1d26c10b4a310e6d/ggml/src/ggml-cuda/common.cuh",
+          "quote": "#define GGML_CUDA_CC_RDNA2      (GGML_CUDA_CC_OFFSET_AMD + 0x1030) // RX 6000, minimum for dp4a #define GGML_CUDA_CC_RDNA3      (GGML_CUDA_CC_OFFSET_AMD + 0x1100) // RX 7000, minimum for WMMA ... static bool amd_wmma_available(const int cc) { return (GGML_CUDA_CC_IS_RDNA4(cc) || GGML_CUDA_CC_IS_RDNA3(cc)); }",
+          "locator": "llama.cpp master a0e6dc7 (2026-10-14), ggml-cuda/common.cuh lines 82-83 and 357-359 (community corroboration)",
+          "supports": [
+            "note:llama.cpp uses dp4a (sdot4), not WMMA, on RDNA2"
+          ]
+        }
+      ],
+      "note": "Covers gfx1030 (Navi 21): Radeon PRO V620, Radeon PRO W6800, RX 6800/6800 XT/6900 XT. No matrix instructions: WMMA first appears with RDNA 3, and the complete RDNA 2 VALU and VOP3P opcode lists hold only packed FP16 and DOT2/DOT4/DOT8 dot products, so all eight formats are absent. llama.cpp uses the INT8 dot4 (dp4a), not WMMA, on RDNA 2. There is no BF16 instruction. Contradiction: ROCm's \"Data types and precision support\" page marks RDNA 2 as having matrix-core INT8, FP16 and BF16; the ISA and rocWMMA's target list both say otherwise, and the ISA is taken as authoritative."
     },
     {
       "id": "rdna3",
@@ -2376,6 +2552,41 @@
       }
     },
     {
+      "id": "radeon_pro_v620",
+      "label": "Radeon PRO V620 32GB",
+      "vendor": "AMD",
+      "arch": "rdna2",
+      "released": "2021-11",
+      "memoryGB": 32,
+      "memoryBandwidthGBs": 512,
+      "tdpW": 300,
+      "process": "TSMC 7nm FinFET",
+      "pricing": {
+        "street": {
+          "usd": 650,
+          "asOf": "2026-10",
+          "note": "The maintainer's observation, Oct 2026. Undated eBay asks seen in search run $565-$850 used."
+        }
+      },
+      "sources": [
+        "https://www.amd.com/en/products/accelerators/radeon-pro/amd-radeon-pro-v620.html -- 72 CUs, 4,608 stream processors, FP32 20.28 / FP16 40.55 TFLOPs, 32 GB GDDR6, 512 GB/s, 300 W, passive cooling",
+        "https://www.amd.com/en/newsroom/press-releases/2021-11-4-amd-radeon-pro-v620-gpu-delivers-powerful-multi-.html -- announced Nov 4, 2021: \"32GB @ 16Gbps 512 GB/s 256-bit\"",
+        "https://gpuopen.com/download/rdna2-shader-instruction-set-architecture.pdf -- V_DOT4_I32_I8 exists; no INT8 issue rate published",
+        "https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html -- \"AMD Radeon PRO V620 | RDNA2 | gfx1030 | ✅\" (Ubuntu 24.04.4 and 22.04.5 only)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.amd.com/en/products/accelerators/radeon-pro/amd-radeon-pro-v620.html",
+        "values": {
+          "fp32": 20.28,
+          "fp16:vector": 40.55,
+          "int8:vector": 81.1
+        },
+        "note": "All vector: this card has no matrix units. FP32 and packed FP16 are AMD's figures at the 2.2 GHz peak clock. INT8 is derived, not rated: 4,608 lanes x 4 multiply-adds (dot4) x 2 x 2.2 GHz, i.e. four times FP32, the rate AMD rates gfx906's dot4 at. AMD publishes no INT8 rate for any RDNA 2 card, so this is the most the hardware could do, not a measured or rated figure. It is recorded because llama.cpp's quantized prefill runs on that dot4, and a ceiling from FP16 alone could sit below real runs."
+      },
+      "note": "A data-center and cloud part (it ran in Azure NGads V620 VMs), so used cards are presumably ex-cloud. Passive, full-height, dual-slot, 2x 8-pin; it needs server airflow. Same Navi 21 configuration as the RX 6800 XT, with 32 GB and ECC. ROCm supports it (Ubuntu only). Known llama.cpp problems: HIP flash attention can assert on RDNA 2 at head size 256, which Qwen3.x 27B uses (discussion #23310, open), and Vulkan flash attention slows sharply with depth (issue #25207). AMD's spec page gives a 2023-09-01 launch date against the November 2021 announcement; general availability may explain it."
+    },
+    {
       "id": "radeon_pro_w7900",
       "label": "Radeon Pro W7900 48GB",
       "vendor": "AMD",
@@ -2544,6 +2755,41 @@
           "bf16": 832
         }
       }
+    },
+    {
+      "id": "mi50_32",
+      "label": "Instinct MI50 32GB",
+      "vendor": "AMD",
+      "arch": "gcn5_1",
+      "released": "2018-11",
+      "memoryGB": 32,
+      "memoryBandwidthGBs": 1024,
+      "tdpW": 300,
+      "process": "TSMC 7nm FinFET",
+      "pricing": {
+        "street": {
+          "usd": 600,
+          "asOf": "2026-09",
+          "note": "Used, eBay asking prices, not sales: \"Live eBay asking prices in September 2026 run about $600-830\" (OpenClaw DC, which says it could not verify them against a completed sale). Low confidence; late-2025 forum reports were near $200. AMD never published a list price."
+        }
+      },
+      "sources": [
+        "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi50-32gb.html -- \"Launch Date 11/18/2018 ... Lithography TSMC 7nm FinFET Stream Processors 3,840 Compute Units 60 Peak Engine Clock 1725 MHz\"; FP16 26.5 TFLOPs, FP32 13.3, INT8 53 TOPs; 32 GB, 4096-bit, 1 GHz",
+        "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/white-papers/amd-cdna-white-paper.pdf -- \"MI50 does not have specialized hardware and performs matrix operations on the vector execution units\"; footnote gives 1.024 TB/s peak memory bandwidth at 1,000 MHz",
+        "https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html -- \"AMD Instinct MI50 | N/A | GCN5.1 | gfx906 | ❌\" (ROCm 7.14.0)",
+        "https://openclawdc.com/blog/amd-mi50-32gb-local-llm/ (street price)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi50-32gb.html",
+        "values": {
+          "fp32": 13.3,
+          "fp16:vector": 26.5,
+          "int8:vector": 53
+        },
+        "note": "All vector: this card has no matrix units. FP16 is packed FP16 on the ALUs; INT8 is the dot4 instruction, at exactly four times the FP32 rate (AMD's datasheet says \"Up to 53.6\"). AMD claims INT4 capability (dot8) but publishes no rate, so none is recorded. At the 1,725 MHz peak engine clock."
+      },
+      "note": "Passively cooled, full-height, dual-slot, 2x 8-pin, 300 W: it needs server airflow or an aftermarket fan, and needs \"Above 4G Decoding\" on the host. The 16GB MI50 is identical apart from memory. llama.cpp still supports gfx906 upstream in HIP and Vulkan as of 2026-10-14, but ROCm has listed it unsupported since 6.4. Community benchmarks are often from overclocked cards (1,825 MHz core, 1,125 MHz HBM, about 12.5% more bandwidth), so their absolute rates overstate a stock card. Release date: AMD lists 2018-11-18 for both sizes, though its 2018 announcement made the MI50 a 16GB card and the 32GB part appears later."
     },
     {
       "id": "mi100",
@@ -7923,6 +8169,305 @@
           "basis": "per-stream",
           "value": 105.1,
           "confidence": "m~"
+        }
+      ]
+    },
+    {
+      "id": "x_mi50_llama8b_q40_pp_d32k",
+      "label": "Llama 3.x 8B · Q4_0 · llama.cpp HIP (PR #17505) · MI50",
+      "model": "llama31_8b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mi50_32",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "ROCm/HIP; ROCm version not stated. The PR author benchmarks on his own card."
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "e44ebb0",
+        "lineage": "upstream",
+        "note": "PR #17505 head (\"CUDA: generalized (mma) FA, add Volta support\"), merged 2025-12-03 as 2e1c9cd"
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0"
+      },
+      "status": "measured",
+      "observed": "2025-11-25",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/ggml-org/llama.cpp/pull/17505 (2025-11-25; PR description, \"Other GPU performance\" table): \"| MI60 / MI50 | llama 8B Q4_0 | 512 | pp512@d32768 | 357.18 | 355.12 | 0.99 |\""
+      },
+      "note": "llama-bench calls the model \"llama 8B\"; Llama 3 8B and 3.1 8B have the same shape, so the ceiling does not depend on which. At a micro-batch of 1, the same table gives 64.40 tok/s at 32K depth, a decode-like rate.",
+      "hazards": [
+        "The device column reads \"MI60 / MI50\" (the ROCm device string covers both); the author refers to his card as an MI50 in PR #19378. An MI60 has 64 CUs to the MI50's 60 and the same bandwidth."
+      ],
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 355.12,
+          "confidence": "m~",
+          "prefillBasis": "new-tokens",
+          "note": "pp512 at depth 32,768, micro-batch 512"
+        }
+      ]
+    },
+    {
+      "id": "x_mi50_llama8b_q40_pp16k",
+      "label": "Llama 3.x 8B · Q4_0 · llama.cpp HIP (PR #15982) · MI50",
+      "model": "llama31_8b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mi50_32",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "ROCm/HIP; ROCm version not stated. The PR author benchmarks on his own card."
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "4a6086184",
+        "lineage": "upstream",
+        "note": "PR #15982 head (\"CUDA: fix FA occupancy, optimize tile kernel\"), merged 2025-09-17"
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0"
+      },
+      "status": "measured",
+      "observed": "2025-09-14",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/ggml-org/llama.cpp/pull/15982 (2025-09-14; PR description, \"Other GPU performance\" table): \"| MI60 / MI50 | llama 8B Q4_0 | 512 | pp16384 | 601.43 | 687.65 | 1.14 |\""
+      },
+      "note": "llama-bench calls the model \"llama 8B\"; Llama 3 8B and 3.1 8B have the same shape. Larger micro-batches reach 708 tok/s in the same table.",
+      "hazards": [
+        "The device column reads \"MI60 / MI50\" (the ROCm device string covers both); the author refers to his card as an MI50 in PR #19378. An MI60 has 64 CUs to the MI50's 60 and the same bandwidth."
+      ],
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 687.65,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "pp16384 from an empty cache, micro-batch 512"
+        }
+      ]
+    },
+    {
+      "id": "x_mi50oc_qwen38_27b_q80_fork",
+      "label": "Qwen3.8 27B · Q8_0 · MI50-llama.cpp fork · MI50 (overclocked)",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mi50_32",
+            "count": 1
+          }
+        ],
+        "powerCapW": 300,
+        "host": {
+          "note": "ROCm 7.14; card overclocked to 1,825 MHz core and 1,125 MHz HBM (AMD spec: 1,725 / 1,000), about 12.5% more bandwidth than stock."
+        }
+      },
+      "engine": {
+        "name": "MI50-llama.cpp",
+        "lineage": "fork",
+        "commit": "39526f1",
+        "note": "a fork of mxxm-t/mx-llama.cpp, itself based on upstream b10760; -fa on, one slot"
+      },
+      "quant": {
+        "format": "Q8_0",
+        "key": "q8_0"
+      },
+      "kvCache": {
+        "k": "q8_0",
+        "v": "q8_0"
+      },
+      "status": "measured",
+      "observed": "2026-09-23",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/Martin1701/MI50-llama.cpp (README results, commit 39526f1, 2026-09-23): \"One MI50 32 GB, 300 W / 1825 MHz core / 1125 MHz HBM, ROCm 7.14. Qwen3.8-27B Q8_0, Q8_0 KV cache, -fa on, one slot. Decode is llama-bench TG64 at the stated occupied depth\""
+      },
+      "hazards": [
+        "Overclocked: the ceiling uses the stock 1,024 GB/s, so these readings run about 12.5% closer to it than a stock card would.",
+        "The fork changes FP32 summation order in attention (its README reports +0.07% perplexity at 16K). Depths are the README's \"2k/16k/64k\" labels, not exact counts."
+      ],
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 2048,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 22.8,
+          "confidence": "m~",
+          "note": "tg64 at \"~2k\""
+        },
+        {
+          "metric": "decode",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 22,
+          "confidence": "m~",
+          "note": "tg64 at \"~16k\""
+        },
+        {
+          "metric": "decode",
+          "depth": 65536,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 20.4,
+          "confidence": "m~",
+          "note": "tg64 at \"~64k\""
+        }
+      ]
+    },
+    {
+      "id": "x_v620_qwen27b_q6k_vulkan",
+      "label": "Qwen3.x 27B · Q6_K · llama.cpp Vulkan · Radeon PRO V620",
+      "model": "qwen35_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "radeon_pro_v620",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "Vulkan (RADV); Mesa version not stated."
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "lineage": "upstream",
+        "note": "Vulkan backend, \"Master\" (build not given); fa=1"
+      },
+      "quant": {
+        "format": "Q6_K (20.46 GiB)",
+        "key": "q6_k"
+      },
+      "status": "measured",
+      "observed": "2026-08-31",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/ggml-org/llama.cpp/issues/25207 (\"Eval bug: Unexpected massive performace drop with Vulkan Flash Attention\", open), commenter draetheus, on a Radeon PRO V620, 2026-08-31"
+      },
+      "note": "llama-bench labels the model \"qwen35 27B\", llama.cpp's architecture name for the Qwen3.5/3.6/3.8 27B family, which share one shape here. A local shared-memory staging change in the same comment holds 309 tok/s at 16K, so most of the drop is the Vulkan flash-attention problem the issue is about.",
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 361.84,
+          "confidence": "m~",
+          "prefillBasis": "new-tokens",
+          "note": "pp2048 at depth 0"
+        },
+        {
+          "metric": "prefill",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 258.48,
+          "confidence": "m~",
+          "prefillBasis": "new-tokens",
+          "note": "pp2048 at depth 8,192"
+        },
+        {
+          "metric": "prefill",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 190.41,
+          "confidence": "m~",
+          "prefillBasis": "new-tokens",
+          "note": "pp2048 at depth 16,384"
+        }
+      ]
+    },
+    {
+      "id": "x_v620_qwen38_27b_q6k_hip",
+      "label": "Qwen3.8 27B · Q6_K · llama.cpp HIP · Radeon PRO V620",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "radeon_pro_v620",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "ROCm 7.14, per the author."
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "lineage": "upstream",
+        "note": "HIP backend, master (hash not given), the baseline column of PR #27558"
+      },
+      "quant": {
+        "format": "Q6_K (21.49 GiB)",
+        "key": "q6_k"
+      },
+      "status": "measured",
+      "observed": "2026-08-22",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/ggml-org/llama.cpp/pull/27558 (\"HIP: Expand Q5_K and Q6_K tile widths for RDNA2\", open), by draetheus, 2026-08-22"
+      },
+      "note": "The PR branch reaches 409.68 tok/s at depth 0 and 374.57 at 8K; it is unmerged, so master is recorded.",
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 379.06,
+          "confidence": "m~",
+          "prefillBasis": "new-tokens",
+          "note": "pp2048 at depth 0"
+        },
+        {
+          "metric": "prefill",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 348.68,
+          "confidence": "m~",
+          "prefillBasis": "new-tokens",
+          "note": "pp2048 at depth 8,192"
         }
       ]
     }
