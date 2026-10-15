@@ -79,8 +79,9 @@ const HW_COLS = (prec) => [
     cell: u => {
       const d = u.compute?.values?.[prec];
       const sp = u.compute?.values?.[`${prec}:sparse`];
-      if (d == null && sp == null) return `<td class="num">${DASH}</td>`;
-      return `<td class="num">${d ?? DASH}${sp != null ? `<span class="sub">${sp} sparse</span>` : ''}</td>`;
+      const vec = u.compute?.values?.[`${prec}:vector`];
+      if (d == null && sp == null && vec == null) return `<td class="num">${DASH}</td>`;
+      return `<td class="num">${d ?? DASH}${sp != null ? `<span class="sub">${sp} sparse</span>` : ''}${vec != null ? `<span class="sub" title="Shader-ALU rate: this card has no matrix units">${vec} vector</span>` : ''}</td>`;
     },
   },
   { key: 'tdp', label: 'TDP W', sort: u => u.tdpW, cell: u => `<td class="num">${u.tdpW ?? DASH}</td>` },
@@ -128,7 +129,7 @@ export function renderHardwareTable(model, state, matches) {
     ? rows.map(u => `<tr>${cols.map(c => c.cell(u)).join('')}</tr>`).join('')
     : `<tr><td class="lbl" colspan="${cols.length}" style="color:var(--muted);padding:16px">No unit passes every filter. Loosen one above.</td></tr>`;
   el('hwNote').textContent =
-    `Throughput in 10¹² ops/sec at the precision chosen for the chart; "sparse" is the 2:4 structured-sparsity rate vendors often quote unlabelled. ` +
+    `Throughput in 10¹² ops/sec at the precision chosen for the chart; "sparse" is the 2:4 structured-sparsity rate vendors often quote unlabelled, and "vector" is a shader-ALU rate on a card with no matrix units. ` +
     `$ per GB and GB/s per $1k use the dated street price. Blanks sort last in both directions. Click a heading to sort.`;
 }
 
@@ -181,7 +182,7 @@ export function renderCeilingTable(model, state, units) {
     const prec = r.prefill.precision;
     const pre = r.prefill.tps == null
       ? `<td class="lbl">${DASH}<span class="sub">no rated ${prec.precision.toUpperCase()} figure</span></td>`
-      : `<td class="lbl"><span class="num">${n0(r.prefill.tps)}</span><span class="sub" title="${esc(prec.note)}">${prec.precision.toUpperCase()}${prec.grounded ? '' : ' · assumed'}</span></td>`;
+      : `<td class="lbl"><span class="num">${n0(r.prefill.tps)}</span><span class="sub" title="${esc(prec.note)}">${prec.precision.toUpperCase()}${prec.vector ? ' vector' : ''}${prec.grounded ? '' : ' · assumed'}</span></td>`;
     const modeWord = r.n === 1 ? '' : r.mode === 'tensor' ? (splitsEvenly(m, r.n) ? 'tensor parallel' : `tensor parallel · ${m.heads} heads don't split ${r.n} ways`) : 'layer split';
     return (
       `<tr${f && !f.fits ? ' style="opacity:.55"' : ''}>` +
@@ -289,7 +290,7 @@ function pointRow(l, r) {
     `<tr class="pt">` +
     `<td class="lbl">${what} ${at}${streams}${spec}</td>` +
     `<td class="num">${value}</td>` +
-    `<td class="num">${c.tps ? sig(c.tps) : DASH}${c.precision ? `<span class="sub">${c.precision.precision.toUpperCase()}${c.precision.grounded ? '' : ' assumed'}</span>` : ''}</td>` +
+    `<td class="num">${c.tps ? sig(c.tps) : DASH}${c.precision ? `<span class="sub">${c.precision.precision.toUpperCase()}${c.precision.vector ? ' vector' : ''}${c.precision.grounded ? '' : ' assumed'}</span>` : ''}</td>` +
     share +
     `<td class="lbl wrap" style="min-width:220px;max-width:380px;font-size:11.5px;color:var(--muted)">${notes.map(esc).join('<br>')}</td>` +
     `</tr>`

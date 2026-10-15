@@ -140,6 +140,8 @@ for (const u of doc.units ?? []) {
   // does not is contradicting a datasheet, and one of the two is wrong.
   const arch = archById[u.arch];
   for (const key of Object.keys(u.compute?.values ?? {})) {
+    // A vector rate is a shader-ALU figure, which a matrix-less card can have.
+    if (key.endsWith(':vector')) continue;
     const f = key.replace(':sparse', '');
     if (!FORMATS.includes(f)) continue;
     const state = u.formatOverrides?.[f] ?? arch?.formats?.[f];

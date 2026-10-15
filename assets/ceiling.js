@@ -335,10 +335,32 @@ export function computePrecision(unit, formatKey) {
  */
 export function prefillCeiling(m, unit, { cards = 1, formatKey, depth, cold = false }) {
   const flops = prefillFlopsPerToken(m, depth, { cold });
-  const prec = computePrecision(unit, formatKey);
-  const ops = unit.compute?.values?.[prec.precision];
+  let prec = computePrecision(unit, formatKey);
+  let ops = unit.compute?.values?.[prec.precision];
+  if (ops == null) {
+    const v = vectorBound(unit);
+    if (v) {
+      prec = { precision: v.precision, vector: true, grounded: true, note: `no matrix units: the fastest rate on the shader ALUs (${v.precision.toUpperCase()}) bounds any kernel` };
+      ops = v.ops;
+    }
+  }
   if (!flops || ops == null) return { tps: null, precision: prec, flopsPerToken: flops };
   return { tps: (ops * 1e12 * cards) / flops, precision: prec, flopsPerToken: flops, opsPerSec: ops * cards };
+}
+
+/**
+ * A card with no matrix units at all multiplies on its shader ALUs (packed
+ * FP16, dot-product INT8), so whichever path a kernel takes, the fastest of
+ * those rates bounds it. A card with any matrix path, or one whose formats
+ * are unknown, gets no such fallback: its matrix units may be faster.
+ */
+export function vectorBound(unit) {
+  const fmt = Object.values(unit.formats ?? {});
+  if (!fmt.length || fmt.some(s => s !== 'absent')) return null;
+  const vec = Object.entries(unit.compute?.values ?? {})
+    .filter(([k]) => k.endsWith(':vector'))
+    .sort((a, b) => b[1] - a[1]);
+  return vec.length ? { precision: vec[0][0].slice(0, -':vector'.length), ops: vec[0][1] } : null;
 }
 
 // --- Capacity ---------------------------------------------------------------

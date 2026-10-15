@@ -182,10 +182,10 @@
               "type": "string"
             },
             "values": {
-              "description": "Rated throughput keyed by precision (fp32, tf32, bf16, fp16, fp8, fp4, int8, ...). Suffix a key with ':sparse' for structured-sparsity figures. New precisions need no schema change.",
+              "description": "Rated throughput keyed by precision (fp32, tf32, bf16, fp16, fp8, fp4, int8, ...). Suffix a key with ':sparse' for structured-sparsity figures, or ':vector' for a shader-ALU rate (packed FP16, dot-product INT8) on a card with no matrix units; vector rates prove no matrix path and bound prefill only when the card has none. New precisions need no schema change.",
               "type": "object",
               "propertyNames": {
-                "pattern": "^[a-z0-9]+(:sparse)?$"
+                "pattern": "^[a-z0-9]+(:sparse|:vector)?$"
               },
               "additionalProperties": {
                 "type": "number",

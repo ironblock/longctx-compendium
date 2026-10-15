@@ -49,6 +49,22 @@ const q32KvPerPos = 64 * 8 * 128 * 2 * 2;
   const flops = 2 * (32.8e9 - 151936 * 5120) + 4 * 64 * 128 * 64 * 32768;
   near('Qwen3-32B: prefill FLOPs per appended token at 32K', C.prefillFlopsPerToken(q32, 32768), flops);
   near('Qwen3-32B: BF16 prefill ceiling at 100 TFLOPS', C.prefillCeiling(q32, unit(936), { formatKey: 'bf16', depth: 32768 }).tps, 100e12 / flops);
+
+  // A card with no matrix units is bounded by its fastest shader rate, here
+  // 53 TOPS of dot-product INT8 against 26.5 TFLOPS of packed FP16.
+  const absent = Object.fromEntries(['tf32', 'bf16', 'fp16', 'fp8', 'fp6', 'fp4', 'int8', 'int4'].map(f => [f, 'absent']));
+  const noMatrix = unit(1024, { formats: absent, compute: { values: { 'fp16:vector': 26.5, 'int8:vector': 53 } } });
+  const vec = C.prefillCeiling(q32, noMatrix, { formatKey: 'q4_k_m', depth: 32768 });
+  near('No matrix units: Q4_K_M prefill bounded by the fastest vector rate', vec.tps, 53e12 / flops);
+  const vecOk = vec.precision.vector === true && vec.precision.precision === 'int8';
+  if (!vecOk) failed++;
+  console.log(`${vecOk ? '✓' : '✗'} No matrix units: the bound says it is a vector INT8 rate`);
+  // A card with a matrix path but no rating for it must not fall back: its
+  // matrix units may beat the vector rate, so no bound is the honest answer.
+  const unrated = unit(1024, { formats: { ...absent, fp16: 'native' }, compute: { values: { 'fp16:vector': 26.5 } } });
+  const none = C.prefillCeiling(q32, unrated, { formatKey: 'bf16', depth: 32768 }).tps;
+  if (none != null) failed++;
+  console.log(`${none == null ? '✓' : '✗'} Unrated matrix path: no vector fallback${none == null ? '' : ` -- got ${none}`}`);
 }
 
 // Gemma 4 31B at 128K, F16: 10 full layers of 4 KV heads x 512 with keys equal
