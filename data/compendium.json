@@ -2420,7 +2420,7 @@
       ],
       "compute": {
         "unit": "Tops",
-        "note": "Derived, not rated: NVIDIA never published a rating for this card. Each figure is A100's dense per-SM tensor rate (whitepaper) x 70 SMs x 1,470 MHz, the sustained clock of an 8 GB card on the 300 W VBIOS, the same configuration as the bandwidth. The unlocked cards' own mma throughput lands just under these (satspace: BF16 201.55, INT8 409.77, TF32 99.82). Through torch, cuBLAS or OpenCL, INT8 measured only 43-48 TOPS in July 2026, against 335-410 TOPS in mma microbenchmarks; that gap is unresolved. llama.cpp issues mma directly, so the higher figure is the bound. No FP8, FP6 or FP4 (sm_80). Sparse rates were never measured on this card, so none are recorded.",
+        "note": "Derived, not rated: NVIDIA never published a rating for this card. Each figure is A100's dense per-SM tensor rate (whitepaper) x 70 SMs x 1,470 MHz, the sustained clock of an 8 GB card on the 300 W VBIOS, the same configuration as the bandwidth. The unlocked cards' own mma throughput lands just under these (satspace: BF16 201.55, INT8 409.77, TF32 99.82). Through torch, cuBLAS or OpenCL, INT8 measured only 43-48 TOPS in July 2026, against 335-410 TOPS in mma microbenchmarks; that gap is unresolved. llama.cpp issues mma directly, so the higher figure is the bound. No FP8, FP6 or FP4 (sm_80). Sparse rates were never measured on this card, so none are recorded. With 170tune’s qualified +250 MHz offset the SM clock reaches about 1,490-1,590 MHz near 250-280 W, up to 8% above the clock these figures assume; real prefill sits far below either.",
         "source": "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/overview.md",
         "values": {
           "fp32": 13.2,
@@ -6518,6 +6518,81 @@
           "basis": "per-stream",
           "value": 26.97,
           "confidence": "m~"
+        }
+      ]
+    },
+    {
+      "id": "x_cmp170hx_qwen38_27b_fp8_vllm_200w",
+      "label": "Qwen3.8 27B · FP8 · vLLM 0.26.0 · MTP n=2 · 1× CMP 170HX at 200 W",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "cmp_170hx_64",
+            "count": 1
+          }
+        ],
+        "powerCapW": 200,
+        "host": {
+          "note": "Driver 610.43.03, 300 W VBIOS, PCIe Gen2 x4, SM clock offset +250 MHz; sustained clock about 1,320 MHz at this cap."
+        }
+      },
+      "engine": {
+        "name": "vLLM",
+        "version": "0.26.0",
+        "note": "CUDA graphs on"
+      },
+      "quant": {
+        "format": "FP8 (Qwen3.8-27B-FP8)",
+        "key": "fp8",
+        "note": "Ampere has no FP8 matrix units, so the weights are upcast to 16-bit for the multiply; the source does not name the kernel."
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 2,
+        "note": "the checkpoint’s native MTP head, num_speculative_tokens=2; decode counted by completion_tokens, not stream chunks"
+      },
+      "status": "measured",
+      "observed": "2026-08-30",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/cachenetics/170tune/blob/73ba17b/docs/power-cap-curve.md (\"Performance versus envelope\", 200 W row: \"| 200 W | ~1,320 MHz | 1,929 tok/s | ~87 tok/s | 62 tok/s |\"); last changed in commit 73ba17b on 2026-08-30"
+      },
+      "hazards": [
+        "The card ran a +250 MHz clock offset, an undervolt the source qualified on this one card; the same page says +280 and above fault."
+      ],
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 6600,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1929,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "unique, uncacheable prompts of about 6.6K tokens"
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "depthNote": "not stated",
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 87,
+          "confidence": "m~",
+          "note": "\"~87 tok/s\" single-stream, MTP on"
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "depthNote": "not stated",
+          "streams": 6,
+          "basis": "per-stream",
+          "value": 62,
+          "confidence": "m~",
+          "note": "per request under 6-way concurrent load, MTP on"
         }
       ]
     }
