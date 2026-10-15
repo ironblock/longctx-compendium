@@ -1612,6 +1612,97 @@
       }
     },
     {
+      "id": "rtx_pro_5000",
+      "label": "RTX PRO 5000 Blackwell 48GB",
+      "vendor": "NVIDIA",
+      "arch": "blackwell",
+      "released": "2025",
+      "memoryGB": 48,
+      "memoryBandwidthGBs": 1344,
+      "tdpW": 300,
+      "process": "TSMC 4N",
+      "pricing": {
+        "msrp": {
+          "usd": 4569,
+          "asOf": "2025",
+          "note": "Not an NVIDIA MSRP (NVIDIA publishes none for RTX PRO cards): a US reseller (Connection) listing near launch, reported by VideoCardz. Low confidence."
+        },
+        "street": {
+          "usd": 7999,
+          "asOf": "2026-10",
+          "note": "New: $7,999 at B&H (OEM) on gpuprix (2026-10-14), during the GDDR7 shortage; its 12-month low was $4,400. That puts it within about $500 of the RTX PRO 6000."
+        }
+      },
+      "sources": [
+        "https://www.pny.com/File%20Library/Company/Support/Product%20Brochures/NVIDIA%20RTX/English/nvidia-rtx-pro-5000-blackwell.pdf -- \"AI TOPS 2,064 AI TOPS\" (footnote: \"Effective FP4 TOPS with sparsity\"); \"Single-Precision Performance 65 TFLOPS\"; \"48 GB GDDR7 with ECC | 72 GB GDDR7 with ECC | Memory Interface 384-bit | Memory Bandwidth 1,344 GB/s\"; total board power 300 W",
+        "https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-5000/ -- \"AI TOPS 2064 ... Memory Bandwidth 1,344 GB/sec ... Max Power Consumption 300 W\"",
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/pdf/NVIDIA-RTX-Blackwell-PRO-GPU-Architecture-v1.1.pdf -- RTX PRO 6000 per-precision table, whose ratios the derived figures use; the PRO 5000 is listed as a GB202 part",
+        "https://gpuprix.com/us/gpus/rtx-pro-5000-blackwell (street price, 2026-10-14)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.pny.com/File%20Library/Company/Support/Product%20Brochures/NVIDIA%20RTX/English/nvidia-rtx-pro-5000-blackwell.pdf",
+        "values": {
+          "fp32": 65,
+          "fp4:sparse": 2064,
+          "fp4": 1032,
+          "fp8": 516,
+          "int8": 516,
+          "fp16": 258,
+          "bf16": 258,
+          "tf32": 129
+        },
+        "note": "Only two figures are NVIDIA's: 2,064 AI TOPS (\"Effective FP4 TOPS with sparsity\") and 65 TFLOPS FP32. The rest are derived: dense FP4 is half the sparse figure (NVIDIA's convention), and the other precisions follow the RTX PRO 6000 whitepaper's fixed per-SM ratios to FP4 (FP8 and INT8 half, FP16/BF16 a quarter, TF32 an eighth). The 16-bit figures assume full-rate FP32 accumulate, as on the PRO 6000, which NVIDIA does not state for this card; if it is half rate, the ceiling is generous. NVIDIA's 72GB launch blog says 2,142 TOPS, but later datasheet revisions still print 2,064, which is used."
+      },
+      "note": "GB202 with 110 SMs (14,080 CUDA cores). Announced 2025-03-18 for availability \"in the summer\"; the exact first-ship month is not sourced. With FP8 matrix units and 1.25 TiB/s, it is the cheapest card in the catalog that meets both of those bars."
+    },
+    {
+      "id": "rtx_pro_5000_72",
+      "label": "RTX PRO 5000 Blackwell 72GB",
+      "vendor": "NVIDIA",
+      "arch": "blackwell",
+      "released": "2025-12",
+      "memoryGB": 72,
+      "memoryBandwidthGBs": 1344,
+      "tdpW": 300,
+      "process": "TSMC 4N",
+      "pricing": {
+        "msrp": {
+          "usd": 9999,
+          "asOf": "2025-12",
+          "note": "Reseller-reported: \"SHI lists the MSRP as $9,999\" (CG Channel, 2025-12-22). NVIDIA announced no price."
+        },
+        "street": {
+          "usd": 9599,
+          "asOf": "2026-10",
+          "note": "New: PNY card on Amazon at $9,599 (gpuprix, 2026-10-14); one tracker snapshot."
+        }
+      },
+      "sources": [
+        "https://www.pny.com/File%20Library/Company/Support/Product%20Brochures/NVIDIA%20RTX/English/nvidia-rtx-pro-5000-blackwell.pdf -- \"AI TOPS 2,064 AI TOPS\" (footnote: \"Effective FP4 TOPS with sparsity\"); \"Single-Precision Performance 65 TFLOPS\"; \"48 GB GDDR7 with ECC | 72 GB GDDR7 with ECC | Memory Interface 384-bit | Memory Bandwidth 1,344 GB/s\"; total board power 300 W",
+        "https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-5000/ -- \"AI TOPS 2064 ... Memory Bandwidth 1,344 GB/sec ... Max Power Consumption 300 W\"",
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/pdf/NVIDIA-RTX-Blackwell-PRO-GPU-Architecture-v1.1.pdf -- RTX PRO 6000 per-precision table, whose ratios the derived figures use; the PRO 5000 is listed as a GB202 part",
+        "https://blogs.nvidia.com/blog/rtx-pro-5000-72gb-blackwell-gpu/ -- \"72GB of ultrafast GDDR7 memory — a 50% increase over the 48GB model\"",
+        "https://gpuprix.com/us/gpus/rtx-pro-5000-blackwell-72gb (street price)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.pny.com/File%20Library/Company/Support/Product%20Brochures/NVIDIA%20RTX/English/nvidia-rtx-pro-5000-blackwell.pdf",
+        "values": {
+          "fp32": 65,
+          "fp4:sparse": 2064,
+          "fp4": 1032,
+          "fp8": 516,
+          "int8": 516,
+          "fp16": 258,
+          "bf16": 258,
+          "tf32": 129
+        },
+        "note": "Only two figures are NVIDIA's: 2,064 AI TOPS (\"Effective FP4 TOPS with sparsity\") and 65 TFLOPS FP32. The rest are derived: dense FP4 is half the sparse figure (NVIDIA's convention), and the other precisions follow the RTX PRO 6000 whitepaper's fixed per-SM ratios to FP4 (FP8 and INT8 half, FP16/BF16 a quarter, TF32 an eighth). The 16-bit figures assume full-rate FP32 accumulate, as on the PRO 6000, which NVIDIA does not state for this card; if it is half rate, the ceiling is generous. NVIDIA's 72GB launch blog says 2,142 TOPS, but later datasheet revisions still print 2,064, which is used."
+      },
+      "note": "The same GPU, bandwidth and power as the 48GB card; NVIDIA says only the memory differs. General availability through distributors from 2025-12-18."
+    },
+    {
       "id": "rtx_5090",
       "label": "GeForce RTX 5090 32GB",
       "vendor": "NVIDIA",
@@ -1662,6 +1753,52 @@
         },
         "source": "https://www.runpod.io/articles/guides/nvidia-rtx-5090"
       }
+    },
+    {
+      "id": "rtx_5060_ti_16",
+      "label": "GeForce RTX 5060 Ti 16GB",
+      "vendor": "NVIDIA",
+      "arch": "blackwell",
+      "released": "2025-04",
+      "memoryGB": 16,
+      "memoryBandwidthGBs": 448,
+      "tdpW": 180,
+      "process": "TSMC 4N",
+      "pricing": {
+        "msrp": {
+          "usd": 429,
+          "asOf": "2025-04",
+          "note": "NVIDIA: \"available starting April 16 at $429\" (16GB). Partner cards only."
+        },
+        "street": {
+          "usd": 770,
+          "asOf": "2026-10",
+          "note": "New: $769 on Amazon, $830 on Newegg (gpudojo, 2026-10-14), about 1.8x MSRP amid the GDDR7 shortage."
+        }
+      },
+      "sources": [
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5060-family/ -- \"CUDA Cores 4608 | Tensor Cores (AI) 5th Gen, 759 AI TOPS | Boost Clock 2.57 GHz | Memory 16 GB or 8 GB GDDR7 | Memory Interface 128-bit\"",
+        "https://images.nvidia.com/aem-dam/Solutions/geforce/blackwell/nvidia-rtx-blackwell-gpu-architecture.pdf -- RTX 5070 Table 6, whose per-SM ratios the derived figures use: \"Peak FP4 Tensor TFLOPS with FP32 Accumulate (FP4 AI TOPS) 493.9/987.8\"",
+        "https://www.club386.com/?p=104295 -- \"Memory speed 28Gb/s | Bus width 128-bits\" (bandwidth; NVIDIA's page omits it)",
+        "https://investor.nvidia.com/news/press-release-details/2025/NVIDIA-Blackwell-GeForce-RTX-Arrives-for-Every-Gamer-Starting-at-299/default.aspx -- \"$429 and $379\"",
+        "https://gpudojo.com/rtx-5060-ti-16gb (street price)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5060-family/",
+        "values": {
+          "fp32": 23.7,
+          "fp4:sparse": 759,
+          "fp4": 379.5,
+          "fp8": 189.8,
+          "int8": 189.8,
+          "fp16": 94.9,
+          "bf16": 47.4,
+          "tf32": 23.7
+        },
+        "note": "NVIDIA publishes only 759 AI TOPS, which on GeForce Blackwell is the sparse FP4 figure (the RTX 5070's 988 AI TOPS is its whitepaper's sparse FP4). The whitepaper has no 5060 Ti table, so the rest are derived from the 5070's per-SM ratios, and they cross-check: 36 SMs x 2.572 GHz x 4,096 x 2 = 758.5. Catalog convention for GeForce: FP16 and FP8 at the FP16-accumulate rate, BF16 at the half-rate FP32-accumulate one. FP32 23.7 is Club386's figure."
+      },
+      "note": "GB206, 36 SMs. Bandwidth (28 Gb/s on 128 bits) comes from reviews; NVIDIA's page lists the bus but not the bandwidth."
     },
     {
       "id": "radeon_r9700",
@@ -2038,16 +2175,19 @@
         "Intel Arc Pro B70 datasheet",
         "Tom's Hardware / Puget Systems / StorageReview / igor'sLAB Arc Pro B70 reviews",
         "GPU Poet eBay price tracking (Apr 2026)",
-        "AI Inference Hardware — Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026)"
+        "AI Inference Hardware — Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026)",
+        "https://cdrdv2-public.intel.com/824434/2024_Intel_Tech%20Tour%20TW_Xe2%20and%20Lunar%20Lakes%20GPU.pdf -- p.9: \"XMX FP16 / BF16 8 16 2 4 2 2048\" / \"XMX INT8 8 16 4 4 2 4096\" ops per clock per Xe-core"
       ],
       "note": "230W reference TDP (160-290W partner range). PCIe 5.0 x16, one GPU per card (unlike the dual-GPU B60's x8/x8 split). Software: SYCL/oneAPI is a valid current toolkit but immature -- llama.cpp SYCL backend and IPEX-LLM work today; vLLM requires Intel's maintained fork (mainline CUDA kernels won't run); no FP4/NVFP4 acceleration (XMX engines are FP16/INT8-optimized). StorageReview's verdict: \"the hardware is ready, the stack needs to catch up.\" FP8 and FP4/NVFP4 confirmed architecturally absent on this Battlemage Xe2 die (not merely undocumented) -- corroborates the earlier report's note that XMX engines here are FP16/INT8-optimized with no FP4 path.",
       "arch": "xe2",
       "compute": {
         "unit": "Tops",
-        "note": "dense throughput in 10^12 ops/sec; add precisions as keys. The 45.88 TFLOPS FP16 figure recorded here before is exactly twice the FP32 rate, i.e. the vector-engine rate, not the XMX matrix rate a prefill ceiling needs; it is kept in this note rather than the FP16 column. Intel's XMX FP16 rate for this card is not recorded.",
+        "note": "dense throughput in 10^12 ops/sec; add precisions as keys. The 45.88 TFLOPS FP16 figure recorded here before is exactly twice the FP32 rate, i.e. the vector-engine rate, not the XMX matrix rate a prefill ceiling needs; it is kept in this note rather than the FP16 column. FP16 and BF16 are derived, not rated: Intel publishes no XMX FP16 figure for this card, but its Xe2 table (\"Key Peak Metrics for 2nd Gen Xe-core\", Tech Tour 2024, p.9) gives 2,048 XMX FP16/BF16 ops per clock per Xe-core against 4,096 for INT8, so they are half the rated INT8.",
         "values": {
           "fp32": 22.94,
-          "int8": 367
+          "int8": 367,
+          "fp16": 183.5,
+          "bf16": 183.5
         },
         "source": "Intel Arc Pro B70 datasheet (BMG-G31 Battlemage die, launched 2026-03-25); corroborated by Tom's Hardware, Puget Systems, StorageReview, igor'sLAB reviews"
       }
@@ -2274,6 +2414,49 @@
           "int8:sparse": 3026
         }
       }
+    },
+    {
+      "id": "h20",
+      "label": "H20 96GB (HGX)",
+      "vendor": "NVIDIA",
+      "arch": "hopper",
+      "released": "2024-02",
+      "memoryGB": 96,
+      "memoryBandwidthGBs": 4000,
+      "tdpW": 400,
+      "pricing": {
+        "msrp": {
+          "usd": 13500,
+          "asOf": "2024-02",
+          "note": "No NVIDIA list price. Reuters: distributors ordered at $12,000-$15,000 per card; the midpoint is shown."
+        },
+        "street": {
+          "usd": 11000,
+          "asOf": "2025-09",
+          "note": "Reuters (2025-09-04): \"currently sells for between $10,000 and $12,000\"; the midpoint is shown. No 2026 price was found."
+        }
+      },
+      "sources": [
+        "https://lmsys.org/images/blog/deepseek_v4/01_hardware_gap.svg -- \"FP8 (TFLOPS) | 296\" ... \"Memory BW (GB/s) | 4,000\" for H20-96GB (LMSYS, an operator running it)",
+        "https://wccftech.com/nvidia-china-compliant-h20-gpu-41-percent-fewer-cores-lower-performance-vs-top-hopper-h100/ -- \"96 GB HBM3 | 4.0 TB/s | FP32 44 TFLOPS | TF32 74 TFLOPS | FP16 148 TFLOPS | INT8 296 TFLOPS | TDP 400W\"",
+        "https://forums.developer.nvidia.com/t/do-we-have-manual-datasheet-for-nvidia-h20/303749 -- NVIDIA staff point datasheet requests to sales: no public datasheet exists",
+        "https://docs.nvidia.com/590trd1-trusted-computing-solutions-release-notes.pdf -- \"HGX H20A HBM3 96GB 8-GPU\" and \"HGX H20 141GB HBM3e 8-GPU\"",
+        "https://www.republicworld.com/tech/chinese-firms-still-want-nvidia-chips-despite-government-pressure-not-to-buy-report (Reuters price, 2025-09)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://lmsys.org/images/blog/deepseek_v4/01_hardware_gap.svg",
+        "values": {
+          "fp32": 44,
+          "tf32": 74,
+          "fp16": 148,
+          "bf16": 148,
+          "fp8": 296,
+          "int8": 296
+        },
+        "note": "No NVIDIA source: NVIDIA publishes no H20 datasheet. FP8 is LMSYS's; FP16, TF32 and INT8 come from a Wccftech table credited to NVIDIA; BF16 only from a spec database. No source says dense or sparse; dense is assumed because LMSYS sets its FP8 beside B300's dense figures. If they are sparse, the prefill ceiling is generous."
+      },
+      "note": "Hopper cut down for export to China: about 4 TB/s of HBM3 with roughly a sixth of an H100's matrix throughput, so its decode ceiling is H100-class while its prefill ceiling is far lower. As of 2026-10 it is exportable under licence but commercially stalled: NVIDIA reported no Hopper data-center shipments to China in Q1 FY27, though a large installed base remains. A 141GB HBM3e variant exists (NVIDIA release notes); its bandwidth is reported as 4.8 TB/s by LMSYS and 4.0 TB/s elsewhere, so it is not recorded. Released is the pre-order month (Reuters)."
     },
     {
       "id": "mi300x",
@@ -2673,19 +2856,63 @@
       },
       "sources": [
         "AI Inference Hardware — Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026)",
-        "https://www.intel.com/content/www/us/en/products/sku/245796/intel-arc-pro-b65-graphics/specifications.html"
+        "https://www.intel.com/content/www/us/en/products/sku/245796/intel-arc-pro-b65-graphics/specifications.html",
+        "https://cdrdv2-public.intel.com/824434/2024_Intel_Tech%20Tour%20TW_Xe2%20and%20Lunar%20Lakes%20GPU.pdf -- p.9: \"XMX FP16 / BF16 8 16 2 4 2 2048\" / \"XMX INT8 8 16 4 4 2 4096\" ops per clock per Xe-core"
       ],
       "note": "Same 32GB/608GB/s as the B70 but fewer compute cores (20 vs 32 Xe cores, 160 vs 256 XMX engines, 200W vs 230W). Initially misreported pre-launch as a 24GB part; Intel's official spec sheet confirms 32GB.",
       "arch": "xe2",
       "compute": {
         "unit": "Tops",
-        "note": "dense unless the key says :sparse; 10^12 ops/sec",
+        "note": "dense unless the key says :sparse; 10^12 ops/sec FP16 and BF16 are derived, not rated: Intel publishes no XMX FP16 figure for this card, but its Xe2 table (\"Key Peak Metrics for 2nd Gen Xe-core\", Tech Tour 2024, p.9) gives 2,048 XMX FP16/BF16 ops per clock per Xe-core against 4,096 for INT8, so they are half the rated INT8.",
         "values": {
           "int8": 197,
-          "fp32": 12.28
+          "fp32": 12.28,
+          "fp16": 98.5,
+          "bf16": 98.5
         },
         "source": "AI Inference Hardware — Arc Pro B-Series/NPU/OAM-to-PCIe (research report, Aug 2026) -- Intel official spec sheet, per CraftRigs reporting"
       }
+    },
+    {
+      "id": "arc_b60",
+      "label": "Arc Pro B60 24GB",
+      "vendor": "Intel",
+      "arch": "xe2",
+      "released": "2025-05",
+      "memoryGB": 24,
+      "memoryBandwidthGBs": 456,
+      "tdpW": 200,
+      "process": "TSMC N5",
+      "pricing": {
+        "msrp": {
+          "usd": 599,
+          "asOf": "2025-09",
+          "note": "Not an Intel MSRP (Intel sells no card of its own): the first US retail listing, an ASRock Arc Pro B60 Creator at Central Computers (Wccftech, 2025-09-20). SPARKLE's Blower Edition launched at a $799 partner MSRP in January 2026."
+        },
+        "street": {
+          "usd": 650,
+          "asOf": "2026-10",
+          "note": "New: ASRock Arc Pro B60 Creator at $650 on Amazon (gpuprix, 2026-10-14); 12-month low $600."
+        }
+      },
+      "sources": [
+        "https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2026-03/datasheet-b60-gpu.pdf -- \"GPU Peak TOPS (Int8) 197 TOPS\"; \"Peak FP32 Throughput Up to 12.28 TFLOPS\"; \"Xe-cores 20 Xe2-HPG | XMX Engines 160\"; PCIe 5.0 x16 (x8 electrical)",
+        "https://www.intel.com/content/www/us/en/products/sku/243916/intel-arc-pro-b60-graphics/specifications.html -- \"Launch Date Q2'25 | Xe-cores 20 | Graphics Clock 2400 MHz | TBP 200 W | Memory 24 GB GDDR6 | 192 bit | 456 GB/s\"",
+        "https://cdrdv2-public.intel.com/824434/2024_Intel_Tech%20Tour%20TW_Xe2%20and%20Lunar%20Lakes%20GPU.pdf -- p.9: \"XMX FP16 / BF16 ... 2048\" / \"XMX INT8 ... 4096\" ops per clock per Xe-core",
+        "https://gpuprix.com/us/gpus/arc-pro-b60 (street price, 2026-10-14)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2026-03/datasheet-b60-gpu.pdf",
+        "values": {
+          "fp32": 12.28,
+          "int8": 197,
+          "fp16": 98.5,
+          "bf16": 98.5
+        },
+        "note": "INT8 is Intel's rated dense XMX figure (datasheet footnote). FP16 and BF16 are derived, not rated: Intel publishes no XMX FP16 figure for this card, but its Xe2 table (\"Key Peak Metrics for 2nd Gen Xe-core\", Tech Tour 2024, p.9) gives 2,048 XMX FP16/BF16 ops per clock per Xe-core against 4,096 for INT8, so they are half the rated INT8."
+      },
+      "note": "Same compute as the Arc Pro B65 (20 Xe-cores, 160 XMX engines) on the 24GB, 192-bit BMG-G21, with PCIe 5.0 x8 electrical. Released is the Computex announcement (May 2025); the first US retail listing was September 2025. Dual-GPU boards (Maxsun Arc Pro B60 Dual 48G) shipped in August 2025: they are two separate 24GB GPUs, each on PCIe x8, needing host bifurcation, so a rig counts them as two of this unit."
     },
     {
       "id": "max_1100",
@@ -3032,10 +3259,12 @@
       "process": "TSMC N5",
       "compute": {
         "unit": "Tops",
-        "note": "Intel states only peak INT8.",
+        "note": "Intel states only peak INT8. FP16 and BF16 are derived, not rated: Intel publishes no XMX FP16 figure for this card, but its Xe2 table (\"Key Peak Metrics for 2nd Gen Xe-core\", Tech Tour 2024, p.9) gives 2,048 XMX FP16/BF16 ops per clock per Xe-core against 4,096 for INT8, so they are half the rated INT8.",
         "source": "https://www.intel.com/content/www/us/en/products/sku/241598/intel-arc-b580-graphics/specifications.html",
         "values": {
-          "int8": 233
+          "int8": 233,
+          "fp16": 116.5,
+          "bf16": 116.5
         }
       },
       "pricing": {
@@ -3045,7 +3274,8 @@
         }
       },
       "sources": [
-        "https://www.intel.com/content/www/us/en/products/sku/241598/intel-arc-b580-graphics/specifications.html"
+        "https://www.intel.com/content/www/us/en/products/sku/241598/intel-arc-b580-graphics/specifications.html",
+        "https://cdrdv2-public.intel.com/824434/2024_Intel_Tech%20Tour%20TW_Xe2%20and%20Lunar%20Lakes%20GPU.pdf -- p.9: \"XMX FP16 / BF16 8 16 2 4 2 2048\" / \"XMX INT8 8 16 4 4 2 4096\" ops per clock per Xe-core"
       ],
       "note": "In the catalog for the llama.cpp SYCL tensor-split readings. Intel lists the launch as Q4 2024 and the TBP as 190 W."
     },
@@ -8468,6 +8698,450 @@
           "confidence": "m~",
           "prefillBasis": "new-tokens",
           "note": "pp2048 at depth 8,192"
+        }
+      ]
+    },
+    {
+      "id": "x_b60_qwen38_27b_vulkan",
+      "label": "Qwen3.8 27B · UD-Q4_K_M · llama.cpp b11524 Vulkan · Arc Pro B60",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "arc_b60",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "Windows 11; Ryzen 7 3700X, 32 GB."
+        }
+      },
+      "quant": {
+        "format": "UD-Q4_K_M (Unsloth, 16.46 GB)",
+        "key": "q4_k_m",
+        "bpw": 4.9,
+        "note": "Bits per weight from the 16.46 GB file over 26.9B parameters."
+      },
+      "kvCache": {
+        "k": "f16",
+        "v": "f16"
+      },
+      "status": "measured",
+      "observed": "2026-10-10",
+      "recorded": "2026-10-15",
+      "engine": {
+        "name": "llama.cpp",
+        "version": "b11524",
+        "commit": "86a283532",
+        "lineage": "upstream",
+        "note": "Vulkan, stock build (Clang 20.1.8); llama-bench -r 1"
+      },
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/edagher92-coder/arc-llm-lab/blob/4e9b27125436561d10a0a229b958e5c640aacc79/data/raw/compare-f16.txt (raw llama-bench log, single runs)"
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 589.22,
+          "confidence": "m~",
+          "prefillBasis": "new-tokens",
+          "note": "pp2048 at depth 0"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 16.01,
+          "confidence": "m~",
+          "note": "tg32 at depth 0"
+        },
+        {
+          "metric": "prefill",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 198.44,
+          "confidence": "m~",
+          "prefillBasis": "new-tokens",
+          "note": "pp2048 at depth 16,384"
+        },
+        {
+          "metric": "decode",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 15.14,
+          "confidence": "m~",
+          "note": "tg32 at depth 16,384"
+        },
+        {
+          "metric": "prefill",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 118,
+          "confidence": "m~",
+          "prefillBasis": "new-tokens",
+          "note": "pp2048 at depth 32,768"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 14.45,
+          "confidence": "m~",
+          "note": "tg32 at depth 32,768"
+        }
+      ]
+    },
+    {
+      "id": "x_b60_qwen38_27b_vulkan_fa",
+      "label": "Qwen3.8 27B · UD-Q4_K_M · llama.cpp + Intel FA prefill kernel · Arc Pro B60",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "arc_b60",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "Windows 11; Ryzen 7 3700X, 32 GB."
+        }
+      },
+      "quant": {
+        "format": "UD-Q4_K_M (Unsloth, 16.46 GB)",
+        "key": "q4_k_m",
+        "bpw": 4.9,
+        "note": "Bits per weight from the 16.46 GB file over 26.9B parameters."
+      },
+      "kvCache": {
+        "k": "f16",
+        "v": "f16"
+      },
+      "status": "measured",
+      "observed": "2026-10-10",
+      "recorded": "2026-10-15",
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "c85e6c598",
+        "lineage": "patched",
+        "note": "b11524 plus the Intel flash-attention prefill kernel from llama.cpp PR #29357 (closed unmerged 2026-09-25), Vulkan"
+      },
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/edagher92-coder/arc-llm-lab (README and raw logs at commit 4e9b271, 2026-10-12)"
+      },
+      "note": "The same card, model and cache as the stock-build line: an unmerged kernel lifts prefill at 32K from 118 to 420 tok/s and leaves decode alone. With a Q4 cache the kernel gives no gain, per the README.",
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 513.33,
+          "confidence": "m~",
+          "prefillBasis": "new-tokens",
+          "note": "pp2048 at depth 16,384"
+        },
+        {
+          "metric": "decode",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 15.2,
+          "confidence": "m~",
+          "note": "tg32 at depth 16,384"
+        },
+        {
+          "metric": "prefill",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 420.05,
+          "confidence": "m~",
+          "prefillBasis": "new-tokens",
+          "note": "pp2048 at depth 32,768"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 14.46,
+          "confidence": "m~",
+          "note": "tg32 at depth 32,768"
+        }
+      ]
+    },
+    {
+      "id": "x_5060tix2_qwen38_27b_llamacpp",
+      "label": "Qwen3.8 27B · Q4_K_S · llama.cpp b10364 · 2× RTX 5060 Ti 16GB",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_5060_ti_16",
+            "count": 2
+          }
+        ],
+        "host": {
+          "note": "Ubuntu 24.04, driver 595.58.03, CUDA 12.8."
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "version": "b10364",
+        "commit": "153d324bc",
+        "lineage": "upstream",
+        "note": "MTP disabled, flash attention on, full offload"
+      },
+      "quant": {
+        "format": "Q4_K - Small (16.68 GiB)",
+        "key": "q4_k_m",
+        "bpw": 5.33,
+        "note": "Q4_K_S; bits per weight from the 16.68 GiB file over 26.9B parameters. The key gives the K-quant family."
+      },
+      "parallel": {
+        "mode": "layer",
+        "note": "llama.cpp's default split; the source does not say otherwise"
+      },
+      "status": "measured",
+      "observed": "2026-08-17",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://www.hardware-corner.net/qwen3-8-27b-hardware-tests/ (Hardware Corner, updated 2026-08-17)"
+      },
+      "hazards": [
+        "Whether the context sizes are prompt lengths or cache depths is not stated, and neither is the KV-cache type.",
+        "The quant is inferred from the page’s other rows for this model, not stated for the dual-card rows; decode sits near 90% of the ceiling, so a smaller quant would mean a higher ceiling and a lower share."
+      ],
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 904.12,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "\"32K\""
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 20.43,
+          "confidence": "m~",
+          "note": "\"32K\""
+        },
+        {
+          "metric": "prefill",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 512.63,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "\"128K\""
+        },
+        {
+          "metric": "decode",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 15.55,
+          "confidence": "m~",
+          "note": "\"128K\""
+        }
+      ]
+    },
+    {
+      "id": "x_5060ti_qwen35_35b_a3b_llamacpp",
+      "label": "Qwen3.5 35B-A3B · UD-IQ3_XXS · llama.cpp · RTX 5060 Ti 16GB",
+      "model": "qwen35_35b_a3b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_5060_ti_16",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "Card on OCuLink (PCIe 4.0 x4)."
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "lineage": "upstream",
+        "note": "CUDA, built from source (commit not stated); -c 163840, -fa 1, --swa-full"
+      },
+      "quant": {
+        "format": "UD-IQ3_XXS (Unsloth, 13.68 GiB)",
+        "key": "iq",
+        "bpw": 3.39,
+        "note": "Bits per weight from the 13.68 GiB file over the model’s parameter count."
+      },
+      "kvCache": {
+        "k": "q4_0",
+        "v": "q4_0"
+      },
+      "status": "measured",
+      "observed": "2026-03-02",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "forum",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://njannasch.dev/blog/running-qwen-3-5-35b-a3b-on-5060-ti/ (personal blog, 2026-03-02)"
+      },
+      "note": "Decode is reported only as 41-47 tok/s (20-24 ms per token) at an unstated depth, so it is not recorded as a reading.",
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 90000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1123,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "a 90K-token first prompt, 92.7 s"
+        }
+      ]
+    },
+    {
+      "id": "x_pro5000_qwen3_30b_a3b",
+      "label": "Qwen3 30B-A3B · Q4_K · RTX PRO 5000 48GB",
+      "model": "qwen3_30b_a3b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_pro_5000",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "not recorded",
+        "note": "GGUF files, so presumably llama.cpp; the build is not stated"
+      },
+      "status": "measured",
+      "observed": "2026-03",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://www.hardware-corner.net/gpu-llm-benchmarks/rtx-pro-5000-blackwell/ (Hardware Corner, \"Updated Benchmarks: March 2026\")"
+      },
+      "hazards": [
+        "Engine, build and KV-cache type are not stated; contexts are \"grouped into tiers\", and whether a tier is the prompt length or the cache depth is not said."
+      ],
+      "quant": {
+        "format": "Q4_K (GGUF)",
+        "key": "q4_k_m"
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 702.7,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "\"128K\" tier"
+        },
+        {
+          "metric": "decode",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 61.4,
+          "confidence": "m~",
+          "note": "\"128K\" tier"
+        },
+        {
+          "metric": "prefill",
+          "depth": 262144,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 364.1,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "\"256K\" tier"
+        },
+        {
+          "metric": "decode",
+          "depth": 262144,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 37,
+          "confidence": "m~",
+          "note": "\"256K\" tier"
+        }
+      ]
+    },
+    {
+      "id": "x_pro5000_llama33_70b",
+      "label": "Llama 3.3 70B · Q4_K · RTX PRO 5000 48GB",
+      "model": "llama33_70b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_pro_5000",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "not recorded",
+        "note": "GGUF files, so presumably llama.cpp; the build is not stated"
+      },
+      "status": "measured",
+      "observed": "2026-03",
+      "recorded": "2026-10-15",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://www.hardware-corner.net/gpu-llm-benchmarks/rtx-pro-5000-blackwell/ (Hardware Corner, \"Updated Benchmarks: March 2026\")"
+      },
+      "hazards": [
+        "Engine, build and KV-cache type are not stated; contexts are \"grouped into tiers\", and whether a tier is the prompt length or the cache depth is not said."
+      ],
+      "quant": {
+        "format": "Q4_K (GGUF)",
+        "key": "q4_k_m"
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 826.3,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "\"16K\" tier"
+        },
+        {
+          "metric": "decode",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 22.4,
+          "confidence": "m~",
+          "note": "\"16K\" tier"
         }
       ]
     }
