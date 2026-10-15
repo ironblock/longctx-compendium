@@ -2039,7 +2039,8 @@
         "msrp": {
           "usd": 5499,
           "asOf": "2026-08",
-          "note": "Apple: \"starts at $5,499 (U.S.)\" (30-core CPU, 64-core GPU, 96GB, 1TB). The 80-core GPU with 96GB is $6,799."
+          "note": "Apple: \"starts at $5,499 (U.S.)\" (30-core CPU, 64-core GPU, 96GB, 1TB). Apple's configurator on 2026-10-15 still showed \"Buy from $5499\", with the 64-core GPU $1,300 below the 80-core and 96GB $4,000 below 256GB, so the 80-core GPU with 96GB is $6,799.",
+          "source": "Apple Store Mac Studio configurator, screenshots taken by the maintainer on 2026-10-15"
         },
         "street": {
           "usd": 5499,
@@ -2066,12 +2067,13 @@
         "msrp": {
           "usd": 10799,
           "asOf": "2026-08",
-          "note": "36-core CPU / 80-core GPU / 256GB / 1TB, from configurator line items (aicybr; Daring Fireball's $6,800 chip + $4,000 memory), consistent with Macworld's $18,299 for the same with 16TB. Apple publishes only the starting price."
+          "note": "36-core CPU / 80-core GPU / 256GB / 1TB: Apple's configurator showed \"One-time payment $10,799.00\" for exactly this machine on 2026-10-15, matching the earlier figure computed from line items (Daring Fireball's $6,800 chip + $4,000 memory). Going from 96GB to 256GB costs $4,000, about $25 per added GB.",
+          "source": "Apple Store Mac Studio configurator, screenshots taken by the maintainer on 2026-10-15"
         },
         "street": {
           "usd": 10799,
           "asOf": "2026-10",
-          "note": "New at Apple's list price; too new for used-market data."
+          "note": "New at Apple's list price, but not soon: on 2026-10-15 Apple quoted 15-17 weeks to ship and an in-store pickup date of 2027-02-19 for this configuration. Too new for used-market data."
         }
       },
       "sources": [
@@ -2094,7 +2096,7 @@
         "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Combined with up to 512GB of unified memory and 1.2TB/s of memory bandwidth, 50 percent higher than before\"; \"Mac Studio with M5 Ultra starts at $5,499 (U.S.)\"; \"Mac Studio with 512GB of unified memory is coming in late October.\"",
         "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)"
       ],
-      "note": "Announced, not shipping: Apple says the 512GB Mac Studio is \"coming in late October\" (2026) and has published no price. Every M5 Ultra benchmark so far is on a 96GB or 256GB machine. Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default."
+      "note": "Announced, not shipping: Apple's configurator still said \"512GB memory option for M5 Ultra coming late October\" on 2026-10-15, with no price. Every M5 Ultra benchmark so far is on a 96GB or 256GB machine. Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default."
     },
     {
       "id": "strix_halo",
