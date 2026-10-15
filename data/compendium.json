@@ -253,7 +253,7 @@
           ]
         }
       ],
-      "note": "Covers GA100: A100 80GB PCIe, PG199/DRIVE A100; GA102: RTX 3090, 3090 Ti, RTX A6000. Format sets are identical on GA100 and GA102 for the eight types tracked here. GA100-only: FP64 Tensor Core (GA102 has none). Also, on GeForce GA102 (RTX 3090) FP16/BF16 with FP32 accumulate runs at half the FP16-accumulate rate. In the GA102 whitepaper's Appendix A, the RTX 3090 column lists FP16 Tensor at 142/284 TFLOPS (dense/sparse) with FP16 accumulate and 71/142 with FP32 accumulate. Binary/INT1 is also supported but not tracked. PG199 / DRIVE A100 is GA100: it carries HBM2, which no other Ampere die has, and its measured 16-bit matmul rate is more than twice what the largest GA102 could reach at the same clock (see the unit's note)."
+      "note": "Covers GA100: A100 80GB PCIe, A100 40GB PCIe, PG199/DRIVE A100, CMP 170HX; GA102: RTX 3090, 3090 Ti, RTX A6000. Format sets are identical on GA100 and GA102 for the eight types tracked here. GA100-only: FP64 Tensor Core (GA102 has none). Also, on GeForce GA102 (RTX 3090) FP16/BF16 with FP32 accumulate runs at half the FP16-accumulate rate. In the GA102 whitepaper's Appendix A, the RTX 3090 column lists FP16 Tensor at 142/284 TFLOPS (dense/sparse) with FP16 accumulate and 71/142 with FP32 accumulate. Binary/INT1 is also supported but not tracked. PG199 / DRIVE A100 is GA100: it carries HBM2, which no other Ampere die has, and its measured 16-bit matmul rate is more than twice what the largest GA102 could reach at the same clock (see the unit's note)."
     },
     {
       "id": "ada",
@@ -317,7 +317,7 @@
           ]
         }
       ],
-      "note": "Covers AD102: RTX 4090, RTX 6000 Ada, L40S. FP8 is E4M3/E5M2. In the Ada whitepaper's GeForce RTX 4090 table, FP8 with FP32 accumulate is half the FP16-accumulate rate (330.3 vs 660.6 dense TFLOPS). That is a rate difference, not a format difference."
+      "note": "Covers AD102 (RTX 4090, RTX 6000 Ada, L40S) and AD104 (L4). FP8 is E4M3/E5M2. In the Ada whitepaper's GeForce RTX 4090 table, FP8 with FP32 accumulate is half the FP16-accumulate rate (330.3 vs 660.6 dense TFLOPS). That is a rate difference, not a format difference."
     },
     {
       "id": "hopper",
@@ -374,7 +374,7 @@
           ]
         }
       ],
-      "note": "Covers GH100: H100 SXM, H100 PCIe, H200. INT4 Tensor Core support was dropped in Hopper. Both the NVIDIA blog's enumeration and CUDA guide Table 33 omit it. Caveat: PTX still accepts legacy mma.sync .s4/.u4 for sm_80+ targets, so INT4 code compiles for sm_90. NVIDIA documents no INT4 Tensor Core path or rate for Hopper. H200 is the same GH100 GPU at CC 9.0."
+      "note": "Covers GH100: H100 SXM, H100 PCIe, H100 NVL, H200, H20. INT4 Tensor Core support was dropped in Hopper. Both the NVIDIA blog's enumeration and CUDA guide Table 33 omit it. Caveat: PTX still accepts legacy mma.sync .s4/.u4 for sm_80+ targets, so INT4 code compiles for sm_90. NVIDIA documents no INT4 Tensor Core path or rate for Hopper. H200 is the same GH100 GPU at CC 9.0."
     },
     {
       "id": "blackwell",
@@ -2322,7 +2322,7 @@
         "https://images.nvidia.com/aem-dam/en-zz/Solutions/data-center/nvidia-ampere-architecture-whitepaper.pdf",
         "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-nvidia-us-2188504-web.pdf"
       ],
-      "note": "The Tesla table collapses the 40 GB and 80 GB PCIe cards into one row; its 250 W and May-2020 launch describe the 40 GB HBM2 part, so they are left unset here. Bandwidth is NVIDIA's A100 datasheet figure for the 80 GB PCIe card (1,935 GB/s). The compute figures are shared (same GA100 die and clocks), so they are taken.",
+      "note": "The Tesla table collapses the 40 GB and 80 GB PCIe cards into one row; its 250 W describes the 40 GB card (a100_40_pcie) and its May 2020 date is the A100 launch, not either PCIe card's, so both are left unset here. Bandwidth is NVIDIA's A100 datasheet figure for the 80 GB PCIe card (1,935 GB/s). The compute figures are shared (same GA100 die and clocks), so they are taken.",
       "arch": "ampere",
       "compute": {
         "unit": "Tops",
@@ -2342,6 +2342,50 @@
         }
       },
       "memoryBandwidthGBs": 1935
+    },
+    {
+      "id": "a100_40_pcie",
+      "label": "A100 40GB PCIe",
+      "vendor": "NVIDIA",
+      "arch": "ampere",
+      "released": "2020-06",
+      "memoryGB": 40,
+      "memoryBandwidthGBs": 1555,
+      "tdpW": 250,
+      "process": "TSMC N7",
+      "pricing": {
+        "street": {
+          "usd": 4500,
+          "asOf": "2026-10",
+          "source": "https://gpudojo.com/a100-40gb",
+          "note": "Used. Two figures agree: the lowest eBay ask on GPUDojo's tracker was $4,495 (2026-10-14; $3,500 on 2026-10-02), and American Compute puts used A100 40GB PCIe sales at $4,200-$5,000 over the 12 months to August 2026 (amcompute.com/appraisals/a100-pcie-40gb). The tracker's eBay search does not exclude the SXM4 40GB module, which sells for far less, so the lowest ask may not be a PCIe card. A reseller's pull of 22 US eBay listings in September 2026 found asks from $3,800 to $13,196, median $7,750. NVIDIA published no price."
+        }
+      },
+      "sources": [
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/A100-PCIE-Prduct-Brief.pdf -- product brief PB-10137-001_v03, September 2020: \"Total board power 250 W\", \"GPU clocks Base: 765 MHz Boost: 1410 MHz\", \"Memory type HBM2 | Memory size 40 GB | Memory bus width 5120 bits | Peak memory bandwidth Up to 1555 GB/s\"",
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/a100-80gb-datasheet-update-nvidia-us-1521051-r2-web.pdf -- \"NVIDIA A100 for PCIe: Peak FP64 9.7 TF | Peak FP32 19.5 TF | Tensor Float 32 (TF32) 156 TF | 312 TF* | Peak BFLOAT16 Tensor Core 312 TF | 624 TF* | Peak FP16 Tensor Core 312 TF | 624 TF* | Peak INT8 Tensor Core 624 TOPS | 1,248 TOPS* | Peak INT4 Tensor Core 1,248 TOPS | 2,496 TOPS* | GPU Memory 40GB | GPU Memory Bandwidth 1,555 GB/s ... Max TDP Power 250 W\" (* with sparsity)",
+        "https://nvidianews.nvidia.com/news/worlds-top-system-makers-unveil-nvidia-a100-powered-servers-to-accelerate-ai-data-science-and-scientific-computing -- 2020-06-22: \"NVIDIA also unveiled a PCIe form factor for the A100\"",
+        "https://gpudojo.com/a100-40gb (street price, 2026-10-14)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/a100-80gb-datasheet-update-nvidia-us-1521051-r2-web.pdf",
+        "values": {
+          "fp64": 9.7,
+          "fp32": 19.5,
+          "fp16": 312,
+          "tf32": 156,
+          "tf32:sparse": 312,
+          "bf16": 312,
+          "bf16:sparse": 624,
+          "int8": 624,
+          "int8:sparse": 1248,
+          "int4": 1248,
+          "int4:sparse": 2496
+        },
+        "note": "NVIDIA prints dense and sparse side by side for the PCIe card, at the 1,410 MHz boost. The same GA100 configuration as the SXM4 part, but at a 250 W limit; NVIDIA's launch datasheet rates the PCIe card's delivered application performance at 90% of the 400 W one."
+      },
+      "note": "HBM2 (five 8 GB stacks), not the 80 GB card's HBM2e, which is most of the bandwidth gap. Two cards pair over an NVLink bridge. NVIDIA rounded the bandwidth to \"1.6 TB/sec\" in its June 2020 datasheet; its product brief and later datasheets say 1,555 GB/s."
     },
     {
       "id": "h100_sxm",
@@ -2435,6 +2479,53 @@
       }
     },
     {
+      "id": "h100_nvl",
+      "label": "H100 NVL 94GB",
+      "vendor": "NVIDIA",
+      "arch": "hopper",
+      "released": "2023",
+      "memoryGB": 94,
+      "memoryBandwidthGBs": 3938,
+      "tdpW": 400,
+      "process": "TSMC 4N",
+      "pricing": {
+        "street": {
+          "usd": 22000,
+          "asOf": "2026-08",
+          "source": "https://www.amcompute.com/appraisals/h100-nvl",
+          "note": "Used, reported sales, low confidence: American Compute puts used H100 NVL sales at $21,000-$23,000 over the 12 months to August 2026; the midpoint is shown. Asks are far higher: a reseller's pull of four US eBay listings in September 2026 found $29,500-$39,999. New cards were listed at $28,999-$36,299 in October 2026, out of stock, and Cisco discontinued its H100 NVL part in August 2026. NVIDIA published no price."
+        }
+      },
+      "sources": [
+        "https://www.nvidia.com/en-us/data-center/h100/ -- H100 NVL column (per GPU): \"FP64 30 teraFLOPs | FP32 60 teraFLOPs | TF32 Tensor Core* 835 teraFLOPs | BFLOAT16 Tensor Core* 1,671 teraFLOPS | FP16 Tensor Core* 1,671 teraFLOPS | FP8 Tensor Core* 3,341 teraFLOPS | INT8 Tensor Core* 3,341 TOPS | GPU Memory 94GB | GPU Memory Bandwidth 3.9TB/s\"; \"* With sparsity\"",
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/h100/PB-11773-001_v01.pdf -- product brief, March 2024: \"PCIe 16-pin cable strapped for 450 W or 600 W power mode: > 400 W maximum (default) ... PCIe 16-pin cable strapped for 300 W power mode: > 310 W maximum (default)\"; \"GPU clocks Base: 1,080 MHz Boost: 1,785 MHz\"; \"Memory clock 2,619 MHz | Memory type HBM3\"; 3,938 GB/s",
+        "https://dam-cdn.nvd.orangelogic.com/AssetLink/mfj81tsm68n0ne632upmuvirso3ta3g3.pdf -- H100 datasheet footnote: \"* Shown with sparsity. Specifications 1/2 lower without sparsity.\"",
+        "https://github.com/NVIDIA/trt-samples-for-hackathon-cn/blob/a7d5daeef6549ee0fe731b7fe0d944e4f5da20a3/cookbook/90-Misc/DeviceInfo/output/h100-nvl.txt -- NVIDIA's own deviceQuery dump: \"multiProcessorCount = 132\", \"memoryBusWidth = 6016\", \"totalGlobalMem = 99949805568\", \"name = b'NVIDIA H100 NVL'\"",
+        "https://investor.nvidia.com/news/press-release-details/2023/NVIDIA-Launches-Inference-Platforms-for-Large-Language-Models-and-Generative-AI-Workloads/default.aspx -- 2023-03-21: \"The H100 NVL GPU also is expected in the second half of the year.\"",
+        "https://www.amcompute.com/appraisals/h100-nvl (street price, data through 2026-08)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.nvidia.com/en-us/data-center/h100/",
+        "values": {
+          "fp64": 30,
+          "fp32": 60,
+          "tf32": 417.5,
+          "tf32:sparse": 835,
+          "fp16": 835.5,
+          "fp16:sparse": 1671,
+          "bf16": 835.5,
+          "bf16:sparse": 1671,
+          "fp8": 1670.5,
+          "fp8:sparse": 3341,
+          "int8": 1670.5,
+          "int8:sparse": 3341
+        },
+        "note": "Per GPU. NVIDIA prints only the sparse figures for the NVL; the dense ones are half, by NVIDIA's own footnote for this table. These are NVIDIA's current ratings, about 84% of the per-GPU figures in its March 2023 launch table (which described the bridged pair: 188 GB, 7.8 TB/s, 1,979 sparse BF16 per GPU); do not halve the pair figures. The rating is not a hard limit: a 3-second mma.sync burst test on an H100 NVL measured about 977 TFLOPS FP16 and 1,410 TOPS INT8 dense (ReinForce-II/mmapeak), above these figures, while a card capped at 310 W fell to about 700 MHz under sustained load (infervisor/plow)."
+      },
+      "note": "GH100 with 132 SMs, the same as the SXM card (not the H100 PCIe's 114). The marketed 94 GB is what CUDA reports as 93.1 GiB. Power depends on the cable: 400 W by default with a 450 W or 600 W strapped 16-pin cable, 310 W with a 300 W one. Two cards join over three NVLink bridges and appear as two GPUs. Announced 2023-03-21 for the second half of the year; the first-ship month is not sourced."
+    },
+    {
       "id": "h20",
       "label": "H20 96GB (HGX)",
       "vendor": "NVIDIA",
@@ -2497,18 +2588,22 @@
       "pricing": {
         "msrp": {
           "usd": 15000,
-          "asOf": "2026-08"
+          "asOf": "2026-08",
+          "note": "Not AMD's figure: AMD publishes no price for Instinct accelerators. $15,000 is a figure repeated by price-aggregator sites."
         },
         "street": {
-          "usd": 12000,
-          "asOf": "2026-08",
-          "note": "Launched street $10,000-$15,000; current market ~$18,000."
+          "usd": 30000,
+          "asOf": "2026-10",
+          "source": "https://gpudojo.com/mi300x",
+          "note": "Used, asking, low confidence: the lowest eBay ask on GPUDojo's tracker was $29,999.99 on 2026-10-09 and 2026-10-14; it had been $17,000 every week from 2026-09-11 to 2026-10-02, and $19,000-$20,000 in late August. GPUPoet listed four live asks at $27,500-$34,650 (2026-10-15). No completed sales were found, and American Compute publishes no value for this card. It is an OAM module that runs only on an OAM baseboard (an 8-GPU UBB server), so standalone prices are scarce."
         }
       },
       "sources": [
         "https://en.wikipedia.org/wiki/AMD_Instinct",
         "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
-        "https://www.amd.com/en/products/accelerators/instinct/mi300/mi300x.html"
+        "https://www.amd.com/en/products/accelerators/instinct/mi300/mi300x.html",
+        "https://gpudojo.com/mi300x (street price, 2026-10-14)",
+        "https://gpupoet.com/gpu/shop/amd-instinct-mi300x -- \"Prices are live asking prices from eBay and Amazon ... not sold prices\" (2026-10-15)"
       ],
       "note": "Reference only — no benchmarks on this page. 192 GB in one OAM module clears gpt-oss-120B without a multi-card split. TBP rather than TDP in AMD's wording.",
       "arch": "cdna3",
@@ -2753,6 +2848,54 @@
         },
         "source": "https://www.nvidia.com/en-us/data-center/l40s/"
       }
+    },
+    {
+      "id": "l4",
+      "label": "L4 24GB",
+      "vendor": "NVIDIA",
+      "arch": "ada",
+      "released": "2023-03",
+      "memoryGB": 24,
+      "memoryBandwidthGBs": 300,
+      "tdpW": 72,
+      "process": "TSMC 4N",
+      "pricing": {
+        "street": {
+          "usd": 3599,
+          "asOf": "2026-10",
+          "source": "https://gpudojo.com/l4",
+          "note": "New, asking: the lowest Newegg offer on GPUDojo's tracker (2026-10-14). Used asks are higher right now: the lowest eBay offer was $4,599, up from $3,500 in August. Completed sales were far lower: American Compute puts used L4 sales at $2,100-$2,400 over the 12 months to August 2026 (amcompute.com/appraisals/l4-pcie). NVIDIA published no price."
+        }
+      },
+      "sources": [
+        "https://images.nvidia.com/aem-dam/Solutions/Data-Center/l4/nvidia-ada-gpu-architecture-whitepaper-v2.1.pdf -- Appendix D, Table 5 \"NVIDIA L4 GPU vs NVIDIA T4\": AD104, \"SMs 40 58\", \"GPU Memory Bandwidth 320 GB/s 300 GB/s\", \"FP32 Performance 8.1 TFLOPS 30.3 TFLOPS\"; dense | sparse tensor rates TF32 60 | 120, FP16 and BF16 121 | 242, FP8 and INT8 242 | 485, INT4 484 | 969, footnote \"Effective TOPS / TFLOPS using the new Sparsity Feature\"",
+        "https://www.nvidia.com/en-us/data-center/l4/ -- \"FP16 Tensor Core | 242 teraFLOPS* ... INT8 Tensor Core | 485 TOPs* | GPU memory | 24GB | GPU memory bandwidth | 300GB/s\"; \"* Shown with sparsity. Specifications are one-half lower without sparsity.\"",
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/l4/PB-11316-001_v01.pdf -- product brief, March 2023: \"Total board power 72 W default 72 W maximum 40 W minimum\"; \"GPU clocks Base: 795 MHz Boost: 2,040 MHz\"; \"Memory bus width 192 bits | Peak memory bandwidth 300 GB/sec\"",
+        "https://nvidianews.nvidia.com/news/nvidia-launches-inference-platforms-for-large-language-models-and-generative-ai-workloads -- launch, 2023-03-21",
+        "https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/ec2/USD/current/ec2-ondemand-without-sec-sel/US%20East%20(N.%20Virginia)/Linux/index.json -- g6.xlarge (1x L4) \"price\": \"0.8048000000\" (feed published 2026-10-12)",
+        "https://gpudojo.com/l4 (street price, 2026-10-14)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://images.nvidia.com/aem-dam/Solutions/Data-Center/l4/nvidia-ada-gpu-architecture-whitepaper-v2.1.pdf",
+        "values": {
+          "fp32": 30.3,
+          "tf32": 60,
+          "tf32:sparse": 120,
+          "fp16": 121,
+          "fp16:sparse": 242,
+          "bf16": 121,
+          "bf16:sparse": 242,
+          "fp8": 242,
+          "fp8:sparse": 485,
+          "int8": 242,
+          "int8:sparse": 485,
+          "int4": 484,
+          "int4:sparse": 969
+        },
+        "note": "Dense and sparse pairs as NVIDIA prints them in the Ada whitepaper's L4 appendix; the product page gives only the sparse figures. At the 2,040 MHz boost. NVIDIA does not state the accumulate mode; 121 dense FP16 is the full Ada per-SM rate. One operator found the card pinned at its 72 W cap and about 1,845 MHz during speculative decoding, about 90% of the boost clock."
+      },
+      "note": "AD104 with 58 SMs; single-slot, low-profile, passively cooled, 72 W. GDDR6 ECC is on by default; one operator measured about 10% more decode with it off. In the cloud: AWS g6.xlarge (one L4) is $0.805 an hour on demand in us-east-1 (October 2026); GCP g2-standard-4 is about $0.71 (a third-party copy of Google's price list, 2026-10-11)."
     },
     {
       "id": "radeon_pro_v620",
@@ -3475,6 +3618,45 @@
         "note": "Dense, at the reference 1,545 MHz boost: modded cards are rebuilt on assorted donor boards, so the reference column is the safer default (Founders Edition figures are about 6% higher). FP16 is the FP16-accumulate rate; with FP32 accumulate this GeForce part runs at half (53.8). The memory mod does not change compute. No sparsity on Turing."
       },
       "note": "Not an NVIDIA product. NVIDIA only shipped the 2080 Ti with 11 GB; this is an aftermarket rework replacing each 1 GB GDDR6 package with a 2 GB one, changing the density straps and flashing a matching VBIOS. Bandwidth is the stock card's 616 GB/s, which every source says is unchanged on the same 352-bit bus, but nobody has published a measurement on a modded card. Released is the stock card's date. Donor boards (often blower \"Turbo\" cards) vary in clocks and power limits, and seller claims about drivers and firmware are untested. No BF16 or FP8: FP8 checkpoints run as 16-bit weights."
+    },
+    {
+      "id": "t4",
+      "label": "Tesla T4 16GB",
+      "vendor": "NVIDIA",
+      "arch": "turing",
+      "released": "2018-09",
+      "memoryGB": 16,
+      "memoryBandwidthGBs": 320,
+      "tdpW": 70,
+      "process": "TSMC 12nm FFN",
+      "pricing": {
+        "street": {
+          "usd": 450,
+          "asOf": "2026-10",
+          "source": "https://gpudojo.com/t4",
+          "note": "Used, asking: the lowest eBay offer on GPUDojo's tracker (2026-10-14); weekly lowest asks ran $395-$450 in September and October 2026, down from $600 in April. Completed sales were higher: American Compute puts used T4 sales at $510-$580 over the 12 months to August 2026 (amcompute.com/appraisals/tesla-t4). NVIDIA published no launch price; the \"$2,299 launch MSRP\" on some trackers traces to nothing verifiable."
+        }
+      },
+      "sources": [
+        "https://images.nvidia.com/aem-dam/en-zz/Solutions/design-visualization/technologies/turing-architecture/NVIDIA-Turing-Architecture-Whitepaper.pdf -- Table 5 (Tesla T4 column): \"SMs 40\", \"GPU Base Clock MHz 585\", \"GPU Boost Clock MHz 1,590\", \"Peak FP32 TFLOPS 8.1\", \"Peak FP16 Tensor TFLOPS with FP16 Accumulate 65\", \"...with FP32 Accumulate 65\", \"Peak INT8 Tensor TOPS 130\", \"Peak INT4 Tensor TOPS 260\"; Appendix A: \"a 256-bit memory interface and a 10 Gbps memory data rate for a total bandwidth of 320 GB/s\"",
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/tesla-t4/t4-tensor-core-datasheet-951643.pdf -- \"Mixed-Precision (FP16/FP32) 65 TFLOPS | INT8 130 TOPS | INT4 260 TOPS | GPU Memory 16 GB GDDR6 300 GB/sec\"; 70 W",
+        "https://www.nvidia.com/en-us/data-center/tesla-t4/ -- \"Single Precision Performance (FP32) 8.1 TFLOPS | Mixed Precision (FP16/FP32) 65 FP16 TFLOPS | INT8 Precision 130 INT8 TOPS | INT4 Precision 260 INT4 TOPS\"",
+        "https://nvidianews.nvidia.com/news/new-nvidia-data-center-inference-platform-to-fuel-next-wave-of-ai-powered-services -- launch, 2018-09-12 (\"75-watt\")",
+        "https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/ec2/USD/current/ec2-ondemand-without-sec-sel/US%20East%20(N.%20Virginia)/Linux/index.json -- g4dn.xlarge (1x T4) \"price\": \"0.5260000000\" (feed published 2026-10-12)",
+        "https://gpudojo.com/t4 (street price, 2026-10-14)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://images.nvidia.com/aem-dam/en-zz/Solutions/design-visualization/technologies/turing-architecture/NVIDIA-Turing-Architecture-Whitepaper.pdf",
+        "values": {
+          "fp32": 8.1,
+          "fp16": 65,
+          "int8": 130,
+          "int4": 260
+        },
+        "note": "Dense, at the 1,590 MHz boost clock. FP16 is 65 with FP16 or FP32 accumulate. NVIDIA's own whitepaper says the 585 MHz base clock is \"the lowest clock that would typically be seen in very stressful inferencing workloads\"; at that clock the same tensor cores give about 24, 48 and 96 TOPS (FP16, INT8, INT4), so a 70 W T4 can sit well below these ceilings. No sparsity on Turing."
+      },
+      "note": "TU104 with 40 SMs; single-slot, passively cooled, 70 W, so it needs server airflow. NVIDIA's figures disagree with each other: the datasheet PDF says 300 GB/s and the whitepapers 320 GB/s (256-bit at 10 Gbps), which is used; the 2018 press release says 75 W, the datasheet 70 W. In the cloud: AWS g4dn.xlarge (one T4) is $0.526 an hour on demand in us-east-1 (October 2026)."
     }
   ],
   "lines": [
@@ -9178,6 +9360,517 @@
           "value": 22.4,
           "confidence": "m~",
           "note": "\"16K\" tier"
+        }
+      ]
+    },
+    {
+      "id": "x_t4x2_qwen38_27b_q4kxl_mtp",
+      "label": "Qwen3.8 27B · UD-Q4_K_XL · llama.cpp · MTP n=2 · 2× T4, tensor split",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "t4",
+            "count": 2
+          }
+        ],
+        "interconnect": {
+          "kind": "pcie",
+          "note": "Kaggle notebook; no NVLink."
+        },
+        "host": {
+          "note": "Kaggle 2x T4 (15,360 MiB each as reported). Clocks and power not reported."
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "0d9ceae",
+        "lineage": "upstream",
+        "note": "CUDA; llama-server -sm tensor -fa on -c 131072 -np 1 --spec-type draft-mtp --spec-draft-n-max 2. Built from a shallow clone, so the build number is meaningless."
+      },
+      "quant": {
+        "format": "UD-Q4_K_XL (Unsloth, MTP head inline)",
+        "key": "q4_k_xl",
+        "bpw": 5.248,
+        "sizeGB": 17.92,
+        "note": "Width from the file (unsloth/Qwen3.8-27B-GGUF, Qwen3.8-27B-UD-Q4_K_XL.gguf, 17,923,394,624 bytes) over the 27.32B parameters llama-bench reports, which include the MTP layer; the ceiling counts the 26.9B base parameters at that width, slightly under the file."
+      },
+      "kvCache": {
+        "k": "q8_0",
+        "v": "q8_0"
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 2
+      },
+      "status": "measured",
+      "observed": "2026-08-16",
+      "recorded": "2026-10-15",
+      "parallel": {
+        "mode": "tensor",
+        "degree": 2
+      },
+      "hazards": [
+        "Single run per server row. At the 27,274-token prompt only 20,916 tokens were evaluated; the rest was apparently reused from the previous request's prompt cache. That reading of the raw JSON is ours, not the author's.",
+        "Free Kaggle hardware: clocks, power and throttling are unreported, and a T4 at its 70 W cap can run far below its boost clock."
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/Ekansh-K/Kinffer/blob/ada7f093a4109ef373f9688c4942493a3440cfa3/config/FINAL_SETUP.md (raw: config/ctx128_summary.json and config/tps_ab_summary_v1.json): \"| ~27k filler + task | 27274 | **19.10** | ... | 82.3% | 389 |\"; \"\\\"prompt_tokens\\\": 27274, ... \\\"eval_tps\\\": 19.1, \\\"pp_tokens\\\": 20916, \\\"pp_tps\\\": 389.16\"; llama-bench \"tensor | 1 | pp512 | 513.72 ± 1.10\", \"tg128 | 16.37 ± 0.46\""
+      },
+      "note": "The same llama-bench run with a layer split gave 314.28 tok/s pp512 and 12.75 tok/s tg128; tensor split wins on both. The author's figures at about 50K and 128K (13-15 and 7-8 tok/s) are not recorded here because the source gives them as ranges without raw data.",
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 513.72,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "reps": 3,
+          "note": "llama-bench pp512, speculation off"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 16.37,
+          "confidence": "m~",
+          "spec": "off",
+          "reps": 3,
+          "note": "llama-bench tg128 from an empty context"
+        },
+        {
+          "metric": "prefill",
+          "depth": 6874,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 453.16,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "reps": 1,
+          "note": "6,832 of the 6,874 prompt tokens evaluated"
+        },
+        {
+          "metric": "decode",
+          "depth": 6874,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 27.53,
+          "confidence": "m~",
+          "acceptance": 0.84,
+          "reps": 1,
+          "note": "128 tokens generated"
+        },
+        {
+          "metric": "prefill",
+          "depth": 16816,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 389.16,
+          "confidence": "m~",
+          "prefillBasis": "new-tokens",
+          "reps": 1,
+          "depthNote": "20,916 tokens appended after about 6,358 cached, ending at 27,274; the depth is the midpoint of the appended span, where the ceiling's per-token attention cost averages out."
+        },
+        {
+          "metric": "decode",
+          "depth": 27274,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 19.1,
+          "confidence": "m~",
+          "acceptance": 0.823,
+          "reps": 1,
+          "note": "128 tokens generated"
+        }
+      ]
+    },
+    {
+      "id": "x_t4_qwen38_27b_iq3xxs_colab",
+      "label": "Qwen3.8 27B · GSQ-RCO IQ3_XXS · llama.cpp · T4 (Colab free tier)",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "t4",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "Google Colab free tier: 2 vCPU, 12 GB RAM, driver 580 / CUDA 13."
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "version": "b11398 or b11399",
+        "lineage": "upstream",
+        "note": "Official prebuilt Linux CUDA 12.x release; the guide tested both builds without saying which produced these rows. llama-bench, -ngl 99, -t 2; flash attention not stated."
+      },
+      "quant": {
+        "format": "GSQ-RCO IQ3_XXS (ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF, 10.1 GB)",
+        "key": "iq",
+        "bpw": 3,
+        "note": "Bits per weight from the guide's 10.1 GB over 26.9B parameters, reading GB as decimal; if it means GiB the width is 3.23 and the ceiling about 7% lower."
+      },
+      "status": "measured",
+      "observed": "2026-10-04",
+      "recorded": "2026-10-15",
+      "hazards": [
+        "Ranges, not means: the guide reports low and high only. Peak VRAM was 10.3 GB and about 64K tokens was the most context that loaded (128K ran out of memory); no speed was measured at depth."
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/Pukujan/Eval-lab/blob/06012a6f925ef3a5bc774cad9e9af47a096b3909/docs/compute/colab-cli.md (\"Written by colab-cli on 2026-10-04 from real runs\"): \"| Qwen3.8-27B GSQ-RCO | IQ3_XXS 10.1 GB (ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF) | T4 GPU | 253–266 | 8.1–8.6 | 10.3 GB | ~64K (128K OOM) |\""
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            253,
+            266
+          ],
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            8.1,
+            8.6
+          ],
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ]
+    },
+    {
+      "id": "x_l4_qwen36_35b_a3b_q4kxl_mtp",
+      "label": "Qwen3.6 35B-A3B · UD-Q4_K_XL · llama.cpp · MTP n=2 · L4 (GCP)",
+      "model": "qwen36_35b_a3b",
+      "rig": {
+        "units": [
+          {
+            "unit": "l4",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "GCP g2-standard-8 (8 vCPU, 32 GB RAM), GDDR6 ECC disabled."
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "lineage": "upstream",
+        "note": "Official Docker image ghcr.io/ggml-org/llama.cpp:server-cuda, which tracks master; commit not recorded. --ctx-size 56320 --parallel 1 --flash-attn on -ngl 99 -ub 64 -b 512 --spec-type draft-mtp --spec-draft-n-max 2."
+      },
+      "quant": {
+        "format": "UD-Q4_K_XL (Unsloth, MTP head inline, about 22 GiB)",
+        "key": "q4_k_xl",
+        "bpw": 5.161,
+        "note": "Width of Unsloth's non-MTP file of the same recipe (22,360,456,160 bytes over 34.66B parameters); the MTP file is a little larger, so the ceiling is slightly generous."
+      },
+      "kvCache": {
+        "k": "f16",
+        "v": "f16"
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 2
+      },
+      "status": "measured",
+      "observed": "2026-08",
+      "recorded": "2026-10-15",
+      "hazards": [
+        "Short prompts whose length is not stated (\"greedy, prompt cache disabled, a fresh generation per request, 256 tokens, 2-rep average\"), so these are near-empty-context rates. Draft acceptance runs from 0.77 (chat) to about 0.90 (math).",
+        "With MTP on, the card sat at its 72 W cap (71.6 W) and about 1,845 MHz."
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/hanxiao/Qwen3.6-35B-A3B-MTP-L4/blob/67df5719cef7d92518734c77bba9823ba762b215/README.md (repo head dated 2026-08-24): \"| Chat / dialogue | **90.6** ← min | ... | Math / reasoning | **98.8** ← max |\"; \"Raw decode ceiling ≈ 73 tok/s (ECC-off). `llama-bench`, no speculation, full GPU residency: `tg ≈ 73 tok/s`\" and \"It was 65.5 with ECC on\""
+      },
+      "note": "With ECC on (the default), the same llama-bench decode was 65.5 tok/s. Ten parallel slots at a 16K slot size gave 91.3 tok/s in total (9.1 each); not recorded as a reading because the depth is not stated. The 56,320-token context is the most that fit with F16 cache and every expert on the GPU.",
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 73,
+          "confidence": "m~",
+          "spec": "off",
+          "note": "llama-bench tg; the source writes \"≈ 73\""
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            90.6,
+            98.8
+          ],
+          "confidence": "m~",
+          "reps": 2,
+          "note": "Across four workloads: chat 90.6, prose 92.5, code 93.0, math 98.8.",
+          "depthNote": "Short prompts; length not stated."
+        }
+      ]
+    },
+    {
+      "id": "x_l4_qwen25_3b_q8_gcp",
+      "label": "Qwen2.5 3B · Q8_0 · llama.cpp · L4 (GCP)",
+      "model": "qwen25_3b",
+      "rig": {
+        "units": [
+          {
+            "unit": "l4",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "GCP g2-standard-32 (32 vCPU, 128 GB RAM), us-central1-b. The card reports 23,034 MiB, consistent with ECC on."
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "lineage": "upstream",
+        "note": "CUDA; version not recorded in the published doc. A reference row in a project benchmarking its own engine."
+      },
+      "quant": {
+        "format": "Q8_0 (qwen2.5-3b-instruct-q8_0.gguf)",
+        "key": "q8_0"
+      },
+      "status": "measured",
+      "observed": "2026-06-29",
+      "recorded": "2026-10-15",
+      "hazards": [
+        "One figure each, with no repetitions or spread given."
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/anthony-chaudhary/fak/blob/b9d13aa551276cef2b72d87590198872f598c2aa/docs/benchmarks/GCP-L4-RESULTS.md (run 20260629T132955Z): \"| llama.cpp | llama.cpp CUDA | Q8_0 | 6,638.3 | 70.8 |\""
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 6638.3,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 70.8,
+          "confidence": "m~",
+          "note": "tg128 from an empty context"
+        }
+      ]
+    },
+    {
+      "id": "x_a100pcie40x2_gemma4_31b_vllm_rcc",
+      "label": "Gemma 4 31B · BF16 · vLLM 0.26.0 (eager) · 2× A100 40GB PCIe, TP2",
+      "model": "gemma4_31b",
+      "rig": {
+        "units": [
+          {
+            "unit": "a100_40_pcie",
+            "count": 2
+          }
+        ],
+        "host": {
+          "note": "UChicago Research Computing Center, node beagle3-0010; the GPU name \"NVIDIA A100-PCIE-40GB\" is stamped from nvidia-smi. Whether the pair is NVLink-bridged is not stated."
+        }
+      },
+      "engine": {
+        "name": "vLLM",
+        "version": "0.26.0",
+        "lineage": "upstream",
+        "note": "--enforce-eager (no CUDA graphs), --enable-prefix-caching, --max-model-len 16384, --gpu-memory-utilization 0.9; vllm bench at max_concurrency 64."
+      },
+      "quant": {
+        "format": "BF16",
+        "key": "bf16"
+      },
+      "status": "measured",
+      "observed": "2026-08-20",
+      "recorded": "2026-10-15",
+      "parallel": {
+        "mode": "tensor",
+        "degree": 2
+      },
+      "hazards": [
+        "The authors call this row understated: --enforce-eager was a workaround for a crash that cannot occur on sm80, and two 40 GB cards leave only 4.71 GiB (26,342 tokens) of KV cache for 64 concurrent requests."
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/rcc-uchicago/rcc-vllm/blob/d56fe4ca23b7fd9c7c1c319a5f87479e67a206af/billing/rate_table.json (job 53707470, 2026-08-20T09:53:16-0500): prefill_tps 3336.88, decode_tps 336.21, gpu_name \"NVIDIA A100-PCIE-40GB\"; CHANGELOG.md: \"both gemma4_31B rate rows (a40, a100) are understated\""
+      },
+      "note": "Decode under the same run was 336.21 tok/s in total across up to 64 requests of 64 tokens in and 1,024 out, but the cache could not hold 64 such requests at once, so the number of streams actually decoding is unknown and it is not recorded as a reading.",
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 2048,
+          "streams": 64,
+          "basis": "aggregate",
+          "value": 3336.88,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "Prefill-heavy profile: 2,048 tokens in, 8 out, at up to 64 concurrent requests."
+        }
+      ]
+    },
+    {
+      "id": "x_h100nvl_qwen38_27b_bf16_vllm",
+      "label": "Qwen3.8 27B · BF16 · vLLM 0.28.0 · H100 NVL",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "h100_nvl",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "Azure NC-series VM (95,830 MiB reported)."
+        }
+      },
+      "engine": {
+        "name": "vLLM",
+        "version": "0.28.0",
+        "commit": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+        "lineage": "upstream",
+        "note": "Model Runner V2; max_model_len 32768, max_num_seqs 16, max_num_batched_tokens 16384."
+      },
+      "quant": {
+        "format": "BF16 (Qwen/Qwen3.8-27B at 1d4bf0f2)",
+        "key": "bf16"
+      },
+      "spec": {
+        "method": "none"
+      },
+      "status": "measured",
+      "observed": "2026-09-06",
+      "recorded": "2026-10-15",
+      "hazards": [
+        "Thinking-mode answers to 64 HumanEval+ and MATH-500 tasks: prompts average about 164 tokens and answers about 2,900 (95th percentile 13-16K), so most decoding is shallow. Rates are from client TPOT p50, median of three seeds."
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/david-xinyuwei/david-share/blob/a769875051b79a5d1a4e3a123cafdedc7fc77385/Deep-Learning/Speculative-Decoding/README.md (data: experiments/20260906-qwen38/data/groups.json): baseline TPOT p50 18.57 ms at concurrency 1 and 20.8 ms at 8; output throughput 53.4 and 287.72 tok/s"
+      },
+      "note": "The same harness with speculation: Qwen's own MTP head drafting 7 tokens gave 113.34 output tok/s at concurrency 1, and a DFlash2 drafter (7 tokens) 150.51, against 53.4 without; at concurrency 8, 565.24 and 741.07 against 287.72. Those are output tokens over wall time, prefill and length-stopped answers included.",
+      "results": [
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 53.85,
+          "confidence": "m~",
+          "reps": 3,
+          "note": "1,000 / 18.57 ms TPOT p50.",
+          "depthNote": "164-token prompts on average, answers of about 2,900 tokens on average (95th percentile 13-16K)."
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 8,
+          "basis": "per-stream",
+          "value": 48.08,
+          "confidence": "m~",
+          "reps": 3,
+          "note": "1,000 / 20.8 ms TPOT p50 at concurrency 8.",
+          "depthNote": "As above."
+        }
+      ]
+    },
+    {
+      "id": "x_h100nvlx2_qwen38_27b_vllm_rcc",
+      "label": "Qwen3.8 27B · BF16 · vLLM 0.26.0 · 2× H100 NVL, TP2",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "h100_nvl",
+            "count": 2
+          }
+        ],
+        "interconnect": {
+          "kind": "nvlink",
+          "bridge": "NVLink bridge, implied by the changelog: the crash it works around affects \"NVLink-bridged H100/H200, TP>=2\""
+        },
+        "host": {
+          "note": "UChicago Research Computing Center, node midway3-0423; the GPU name \"NVIDIA H100 NVL\" is stamped from nvidia-smi."
+        }
+      },
+      "engine": {
+        "name": "vLLM",
+        "version": "0.26.0",
+        "lineage": "upstream",
+        "note": "--compilation-config '{\"pass_config\":{\"fuse_allreduce_rms\":false}}' (CUDA graphs FULL_AND_PIECEWISE), --enable-prefix-caching, --max-model-len 32768, --gpu-memory-utilization 0.9; vllm bench at max_concurrency 64."
+      },
+      "quant": {
+        "format": "BF16",
+        "key": "bf16"
+      },
+      "status": "measured",
+      "observed": "2026-08-20",
+      "recorded": "2026-10-15",
+      "parallel": {
+        "mode": "tensor",
+        "degree": 2
+      },
+      "hazards": [
+        "The repository's own notes call this node \"H100 80GB\" in places; the nvidia-smi stamp in the rate table says H100 NVL and is taken as authoritative.",
+        "In vLLM 0.26.0 the FlashInfer allreduce+RMSNorm fusion crashes on NVLink-bridged H100s at TP>=2. The first workaround, --enforce-eager, cut decode to 894.7 tok/s; turning off only that fusion restored 3,492.74."
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/rcc-uchicago/rcc-vllm/blob/d56fe4ca23b7fd9c7c1c319a5f87479e67a206af/billing/rate_table.json (job 53729212, gpu_name \"NVIDIA H100 NVL\"): prefill_tps 11827.9, decode_tps 3492.74; CHANGELOG.md on the fusion crash and workaround"
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 2048,
+          "streams": 64,
+          "basis": "aggregate",
+          "value": 11827.9,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "Prefill-heavy profile: 2,048 tokens in, 8 out, at up to 64 concurrent requests."
+        },
+        {
+          "metric": "decode",
+          "depth": 576,
+          "streams": 64,
+          "basis": "aggregate",
+          "value": 3492.74,
+          "confidence": "m~",
+          "note": "Decode-heavy profile: 64 tokens in, 1,024 out, at up to 64 concurrent requests.",
+          "depthNote": "Each stream grows from 64 to 1,088 tokens; 576 is the midpoint."
         }
       ]
     }
