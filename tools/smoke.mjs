@@ -458,6 +458,20 @@ check('one row per reading', (await count('#obsTable tr.pt')) === totalPoints, `
   await settle();
 }
 
+// "With speculation" drops exactly the decode readings taken without it, and no prefill.
+{
+  const specOn = (l, p) => !!l.spec && l.spec.method !== 'none' && p.spec !== 'off';
+  const want = model.LINES.reduce((n, l) => n + l.points.filter(p => p.metric !== 'decode' || specOn(l, p)).length, 0);
+  const wantDecode = model.LINES.reduce((n, l) => n + l.points.filter(p => p.metric === 'decode' && specOn(l, p)).length, 0);
+  await page.click('#obsSpecChips button:has-text("With speculation")');
+  await settle();
+  const rows = await page.locator('#obsTable tr.pt td:first-child').allTextContents();
+  check('the speculation filter keeps spec-on decode and all prefill', rows.length === want && rows.filter(t => t.startsWith('Decode')).length === wantDecode && wantDecode > 0, `${rows.length} rows for ${want}`);
+  check('and it is in the address', /ospec=on/.test(await page.evaluate(() => location.hash)));
+  await page.click('#obsSpecChips button:has-text("All")');
+  await settle();
+}
+
 {
   await page.selectOption('#obsModel', '__none');
   await settle();

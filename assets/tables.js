@@ -324,6 +324,11 @@ export function obsMatches(l, r, s) {
   if (s.obsModel === '__none' ? l.model != null : s.obsModel && l.model !== s.obsModel) return false;
   if (s.obsMetric !== 'all' && r.metric !== s.obsMetric) return false;
   if (s.obsProv !== 'all' && l.provenance.attestation !== s.obsProv) return false;
+  // Speculation is a property of decode; prefill readings pass either way.
+  if (s.obsSpec !== 'all' && r.metric === 'decode') {
+    const on = !!l.spec && l.spec.method !== 'none' && r.spec !== 'off';
+    if (on !== (s.obsSpec === 'on')) return false;
+  }
   return true;
 }
 

@@ -72,6 +72,7 @@ const DEFAULTS = {
   obsModel: '',
   obsMetric: 'all',
   obsProv: 'all',
+  obsSpec: 'all',
 };
 
 // --- state <-> address --------------------------------------------------------
@@ -116,10 +117,11 @@ function readState() {
     obsModel: str('om'),
     obsMetric: str('omet', ['all', 'decode', 'prefill']),
     obsProv: str('oprov', ['all', 'witnessed', 'reported']),
+    obsSpec: str('ospec', ['all', 'on', 'off']),
   };
 }
 // The keys DEFAULTS uses under their address names.
-Object.assign(DEFAULTS, { link: null, bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all' });
+Object.assign(DEFAULTS, { link: null, bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all', ospec: 'all' });
 
 function writeState(s) {
   const q = new URLSearchParams();
@@ -149,6 +151,7 @@ function writeState(s) {
   put('om', s.obsModel, '');
   put('omet', s.obsMetric, 'all');
   put('oprov', s.obsProv, 'all');
+  put('ospec', s.obsSpec, 'all');
   const hash = q.toString();
   // A default view leaves a section anchor alone.
   if (!hash && location.hash && !isStateHash(location.hash.slice(1))) return;
@@ -411,6 +414,10 @@ try {
     });
     chips('obsProvChips', [{ v: 'all', label: 'All' }, { v: 'witnessed', label: 'Witnessed' }, { v: 'reported', label: 'Reported' }], v => state.obsProv === v, v => {
       state.obsProv = v;
+      update('obs');
+    });
+    chips('obsSpecChips', [{ v: 'all', label: 'All' }, { v: 'on', label: 'With speculation' }, { v: 'off', label: 'Without' }], v => state.obsSpec === v, v => {
+      state.obsSpec = v;
       update('obs');
     });
     renderObservations(model, state);
