@@ -290,6 +290,24 @@ check('clearing filters empties the slider boxes', (await page.locator('#bwRange
   await settle();
 }
 
+// Every vendor has its own colour, on its chip and on its chart points; a new
+// vendor with no token would fall back to the muted mark and fail here.
+{
+  const vendors = [...new Set(model.UNITS.map(u => u.vendor ?? 'Other'))];
+  const seen = await page.evaluate(() => {
+    const mute = getComputedStyle(document.documentElement).getPropertyValue('--mute-mark').trim();
+    const dots = [...document.querySelectorAll('#vendorChips button')].map(b => ({ v: b.textContent.trim(), c: b.querySelector('.vdot')?.style.getPropertyValue('--c') }));
+    const c = Chart.getChart('scatterChart');
+    const onDs = c.data.datasets.findIndex(d => d.labelPoints);
+    const pts = c.getDatasetMeta(onDs).data.map((el, i) => ({ v: c.data.datasets[onDs].data[i].vendor, c: el.options.backgroundColor }));
+    return { mute, dots, pts };
+  });
+  const colours = new Set(seen.dots.map(d => d.c));
+  check('every vendor chip has its own colour', seen.dots.length === vendors.length && seen.dots.every(d => d.c && d.c !== seen.mute) && colours.size === vendors.length, JSON.stringify(seen.dots));
+  const byVendor = new Map(seen.dots.map(d => [d.v, d.c]));
+  check('chart points wear their vendor colour', seen.pts.length > 0 && seen.pts.every(p => p.c === byVendor.get(p.v)), JSON.stringify(seen.pts.filter(p => p.c !== byVendor.get(p.v)).slice(0, 3)));
+}
+
 // Vendor chips hide and restore.
 {
   const nv = model.UNITS.filter(u => u.vendor === 'NVIDIA').length;

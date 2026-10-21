@@ -18,7 +18,7 @@ import {
   bpwOf,
   fmtGiB,
 } from './ceiling.js';
-import { renderScatter, renderDepth, LAYOUT_COLOR } from './charts.js';
+import { renderScatter, renderDepth, LAYOUT_COLOR, vendorColor } from './charts.js';
 import { rangeSlider, slider } from './sliders.js';
 import {
   unitMatch,
@@ -163,7 +163,7 @@ function chips(id, items, isOn, onPick, cls = () => '') {
   // Rebuilding the row would drop keyboard focus to the page; put it back.
   const focused = host.contains(document.activeElement) ? document.activeElement.dataset.i : null;
   host.innerHTML = items
-    .map((it, i) => `<button type="button" data-i="${i}" class="${isOn(it.v) ? 'on' : ''} ${cls(it.v)}" aria-pressed="${isOn(it.v)}"${it.title ? ` title="${esc(it.title)}"` : ''}>${esc(it.label)}</button>`)
+    .map((it, i) => `<button type="button" data-i="${i}" class="${isOn(it.v) ? 'on' : ''} ${cls(it.v)}" aria-pressed="${isOn(it.v)}"${it.title ? ` title="${esc(it.title)}"` : ''}>${it.dot ? `<span class="vdot" style="--c:${esc(it.dot)}" aria-hidden="true"></span>` : ''}${esc(it.label)}</button>`)
     .join('');
   if (focused != null) host.querySelector(`[data-i="${focused}"]`)?.focus();
   host.onclick = e => {
@@ -226,7 +226,7 @@ try {
     });
     chips(
       'vendorChips',
-      vendors.map(v => ({ v, label: v, title: 'Click to hide or show' })),
+      vendors.map(v => ({ v, label: v, title: 'Click to hide or show', dot: vendorColor(v) })),
       v => !state.vendorsOff.has(v),
       v => {
         state.vendorsOff.has(v) ? state.vendorsOff.delete(v) : state.vendorsOff.add(v);
@@ -268,9 +268,11 @@ try {
 
     const sc = renderScatter(model.UNITS, new Set(ok.map(u => u.id)), state.scatterPrec);
     el('scatterCap').textContent = `bandwidth vs dense ${FMT_LABEL[state.scatterPrec]} throughput · ${sc.plotted} of ${model.UNITS.length} units have both figures · ${sc.on} plotted match${sc.unofficial ? ` · ${sc.unofficial} of the figures are unofficial (hover a point)` : ''}`;
+    // The legend names each vendor's colour, then says what solid and faint mean.
     el('scatterLegend').innerHTML =
-      `<span><span class="swatch" style="background:var(--s1)"></span>matches the filter (labelled)</span>` +
-      `<span><span class="swatch" style="background:var(--mute-mark)"></span>everything else — hover to name it</span>`;
+      vendors.map(v => `<span><span class="swatch" style="background:${esc(vendorColor(v))}"></span>${esc(v)}</span>`).join('') +
+      `<span>solid and labelled: matches the filters</span>` +
+      `<span><span class="swatch faint" style="background:var(--muted)"></span>faint: filtered out — hover to name it</span>`;
     renderHardwareTable(model, state, matches);
     return ok;
   }

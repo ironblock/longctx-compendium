@@ -6,6 +6,11 @@
   /* chart series: validated on the dark panel (dataviz validate_palette, adjacent + all-pairs for three) */
   --s1:#3987e5; --s2:#d95926; --s3:#199e70;
   --mute-mark:#3a4a5c;
+  /* vendor marks: brand colours (dataviz validate_palette, dark panel, all pairs):
+     CVD worst pair NVIDIA/AMD dE 9.7 deutan, normal-vision floor 20.3, all >= 3:1.
+     Two checks fail on purpose: NVIDIA sits above the lightness band, which is what
+     keeps it apart from AMD's red under deuteranopia, and Apple is its brand grey. */
+  --v-nvidia:#76b900; --v-amd:#ed1c24; --v-intel:#0068b5; --v-apple:#8e959a;
   --mono:'Space Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
   color-scheme: dark;
 }
@@ -89,6 +94,10 @@ input[type=number]{width:96px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .swatch{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
 .swatch.line{width:18px;height:0;border-radius:0;border-top:2px solid}
+.swatch.faint{opacity:.35}
+/* A vendor chip's dot is the chart's legend: filled when shown, a hollow ring when hidden. */
+.vdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:0;background:var(--c);box-shadow:0 0 0 1.5px var(--panel)}
+.chips button.off .vdot{background:transparent;box-shadow:inset 0 0 0 1.5px var(--dim)}
 .hidden{display:none!important}
 
 /* tables */

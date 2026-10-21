@@ -110,11 +110,15 @@ export function renderScatter(units, matchIds, precision) {
     short: u.short ?? u.label.replace(/\s*\d+GB$/, ''),
     arch: u.archLabel,
     mem: u.memoryGB,
+    vendor: u.vendor ?? 'Other',
     unofficial: !!u.compute.unofficial?.includes(precision),
   });
   const plotted = units.filter(u => u.memoryBandwidthGBs && u.compute?.values?.[precision] != null);
-  const on = plotted.filter(u => matchIds.has(u.id)).map(point);
-  const off = plotted.filter(u => !matchIds.has(u.id)).map(point);
+  // Lowest first, so a point drawn over another is the higher one, which is
+  // also the one pointLabels names: a label never sits on someone else's colour.
+  const byY = (a, b) => a.y - b.y;
+  const on = plotted.filter(u => matchIds.has(u.id)).map(point).sort(byY);
+  const off = plotted.filter(u => !matchIds.has(u.id)).map(point).sort(byY);
   const unit = precision.startsWith('int') ? 'TOPS' : 'TFLOPS';
 
   mount('scatterChart', {
@@ -124,7 +128,8 @@ export function renderScatter(units, matchIds, precision) {
         {
           label: 'Other units',
           data: off,
-          backgroundColor: css('--mute-mark'),
+          // Colour follows the vendor whether or not the point matches; matching is solid and labelled.
+          backgroundColor: c => fade(vendorColor(c.raw?.vendor), 0.35),
           borderColor: css('--panel'),
           borderWidth: 2,
           pointRadius: 5,
@@ -135,7 +140,7 @@ export function renderScatter(units, matchIds, precision) {
           label: 'Matches the filter',
           data: on,
           labelPoints: true,
-          backgroundColor: css('--s1'),
+          backgroundColor: c => vendorColor(c.raw?.vendor),
           borderColor: css('--panel'),
           borderWidth: 2,
           pointRadius: 6,
@@ -156,7 +161,7 @@ export function renderScatter(units, matchIds, precision) {
           callbacks: {
             title: items => items[0].raw.label,
             label: it => [
-              `${it.raw.arch ?? 'generation not recorded'}`,
+              `${it.raw.vendor} · ${it.raw.arch ?? 'generation not recorded'}`,
               `${it.raw.x.toLocaleString()} GB/s · ${it.raw.mem ?? '?'} GB`,
               `${it.raw.y.toLocaleString()} ${unit} dense ${precision.toUpperCase()}${it.raw.unofficial ? ' (unofficial)' : ''}`,
             ],
@@ -182,6 +187,15 @@ export function renderScatter(units, matchIds, precision) {
   });
   return { plotted: plotted.length, on: on.length, unofficial: plotted.filter(u => u.compute.unofficial?.includes(precision)).length };
 }
+
+/** One colour per vendor, from the brand-colour tokens; anything unlisted gets the muted mark. */
+export const VENDOR_TOKENS = { NVIDIA: '--v-nvidia', AMD: '--v-amd', Intel: '--v-intel', Apple: '--v-apple' };
+export const vendorColor = v => css(VENDOR_TOKENS[v] ?? '--mute-mark');
+/** A hex colour at an alpha, for marks that should recede. */
+const fade = (hex, a) => {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+};
 
 export const LAYOUT_COLOR = () => ({ full: css('--s1'), sliding: css('--s2'), linear: css('--s3') });
 
