@@ -264,6 +264,12 @@ What the validator holds you to, and why:
 - **Prefill says what it covered**: `cold` (the whole prompt) or `new-tokens`
   (only tokens not already cached).
 - **Speculation is stated.** A `spec: "off"` point is the clean reading at depth.
+  Speculative decoding (MTP, DFlash, a draft model) belongs here because it is
+  lossless: the target model verifies every token, so the output is what it
+  would have produced anyway. Speculative prefill is not. It drops prompt
+  tokens the draft judges unimportant (oMLX's SpecPrefill with `keep_pct 0.5`
+  keeps half), so the model answers a shorter prompt and its "prefill" rate
+  counts tokens it never read. Leave those runs out.
 - **The model is named, or its absence is explained.** `model` is a key in
   `MODELS`, or `null` with a `modelNote` quoting what the source did call it.
   Where the source gives only a size ("a dense 40B"), `modelParams`
