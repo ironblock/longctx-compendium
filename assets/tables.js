@@ -54,6 +54,8 @@ export function unitMatch(u, s) {
   if (!within(u.memoryBandwidthGBs, s.bwMin, s.bwMax)) return { ok: false };
   if (!within(u.memoryGB, s.memMin, s.memMax)) return { ok: false };
   if (!within(u.street, s.priceMin, s.priceMax)) return { ok: false };
+  // An unsourced link is not a missing one: say so instead of hiding it silently.
+  if (s.linkMin != null && !(u.link >= s.linkMin)) return { ok: false, linkUnknown: u.link == null };
   const unknown = [];
   for (const f of s.fmt) {
     const st = u.formats[f];
@@ -85,6 +87,19 @@ const HW_COLS = (prec) => [
       if (d == null && sp == null && vec == null) return `<td class="num">${DASH}</td>`;
       const off = k => (u.compute.unofficial?.includes(k) ? `<span title="${esc(UNOFFICIAL_TIP)}">*</span>` : '');
       return `<td class="num">${d ?? DASH}${d != null ? off(prec) : ''}${sp != null ? `<span class="sub">${sp}${off(`${prec}:sparse`)} sparse</span>` : ''}${vec != null ? `<span class="sub" title="Shader-ALU rate: this card has no matrix units">${vec}${off(`${prec}:vector`)} vector</span>` : ''}</td>`;
+    },
+  },
+  {
+    key: 'link',
+    label: 'Direct link',
+    sort: u => u.link,
+    cell: u => {
+      const l = u.peerLink;
+      if (!l) return `<td class="num" title="Not yet sourced">?</td>`;
+      const tip = [l.fabric, l.topology, l.note].filter(Boolean).join('. ');
+      if (!l.maxCards) return `<td class="num"${tip ? ` title="${esc(tip)}"` : ''}>none</td>`;
+      const sizes = [...(l.options ?? []), l.maxCards].sort((a, b) => a - b).join(' or ');
+      return `<td class="num" title="${esc(tip)}">${sizes} cards<span class="sub">${esc(l.fabric ?? '')}</span></td>`;
     },
   },
   { key: 'tdp', label: 'TDP W', sort: u => u.tdpW, cell: u => `<td class="num">${u.tdpW ?? DASH}</td>` },
@@ -135,6 +150,7 @@ export function renderHardwareTable(model, state, matches) {
     `Throughput in 10¹² ops/sec at the precision chosen for the chart; "sparse" is the 2:4 structured-sparsity rate vendors often quote unlabelled, and "vector" is a shader-ALU rate on a card with no matrix units. ` +
     `* marks a figure the vendor never published for that card, worked out from its other figures or taken from a third party; ceilings resting on one say "unofficial". ` +
     `GeForce cards' FP16 figures assume FP16 accumulate; with FP32 accumulate they run at half that rate, so read them as the generous case. ` +
+    `Direct link is the largest group of these cards that exchange data without going through PCIe (NVLink, Infinity Fabric, Xe Link), on a vendor bridge or baseboard; hover for the fabric and topology, and "?" means not yet sourced. ` +
     `$ per GB and GB/s per $1k use the dated street price. Blanks sort last in both directions. Click a heading to sort.`;
 }
 

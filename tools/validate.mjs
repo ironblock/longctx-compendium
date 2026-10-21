@@ -151,6 +151,13 @@ for (const u of doc.units ?? []) {
     if (!(key in (u.compute.values ?? {}))) fail(at, `marks ${key} unofficial, but has no ${key} figure`);
   }
   if (u.compute?.unofficial?.length && !u.compute.note) fail(at, 'marks figures unofficial without a compute note saying where they come from');
+  const link = u.peerLink;
+  if (link) {
+    if (link.maxCards > 0 && !link.fabric) fail(at, `links ${link.maxCards} cards without naming the fabric`);
+    if (link.maxCards < 2 && link.options?.length) fail(at, 'lists link group sizes but says it has no link');
+    for (const n of link.options ?? []) if (n >= link.maxCards) fail(at, `lists a ${n}-card link group, which is not smaller than its maxCards of ${link.maxCards}`);
+    if (link.maxCards === 1) fail(at, 'says one card is linked to itself; use 0 for no link');
+  }
   for (const [f, state] of Object.entries(u.formatOverrides ?? {})) {
     if (arch?.formats?.[f] === state) warn(at, `overrides ${f} to "${state}", which is what its generation already says`);
   }

@@ -34,7 +34,9 @@ const el = id => document.getElementById(id);
 
 const FMT_LABEL = { tf32: 'TF32', bf16: 'BF16', fp16: 'FP16', fp8: 'FP8', fp6: 'FP6', fp4: 'FP4', int8: 'INT8', int4: 'INT4' };
 const SCATTER_PRECS = ['fp16', 'bf16', 'fp8', 'int8', 'fp4'];
-const SORT_KEYS = ['label', 'mem', 'bw', 'prec', 'tdp', 'street', 'perGB', 'bwPerK'];
+const SORT_KEYS = ['label', 'mem', 'bw', 'prec', 'link', 'tdp', 'street', 'perGB', 'bwPerK'];
+/** Minimum direct-link group sizes the filter offers. */
+const LINK_STEPS = [2, 4, 8];
 /** The "Not recorded" choice in the observation model filter. */
 export const NO_MODEL = '__none';
 
@@ -52,6 +54,7 @@ const DEFAULTS = {
   memMax: null,
   priceMin: null,
   priceMax: null,
+  linkMin: null,
   vendorsOff: [],
   scatterPrec: 'fp16',
   hwSort: 'bw:desc',
@@ -97,6 +100,7 @@ function readState() {
     memMax,
     priceMin,
     priceMax,
+    linkMin: LINK_STEPS.includes(num('link')) ? num('link') : null,
     vendorsOff: new Set(list('voff')),
     // With no chart precision in the address, the chart follows the first format asked for.
     scatterPrec: q.has('prec') ? str('prec', SCATTER_PRECS) : inferredPrec(list('fmt')),
@@ -115,7 +119,7 @@ function readState() {
   };
 }
 // The keys DEFAULTS uses under their address names.
-Object.assign(DEFAULTS, { bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all' });
+Object.assign(DEFAULTS, { link: null, bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all' });
 
 function writeState(s) {
   const q = new URLSearchParams();
@@ -130,6 +134,7 @@ function writeState(s) {
   put('memmax', s.memMax, null);
   put('pricemin', s.priceMin, null);
   put('price', s.priceMax, null);
+  put('link', s.linkMin, null);
   put('voff', [...s.vendorsOff].join(','), '');
   put('prec', s.scatterPrec, inferredPrec(s.fmt));
   put('sort', `${s.hwSort.key}:${s.hwSort.dir}`, DEFAULTS.hwSort);
@@ -215,6 +220,10 @@ try {
     sliders.bw.set([state.bwMin, state.bwMax]);
     sliders.mem.set([state.memMin, state.memMax]);
     sliders.price.set([state.priceMin, state.priceMax]);
+    chips('linkChips', [{ v: null, label: 'any' }, ...LINK_STEPS.map(n => ({ v: n, label: `${n}+ cards` }))], v => state.linkMin === v, v => {
+      state.linkMin = v;
+      update('hw');
+    });
     chips(
       'vendorChips',
       vendors.map(v => ({ v, label: v, title: 'Click to hide or show' })),
@@ -245,13 +254,16 @@ try {
     }
     if (state.memMin != null || state.memMax != null) parts.push(`${spanText([state.memMin, state.memMax], v => `${v} GB`)} per card`);
     if (state.priceMin != null || state.priceMax != null) parts.push(`street price ${spanText([state.priceMin, state.priceMax], usd)} (unpriced units drop out)`);
+    if (state.linkMin != null) parts.push(`${state.linkMin}+ cards joined without PCIe`);
     if (state.vendorsOff.size) parts.push(`hiding ${[...state.vendorsOff].join(', ')}`);
+    // Cards out only because nobody has sourced their link yet.
+    const linkUnknown = model.UNITS.filter(u => matches.get(u.id).linkUnknown && unitMatch(u, { ...state, linkMin: null }).ok);
     el('hwSummary').innerHTML =
       `<b>${ok.length}</b> of ${model.UNITS.length} units match${parts.length ? `: ${esc(parts.join(' · '))}` : ' (no filter set)'}.` +
       (almost.length
         ? ` ${almost.length} more would if their unsourced support were confirmed: ${almost.map(u => esc(u.label)).join(', ')}.`
         : '') +
-      '';
+      (linkUnknown.length ? ` ${linkUnknown.length} more ${linkUnknown.length > 1 ? 'have' : 'has'} no sourced link figure yet: ${linkUnknown.map(u => esc(u.label)).join(', ')}.` : '');
     el('hwReset').hidden = !parts.length;
 
     const sc = renderScatter(model.UNITS, new Set(ok.map(u => u.id)), state.scatterPrec);
@@ -480,7 +492,7 @@ try {
   // Built once and only shown or hidden: a button rebuilt by the render its own
   // click triggers can vanish between mousedown and click.
   el('hwReset').addEventListener('click', () => {
-    Object.assign(state, { fmt: new Set(), fmtUnknownOk: false, bwMin: null, bwMax: null, memMin: null, memMax: null, priceMin: null, priceMax: null, vendorsOff: new Set() });
+    Object.assign(state, { fmt: new Set(), fmtUnknownOk: false, bwMin: null, bwMax: null, memMin: null, memMax: null, priceMin: null, priceMax: null, linkMin: null, vendorsOff: new Set() });
     update('hw');
   });
   el('fmtUnknownOk').addEventListener('change', e => {

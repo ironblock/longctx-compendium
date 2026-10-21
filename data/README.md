@@ -114,6 +114,17 @@ page marks it, and any ceiling resting on it says "unofficial".
 `memoryGB` is read as GiB, which is what vendors mean by "32 GB" of VRAM.
 `street` is what every price on the page is summed from; give it an `asOf`.
 
+`peerLink` says how many of these cards can exchange data GPU to GPU without
+going through PCIe: NVLink, Infinity Fabric or Xe Link, on the vendor's own
+bridge (an add-in card) or baseboard (an SXM or OAM module). `maxCards` is the
+largest such group, `options` any smaller supported sizes (a 2-way and a 4-way
+bridge), and 0 means the card has none. Name the `fabric`, say in `topology`
+whether every card reaches every other (a switch) or only its neighbours (pairs,
+a ring, a mesh), and give a `source` with a quote. A missing `peerLink` means
+nobody has sourced it yet, and the page says "?" rather than treating the card
+as unlinked. A NIC between machines (ConnectX, Thunderbolt) is a network, not a
+peer link, and does not count.
+
 ### Specifications need a source
 
 A unit carrying `released`, `memoryBandwidthGBs`, `tdpW`, `process` or any

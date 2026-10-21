@@ -80,6 +80,15 @@ const CASES = [
   ['unofficial figures with no note saying where they come from', 'without a compute note', d => {
     delete unit(d, 'h20').compute.note;
   }],
+  ['a direct link with no fabric named', 'without naming the fabric', d => {
+    unit(d, 'rtx_3090').peerLink = { maxCards: 2, source: 'x' };
+  }],
+  ['a direct link with no source', 'missing required property "source"', d => {
+    unit(d, 'rtx_3090').peerLink = { maxCards: 2, fabric: 'NVLink 3 bridge' };
+  }],
+  ['a link group size that is not smaller than the largest', 'not smaller than its maxCards', d => {
+    unit(d, 'rtx_3090').peerLink = { maxCards: 2, options: [2], fabric: 'NVLink 3 bridge', source: 'x' };
+  }],
   ['unknown precision key shape', 'does not match', d => {
     unit(d, 'rtx_pro_6000').compute.values['FP 16'] = 250;
   }],

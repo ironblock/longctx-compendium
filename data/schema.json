@@ -206,6 +206,45 @@
         "pricing": {
           "$ref": "#/definitions/pricing"
         },
+        "peerLink": {
+          "description": "The largest group of these cards that can exchange data GPU to GPU without going through PCIe (NVLink, Infinity Fabric, Xe Link), on vendor-supported hardware: a bridge for an add-in card, the vendor's baseboard for an SXM or OAM module. 0 means the card has no such link. Left out, the card's link is not yet sourced.",
+          "type": "object",
+          "required": [
+            "maxCards",
+            "source"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "maxCards": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "options": {
+              "description": "Smaller supported group sizes, when there is more than one (a 2-way and a 4-way bridge, say).",
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "integer",
+                "minimum": 2
+              }
+            },
+            "fabric": {
+              "description": "What joins them: 'NVLink 3 bridge', 'NVLink 4 via NVSwitch (HGX)', 'Infinity Fabric Link bridge', 'Xe Link bridge' ...",
+              "type": "string"
+            },
+            "topology": {
+              "description": "All-to-all (switched), pairs, ring or mesh, with link bandwidth where the vendor states it.",
+              "type": "string"
+            },
+            "source": {
+              "description": "Where it is stated: a URL, then a verbatim quote.",
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
         "power": {
           "$ref": "#/definitions/power"
         },

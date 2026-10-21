@@ -38,6 +38,8 @@ export function normalize(doc) {
       support,
       formats: Object.fromEntries(FORMATS.map(f => [f, support[f].state])),
       street: u.pricing?.street?.usd ?? null,
+      // Largest group joined without PCIe; null when not yet sourced.
+      link: u.peerLink ? u.peerLink.maxCards : null,
     };
   });
   const unitById = Object.fromEntries(UNITS.map(u => [u.id, u]));
