@@ -110,6 +110,7 @@ export function renderScatter(units, matchIds, precision) {
     short: u.short ?? u.label.replace(/\s*\d+GB$/, ''),
     arch: u.archLabel,
     mem: u.memoryGB,
+    unofficial: !!u.compute.unofficial?.includes(precision),
   });
   const plotted = units.filter(u => u.memoryBandwidthGBs && u.compute?.values?.[precision] != null);
   const on = plotted.filter(u => matchIds.has(u.id)).map(point);
@@ -157,7 +158,7 @@ export function renderScatter(units, matchIds, precision) {
             label: it => [
               `${it.raw.arch ?? 'generation not recorded'}`,
               `${it.raw.x.toLocaleString()} GB/s · ${it.raw.mem ?? '?'} GB`,
-              `${it.raw.y.toLocaleString()} ${unit} dense ${precision.toUpperCase()}`,
+              `${it.raw.y.toLocaleString()} ${unit} dense ${precision.toUpperCase()}${it.raw.unofficial ? ' (unofficial)' : ''}`,
             ],
           },
         },
@@ -179,7 +180,7 @@ export function renderScatter(units, matchIds, precision) {
     },
     plugins: [pointLabels],
   });
-  return { plotted: plotted.length, on: on.length };
+  return { plotted: plotted.length, on: on.length, unofficial: plotted.filter(u => u.compute.unofficial?.includes(precision)).length };
 }
 
 export const LAYOUT_COLOR = () => ({ full: css('--s1'), sliding: css('--s2'), linear: css('--s3') });

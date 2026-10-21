@@ -152,6 +152,10 @@ check('hardware summary rendered', /of \d+ units match/.test(await text('#hwSumm
   const want = model.UNITS.reduce((n, u) => n + ['fp16', 'fp16:sparse', 'fp16:vector'].filter(k => u.compute?.values?.[k] != null && u.compute.unofficial?.includes(k)).length, 0);
   const got = await count('#hwTable tbody td span[title^="Not the vendor"]', p);
   check('unofficial FP16 figures are marked', want > 0 && got === want, `${got} marks for ${want} unofficial figures`);
+  // The chart has no asterisks, so its caption counts them and the tooltip names them.
+  const inChart = model.UNITS.filter(u => u.memoryBandwidthGBs && u.compute?.values?.fp16 != null && u.compute.unofficial?.includes('fp16')).length;
+  const cap = await text('#scatterCap', p);
+  check('the chart says how many of its points are unofficial', inChart > 0 && cap.includes(`${inChart} of the figures are unofficial`), cap);
   await p.close();
 }
 

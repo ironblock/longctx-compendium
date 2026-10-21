@@ -255,7 +255,7 @@ try {
     el('hwReset').hidden = !parts.length;
 
     const sc = renderScatter(model.UNITS, new Set(ok.map(u => u.id)), state.scatterPrec);
-    el('scatterCap').textContent = `bandwidth vs dense ${FMT_LABEL[state.scatterPrec]} throughput · ${sc.plotted} of ${model.UNITS.length} units have both figures · ${sc.on} plotted match`;
+    el('scatterCap').textContent = `bandwidth vs dense ${FMT_LABEL[state.scatterPrec]} throughput · ${sc.plotted} of ${model.UNITS.length} units have both figures · ${sc.on} plotted match${sc.unofficial ? ` · ${sc.unofficial} of the figures are unofficial (hover a point)` : ''}`;
     el('scatterLegend').innerHTML =
       `<span><span class="swatch" style="background:var(--s1)"></span>matches the filter (labelled)</span>` +
       `<span><span class="swatch" style="background:var(--mute-mark)"></span>everything else — hover to name it</span>`;
