@@ -3132,19 +3132,32 @@
         "https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series",
         "Intel ARK Product Specification Comparison export (Max 1550 vs Max 1100), user-captured 2026-08-19",
         "https://github.com/intel/llvm/blob/b98b3a76c11345f1ff6f295e416755ce8c11b60c/sycl/doc/extensions/experimental/sycl_ext_matrix/sycl_ext_oneapi_matrix.asciidoc",
-        "https://uxlfoundation.github.io/oneDNN/dev_guide_data_types.html"
+        "https://uxlfoundation.github.io/oneDNN/dev_guide_data_types.html",
+        "https://www.intel.com/content/www/us/en/docs/oneapi/optimization-guide-gpu/2024-0/intel-xe-gpu-architecture.html",
+        "https://docs.alcf.anl.gov/aurora/node-performance-overview/node-performance-overview/"
       ],
       "note": "Reference only -- no benchmarks on this page, and there may not be any soon: llama.cpp's own community SYCL performance-reference thread (github.com/ggml-org/llama.cpp discussion #23313) has zero PVC datapoints as of this writing, despite the SYCL backend officially listing both Max 1550 and Max 1100 as verified devices. The only public PVC/llama.cpp number found anywhere is one changelog row (2025.2): Max 1550 going 39->73 tok/s on llama-2-7b Q4_0 -- 18-months-stale, on the flagship rather than this SKU, and roughly a tenth of an Arc A770's memory-bandwidth efficiency (the A770 posts 55-67 tok/s on a sixth of the bandwidth). The software stack has matured a lot since PVC's 2022 launch -- SYCL flash-attention (native and oneDNN-fused) landed 2026.03, and split-mode tensor (true tensor parallelism, not just layer-splitting) is explicitly 'optimized for 2 GPUs,' a good match for a 2-card 96GB build -- but nobody has published it running at depth. GGML_SYCL_FA_ONEDNN_MAX_KV exists specifically because 'GPU driver watchdog resets (DEVICE_LOST) occur during long-context inference,' with a documented workaround capping context near 24,576 tokens -- below this page's own long-context framing. Intel's own ARK listing gives this SKU's expected discontinuance as Jan 2026 (already past as of Aug 2026), which is presumably why pulled cards are turning up on eBay around $2,000 -- cheap for 48GB of HBM2e with real XMX matrix engines, expensive to be the first person to actually measure it at 128K context. Memory arithmetic: Intel's datasheet (817799) says three enabled 16 GB HBM2e stacks at 3.2 GT/s and, in its block diagram, '1.6 TB/s peak BW'; the package physically carries four stacks with one permanently disabled, so 1.6 TB/s is the four-stack figure and three stacks at the standard 1,024 bits give the 1,228.8 GB/s recorded here. PCIe 5.0 x16 to the host.",
       "arch": "xe_hpc",
       "compute": {
         "unit": "Tops",
-        "note": "FP64/FP32 are non-systolic (vector-engine) rated throughput -- Ponte Vecchio runs FP64 and FP32 at the same native 1:1 rate (unlike the usual 1:2), which Intel called out as a deliberate design choice and is how it targeted 2 exaFLOPS peak FP64 for the Aurora supercomputer. Both are the boost-clock figure and reproduce exactly from the shader count: 7168 ALUs x 2 FLOP/clock x 1.55 GHz = 22.22. bf16 is the same template's own Bfloat16 column. tf32/fp16/int8/int4 also execute on the systolic (XMX) matrix engines per Intel's datasheet, but no published per-SKU figure exists for them on this part -- Intel's 419 TFLOPS TF32 headline is the 1550, and scaling it by core count and clock would be deriving a number, not sourcing one. WHICH precisions the XMX engines accept is now sourced: Intel's own SYCL matrix extension (intel/llvm, see sources) lists signed and unsigned INT8, FP16 (FP32 or FP16 accumulate), BF16 and TF32 as supported on intel_gpu_pvc, with no INT4, FP8 or FP4 entry. That is an API support list, not a rate, so the figures stay unknown. A second Intel source agrees: oneDNN's per-microarchitecture data-type table (Xe-HPC row, which it names as the Max Series, formerly Ponte Vecchio) marks f64, f32, bf16, f16 and s8/u8 as hardware-native and f8, f4_e2m1 and s4/u4/u2 as conversion-only, with s4/u4/u2 usable only as weight-only-quantization storage -- so INT4 and FP8 are storage formats on this part, not compute rates. Correction to the sentence above: Intel's platform datasheet (817799) lists no precisions at all, so that claim rests on the product brief, which refused an automated fetch when this was rechecked (as did ARK).",
-        "source": "https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series (boost-clock row, itself citing Intel's official product brief and ARK specification page)",
+        "note": "Nothing here is Intel's rating for this card: Intel's product brief (revised 2025-11) lists Xe-cores, memory, cache, TDP and Xe Link but no throughput, and ARK lists none. FP64 and FP32 are Wikipedia's template figures and reproduce exactly from the shader count on the vector engines: 7,168 ALUs x 2 FLOP/clock x 1.55 GHz = 22.22 (Ponte Vecchio runs FP64 at the FP32 rate; see the Max 1550 for the measurement that confirms it). The matrix figures are derived: Intel's oneAPI GPU Optimization Guide gives 4,096 FP16/BF16 and 8,192 INT8 XMX ops per clock per Xe-core, times 56 Xe-cores at 1.55 GHz. TF32 is half the FP16 rate, as Intel's own 419 TFLOPS for the Max 1550 implies (128 Xe-cores x 2,048 x 1.6 GHz = 419.4), and as ALCF's measured GEMMs show. Wikipedia's template gives 352 BF16, about 1% below this arithmetic, for no stated reason. flopper.io's 420 / 839 / 210 for this card would need a 1.83 GHz clock and look like half the Max 1550's; they are not used. Which precisions the XMX engines take: Intel's SYCL matrix extension lists signed and unsigned INT8, FP16, BF16 and TF32 on intel_gpu_pvc, with no INT4, FP8 or FP4 entry, and oneDNN's data-type table marks f8, f4_e2m1 and s4/u4/u2 as conversion-only on Xe-HPC, so INT4 and FP8 are storage formats here, not compute rates.",
+        "source": "https://www.intel.com/content/www/us/en/docs/oneapi/optimization-guide-gpu/2024-0/intel-xe-gpu-architecture.html (XMX ops per clock per Xe-core) and https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series (FP64/FP32, 1,550 MHz boost)",
         "values": {
           "fp64": 22.2,
           "fp32": 22.2,
-          "bf16": 352
-        }
+          "tf32": 177.8,
+          "fp16": 355.5,
+          "bf16": 355.5,
+          "int8": 711.1
+        },
+        "unofficial": [
+          "fp64",
+          "fp32",
+          "tf32",
+          "fp16",
+          "bf16",
+          "int8"
+        ]
       }
     },
     {
@@ -3162,20 +3175,29 @@
         "https://www.theregister.com/2022/08/23/intel_ponte_vecchio/",
         "https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series",
         "https://www.glennklockwood.com/garden/processors/pvc",
-        "Intel ARK Product Specification Comparison export (Max 1550 vs Max 1100), user-captured 2026-08-19"
+        "Intel ARK Product Specification Comparison export (Max 1550 vs Max 1100), user-captured 2026-08-19",
+        "https://www.intel.com/content/www/us/en/docs/oneapi/optimization-guide-gpu/2024-0/intel-xe-gpu-architecture.html",
+        "https://docs.alcf.anl.gov/aurora/node-performance-overview/node-performance-overview/"
       ],
-      "note": "Reference only -- and unlike the Max 1100 beside it, not a card you can buy or fit. This is a 600W OAM module, not a PCIe add-in card: it needs an OAM baseboard and the cooling to match, the same way an H100 SXM does, so 128GB in one package is academic for a workstation build no matter what it costs. No price is recorded because none was found -- Max Series went through OEM/integrator channels rather than retail, and unlike the 1100 (which turns up pulled on eBay around $2,000 post-EOL) the flagship has no observed secondary market at all. Included because 128GB of HBM2e at 3.28 TB/s in a single package is a genuinely interesting anchor for this page's 96-128GB class: it is the capacity target hit in one module, at roughly 2.7x an RTX PRO 6000's bandwidth. Worth knowing that the only public measured PVC numbers are Glenn Lockwood's DGEMM runs on Aurora, and they land far below these rated peaks -- 17 TFLOPS FP64 against 52 rated, 110 TF32 against 419, 273 BF16 against 832, roughly 30-35% of peak. Those are HPC GEMM kernels rather than LLM inference, but they are the closest thing to a reality check that exists for this silicon, and they are not in compute.values because this column is rated throughput, not achieved. Intel's ARK listing gives expected discontinuance as Jan 2026.",
+      "note": "Reference only -- and unlike the Max 1100 beside it, not a card you can buy or fit. This is a 600W OAM module, not a PCIe add-in card: it needs an OAM baseboard and the cooling to match, the same way an H100 SXM does, so 128GB in one package is academic for a workstation build no matter what it costs. No price is recorded because none was found -- Max Series went through OEM/integrator channels rather than retail, and unlike the 1100 (which turns up pulled on eBay around $2,000 post-EOL) the flagship has no observed secondary market at all. Included because 128GB of HBM2e at 3.28 TB/s in a single package is a genuinely interesting anchor for this page's 96-128GB class: it is the capacity target hit in one module, at roughly 2.7x an RTX PRO 6000's bandwidth. The public measured PVC numbers are ALCF's single-node GEMM runs on Aurora (Glenn Lockwood's page quotes an earlier version of them). They are per stack, half this card, so they sit at roughly 63-68% of the per-stack peak, not the 30-35% of whole-card peak this note used to say; the compute note has them. They are HPC GEMM kernels rather than LLM inference, and they stay out of compute.values because that column is rated throughput, not achieved. Intel's ARK listing gives expected discontinuance as Jan 2026.",
       "arch": "xe_hpc",
       "compute": {
         "unit": "Tops",
-        "note": "FP64/FP32 are non-systolic (vector-engine) throughput at the 1:1 rate Ponte Vecchio is unusual for; tf32/bf16 are systolic (XMX) matrix-engine figures. Note that Wikipedia's Max-series template gives 54.423 in this row, which is a typo: its base-clock figure (29.491) reproduces exactly from 16384 ALUs x 2 FLOP/clock x 0.9 GHz, and the same arithmetic at the 1.6 GHz boost clock gives 52.43, not 54.42 -- the 1100 and 1350 rows of that same table are internally exact, so only this cell is wrong. Intel's own 52 TFLOPS headline is used here instead. The tf32 and bf16 figures corroborate each other independently: Intel's 419 TF32 doubled is 838 against the template's 832 bf16, 0.7% apart, and the template's bf16:fp32 ratio is a consistent 15.84x across all three SKUs.",
-        "source": "Intel via https://www.theregister.com/2022/08/23/intel_ponte_vecchio/ (fp64/fp32/tf32, Intel's own SC22 launch figures) and https://en.wikipedia.org/wiki/Template:Intel_Data_Center_GPU_Max_series (bf16)",
+        "note": "FP64 and FP32 run on the vector engines at the same rate: 16,384 ALUs x 2 FLOP/clock x 1.6 GHz = 52.43, against Intel's SC22 headline of 52. TF32 419 is Intel's own launch figure. FP16, BF16 and INT8 are derived, not rated: Intel's oneAPI GPU Optimization Guide gives 4,096 FP16/BF16 and 8,192 INT8 XMX ops per clock per Xe-core, times 128 Xe-cores at 1.6 GHz; the same arithmetic at 2,048 TF32 ops per clock reproduces Intel's 419. Intel's product brief lists no throughput figures. Wikipedia's template gives 832 BF16, 0.8% below this, and 54.423 FP32, which is a typo (its base-clock 29.491 is exact: 16,384 x 2 x 0.9 GHz). Measured on Aurora by ALCF (one stack, i.e. half this card, at the 1.5 GHz default, 2026-08-25): HGEMM 248, BF16 GEMM 255, TF32 GEMM 125 and INT8 GEMM 537 TFLOP/s, the 1 : 1 : 1/2 : 2 ratio of Intel's per-clock figures, at 63-68% of the per-stack peak at that clock (393 FP16, 197 TF32, 786 INT8). With all 12 stacks of a node busy, per-card throughput falls further: HGEMM 2,369 per six-card node is about 395 per card, half the derived peak at 1.5 GHz. ALCF's FP64 FMA chain reaches 16 TFLOP/s per stack, above the 12.3 a half-rate FP64 unit could reach at 1.5 GHz; that confirms the 1:1 rate, although the same Intel guide says 128 FP64 ops per clock per Xe-core, which is half rate.",
+        "source": "Intel via https://www.theregister.com/2022/08/23/intel_ponte_vecchio/ (FP64/FP32/TF32, Intel's SC22 launch figures) and https://www.intel.com/content/www/us/en/docs/oneapi/optimization-guide-gpu/2024-0/intel-xe-gpu-architecture.html (XMX ops per clock per Xe-core)",
         "values": {
           "fp64": 52.4,
           "fp32": 52.4,
           "tf32": 419,
-          "bf16": 832
-        }
+          "fp16": 838.9,
+          "bf16": 838.9,
+          "int8": 1677.7
+        },
+        "unofficial": [
+          "fp16",
+          "bf16",
+          "int8"
+        ]
       }
     },
     {
