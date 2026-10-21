@@ -2088,16 +2088,23 @@
         "https://lowendmac.com/1234/apple-silicon-m3-ultra-chip-specs/",
         "https://www.iclarified.com/p624/mac-studio-m3-ultra-28core-cpu-60core-gpu-96gb-ram-1tb-ssd",
         "https://www.eatyourbytes.com/applecpu-detail/apple-m3-ultra-60-core-gpu/",
-        "https://macpro-la.com/blogs/news/mac-studio-price-guide-2026 (used prices, Sep-Oct 2026)"
+        "https://macpro-la.com/blogs/news/mac-studio-price-guide-2026 (used prices, Sep-Oct 2026)",
+        "https://github.com/philipturner/metal-benchmarks"
       ],
       "note": "Apple publishes 480 W 'maximum continuous power' for the Mac Studio — a PSU rating for the whole machine, not a GPU TDP. Apple does not publish formal per-precision GPU compute figures the way NVIDIA/AMD/Intel do (no FP16/BF16/INT8 TFLOPS/TOPS spec exists in any official Apple material) -- this entry stays FP32-only for that reason, not for lack of searching. Apple dropped the 512GB option around 2026-03-05 and the 256GB one on 2026-05-05, leaving this 96GB model until the M5 Ultra replaced it; every M3 Ultra is now a used purchase.",
       "arch": "apple_m3",
       "compute": {
         "unit": "Tops",
+        "note": "Derived, not Apple's: Apple publishes no GPU throughput. 60 GPU cores x 128 FP32 ALUs (Philip Turner's metal-benchmarks: \"Apple described each GPU core as having 128 ALUs\") x 2 FLOP per FMA x 1.40 GHz (eatyourbytes gives the same 21.5; at the 1.38 GHz other aggregators give, 21.2). This generation has no GPU matrix units, and FP16 runs at the FP32 rate (Apple, \"Explore GPU advancements in M3 and A17 Pro\" (Tech Talk): FP16 math \"execute[s] at peak throughput\", with \"up to 2x\" only for mixed FP16/FP32/integer work), so the FP16 figure is a shader (vector) rate, which is what bounds its prefill. Measured floors agree: MLX bf16 GEMM reaches 19.7 TFLOPS on a 60-core M3 Ultra (ml-explore/mlx issue #3196, 93% of 21.2 at 1.38 GHz), and GPU-only prefill on an 80-core M3 Ultra implies 22-24 TFLOPS (Apple's MLX distributed-inference post, MacStories). One oMLX run with Neural Engine prefill on implies about 31, above this GPU figure, because the Neural Engine took part.",
+        "source": "https://www.eatyourbytes.com/applecpu-detail/apple-m3-ultra-60-core-gpu/",
         "values": {
-          "fp32": 21.5
+          "fp32": 21.5,
+          "fp16:vector": 21.5
         },
-        "source": "https://www.eatyourbytes.com/applecpu-detail/apple-m3-ultra-60-core-gpu/"
+        "unofficial": [
+          "fp32",
+          "fp16:vector"
+        ]
       },
       "peerLink": {
         "maxCards": 0,
@@ -2132,13 +2139,27 @@
         "https://www.cultofmac.com/news/apple-quietly-kills-512gb-m3-ultra-mac-studio-option -- \"You can no longer buy an M3 Ultra Mac Studio with 512GB of unified memory from Apple.\"",
         "https://www.macrumors.com/2026/05/05/apple-mac-studio-mac-mini-ram-cuts -- \"The M3 Ultra Mac Studio is now available only in a 96GB RAM configuration.\"",
         "https://macpro-la.com/blogs/news/mac-studio-price-guide-2026 (used prices, Sep-Oct 2026)",
-        "https://theregister.com/2025/03/05/apple_m3_ultra_mac_studio (launch prices)"
+        "https://theregister.com/2025/03/05/apple_m3_ultra_mac_studio (launch prices)",
+        "https://github.com/philipturner/metal-benchmarks"
       ],
       "note": "Bandwidth is 819 GB/s on both GPU bins. Apple no longer sells it new. The GPU gets only part of the RAM by default. Apple publishes no per-precision GPU compute figures.",
       "peerLink": {
         "maxCards": 0,
         "source": "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/ -- \"making M3 Ultra appear as a single chip to software.\"",
         "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      },
+      "compute": {
+        "unit": "Tops",
+        "note": "Derived, not Apple's: Apple publishes no GPU throughput. 80 GPU cores x 128 FP32 ALUs (Philip Turner's metal-benchmarks: \"Apple described each GPU core as having 128 ALUs\") x 2 FLOP per FMA x 1.40 GHz. This generation has no GPU matrix units, and FP16 runs at the FP32 rate (Apple, \"Explore GPU advancements in M3 and A17 Pro\" (Tech Talk): FP16 math \"execute[s] at peak throughput\", with \"up to 2x\" only for mixed FP16/FP32/integer work), so the FP16 figure is a shader (vector) rate, which is what bounds its prefill. Apple sold the 256GB machine with either GPU bin; this is the 80-core figure, so it bounds both. The 60-core bin is 21.5. Measured floors agree: MLX bf16 GEMM reaches 19.7 TFLOPS on a 60-core M3 Ultra (ml-explore/mlx issue #3196, 93% of 21.2 at 1.38 GHz), and GPU-only prefill on an 80-core M3 Ultra implies 22-24 TFLOPS (Apple's MLX distributed-inference post, MacStories). One oMLX run with Neural Engine prefill on implies about 31, above this GPU figure, because the Neural Engine took part.",
+        "source": "https://github.com/philipturner/metal-benchmarks",
+        "values": {
+          "fp32": 28.7,
+          "fp16:vector": 28.7
+        },
+        "unofficial": [
+          "fp32",
+          "fp16:vector"
+        ]
       }
     },
     {
@@ -2168,13 +2189,27 @@
         "https://www.cultofmac.com/news/apple-quietly-kills-512gb-m3-ultra-mac-studio-option -- \"You can no longer buy an M3 Ultra Mac Studio with 512GB of unified memory from Apple.\"",
         "https://www.macrumors.com/2026/05/05/apple-mac-studio-mac-mini-ram-cuts -- \"The M3 Ultra Mac Studio is now available only in a 96GB RAM configuration.\"",
         "https://macpro-la.com/blogs/news/mac-studio-price-guide-2026 (used prices, Sep-Oct 2026)",
-        "https://theregister.com/2025/03/05/apple_m3_ultra_mac_studio -- \"bringing the total to $9,499 before you even upgrade the storage\""
+        "https://theregister.com/2025/03/05/apple_m3_ultra_mac_studio -- \"bringing the total to $9,499 before you even upgrade the storage\"",
+        "https://github.com/philipturner/metal-benchmarks"
       ],
       "note": "The baseline for Apple's M5 Ultra AI claims. Bandwidth is the same 819 GB/s as every M3 Ultra; the 512GB buys capacity, not speed. The GPU gets only part of the RAM by default. Apple publishes no per-precision GPU compute figures.",
       "peerLink": {
         "maxCards": 0,
         "source": "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/ -- \"making M3 Ultra appear as a single chip to software.\"",
         "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      },
+      "compute": {
+        "unit": "Tops",
+        "note": "Derived, not Apple's: Apple publishes no GPU throughput. 80 GPU cores x 128 FP32 ALUs (Philip Turner's metal-benchmarks: \"Apple described each GPU core as having 128 ALUs\") x 2 FLOP per FMA x 1.40 GHz; 1.38-1.40 GHz is the aggregators' figure, not a measurement. This generation has no GPU matrix units, and FP16 runs at the FP32 rate (Apple, \"Explore GPU advancements in M3 and A17 Pro\" (Tech Talk): FP16 math \"execute[s] at peak throughput\", with \"up to 2x\" only for mixed FP16/FP32/integer work), so the FP16 figure is a shader (vector) rate, which is what bounds its prefill. Measured floors agree: MLX bf16 GEMM reaches 19.7 TFLOPS on a 60-core M3 Ultra (ml-explore/mlx issue #3196, 93% of 21.2 at 1.38 GHz), and GPU-only prefill on an 80-core M3 Ultra implies 22-24 TFLOPS (Apple's MLX distributed-inference post, MacStories). One oMLX run with Neural Engine prefill on implies about 31, above this GPU figure, because the Neural Engine took part.",
+        "source": "https://github.com/philipturner/metal-benchmarks",
+        "values": {
+          "fp32": 28.7,
+          "fp16:vector": 28.7
+        },
+        "unofficial": [
+          "fp32",
+          "fp16:vector"
+        ]
       }
     },
     {
@@ -2201,13 +2236,30 @@
       "sources": [
         "https://www.apple.com/mac-studio/specs/ -- M5 Ultra \"30-core CPU ... 64-core GPU | Neural Accelerators ... 1.2TB/s memory bandwidth\"; \"Configurable to: M5 Ultra with 36-core CPU, 80-core GPU, and 32-core Neural Engine (1.2TB/s memory bandwidth)\"; \"96GB unified memory | Configurable to: 256GB or 512GB (M5 Ultra with 36-core CPU and 80-core GPU)\"",
         "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Combined with up to 512GB of unified memory and 1.2TB/s of memory bandwidth, 50 percent higher than before\"; \"Mac Studio with M5 Ultra starts at $5,499 (U.S.)\"; \"Mac Studio with 512GB of unified memory is coming in late October.\"",
-        "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)"
+        "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)",
+        "https://tzakharko.github.io/apple-neural-accelerators-benchmark/",
+        "https://github.com/philipturner/metal-benchmarks"
       ],
       "note": "Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default.",
       "peerLink": {
         "maxCards": 0,
         "source": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Users and teams looking to share AI compute can cluster multiple Mac Studio systems together using the built-in support for Thunderbolt 5 and RDMA (remote direct memory access).\"",
         "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      },
+      "compute": {
+        "unit": "Tops",
+        "note": "Derived, not Apple's: Apple publishes no GPU throughput, only ratios (\"over 4x the peak GPU compute performance for AI compared to M4\"). Each M5 GPU core's Neural Accelerator does about 1,024 FP16 FLOP per clock (Taras Zakharko's A19 benchmark: \"approximately 7.4 TFLOPS for the 5-core A19 ... around 1000 FLOPS of matrix multiplication throughput per cycle\"), and INT8 about twice that (\"approximately 13.4 TOPS, just short of a double\"). 64 cores x 1,024 x 1.62 GHz for FP16, x 2 for INT8; FP32 is the shader rate, 64 x 128 x 2 x 1.62. The clock is the 1,620 MHz top state powermetrics reports on an M5 Max (feedback-assistant/reports issue #830). No M5 Ultra clock has been measured; this assumes the M5 Max's. Apple's \"up to 4.5x the peak GPU compute for AI compared to M3 Ultra\" implies about 1.55-1.58 GHz instead, so these lean high, which is the right direction for a ceiling. Measured: Apple's own MLX benchmark (Qwen 3.8 27B BF16, 8K prompt) implies about 108 TFLOPS of effective prefill on an 80-core M5 Ultra.",
+        "source": "https://tzakharko.github.io/apple-neural-accelerators-benchmark/",
+        "values": {
+          "fp32": 26.5,
+          "fp16": 106.2,
+          "int8": 212.3
+        },
+        "unofficial": [
+          "fp32",
+          "fp16",
+          "int8"
+        ]
       }
     },
     {
@@ -2235,13 +2287,30 @@
         "https://www.apple.com/mac-studio/specs/ -- M5 Ultra \"30-core CPU ... 64-core GPU | Neural Accelerators ... 1.2TB/s memory bandwidth\"; \"Configurable to: M5 Ultra with 36-core CPU, 80-core GPU, and 32-core Neural Engine (1.2TB/s memory bandwidth)\"; \"96GB unified memory | Configurable to: 256GB or 512GB (M5 Ultra with 36-core CPU and 80-core GPU)\"",
         "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Combined with up to 512GB of unified memory and 1.2TB/s of memory bandwidth, 50 percent higher than before\"; \"Mac Studio with M5 Ultra starts at $5,499 (U.S.)\"; \"Mac Studio with 512GB of unified memory is coming in late October.\"",
         "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)",
-        "https://aicybr.com/blog/mac-studio-m5-max-m5-ultra-2026-price-specs-mac-mini-m6-comparison -- \"M5 Ultra, 36-core CPU / 80-core GPU | 256GB | 1TB | $10,799\""
+        "https://aicybr.com/blog/mac-studio-m5-max-m5-ultra-2026-price-specs-mac-mini-m6-comparison -- \"M5 Ultra, 36-core CPU / 80-core GPU | 256GB | 1TB | $10,799\"",
+        "https://tzakharko.github.io/apple-neural-accelerators-benchmark/",
+        "https://github.com/philipturner/metal-benchmarks"
       ],
       "note": "Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default.",
       "peerLink": {
         "maxCards": 0,
         "source": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Thunderbolt 5 also enables multiple Mac Studio systems to be clustered, bringing up to 3x faster performance for distributed AI inference when compared to a single system.\"",
         "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      },
+      "compute": {
+        "unit": "Tops",
+        "note": "Derived, not Apple's: Apple publishes no GPU throughput, only ratios (\"over 4x the peak GPU compute performance for AI compared to M4\"). Each M5 GPU core's Neural Accelerator does about 1,024 FP16 FLOP per clock (Taras Zakharko's A19 benchmark: \"approximately 7.4 TFLOPS for the 5-core A19 ... around 1000 FLOPS of matrix multiplication throughput per cycle\"), and INT8 about twice that (\"approximately 13.4 TOPS, just short of a double\"). 80 cores x 1,024 x 1.62 GHz for FP16, x 2 for INT8; FP32 is the shader rate, 80 x 128 x 2 x 1.62. The clock is the 1,620 MHz top state powermetrics reports on an M5 Max (feedback-assistant/reports issue #830). No M5 Ultra clock has been measured; this assumes the M5 Max's. Apple's \"up to 4.5x the peak GPU compute for AI compared to M3 Ultra\" implies about 1.55-1.58 GHz instead, so these lean high, which is the right direction for a ceiling. Measured: Apple's own MLX benchmark (Qwen 3.8 27B BF16, 8K prompt) implies about 108 TFLOPS of effective prefill on an 80-core M5 Ultra.",
+        "source": "https://tzakharko.github.io/apple-neural-accelerators-benchmark/",
+        "values": {
+          "fp32": 33.2,
+          "fp16": 132.7,
+          "int8": 265.4
+        },
+        "unofficial": [
+          "fp32",
+          "fp16",
+          "int8"
+        ]
       }
     },
     {
@@ -2254,13 +2323,30 @@
       "sources": [
         "https://www.apple.com/mac-studio/specs/ -- M5 Ultra \"30-core CPU ... 64-core GPU | Neural Accelerators ... 1.2TB/s memory bandwidth\"; \"Configurable to: M5 Ultra with 36-core CPU, 80-core GPU, and 32-core Neural Engine (1.2TB/s memory bandwidth)\"; \"96GB unified memory | Configurable to: 256GB or 512GB (M5 Ultra with 36-core CPU and 80-core GPU)\"",
         "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Combined with up to 512GB of unified memory and 1.2TB/s of memory bandwidth, 50 percent higher than before\"; \"Mac Studio with M5 Ultra starts at $5,499 (U.S.)\"; \"Mac Studio with 512GB of unified memory is coming in late October.\"",
-        "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)"
+        "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)",
+        "https://tzakharko.github.io/apple-neural-accelerators-benchmark/",
+        "https://github.com/philipturner/metal-benchmarks"
       ],
       "note": "Announced, not shipping: Apple's configurator still said \"512GB memory option for M5 Ultra coming late October\" on 2026-10-15, with no price. Every M5 Ultra benchmark so far is on a 96GB or 256GB machine. Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default.",
       "peerLink": {
         "maxCards": 0,
         "source": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"A cluster of four Mac Studio systems delivers up to a remarkable 3x faster AI inference than a single system.\"",
         "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      },
+      "compute": {
+        "unit": "Tops",
+        "note": "Derived, not Apple's: Apple publishes no GPU throughput, only ratios (\"over 4x the peak GPU compute performance for AI compared to M4\"). Each M5 GPU core's Neural Accelerator does about 1,024 FP16 FLOP per clock (Taras Zakharko's A19 benchmark: \"approximately 7.4 TFLOPS for the 5-core A19 ... around 1000 FLOPS of matrix multiplication throughput per cycle\"), and INT8 about twice that (\"approximately 13.4 TOPS, just short of a double\"). 80 cores x 1,024 x 1.62 GHz for FP16, x 2 for INT8; FP32 is the shader rate, 80 x 128 x 2 x 1.62. The clock is the 1,620 MHz top state powermetrics reports on an M5 Max (feedback-assistant/reports issue #830). No M5 Ultra clock has been measured; this assumes the M5 Max's. Apple's \"up to 4.5x the peak GPU compute for AI compared to M3 Ultra\" implies about 1.55-1.58 GHz instead, so these lean high, which is the right direction for a ceiling. Measured: Apple's own MLX benchmark (Qwen 3.8 27B BF16, 8K prompt) implies about 108 TFLOPS of effective prefill on an 80-core M5 Ultra.",
+        "source": "https://tzakharko.github.io/apple-neural-accelerators-benchmark/",
+        "values": {
+          "fp32": 33.2,
+          "fp16": 132.7,
+          "int8": 265.4
+        },
+        "unofficial": [
+          "fp32",
+          "fp16",
+          "int8"
+        ]
       }
     },
     {
@@ -3937,13 +4023,27 @@
       "memoryBandwidthGBs": 546,
       "sources": [
         "https://www.apple.com/newsroom/2024/10/apple-introduces-m4-pro-and-m4-max/",
-        "https://www.notebookcheck.net/Apple-M4-Max-40-core-GPU-Benchmarks-and-Specs.920457.0.html"
+        "https://www.notebookcheck.net/Apple-M4-Max-40-core-GPU-Benchmarks-and-Specs.920457.0.html",
+        "https://github.com/philipturner/metal-benchmarks"
       ],
       "note": "Unified memory, up to 128 GB; the 32-core GPU bin has 410 GB/s. The GPU gets only part of the RAM by default. Bandwidth facts carried over from the old Apple appendix.",
       "peerLink": {
         "maxCards": 0,
         "source": "https://developer.apple.com/videos/play/wwdc2026/233/ -- \"Starting in macOS 26.2, Remote Direct Memory Access protocol, shortly RDMA, is supported over Thunderbolt 5. RDMA moves data directly from one machine's memory to another's, avoiding most CPU and operating system overhead.\"",
         "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      },
+      "compute": {
+        "unit": "Tops",
+        "note": "Derived, not Apple's: Apple publishes no GPU throughput. 40 GPU cores x 128 FP32 ALUs (Philip Turner's metal-benchmarks: \"Apple described each GPU core as having 128 ALUs\") x 2 FLOP per FMA x 1.578 GHz, the most cited M4 Max clock, also not a direct measurement. This generation has no GPU matrix units, and FP16 runs at the FP32 rate (Apple, \"Explore GPU advancements in M3 and A17 Pro\" (Tech Talk): FP16 math \"execute[s] at peak throughput\", with \"up to 2x\" only for mixed FP16/FP32/integer work), so the FP16 figure is a shader (vector) rate, which is what bounds its prefill. Measured: MLX fp16 GEMM reaches 14.8 TFLOPS on a 40-core M4 Max, 92% of this.",
+        "source": "https://github.com/philipturner/metal-benchmarks",
+        "values": {
+          "fp32": 16.2,
+          "fp16:vector": 16.2
+        },
+        "unofficial": [
+          "fp32",
+          "fp16:vector"
+        ]
       }
     },
     {
@@ -3958,7 +4058,10 @@
         "https://www.apple.com/newsroom/2026/03/apple-debuts-m5-pro-and-m5-max-to-supercharge-the-most-demanding-pro-workflows/",
         "https://www.notebookcheck.net/Apple-M5-Max-Processor-Benchmarks-and-Specs.1244918.0.html",
         "https://www.apple.com/mac-studio/specs/ -- \"32-core GPU ... 460GB/s memory bandwidth\"; \"M5 Max with 18-core CPU, 40-core GPU, and 16-core Neural Engine (614GB/s memory bandwidth)\"; \"36GB unified memory | Configurable to: 48GB, 64GB, or 128GB (M5 Max with 18-core CPU and 40-core GPU)\"",
-        "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)"
+        "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)",
+        "https://tzakharko.github.io/apple-neural-accelerators-benchmark/",
+        "https://github.com/feedback-assistant/reports/issues/830",
+        "https://github.com/philipturner/metal-benchmarks"
       ],
       "note": "Unified memory, up to 128 GB, which needs the 40-core GPU (614 GB/s); the 32-core bin is 36GB-only at 460 GB/s (Apple's spec pages). Released is the MacBook Pro launch; the Mac Studio M5 Max shipped on 2026-09-22. The GPU gets only part of the RAM by default.",
       "pricing": {
@@ -3977,6 +4080,21 @@
         "maxCards": 0,
         "source": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Users and teams looking to share AI compute can cluster multiple Mac Studio systems together using the built-in support for Thunderbolt 5 and RDMA (remote direct memory access).\"",
         "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      },
+      "compute": {
+        "unit": "Tops",
+        "note": "Derived, not Apple's: Apple publishes no GPU throughput, only ratios (\"over 4x the peak GPU compute performance for AI compared to M4\"). Each M5 GPU core's Neural Accelerator does about 1,024 FP16 FLOP per clock (Taras Zakharko's A19 benchmark: \"approximately 7.4 TFLOPS for the 5-core A19 ... around 1000 FLOPS of matrix multiplication throughput per cycle\"), and INT8 about twice that (\"approximately 13.4 TOPS, just short of a double\"). 40 cores x 1,024 x 1.62 GHz for FP16, x 2 for INT8; FP32 is the shader rate, 40 x 128 x 2 x 1.62. The clock is the 1,620 MHz top state powermetrics reports on an M5 Max (feedback-assistant/reports issue #830). Measured on a 40-core M5 Max (Anemll benchmarks): 63.8-64.2 TFLOPS FP16 and 122.6 TOPS INT8, 97% and 92% of these. BF16 runs on the accelerators from macOS 26.1, but nobody has measured its rate, so it is left out; FP8 is measured at the FP16 rate on A19 but is not recorded here.",
+        "source": "https://tzakharko.github.io/apple-neural-accelerators-benchmark/",
+        "values": {
+          "fp32": 16.6,
+          "fp16": 66.4,
+          "int8": 132.7
+        },
+        "unofficial": [
+          "fp32",
+          "fp16",
+          "int8"
+        ]
       }
     },
     {

@@ -116,13 +116,19 @@ export function scatterKey(u, precision) {
 }
 
 export function renderScatter(units, matchIds, precision) {
+  // "RTX 3090 24GB" labels as "RTX 3090", but not where the memory is what tells
+  // two units apart (three M3 Ultras), and never as a dangling "..., up to".
+  const trim = u => u.short ?? u.label.replace(/(,\s*up to)?\s*\d+\s*GB$/, '');
+  const seen = new Map();
+  for (const u of units) seen.set(trim(u), (seen.get(trim(u)) ?? 0) + 1);
+  const shortLabel = u => (seen.get(trim(u)) > 1 ? u.label : trim(u));
   const point = u => {
     const key = scatterKey(u, precision);
     return {
       x: u.memoryBandwidthGBs,
       y: u.compute.values[key],
       label: u.label,
-      short: u.short ?? u.label.replace(/\s*\d+GB$/, ''),
+      short: shortLabel(u),
       arch: u.archLabel,
       mem: u.memoryGB,
       vendor: u.vendor ?? 'Other',
