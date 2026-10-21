@@ -132,6 +132,25 @@ const q32KvPerPos = 64 * 8 * 128 * 2 * 2;
   console.log(`${ok ? '✓' : '✗'} check-ceilings fails on an impossible reading${ok ? '' : ` -- exit ${run.status}: ${run.stderr.slice(0, 200)}`}`);
 }
 
+// ...but not on one whose line offloaded that metric beyond what the ceiling
+// counts, and only for the metric named.
+{
+  const doc = JSON.parse(fs.readFileSync(path.join(root, 'data/compendium.json'), 'utf8'));
+  const l = doc.lines.find(x => x.id === 'x_5090_qwen3_32b_llamacpp');
+  const pre = l.results.find(r => r.metric === 'prefill');
+  pre.value *= 10;
+  l.offload = { to: 'CPU', metrics: ['prefill'], note: 'test' };
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'ceilings-')), 'offload.json');
+  fs.writeFileSync(file, JSON.stringify(doc));
+  const pass = spawnSync('node', [path.join(root, 'tools/check-ceilings.mjs'), file], { encoding: 'utf8' }).status === 0;
+  l.offload.metrics = ['decode'];
+  fs.writeFileSync(file, JSON.stringify(doc));
+  const fail = spawnSync('node', [path.join(root, 'tools/check-ceilings.mjs'), file], { encoding: 'utf8' }).status === 1;
+  const ok = pass && fail;
+  if (!ok) failed++;
+  console.log(`${ok ? '✓' : '✗'} an offloaded metric is exempt, and only that metric${ok ? '' : ` -- prefill offload passed: ${pass}, decode offload failed it: ${fail}`}`);
+}
+
 if (failed) {
   console.error(`\n✗ ${failed} ceiling check${failed > 1 ? 's' : ''} failed`);
   process.exit(1);

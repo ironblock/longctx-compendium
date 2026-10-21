@@ -89,6 +89,9 @@ const CASES = [
   ['a link group size that is not smaller than the largest', 'not smaller than its maxCards', d => {
     unit(d, 'rtx_3090').peerLink = { maxCards: 2, options: [2], fabric: 'NVLink 3 bridge', source: 'x' };
   }],
+  ['an offload with no note', 'missing required property "note"', d => {
+    line(d, L).offload = { to: 'Apple Neural Engine', metrics: ['prefill'] };
+  }],
   ['unknown precision key shape', 'does not match', d => {
     unit(d, 'rtx_pro_6000').compute.values['FP 16'] = 250;
   }],

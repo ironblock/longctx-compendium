@@ -290,12 +290,13 @@ function pointRow(l, r) {
   const value = r.range ? `${r.range[0]}–${r.range[1]}` : sig(r.value);
   const c = r.ceiling;
   const specOn = c.speculative;
+  const offload = c.offload;
   let share = `<td class="lbl"><span class="sub">${esc(c.why ?? '')}</span></td>`;
   if (r.ratio != null) {
     const pct = r.ratio * 100;
-    const cls = specOn ? 'spec' : pct > 105 ? 'over' : '';
+    const cls = specOn || offload ? 'spec' : pct > 105 ? 'over' : '';
     share =
-      `<td class="lbl"><div class="bar"><span class="v">${pct >= 10 ? Math.round(pct) : pct.toFixed(1)}%</span><span class="track"><span class="fill ${cls}" style="width:${Math.min(100, Math.max(1, pct)).toFixed(1)}%"></span></span>${specOn ? '<span class="specmark" title="Speculative decoding was on: more than one token per pass is possible, so this can legitimately exceed the ceiling">spec</span>' : ''}</div>` +
+      `<td class="lbl"><div class="bar"><span class="v">${pct >= 10 ? Math.round(pct) : pct.toFixed(1)}%</span><span class="track"><span class="fill ${cls}" style="width:${Math.min(100, Math.max(1, pct)).toFixed(1)}%"></span></span>${specOn ? '<span class="specmark" title="Speculative decoding was on: more than one token per pass is possible, so this can legitimately exceed the ceiling">spec</span>' : ''}${offload ? `<span class="specmark" title="${esc(`Part of this ran on the ${offload}, which the ceiling does not count, so it can legitimately exceed the ceiling`)}">offload</span>` : ''}</div>` +
       (r.depth == null && r.metric === 'decode' ? '<span class="sub">vs the empty-context ceiling, so at least this</span>' : '') +
       (r.range ? '<span class="sub">top of the range</span>' : '') +
       '</td>';

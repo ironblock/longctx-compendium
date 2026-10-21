@@ -667,6 +667,35 @@
             }
           }
         },
+        "offload": {
+          "description": "Work that ran on hardware outside the unit's rated GPU figures: the Apple Neural Engine, the CPU. Readings of the metrics named are shown against the ceiling but not held to it, the way speculative decoding is.",
+          "type": "object",
+          "required": [
+            "to",
+            "metrics",
+            "note"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "to": {
+              "type": "string"
+            },
+            "metrics": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "prefill",
+                  "decode"
+                ]
+              }
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
         "spec": {
           "type": "object",
           "required": [

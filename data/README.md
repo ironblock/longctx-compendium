@@ -216,7 +216,10 @@ synchronization cost, one weight width throughout — so a ceiling is an upper
 bound. A reading above its own ceiling therefore means something in its
 attribution is wrong, and `tools/check-ceilings.mjs` fails on it. The one
 legitimate exception is speculative decoding, which can emit more than one token
-per pass; those readings are shown against the ceiling but not held to it.
+per pass; those readings are shown against the ceiling but not held to it. The
+same goes for a line whose `offload` says part of a metric ran on hardware the
+unit's figures do not cover (`{ "to": "Apple Neural Engine", "metrics":
+["prefill"], "note": "…" }`): a GPU-only ceiling does not bound it.
 
 ## Readings: serving lines
 

@@ -9,7 +9,9 @@
 //   node tools/check-ceilings.mjs [data.json] --table  also print every reading's share
 //
 // Exempt: decode under speculative decoding, which can emit several tokens per
-// pass and so can legitimately exceed a one-token-per-pass bound.
+// pass and so can legitimately exceed a one-token-per-pass bound; and a reading
+// whose line offloaded that metric to hardware the ceiling does not count (the
+// Apple Neural Engine, the CPU).
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -45,8 +47,8 @@ for (const l of model.LINES) {
     }
     compared++;
     const label = `${l.id} ${p.metric}@${p.depth ?? '?'}${p.streams > 1 ? `×${p.streams}` : ''}${p.spec === 'off' ? ' spec-off' : ''}`;
-    if (table) console.log(`${(p.ratio * 100).toFixed(1).padStart(6)}%  ${p.ceiling.speculative ? 'spec ' : '     '}${label}`);
-    if (p.ratio > SLACK && !p.ceiling.speculative) over.push(`${label}: ${p.value ?? p.range} is ${(p.ratio * 100).toFixed(0)}% of a ${p.ceiling.tps.toFixed(1)} t/s ceiling`);
+    if (table) console.log(`${(p.ratio * 100).toFixed(1).padStart(6)}%  ${p.ceiling.speculative ? 'spec ' : p.ceiling.offload ? 'off  ' : '     '}${label}`);
+    if (p.ratio > SLACK && !p.ceiling.speculative && !p.ceiling.offload) over.push(`${label}: ${p.value ?? p.range} is ${(p.ratio * 100).toFixed(0)}% of a ${p.ceiling.tps.toFixed(1)} t/s ceiling`);
   }
 }
 

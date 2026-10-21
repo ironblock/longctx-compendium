@@ -461,6 +461,7 @@ export function ceilingFor(line, point, unitById) {
       tps: c.tps,
       bound: 'bandwidth',
       speculative: specOn,
+      offload: line.offload?.metrics.includes('decode') ? line.offload.to : null,
       assumedKv: !line.kvCache && !!modelById(line.model),
       weightsOnly: !modelById(line.model),
       bytes: c.bytes,
@@ -469,7 +470,7 @@ export function ceilingFor(line, point, unitById) {
   if (point.metric === 'prefill') {
     const p = prefillCeiling(m, unit, { cards, formatKey: line.quant.key, depth: point.depth, cold: point.prefillBasis === 'cold' });
     if (p.tps == null) return { why: `no rated ${p.precision.precision.toUpperCase()} throughput for ${unit.label}` };
-    return { tps: p.tps, bound: 'compute', precision: p.precision };
+    return { tps: p.tps, bound: 'compute', precision: p.precision, offload: line.offload?.metrics.includes('prefill') ? line.offload.to : null };
   }
   return { why: `no ceiling for ${point.metric}` };
 }
