@@ -10629,6 +10629,410 @@
         "note": "Vulkan backend maintainer (0cc4m), measuring a PR against master; the PR's own 1257.3 is left out."
       },
       "note": "No decode figure: this table gives only a +1.2% change for tg128. Two weeks earlier the same maintainer measured 54.18 t/s for this model and quant on the A770 (PR #29476, merged 2026-09-29; generation length not stated)."
+    },
+    {
+      "id": "x_m5ultra256_qwen38_27b_omlx",
+      "label": "Qwen3.8 27B · oQ4e · oMLX 0.7.1.dev2 · MTP · M5 Ultra 80-core",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mac_m5_ultra_256",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "macOS 27.0.1."
+        }
+      },
+      "engine": {
+        "name": "oMLX",
+        "version": "0.7.1.dev2",
+        "note": "oMLX community benchmark: \"Context: Code (Python)\", Lightning MTP, speculative prefill and DFlash off, TurboQuant KV off."
+      },
+      "quant": {
+        "format": "oQ4e (MLX, 4-bit default with selected 5-, 6- and 8-bit weights)",
+        "key": "mlx4",
+        "note": "Mixed widths, so the true average is above the nominal 4.5 bits; the ceiling computed at 4.5 is generous."
+      },
+      "spec": {
+        "method": "mtp",
+        "note": "oMLX \"Lightning MTP\"; the page does not show the draft depth. Speculative prefill off."
+      },
+      "status": "measured",
+      "observed": "2026-10-15",
+      "recorded": "2026-10-21",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://omlx.ai/benchmarks/performance/i3glyrrz -- \"Performance by Context Length\" table, Qwen3.8-27B-oQ4e-mtp, \"Context 32,768 ... PP 1,728 tok/s ... TG 213.1 tok/s ... TTFT 18963 ms\"; specprefill_enabled: false, mtp_enabled: true, qwen35_ane_prefill_enabled: false",
+        "reproduced": false,
+        "note": "oMLX's community benchmark board: a user-submitted run with its settings recipe. The page states no prompt or generation length beyond the context label."
+      },
+      "hazards": [
+        "Decode is MTP-on with temperature 1 on a code prompt, one run per context length, so it moves with acceptance more than with depth (on the M5 Ultra 80-core, 77 t/s at 16K and 213 at 32K). The page does not say how many tokens were generated; each decode row is filed at the context length the page lists it under."
+      ],
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 1024,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1579,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "1K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 1024,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 101.8,
+          "confidence": "m~",
+          "note": "after the 1K prompt, MTP on"
+        },
+        {
+          "metric": "prefill",
+          "depth": 4096,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1900,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "4K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 4096,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 102,
+          "confidence": "m~",
+          "note": "after the 4K prompt, MTP on"
+        },
+        {
+          "metric": "prefill",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1889,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "8K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 123.5,
+          "confidence": "m~",
+          "note": "after the 8K prompt, MTP on"
+        },
+        {
+          "metric": "prefill",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1849,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "16K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 77.2,
+          "confidence": "m~",
+          "note": "after the 16K prompt, MTP on"
+        },
+        {
+          "metric": "prefill",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1728,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "32K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 213.1,
+          "confidence": "m~",
+          "note": "after the 32K prompt, MTP on"
+        }
+      ]
+    },
+    {
+      "id": "x_m5ultra96_qwen38_27b_omlx",
+      "label": "Qwen3.8 27B · oQ4e · oMLX 0.7.1.dev1 · MTP · M5 Ultra 64-core",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mac_m5_ultra_96",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "macOS 27.0.1."
+        }
+      },
+      "engine": {
+        "name": "oMLX",
+        "version": "0.7.1.dev1",
+        "note": "oMLX community benchmark: \"Context: Code (Python)\", Lightning MTP, speculative prefill and DFlash off, TurboQuant KV off."
+      },
+      "quant": {
+        "format": "oQ4e (MLX, 4-bit default with selected 5-, 6- and 8-bit weights)",
+        "key": "mlx4",
+        "note": "Mixed widths, so the true average is above the nominal 4.5 bits; the ceiling computed at 4.5 is generous."
+      },
+      "spec": {
+        "method": "mtp",
+        "note": "oMLX \"Lightning MTP\"; the page does not show the draft depth. Speculative prefill off."
+      },
+      "status": "measured",
+      "observed": "2026-10-10",
+      "recorded": "2026-10-21",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://omlx.ai/benchmarks/performance/q6dyktji -- \"Performance by Context Length\" table, Qwen3.8-27B-oQ4e-mtp, \"Context 32,768 ... PP 1,385 tok/s ... TG 201.1 tok/s ... TTFT 23665 ms\"; specprefill_enabled: false, mtp_enabled: true, qwen35_ane_prefill_enabled: false",
+        "reproduced": false,
+        "note": "oMLX's community benchmark board: a user-submitted run with its settings recipe. The page states no prompt or generation length beyond the context label."
+      },
+      "hazards": [
+        "Decode is MTP-on with temperature 1 on a code prompt, one run per context length, so it moves with acceptance more than with depth (on the M5 Ultra 80-core, 77 t/s at 16K and 213 at 32K). The page does not say how many tokens were generated; each decode row is filed at the context length the page lists it under."
+      ],
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 1024,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1308,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "1K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 1024,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 106.3,
+          "confidence": "m~",
+          "note": "after the 1K prompt, MTP on"
+        },
+        {
+          "metric": "prefill",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1540,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "8K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 105.4,
+          "confidence": "m~",
+          "note": "after the 8K prompt, MTP on"
+        },
+        {
+          "metric": "prefill",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1385,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "32K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 201.1,
+          "confidence": "m~",
+          "note": "after the 32K prompt, MTP on"
+        }
+      ],
+      "note": "Two more runs on a 64-core M5 Ultra the same day gave 1,391 / 200.3 and 1,385 / 199.4 at 32K (omlx.ai/benchmarks/performance/k9r2woub and 2gln3izt; their settings were not checked). Prefill is 80% of the 80-core machine's at 32K, the ratio of their GPU cores."
+    },
+    {
+      "id": "x_m3ultra512_qwen38_27b_omlx",
+      "label": "Qwen3.8 27B · oQ4e · oMLX 0.7.1 · MTP · M3 Ultra 80-core",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mac_m3_ultra_512",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "macOS 27.0."
+        }
+      },
+      "engine": {
+        "name": "oMLX",
+        "version": "0.7.1",
+        "note": "oMLX community benchmark: \"Context: Code (Python)\", Lightning MTP, speculative prefill and DFlash off, TurboQuant KV off."
+      },
+      "quant": {
+        "format": "oQ4e (MLX, 4-bit default with selected 5-, 6- and 8-bit weights)",
+        "key": "mlx4",
+        "note": "Mixed widths, so the true average is above the nominal 4.5 bits; the ceiling computed at 4.5 is generous."
+      },
+      "spec": {
+        "method": "mtp",
+        "note": "oMLX \"Lightning MTP\"; the page does not show the draft depth. Speculative prefill off."
+      },
+      "status": "measured",
+      "observed": "2026-10-21",
+      "recorded": "2026-10-21",
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://omlx.ai/benchmarks/performance/ilusmp1u -- \"Performance by Context Length\" table, Qwen3.8-27B-oQ4e-mtp, \"Context 32,768 ... PP 500.3 tok/s ... TG 166.3 tok/s ... TTFT 65500 ms\"; specprefill_enabled: false, mtp_enabled: true, qwen35_ane_prefill_enabled: true",
+        "reproduced": false,
+        "note": "oMLX's community benchmark board: a user-submitted run with its settings recipe. The page states no prompt or generation length beyond the context label."
+      },
+      "hazards": [
+        "Decode is MTP-on with temperature 1 on a code prompt, one run per context length, so it moves with acceptance more than with depth (on the M5 Ultra 80-core, 77 t/s at 16K and 213 at 32K). The page does not say how many tokens were generated; each decode row is filed at the context length the page lists it under.",
+        "oMLX's Neural Engine prefill was on for this run (qwen35_ane_prefill_enabled), so some prefill work ran on the ANE beside the GPU."
+      ],
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 1024,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 432.4,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "1K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 1024,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 86.3,
+          "confidence": "m~",
+          "note": "after the 1K prompt, MTP on"
+        },
+        {
+          "metric": "prefill",
+          "depth": 4096,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 511.4,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "4K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 4096,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 77.5,
+          "confidence": "m~",
+          "note": "after the 4K prompt, MTP on"
+        },
+        {
+          "metric": "prefill",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 576.3,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "8K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 84.9,
+          "confidence": "m~",
+          "note": "after the 8K prompt, MTP on"
+        },
+        {
+          "metric": "prefill",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 550.2,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "16K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 99,
+          "confidence": "m~",
+          "note": "after the 16K prompt, MTP on"
+        },
+        {
+          "metric": "prefill",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 500.3,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "32K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 166.3,
+          "confidence": "m~",
+          "note": "after the 32K prompt, MTP on"
+        },
+        {
+          "metric": "prefill",
+          "depth": 65536,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 422.4,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "64K context; prompt length over time to first token"
+        },
+        {
+          "metric": "decode",
+          "depth": 65536,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 65.4,
+          "confidence": "m~",
+          "note": "after the 64K prompt, MTP on"
+        }
+      ],
+      "note": "Four earlier runs of the same model on an 80-core M3 Ultra 512GB gave 491.4-496.6 prefill and 163.1-164.8 decode at 32K (2026-10-12 to 10-15; settings not checked). The page also has a batching table (aggregate decode 86.3 / 81.9 / 173.8 / 267.7 t/s at 1 / 2 / 4 / 8 streams) that is not recorded here."
     }
   ],
   "candidates": [
