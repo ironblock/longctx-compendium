@@ -153,9 +153,21 @@ check('hardware summary rendered', /of \d+ units match/.test(await text('#hwSumm
   const got = await count('#hwTable tbody td span[title^="Not the vendor"]', p);
   check('unofficial FP16 figures are marked', want > 0 && got === want, `${got} marks for ${want} unofficial figures`);
   // The chart has no asterisks, so its caption counts them and the tooltip names them.
-  const inChart = model.UNITS.filter(u => u.memoryBandwidthGBs && u.compute?.values?.fp16 != null && u.compute.unofficial?.includes('fp16')).length;
+  // The key a unit is plotted at: dense FP16, or the vector rate on a card with no matrix units.
+  const keyOf = u => {
+    const v = u.compute?.values ?? {};
+    if (v.fp16 != null) return 'fp16';
+    const f = Object.values(u.formats ?? {});
+    return f.length && f.every(x => x === 'absent') && v['fp16:vector'] != null ? 'fp16:vector' : null;
+  };
+  const shown = model.UNITS.filter(u => u.memoryBandwidthGBs && keyOf(u));
+  const inChart = shown.filter(u => u.compute.unofficial?.includes(keyOf(u))).length;
   const cap = await text('#scatterCap', p);
   check('the chart says how many of its points are unofficial', inChart > 0 && cap.includes(`${inChart} of the figures are unofficial`), cap);
+  // A card with no matrix units is on the chart at its vector rate, drawn as a ring.
+  const vec = shown.filter(u => keyOf(u) === 'fp16:vector');
+  const drawn = await p.evaluate(() => Chart.getChart('scatterChart').data.datasets.flatMap(d => d.data).filter(x => x.vector).map(x => x.label));
+  check('matrix-less cards are plotted at their vector rate', vec.length > 0 && drawn.length === vec.length && vec.every(u => drawn.includes(u.label)) && cap.includes(`${vec.length} at a vector rate`), `${drawn.join(', ')} | ${cap}`);
   await p.close();
 }
 

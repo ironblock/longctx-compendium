@@ -267,11 +267,12 @@ try {
     el('hwReset').hidden = !parts.length;
 
     const sc = renderScatter(model.UNITS, new Set(ok.map(u => u.id)), state.scatterPrec);
-    el('scatterCap').textContent = `bandwidth vs dense ${FMT_LABEL[state.scatterPrec]} throughput · ${sc.plotted} of ${model.UNITS.length} units have both figures · ${sc.on} plotted match${sc.unofficial ? ` · ${sc.unofficial} of the figures are unofficial (hover a point)` : ''}`;
+    el('scatterCap').textContent = `bandwidth vs dense ${FMT_LABEL[state.scatterPrec]} throughput · ${sc.plotted} of ${model.UNITS.length} units have both figures · ${sc.on} plotted match${sc.vector ? ` · ${sc.vector} at a vector rate (no matrix units)` : ''}${sc.unofficial ? ` · ${sc.unofficial} of the figures are unofficial (hover a point)` : ''}`;
     // The legend names each vendor's colour, then says what solid and faint mean.
     el('scatterLegend').innerHTML =
       vendors.map(v => `<span><span class="swatch" style="background:${esc(vendorColor(v))}"></span>${esc(v)}</span>`).join('') +
       `<span>solid and labelled: matches the filters</span>` +
+      `<span><span class="swatch ring"></span>ring: vector rate, no matrix units</span>` +
       `<span><span class="swatch faint" style="background:var(--muted)"></span>faint: filtered out — hover to name it</span>`;
     renderHardwareTable(model, state, matches);
     return ok;

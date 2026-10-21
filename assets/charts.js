@@ -102,18 +102,35 @@ const pointLabels = {
  * than identity: units matching the hardware filter are the accent colour and
  * labelled, everything else is a muted point that only the tooltip names.
  */
+/**
+ * The figure a unit is plotted at: its dense matrix rate, or, on a card with no
+ * matrix units at all, its shader-ALU (vector) rate, which is what bounds its
+ * prefill (ceiling.js vectorBound uses the same rule).
+ */
+export function scatterKey(u, precision) {
+  const v = u.compute?.values ?? {};
+  if (v[precision] != null) return precision;
+  const fmt = Object.values(u.formats ?? {});
+  const matrixless = fmt.length > 0 && fmt.every(s => s === 'absent');
+  return matrixless && v[`${precision}:vector`] != null ? `${precision}:vector` : null;
+}
+
 export function renderScatter(units, matchIds, precision) {
-  const point = u => ({
-    x: u.memoryBandwidthGBs,
-    y: u.compute.values[precision],
-    label: u.label,
-    short: u.short ?? u.label.replace(/\s*\d+GB$/, ''),
-    arch: u.archLabel,
-    mem: u.memoryGB,
-    vendor: u.vendor ?? 'Other',
-    unofficial: !!u.compute.unofficial?.includes(precision),
-  });
-  const plotted = units.filter(u => u.memoryBandwidthGBs && u.compute?.values?.[precision] != null);
+  const point = u => {
+    const key = scatterKey(u, precision);
+    return {
+      x: u.memoryBandwidthGBs,
+      y: u.compute.values[key],
+      label: u.label,
+      short: u.short ?? u.label.replace(/\s*\d+GB$/, ''),
+      arch: u.archLabel,
+      mem: u.memoryGB,
+      vendor: u.vendor ?? 'Other',
+      vector: key.endsWith(':vector'),
+      unofficial: !!u.compute.unofficial?.includes(key),
+    };
+  };
+  const plotted = units.filter(u => u.memoryBandwidthGBs && scatterKey(u, precision));
   // Lowest first, so a point drawn over another is the higher one, which is
   // also the one pointLabels names: a label never sits on someone else's colour.
   const byY = (a, b) => a.y - b.y;
@@ -129,8 +146,8 @@ export function renderScatter(units, matchIds, precision) {
           label: 'Other units',
           data: off,
           // Colour follows the vendor whether or not the point matches; matching is solid and labelled.
-          backgroundColor: c => fade(vendorColor(c.raw?.vendor), 0.35),
-          borderColor: css('--panel'),
+          backgroundColor: c => (c.raw?.vector ? css('--panel') : fade(vendorColor(c.raw?.vendor), 0.35)),
+          borderColor: c => (c.raw?.vector ? fade(vendorColor(c.raw?.vendor), 0.35) : css('--panel')),
           borderWidth: 2,
           pointRadius: 5,
           pointHoverRadius: 7,
@@ -140,8 +157,8 @@ export function renderScatter(units, matchIds, precision) {
           label: 'Matches the filter',
           data: on,
           labelPoints: true,
-          backgroundColor: c => vendorColor(c.raw?.vendor),
-          borderColor: css('--panel'),
+          backgroundColor: c => (c.raw?.vector ? css('--panel') : vendorColor(c.raw?.vendor)),
+          borderColor: c => (c.raw?.vector ? vendorColor(c.raw?.vendor) : css('--panel')),
           borderWidth: 2,
           pointRadius: 6,
           pointHoverRadius: 8,
@@ -163,7 +180,8 @@ export function renderScatter(units, matchIds, precision) {
             label: it => [
               `${it.raw.vendor} · ${it.raw.arch ?? 'generation not recorded'}`,
               `${it.raw.x.toLocaleString()} GB/s · ${it.raw.mem ?? '?'} GB`,
-              `${it.raw.y.toLocaleString()} ${unit} dense ${precision.toUpperCase()}${it.raw.unofficial ? ' (unofficial)' : ''}`,
+              `${it.raw.y.toLocaleString()} ${unit} ${it.raw.vector ? 'vector' : 'dense'} ${precision.toUpperCase()}${it.raw.unofficial ? ' (unofficial)' : ''}`,
+              ...(it.raw.vector ? ['no matrix units: shader-ALU rate'] : []),
             ],
           },
         },
@@ -185,7 +203,12 @@ export function renderScatter(units, matchIds, precision) {
     },
     plugins: [pointLabels],
   });
-  return { plotted: plotted.length, on: on.length, unofficial: plotted.filter(u => u.compute.unofficial?.includes(precision)).length };
+  return {
+    plotted: plotted.length,
+    on: on.length,
+    unofficial: plotted.filter(u => u.compute.unofficial?.includes(scatterKey(u, precision))).length,
+    vector: plotted.filter(u => scatterKey(u, precision).endsWith(':vector')).length,
+  };
 }
 
 /** One colour per vendor, from the brand-colour tokens; anything unlisted gets the muted mark. */
