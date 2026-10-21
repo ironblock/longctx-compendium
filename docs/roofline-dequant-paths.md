@@ -66,7 +66,7 @@ grouped here; exceptions are called out.
 | AMD RDNA4 | **int8** | m | Unconditional WMMA int8 at every batch size — "MMQ is consistently faster than dequantization + hipBLAS" per the cited upstream PR (`mmq.cu:342,368`). |
 | Apple (batch>8) | **fp16** | e/m | Dequant to `half4x4` → `simdgroup_half8x8` MMA (M1-M4/A14-A18) or the newer `mpp::tensor_ops` cooperative-tensor path (M5/M6/A19/A20, name-gated), fp32 accumulate (`ggml-metal.metal:9560-9567,9436-9496`). |
 | Apple, decode (ne11≤8) | — | — | **Gap.** A separate matrix-vector kernel dispatches; its precision was never confirmed. |
-| Intel Xe2 (Arc B-series) | **fp16** (as dispatched) | i | The int8 MMQ kernel exists in source but `ggml_sycl_supports_mmq()` unconditionally `return false`s — dead code (`ggml-sycl.cpp:3503-3507`). Real path: oneDNN `dnnl::matmul`, fp16 operands. Whether that lands on XMX/DPAS hardware or generic vector ALUs is **not visible from this codebase** — closed-source oneDNN/oneMKL internals. |
+| Intel Xe2 (Arc B-series) | **fp16** (as dispatched) | i | The int8 MMQ kernel exists in source but `ggml_sycl_supports_mmq()` unconditionally `return false`s — dead code (`ggml-sycl.cpp:3503-3507`). Real path: oneDNN `dnnl::matmul`, fp16 operands. Whether that lands on XMX/DPAS hardware or generic vector ALUs is **not visible from this codebase** — closed-source oneDNN/oneMKL internals. The same holds for Alchemist (Arc A-series, Xe-HPG): `ggml_sycl_supports_mmq()` takes no device, and the only `intel_gpu_acm_g10` branch in `ggml_sycl_mul_mat` picks a Q4_0 matrix-vector kernel for decode, which prefill never reaches. |
 
 **IQ-series caveat**: IQ1_M has no `mmq_type_traits` entry — it can never
 take the tensor-core path at any batch size, always falling to fp16-dequant

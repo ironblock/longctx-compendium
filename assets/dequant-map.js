@@ -93,5 +93,9 @@ export const ARCH_TO_DEQUANT_FAMILY = {
   apple_m3: { family: 'apple' },
   apple_m4: { family: 'apple' },
   apple_m5: { family: 'apple', approximate: 'M5 can take the newer tensor-ops path; precision unconfirmed' },
+  // The SYCL finding is about llama.cpp's backend, not the chip: the MMQ gate
+  // takes no device, and the one Alchemist branch (intel_gpu_acm_g10) only
+  // picks a Q4_0 matrix-vector kernel for decode.
+  xe_hpg: { family: 'xe2' },
   xe2: { family: 'xe2' },
 };
