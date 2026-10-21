@@ -104,6 +104,8 @@ th.sorted{color:var(--text);background:var(--panel)}
 tbody tr:hover{background:rgba(255,255,255,.015)}
 .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .sub{display:block;font-size:10.5px;color:var(--dim);margin-top:2px}
+/* Fabric names run long; let them wrap under the card count. */
+td.link .sub{white-space:normal;max-width:15em;margin-left:auto}
 .dash{color:var(--dim);font-family:var(--mono)}
 .t-ok{color:var(--ok)} .t-warn{color:var(--warn)} .t-bad{color:var(--bad)}
 .grp{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;background:var(--panel2);color:var(--dim);border-top:1px solid var(--line);text-align:left}

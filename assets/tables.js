@@ -98,8 +98,9 @@ const HW_COLS = (prec) => [
       if (!l) return `<td class="num" title="Not yet sourced">?</td>`;
       const tip = [l.fabric, l.topology, l.note].filter(Boolean).join('. ');
       if (!l.maxCards) return `<td class="num"${tip ? ` title="${esc(tip)}"` : ''}>none</td>`;
-      const sizes = [...(l.options ?? []), l.maxCards].sort((a, b) => a - b).join(' or ');
-      return `<td class="num" title="${esc(tip)}">${sizes} cards<span class="sub">${esc(l.fabric ?? '')}</span></td>`;
+      const all = [...(l.options ?? []), l.maxCards].sort((a, b) => a - b);
+      const sizes = all.length > 1 ? `${all.slice(0, -1).join(', ')} or ${all.at(-1)}` : `${all[0]}`;
+      return `<td class="num link" title="${esc(tip)}">${sizes} cards<span class="sub">${esc(l.fabric ?? '')}</span></td>`;
     },
   },
   { key: 'tdp', label: 'TDP W', sort: u => u.tdpW, cell: u => `<td class="num">${u.tdpW ?? DASH}</td>` },

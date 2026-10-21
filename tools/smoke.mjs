@@ -159,6 +159,23 @@ check('hardware summary rendered', /of \d+ units match/.test(await text('#hwSumm
   await p.close();
 }
 
+// Cards joined without PCIe: "2+" means any direct link at all.
+{
+  const p = await browser.newPage();
+  const rowsAt = async n => {
+    await p.goto(`${base}/index.html#link=${n}`, { waitUntil: 'networkidle' });
+    return p.locator('#hwTable tbody tr > td:first-child > span:first-child').allTextContents();
+  };
+  const two = await rowsAt(2);
+  const want2 = model.UNITS.filter(u => u.link >= 2).length;
+  check('the 2+ link filter keeps exactly the linked cards', two.length === want2, `${two.length} rows for ${want2} linked units`);
+  check('2+ keeps a bridged pair and drops unlinked cards', two.includes('GeForce RTX 3090 24GB') && !two.some(l => /A770|PG199/.test(l)), two.join(', '));
+  const four = await rowsAt(4);
+  check('4+ keeps the 4-card hives and drops the pairs', four.some(l => /MI100/.test(l)) && four.some(l => /Max 1100/.test(l)) && !four.some(l => /RTX 3090/.test(l)), four.join(', '));
+  check('the link filter is in the summary', /cards joined without PCIe/.test(await text('#hwSummary', p)));
+  await p.close();
+}
+
 // The question this section exists for: FP8 matrix units and more than 1 TiB/s,
 // typed exactly into the bandwidth slider's minimum box.
 await page.click('#fmtChips button:has-text("FP8")');

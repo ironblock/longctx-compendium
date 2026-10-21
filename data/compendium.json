@@ -1706,6 +1706,11 @@
           "fp4": 2015.2
         },
         "source": "https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-6000/"
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/data-center/rtx-pro-6000-blackwell-workstation-edition/workstation-blackwell-rtx-pro-6000-workstation-edition-nvidia-us-3519208-web.pdf -- \"System Interface PCIe 5.0 x16\"",
+        "note": "The datasheet lists only PCIe 5.0 x16. NVIDIA's brief for the sibling Server Edition says \"NVIDIA NVLink: Not supported\", and Lenovo lists the Max-Q as \"NVLink support: No\"."
       }
     },
     {
@@ -1759,7 +1764,12 @@
           "tf32"
         ]
       },
-      "note": "GB202 with 110 SMs (14,080 CUDA cores). Announced 2025-03-18 for availability \"in the summer\"; the exact first-ship month is not sourced. It has FP8 matrix units and 1.25 TiB/s; at October 2026 street prices the RTX 5090 meets both for less, with a third of the memory."
+      "note": "GB202 with 110 SMs (14,080 CUDA cores). Announced 2025-03-18 for availability \"in the summer\"; the exact first-ship month is not sourced. It has FP8 matrix units and 1.25 TiB/s; at October 2026 street prices the RTX 5090 meets both for less, with a third of the memory.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/professional-desktop-gpus/rtx-pro-5000-blackwell/workstation-datasheet-blackwell-rtx-pro-5000-5488550-nvidia.pdf -- \"System Interface PCIe 5.0 x16\"",
+        "note": "The datasheet lists only PCIe 5.0 x16; NVIDIA states no NVLink for the sibling RTX PRO 6000 Server Edition."
+      }
     },
     {
       "id": "rtx_pro_5000_72",
@@ -1813,7 +1823,12 @@
           "tf32"
         ]
       },
-      "note": "The same GPU, bandwidth and power as the 48GB card; NVIDIA says only the memory differs. General availability through distributors from 2025-12-18."
+      "note": "The same GPU, bandwidth and power as the 48GB card; NVIDIA says only the memory differs. General availability through distributors from 2025-12-18.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/professional-desktop-gpus/rtx-pro-5000-blackwell/workstation-datasheet-blackwell-rtx-pro-5000-5488550-nvidia.pdf -- \"GPU Memory 48 GB GDDR7 with ECC 72 GB GDDR7 with ECC ... System Interface PCIe 5.0 x16\"",
+        "note": "Same datasheet as the 48 GB card: PCIe 5.0 x16 only."
+      }
     },
     {
       "id": "rtx_5090",
@@ -1867,6 +1882,10 @@
           "int8:sparse": 1676
         },
         "source": "https://www.runpod.io/articles/guides/nvidia-rtx-5090"
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5090/ -- \"NVIDIA NVLink™ (SLI-Ready) | No\""
       }
     },
     {
@@ -1922,7 +1941,11 @@
           "tf32"
         ]
       },
-      "note": "GB206, 36 SMs. Bandwidth (28 Gb/s on 128 bits) comes from reviews; NVIDIA's page lists the bus but not the bandwidth."
+      "note": "GB206, 36 SMs. Bandwidth (28 Gb/s on 128 bits) comes from reviews; NVIDIA's page lists the bus but not the bandwidth.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5060-family/ -- \"NVIDIA NVLink™ (SLI-Ready) | No | No\""
+      }
     },
     {
       "id": "radeon_r9700",
@@ -1972,6 +1995,11 @@
           "int4:sparse": 1531
         },
         "source": "https://www.gigabyte.com/us/Graphics-Card/GV-R9700AI-TOP-32GD-rev-10/sp"
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.amd.com/en/products/graphics/workstations/radeon-ai-pro/ai-9000-series/amd-radeon-ai-pro-r9700.html -- \"Bus Type | PCIe® 5.0 x16\"",
+        "note": "AMD markets it for multi-GPU workstations, over PCIe peer-to-peer."
       }
     },
     {
@@ -2022,7 +2050,12 @@
         },
         "source": "https://www.nvidia.com/en-us/products/workstations/dgx-spark/"
       },
-      "note": "NVIDIA publishes only \"up to 1 PFLOP FP4\" for GB10, and its docs say that figure is with sparsity; no NVIDIA source was found for the dense FP4 and BF16 figures recorded here, nor any FP8 figure."
+      "note": "NVIDIA publishes only \"up to 1 PFLOP FP4\" for GB10, and its docs say that figure is with sparsity; no NVIDIA source was found for the dense FP4 and BF16 figures recorded here, nor any FP8 figure.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.nvidia.com/en-us/products/workstations/dgx-spark/ -- \"Up to 4 DGX Spark systems can be connected using NVIDIA ConnectX-7 networking. You can cluster two or three systems with a single QSFP cable; clustering 4 systems requires an external network switch. ... 4 × DGX Spark | 256 GB | 512 GB | 200 GbE switch (QSFP56-DD, RoCE v2)\"",
+        "note": "Its ConnectX-7 joins up to four Sparks over 200 GbE with RoCE: a network between machines, reached over PCIe, so it does not count."
+      }
     },
     {
       "id": "mac_m3_ultra",
@@ -2065,6 +2098,11 @@
           "fp32": 21.5
         },
         "source": "https://www.eatyourbytes.com/applecpu-detail/apple-m3-ultra-60-core-gpu/"
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/ -- \"Apple’s custom-built UltraFusion packaging technology uses an embedded silicon interposer that connects two M3 Max dies across more than 10,000 signals, providing over 2.5TB/s of low-latency interprocessor bandwidth, and making M3 Ultra appear as a single chip to software.\"",
+        "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
       }
     },
     {
@@ -2096,7 +2134,12 @@
         "https://macpro-la.com/blogs/news/mac-studio-price-guide-2026 (used prices, Sep-Oct 2026)",
         "https://theregister.com/2025/03/05/apple_m3_ultra_mac_studio (launch prices)"
       ],
-      "note": "Bandwidth is 819 GB/s on both GPU bins. Apple no longer sells it new. The GPU gets only part of the RAM by default. Apple publishes no per-precision GPU compute figures."
+      "note": "Bandwidth is 819 GB/s on both GPU bins. Apple no longer sells it new. The GPU gets only part of the RAM by default. Apple publishes no per-precision GPU compute figures.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/ -- \"making M3 Ultra appear as a single chip to software.\"",
+        "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      }
     },
     {
       "id": "mac_m3_ultra_512",
@@ -2127,7 +2170,12 @@
         "https://macpro-la.com/blogs/news/mac-studio-price-guide-2026 (used prices, Sep-Oct 2026)",
         "https://theregister.com/2025/03/05/apple_m3_ultra_mac_studio -- \"bringing the total to $9,499 before you even upgrade the storage\""
       ],
-      "note": "The baseline for Apple's M5 Ultra AI claims. Bandwidth is the same 819 GB/s as every M3 Ultra; the 512GB buys capacity, not speed. The GPU gets only part of the RAM by default. Apple publishes no per-precision GPU compute figures."
+      "note": "The baseline for Apple's M5 Ultra AI claims. Bandwidth is the same 819 GB/s as every M3 Ultra; the 512GB buys capacity, not speed. The GPU gets only part of the RAM by default. Apple publishes no per-precision GPU compute figures.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/ -- \"making M3 Ultra appear as a single chip to software.\"",
+        "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      }
     },
     {
       "id": "mac_m5_ultra_96",
@@ -2155,7 +2203,12 @@
         "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Combined with up to 512GB of unified memory and 1.2TB/s of memory bandwidth, 50 percent higher than before\"; \"Mac Studio with M5 Ultra starts at $5,499 (U.S.)\"; \"Mac Studio with 512GB of unified memory is coming in late October.\"",
         "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)"
       ],
-      "note": "Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default."
+      "note": "Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Users and teams looking to share AI compute can cluster multiple Mac Studio systems together using the built-in support for Thunderbolt 5 and RDMA (remote direct memory access).\"",
+        "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      }
     },
     {
       "id": "mac_m5_ultra_256",
@@ -2184,7 +2237,12 @@
         "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)",
         "https://aicybr.com/blog/mac-studio-m5-max-m5-ultra-2026-price-specs-mac-mini-m6-comparison -- \"M5 Ultra, 36-core CPU / 80-core GPU | 256GB | 1TB | $10,799\""
       ],
-      "note": "Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default."
+      "note": "Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Thunderbolt 5 also enables multiple Mac Studio systems to be clustered, bringing up to 3x faster performance for distributed AI inference when compared to a single system.\"",
+        "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      }
     },
     {
       "id": "mac_m5_ultra_512",
@@ -2198,7 +2256,12 @@
         "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Combined with up to 512GB of unified memory and 1.2TB/s of memory bandwidth, 50 percent higher than before\"; \"Mac Studio with M5 Ultra starts at $5,499 (U.S.)\"; \"Mac Studio with 512GB of unified memory is coming in late October.\"",
         "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios (configuration line items)"
       ],
-      "note": "Announced, not shipping: Apple's configurator still said \"512GB memory option for M5 Ultra coming late October\" on 2026-10-15, with no price. Every M5 Ultra benchmark so far is on a 96GB or 256GB machine. Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default."
+      "note": "Announced, not shipping: Apple's configurator still said \"512GB memory option for M5 Ultra coming late October\" on 2026-10-15, with no price. Every M5 Ultra benchmark so far is on a 96GB or 256GB machine. Apple gives the bandwidth as \"1.2TB/s\" for both GPU bins; 1,228 GB/s (twice the M5 Max) appears in community tables, but Apple has not said the chip is two M5 Max dies. Apple publishes no per-precision GPU compute figures. The GPU gets only part of the RAM by default.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"A cluster of four Mac Studio systems delivers up to a remarkable 3x faster AI inference than a single system.\"",
+        "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      }
     },
     {
       "id": "strix_halo",
@@ -2239,6 +2302,11 @@
           "int4": 118.8
         },
         "source": "https://chipversus.com/hardware/gpu/radeon-8060s"
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.amd.com/en/developer/resources/technical-articles/2026/how-to-run-a-one-trillion-parameter-llm-locally-an-amd.html -- \"A four-node cluster of Framework Desktop systems is used to demonstrate distributed local inference of the state-of-the-art one trillion-parameter Kimi K2.5 open-source model. ... Network Interconnect | 5Gbps over Ethernet\"",
+        "note": "One integrated GPU per machine; AMD's own multi-machine guide joins them over Ethernet."
       }
     },
     {
@@ -2273,7 +2341,12 @@
         "note": "Whether 900 TOPS is dense or sparse is not stated; it is filed as sparse for the reason given in the unit note, so this card has no dense figure and no prefill ceiling."
       },
       "memoryGB": 32,
-      "memoryBandwidthGBs": 1433
+      "memoryBandwidthGBs": 1433,
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://leikoe.github.io/posts/automotive-gpu-maxxxing -- \"NVLINK doesn't work. (unknown reasons to me at this point) ... From what I know, the chip supports NVLINK but the pcb misses the NVLINK traces so they change it. It's not a software side problem. The gsp reports that the card doesn't support NVLINK\"",
+        "note": "No NVIDIA source. A modder says the board lacks the NVLink traces; a community fuse survey says NVLink is fused off. Either way, none."
+      }
     },
     {
       "id": "arc_b70",
@@ -2325,6 +2398,11 @@
           "fp16",
           "bf16"
         ]
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2026-03/datasheet-b70-gpu.pdf -- \"Scale up with Linux multi-GPU compatibility, supporting OneAPI for faster AI processing with greater throughput and capacity for massive models. ... PCIe® Support Gen 5 x16 Native\"",
+        "note": "Intel's multi-GPU support for Arc is over PCIe; in Intel's material Xe Link appears only on the Data Center GPU Max series. No statement of absence found."
       }
     },
     {
@@ -2361,6 +2439,17 @@
           "fp32": 15.7,
           "fp16": 125
         }
+      },
+      "peerLink": {
+        "maxCards": 8,
+        "options": [
+          2,
+          4
+        ],
+        "fabric": "NVLink 2 on an SXM2 baseboard (DGX-1 / HGX-1)",
+        "topology": "Hybrid cube-mesh, not all-to-all: six 50 GB/s links per GPU (300 GB/s bidirectional), each GPU wired to 4 of the other 7; collectives relay through neighbours",
+        "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"Each Tesla V100 has 6 NVLink connections, each capable of 50 GB/s of bidirectional bandwidth, for an aggregate of up to 300 GB/s bidirectional bandwidth. ... Figure 4 DGX-1 uses an 8-GPU hybrid cube-mesh interconnection network topology. ... Furthermore, this 8-GPU cube-mesh topology is easily subdivided into fully connected halves, or into NVLink-connected GPU pairs.\"",
+        "note": "A single SXM2 module on a PCIe adapter, the usual hobbyist setup, has no NVLink at all."
       }
     },
     {
@@ -2403,6 +2492,13 @@
           "int4:sparse": 1136
         },
         "source": "https://www.nvidia.com/content/PDF/nvidia-ampere-ga-102-gpu-architecture-whitepaper-v2.pdf"
+      },
+      "peerLink": {
+        "maxCards": 2,
+        "fabric": "NVLink 3 bridge",
+        "topology": "Pairs, 112.5 GB/s bidirectional",
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/30-series/rtx-3090-3090ti/ -- \"NVIDIA NVLink™ (SLI-Ready) | Yes | Yes\"",
+        "note": "Two-way only. CUDA peer-to-peer runs over the bridge on Linux (users measure about 52 GB/s each way); without it, GeForce drivers report no peer-to-peer."
       }
     },
     {
@@ -2452,7 +2548,14 @@
           "int4:sparse": 2496
         }
       },
-      "memoryBandwidthGBs": 1935
+      "memoryBandwidthGBs": 1935,
+      "peerLink": {
+        "maxCards": 2,
+        "fabric": "NVLink 3 bridge (three bridges per pair)",
+        "topology": "Pairs, 600 GB/s bidirectional; pairs reach other pairs over PCIe",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-nvidia-us-2188504-web.pdf -- \"A100 80GB PCIe ... Interconnect: NVIDIA® NVLink® Bridge for 2 GPUs: 600GB/s ** PCIe Gen4: 64GB/s ... ** SXM4 GPUs via HGX A100 server boards; PCIe GPUs via NVLink Bridge for up to two GPUs\"",
+        "note": "This is the PCIe card; the SXM4 A100 80GB would be 8 on an HGX board."
+      }
     },
     {
       "id": "a100_40_pcie",
@@ -2496,7 +2599,13 @@
         },
         "note": "NVIDIA prints dense and sparse side by side for the PCIe card, at the 1,410 MHz boost. The same GA100 configuration as the SXM4 part, but at a 250 W limit; NVIDIA's launch datasheet rates the PCIe card's delivered application performance at 90% of the 400 W one."
       },
-      "note": "HBM2 (five 8 GB stacks), not the 80 GB card's HBM2e, which is most of the bandwidth gap. Two cards pair over an NVLink bridge. NVIDIA rounded the bandwidth to \"1.6 TB/sec\" in its June 2020 datasheet; its product brief and later datasheets say 1,555 GB/s."
+      "note": "HBM2 (five 8 GB stacks), not the 80 GB card's HBM2e, which is most of the bandwidth gap. Two cards pair over an NVLink bridge. NVIDIA rounded the bandwidth to \"1.6 TB/sec\" in its June 2020 datasheet; its product brief and later datasheets say 1,555 GB/s.",
+      "peerLink": {
+        "maxCards": 2,
+        "fabric": "NVLink 3 bridge (three bridges per pair)",
+        "topology": "Pairs, 600 GB/s bidirectional; pairs reach other pairs over PCIe",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/A100-PCIE-Prduct-Brief.pdf -- \"The NVIDIA A100 card supports NVLink bridge connection with a single adjacent A100 card. Each of the three attached bridges spans two PCIe slots. ... Total NVLink bridges supported by NVIDIA A100 3 | Total NVLink Rx and Tx lanes supported 96 | Data rate per NVIDIA A100 NVLink lane (each direction) 50 Gbps | Total maximum NVLink bandwidth 600 Gbytes per second\""
+      }
     },
     {
       "id": "h100_sxm",
@@ -2541,6 +2650,15 @@
           "int8": 1978.9,
           "int8:sparse": 3957.8
         }
+      },
+      "peerLink": {
+        "maxCards": 8,
+        "options": [
+          4
+        ],
+        "fabric": "NVLink 4 via NVSwitch (HGX H100)",
+        "topology": "8-GPU board: all-to-all through NVSwitch, 900 GB/s per GPU. 4-GPU board: directly linked, no switch",
+        "source": "https://www.nvidia.com/en-us/data-center/h100/ -- \"Interconnect | NVIDIA NVLink™: 900GB/s PCIe Gen5: 128GB/s | ... Server Options | NVIDIA HGX H100 Partner and NVIDIA-Certified Systems™ with 4 or 8 GPUs NVIDIA DGX H100 with 8 GPUs\""
       }
     },
     {
@@ -2587,6 +2705,12 @@
           "int8": 1512.9,
           "int8:sparse": 3026
         }
+      },
+      "peerLink": {
+        "maxCards": 2,
+        "fabric": "NVLink 4 bridge (three bridges per pair)",
+        "topology": "Pairs, 600 GB/s bidirectional",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/gtcs22/data-center/h100/PB-11133-001_v01.pdf -- \"The NVIDIA H100 card supports NVLink bridge connection with a single adjacent NVIDIA H100 card. Each of the three attached bridges spans two PCIe slots. ... Total NVLink bridges supported by NVIDIA H100 3 | Total NVLink Rx and Tx lanes supported 48 | Data rate per NVIDIA H100 NVLink lane (each direction) 100 Gbps | Total maximum NVLink bandwidth 600 Gbytes per second\""
       }
     },
     {
@@ -2634,7 +2758,14 @@
         },
         "note": "Per GPU. NVIDIA prints only the sparse figures for the NVL; the dense ones are half, by NVIDIA's own footnote for this table. These are NVIDIA's current ratings, about 84% of the per-GPU figures in its March 2023 launch table (which described the bridged pair: 188 GB, 7.8 TB/s, 1,979 sparse BF16 per GPU); do not halve the pair figures. The rating is not a hard limit: a 3-second mma.sync burst test on an H100 NVL measured about 977 TFLOPS FP16 and 1,410 TOPS INT8 dense (ReinForce-II/mmapeak), above these figures, while a card capped at 310 W fell to about 700 MHz under sustained load (infervisor/plow)."
       },
-      "note": "GH100 with 132 SMs, the same as the SXM card (not the H100 PCIe's 114). The marketed 94 GB is what CUDA reports as 93.1 GiB. Power depends on the cable: 400 W by default with a 450 W or 600 W strapped 16-pin cable, 310 W with a 300 W one. Two cards join over three NVLink bridges and appear as two GPUs. Announced 2023-03-21 for the second half of the year; the first-ship month is not sourced."
+      "note": "GH100 with 132 SMs, the same as the SXM card (not the H100 PCIe's 114). The marketed 94 GB is what CUDA reports as 93.1 GiB. Power depends on the cable: 400 W by default with a 450 W or 600 W strapped 16-pin cable, 310 W with a 300 W one. Two cards join over three NVLink bridges and appear as two GPUs. Announced 2023-03-21 for the second half of the year; the first-ship month is not sourced.",
+      "peerLink": {
+        "maxCards": 2,
+        "fabric": "NVLink 4 bridge (three bridges per pair)",
+        "topology": "Pairs, 600 GB/s bidirectional",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/h100/PB-11773-001_v01.pdf -- \"The NVIDIA H100 NVL card supports NVLink bridge connection with a single adjacent NVIDIA H100 NVL card. Each of the three attached bridges spans two PCIe slots. ... Total maximum NVLink bandwidth 600 Gbytes per second\"",
+        "note": "NVIDIA offers no 4-way bridge for the H100 NVL (it does for the H200 NVL)."
+      }
     },
     {
       "id": "h20",
@@ -2685,7 +2816,14 @@
           "int8"
         ]
       },
-      "note": "Hopper cut down for export to China: about 4 TB/s of HBM3 with roughly a sixth of an H100's matrix throughput, so its decode ceiling is H100-class while its prefill ceiling is far lower. As of 2026-10 it is exportable under licence but commercially stalled: NVIDIA reported no Hopper data-center shipments to China in Q1 FY27, though a large installed base remains. A 141GB HBM3e variant exists (NVIDIA release notes); its bandwidth is reported as 4.8 TB/s by LMSYS and 4.0 TB/s elsewhere, so it is not recorded. Released is the pre-order month (Reuters)."
+      "note": "Hopper cut down for export to China: about 4 TB/s of HBM3 with roughly a sixth of an H100's matrix throughput, so its decode ceiling is H100-class while its prefill ceiling is far lower. As of 2026-10 it is exportable under licence but commercially stalled: NVIDIA reported no Hopper data-center shipments to China in Q1 FY27, though a large installed base remains. A 141GB HBM3e variant exists (NVIDIA release notes); its bandwidth is reported as 4.8 TB/s by LMSYS and 4.0 TB/s elsewhere, so it is not recorded. Released is the pre-order month (Reuters).",
+      "peerLink": {
+        "maxCards": 8,
+        "fabric": "NVLink 4 on the HGX H20 8-GPU board",
+        "topology": "Switched all-to-all, inferred from the HGX Hopper design",
+        "source": "https://docs.nvidia.com/590trd1-trusted-computing-solutions-release-notes.pdf -- \"In the PPCIe mode, multiple Hopper-architecture GPUs interconnected by NVSwitch or NVLink can be passed through to one CVM. ... Following are the hardware SKUs that support PPCIe mode: ● HGX H100 8-GPU 80GB (Air Cooled) ... ● HGX H20A HBM3 96GB 8-GPU (Air Cooled) ● HGX H200 8-GPU 141GB (Air Cooled)\"",
+        "note": "NVIDIA publishes no H20 datasheet; the board is listed in its release notes, and the 900 GB/s link figure comes only from a third party (LMSYS)."
+      }
     },
     {
       "id": "mi300x",
@@ -2733,6 +2871,13 @@
           "fp8": 2614.9,
           "fp8:sparse": 5229.8
         }
+      },
+      "peerLink": {
+        "maxCards": 8,
+        "fabric": "Infinity Fabric on AMD's 8-OAM baseboard (UBB 2.0)",
+        "topology": "All-to-all: seven 128 GB/s links per GPU, one to each peer",
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/data-sheets/amd-instinct-mi300x-platform-data-sheet.pdf -- \"The eight Open Compute Project (OCP) Accelerator Modules (OAMs) are connected with an AMD Infinity Fabric™ mesh that provides direct connectivity between each of the GPUs over 128 GB/s bidirectional links. Each MI300X connects with its peers through seven links, plus one PCIe® Gen 5 x16 connection per OAM device provides upstream server and/or I/O connectivity.\"",
+        "note": "AMD sells it only on the 8-GPU board."
       }
     },
     {
@@ -2775,6 +2920,12 @@
           "fp6": 10066.3,
           "fp4": 10066.3
         }
+      },
+      "peerLink": {
+        "maxCards": 8,
+        "fabric": "Infinity Fabric on AMD's 8-OAM baseboard (UBB 2.0)",
+        "topology": "All-to-all: seven links per GPU at 153.6 GB/s (other AMD documents say 153 or 160)",
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/amd-instinct-miI355x-platform-brochure.pdf -- \"The eight Open Compute Project (OCP) Accelerator Modules (OAMs) are connected with an AMD Infinity Fabric™ mesh that provides direct connectivity between each of the GPUs over 153.6 GB/s bidirectional links. Each MI355X connects with its peers through seven links, plus one PCIe® Gen 5 x16 connection per OAM device for upstream server and/or I/O connectivity.\""
       }
     },
     {
@@ -2805,6 +2956,13 @@
           "fp16:sparse": 320
         },
         "source": "https://www.nvidia.com/en-us/geforce/news/geforce-rtx-3090-ti-out-now/"
+      },
+      "peerLink": {
+        "maxCards": 2,
+        "fabric": "NVLink 3 bridge",
+        "topology": "Pairs, 112.5 GB/s bidirectional",
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/30-series/rtx-3090-3090ti/ -- \"NVIDIA NVLink™ (SLI-Ready) | Yes | Yes\"",
+        "note": "The last GeForce card with NVLink."
       }
     },
     {
@@ -2841,6 +2999,11 @@
           "int4:sparse": 2642.4
         },
         "source": "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf"
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/40-series/rtx-4090/ -- \"NVIDIA NVLink™ (SLI-Ready) | No\"",
+        "note": "Puget Systems reports that GeForce drivers also disable PCIe peer-to-peer on this card, so two of them exchange data through host memory."
       }
     },
     {
@@ -2883,6 +3046,13 @@
           "int4:sparse": 1238.6
         },
         "source": "https://www.nvidia.com/content/PDF/nvidia-ampere-ga-102-gpu-architecture-whitepaper-v2.pdf"
+      },
+      "peerLink": {
+        "maxCards": 2,
+        "fabric": "NVLink 3 bridge (2- or 3-slot)",
+        "topology": "Pairs, 112.5 GB/s bidirectional",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/nvidia-rtx-a6000-datasheet.pdf -- \"NVIDIA NVLink Connects two NVIDIA RTX A6000 GPUs ... NVIDIA NVLink bandwidth 112.5 GB/s (bidirectional)\"",
+        "note": "\"Four-way VR SLI\" is two NVLink pairs."
       }
     },
     {
@@ -2921,6 +3091,10 @@
           "int4:sparse": 2914
         },
         "source": "https://images.nvidia.com/aem-dam/en-zz/Solutions/technologies/NVIDIA-ADA-GPU-PROVIZ-Architecture-Whitepaper_1.1.pdf"
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/rtx-6000/proviz-print-rtx6000-datasheet-web-2504660.pdf -- \"NVIDIA NVLink® No\""
       }
     },
     {
@@ -2958,6 +3132,10 @@
           "int4:sparse": 1466
         },
         "source": "https://www.nvidia.com/en-us/data-center/l40s/"
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.nvidia.com/en-us/data-center/l40s/ -- \"Interconnect Interface | PCIe Gen4 x16: 64GB/s bidirectional | ... NVIDIA® NVLink® Support | No\""
       }
     },
     {
@@ -3006,7 +3184,11 @@
         },
         "note": "Dense and sparse pairs as NVIDIA prints them in the Ada whitepaper's L4 appendix; the product page gives only the sparse figures. At the 2,040 MHz boost. NVIDIA does not state the accumulate mode; 121 dense FP16 is the full Ada per-SM rate. One operator found the card pinned at its 72 W cap and about 1,845 MHz during speculative decoding, about 90% of the boost clock."
       },
-      "note": "AD104 with 58 SMs; single-slot, low-profile, passively cooled, 72 W. GDDR6 ECC is on by default; one operator measured about 10% more decode with it off. In the cloud: AWS g6.xlarge (one L4) is $0.805 an hour on demand in us-east-1 (October 2026); GCP g2-standard-4 is about $0.71 (a third-party copy of Google's price list, 2026-10-11)."
+      "note": "AD104 with 58 SMs; single-slot, low-profile, passively cooled, 72 W. GDDR6 ECC is on by default; one operator measured about 10% more decode with it off. In the cloud: AWS g6.xlarge (one L4) is $0.805 an hour on demand in us-east-1 (October 2026); GCP g2-standard-4 is about $0.71 (a third-party copy of Google's price list, 2026-10-11).",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://docs.nvidia.com/vgpu/sizing/virtual-workstation/latest/gpus-vws.html -- \"Table 1 NVIDIA GPUs Recommended for RTX vWS | RTX PRO 6000 Blackwell Server Edition | RTX PRO 4500 Blackwell Server Edition | L40S | L4 | A40 | A10 | ... NVLink Support | No | No | No | No | Yes | No\""
+      }
     },
     {
       "id": "radeon_pro_v620",
@@ -3044,7 +3226,12 @@
           "int8:vector"
         ]
       },
-      "note": "A data-center and cloud part (it ran in Azure NGads V620 VMs), so used cards are presumably ex-cloud. Passive, full-height, dual-slot, 2x 8-pin; it needs server airflow. Same Navi 21 configuration as the RX 6800 XT, with 32 GB and ECC. ROCm supports it (Ubuntu only). Known llama.cpp problems: HIP flash attention can assert on RDNA 2 at head size 256, which Qwen3.x 27B uses (discussion #23310, open), and Vulkan flash attention slows sharply with depth (issue #25207). AMD's spec page gives a 2023-09-01 launch date against the November 2021 announcement; general availability may explain it."
+      "note": "A data-center and cloud part (it ran in Azure NGads V620 VMs), so used cards are presumably ex-cloud. Passive, full-height, dual-slot, 2x 8-pin; it needs server airflow. Same Navi 21 configuration as the RX 6800 XT, with 32 GB and ECC. ROCm supports it (Ubuntu only). Known llama.cpp problems: HIP flash attention can assert on RDNA 2 at head size 256, which Qwen3.x 27B uses (discussion #23310, open), and Vulkan flash attention slows sharply with depth (issue #25207). AMD's spec page gives a 2023-09-01 launch date against the November 2021 announcement; general availability may explain it.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.amd.com/en/products/accelerators/radeon-pro/amd-radeon-pro-v620.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16\"",
+        "note": "AMD's spec page lists only PCIe 4.0 x16 and has no link row, unlike its Instinct pages; no bridge part was found."
+      }
     },
     {
       "id": "radeon_pro_w7900",
@@ -3084,6 +3271,11 @@
           "int4": 245
         },
         "source": "https://www.amd.com/en/products/graphics/workstations/radeon-pro/w7900.html"
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.amd.com/en/products/graphics/workstations/radeon-pro/w7900.html -- \"Bus Type | PCIe® 4.0 x16 (3.0 Backward Compatible)\"",
+        "note": "The spec page has no link row and AMD sells no bridge; its multi-GPU guidance is about PCIe slots."
       }
     },
     {
@@ -3116,6 +3308,11 @@
           "int4": 246
         },
         "source": "https://www.amd.com/en/products/graphics/desktops/radeon/7000-series/amd-radeon-rx-7900xtx.html"
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://rocm.docs.amd.com/projects/radeon-ryzen/en/docs-6.1.3/docs/install/native_linux/mgpu.html -- \"When using two AMD Radeon 7900XTX GPUs, the following HIP error is observed when running PyTorch micro-benchmarking if any one of the two GPUs are connected to a non-CPU PCIe slot (PCIe on chipset):\"",
+        "note": "No bridge exists; AMD's multi-GPU guidance is about PCIe slot placement."
       }
     },
     {
@@ -3153,6 +3350,11 @@
           "fp16",
           "bf16"
         ]
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2026-03/intel-arc-pro-b-series-graphics-quick-reference-guide-v1-0.pdf -- \"Scale up with Linux multi-GPU compatibility, up to 100+ GB combined graphics memory, and oneAPI support for faster AI processing, higher throughput, and massive models.\"",
+        "note": "Intel's multi-GPU support for Arc is over PCIe; in Intel's material Xe Link appears only on the Data Center GPU Max series. No statement of absence found."
       }
     },
     {
@@ -3198,7 +3400,12 @@
           "bf16"
         ]
       },
-      "note": "Same compute as the Arc Pro B65 (20 Xe-cores, 160 XMX engines) on the 24GB, 192-bit BMG-G21, with PCIe 5.0 x8 electrical. Released is the Computex announcement (May 2025); the first US retail listing was September 2025. Dual-GPU boards (Maxsun Arc Pro B60 Dual 48G) shipped in August 2025: they are two separate 24GB GPUs, each on PCIe x8, needing host bifurcation, so a rig counts them as two of this unit."
+      "note": "Same compute as the Arc Pro B65 (20 Xe-cores, 160 XMX engines) on the 24GB, 192-bit BMG-G21, with PCIe 5.0 x8 electrical. Released is the Computex announcement (May 2025); the first US retail listing was September 2025. Dual-GPU boards (Maxsun Arc Pro B60 Dual 48G) shipped in August 2025: they are two separate 24GB GPUs, each on PCIe x8, needing host bifurcation, so a rig counts them as two of this unit.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.intel.com/content/www/us/en/products/sku/243916/intel-arc-pro-b60-graphics/specifications.html -- \"PCI Express Configurations ‡ | PCI Express 5.0 x8\"",
+        "note": "Intel's multi-GPU support for Arc is over PCIe; in Intel's material Xe Link appears only on the Data Center GPU Max series. No statement of absence found. Dual-GPU B60 boards join their two GPUs through PCIe bifurcation."
+      }
     },
     {
       "id": "max_1100",
@@ -3249,6 +3456,16 @@
           "bf16",
           "int8"
         ]
+      },
+      "peerLink": {
+        "maxCards": 4,
+        "options": [
+          2
+        ],
+        "fabric": "Xe Link bridge (2- or 4-card)",
+        "topology": "All-to-all: six Xe Link connections between two cards, or two between each pair of four",
+        "source": "https://cdrdv2-public.intel.com/817799/817799_Intel%20Data%20Center%20GPU%20Max%201100%20Datasheet_Rev_1_0.pdf -- \"The Intel Data Center GPU Max 1100 can run in one, two, or four card configurations. Two and four-card configurations can use Intel® Xe Link connections for direct all-to-all card-to-card communication. ... X2 bridges connect two cards and provide six Intel Xe Link connections between them. X4 bridges connect four cards and provide two Intel Xe Link connections between each card.\"",
+        "note": "Intel lists both bridges (99ARXG, 99ARXX) as discontinued."
       }
     },
     {
@@ -3289,6 +3506,13 @@
           "bf16",
           "int8"
         ]
+      },
+      "peerLink": {
+        "maxCards": 4,
+        "fabric": "Xe Link on Intel's 4-OAM carrier board",
+        "topology": "All-to-all within the 4-card subsystem",
+        "source": "https://download.intel.com/newsroom/archive/2025/en-us-2022-11-09-intel-max-series-brings-breakthrough-memory-bandwidth-and-performance-to-hpc-and-ai.pdf -- \"Beyond individual cards and modules, Intel will offer the Intel Data Center GPU Max Series subsystem with x4 GPU OAM carrier board and Intel Xe Link to enable high performance multiGPU communication within the subsystem.\"",
+        "note": "Aurora runs six per node, all linked, on blades built for Argonne rather than a board anyone could order."
       }
     },
     {
@@ -3324,7 +3548,17 @@
         },
         "note": "All vector: this card has no matrix units. FP16 is packed FP16 on the ALUs; INT8 is the dot4 instruction, at exactly four times the FP32 rate (AMD's datasheet says \"Up to 53.6\"). AMD claims INT4 capability (dot8) but publishes no rate, so none is recorded. At the 1,725 MHz peak engine clock."
       },
-      "note": "Passively cooled, full-height, dual-slot, 2x 8-pin, 300 W: it needs server airflow or an aftermarket fan, and needs \"Above 4G Decoding\" on the host. The 16GB MI50 is identical apart from memory. llama.cpp still supports gfx906 upstream in HIP and Vulkan as of 2026-10-14, but ROCm has listed it unsupported since 6.4. Community benchmarks are often from overclocked cards (1,825 MHz core, 1,125 MHz HBM, about 12.5% more bandwidth), so their absolute rates overstate a stock card. Release date: AMD lists 2018-11-18 for both sizes, though its 2018 announcement made the MI50 a 16GB card and the 32GB part appears later."
+      "note": "Passively cooled, full-height, dual-slot, 2x 8-pin, 300 W: it needs server airflow or an aftermarket fan, and needs \"Above 4G Decoding\" on the host. The 16GB MI50 is identical apart from memory. llama.cpp still supports gfx906 upstream in HIP and Vulkan as of 2026-10-14, but ROCm has listed it unsupported since 6.4. Community benchmarks are often from overclocked cards (1,825 MHz core, 1,125 MHz HBM, about 12.5% more bandwidth), so their absolute rates overstate a stock card. Release date: AMD lists 2018-11-18 for both sizes, though its 2018 announcement made the MI50 a 16GB card and the 32GB part appears later.",
+      "peerLink": {
+        "maxCards": 4,
+        "options": [
+          2
+        ],
+        "fabric": "Infinity Fabric Link bridge",
+        "topology": "Ring: two links per GPU, so a 4-card hive is a ring, not all-to-all. AMD gave 100 GB/s per link at launch and 92 GB/s later",
+        "source": "https://ir.amd.com/news-events/press-releases/detail/859/amd-unveils-worlds-first-7nm-datacenter-gpus----powering-the-next-era-of-artificial-intelligence-cloud-computing-and-high-performance-computing-hpc -- \"Up to 6X Faster Data Transfer: Two Infinity Fabric™ Links per GPU deliver up to 200 GB/s of peer-to-peer bandwidth – up to 6X faster than PCIe 3.0 alone[4] – and enable the connection of up to 4 GPUs in a hive ring configuration (2 hives in 8 GPU servers).\"",
+        "note": "The bridges (AMD 199-999762 two-way, 199-999764 four-way) are hard to find, per a Debian ROCm maintainer, and MI100 and MI210 bridges do not fit."
+      }
     },
     {
       "id": "mi100",
@@ -3359,6 +3593,13 @@
           "int8": 184.6
         },
         "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/product-briefs/instinct-mi100-brochure.pdf"
+      },
+      "peerLink": {
+        "maxCards": 4,
+        "fabric": "Infinity Fabric Link bridge (quad hive)",
+        "topology": "All-to-all within a 4-card hive, three links per GPU",
+        "source": "https://rocm.docs.amd.com/en/latest/reference/gpu-arch/mi100.html -- \"Each hive of four GPUs can participate in a fully connected, coherent AMD Instinct™ fabric that connects the four GPUs using 23 GT/sec AMD Infinity fabric links that run at a higher frequency than the inter-processor links. This inter-GPU link can be established in certified server systems if the GPUs are mounted in neighboring PCIe slots by installing the AMD Infinity Fabric™ bridge for the AMD Instinct™ GPUs.\"",
+        "note": "An 8-GPU MI100 server is two separate hives. No 2-card bridge was found."
       }
     },
     {
@@ -3392,6 +3633,15 @@
           "int8": 181
         },
         "source": "https://www.amd.com/en/products/accelerators/instinct/mi200/mi210.html"
+      },
+      "peerLink": {
+        "maxCards": 4,
+        "options": [
+          2
+        ],
+        "fabric": "Infinity Fabric Link bridge (2- or 4-way)",
+        "topology": "Direct-connect dual or quad hives; in a quad, one link to each peer",
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/product-briefs/instinct-mi210-brochure.pdf -- \"The AMD Infinity Architecture enables platform designs with dual and quad, direct-connect, GPU hives with high-speed P2P connectivity and delivers up to 1.2 TB/s of total theoretical GPU bandwidth within a server design.\""
       }
     },
     {
@@ -3423,6 +3673,13 @@
           "fp8": 2614.9
         },
         "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/instinct-mi325x-datasheet.pdf"
+      },
+      "peerLink": {
+        "maxCards": 8,
+        "fabric": "Infinity Fabric on AMD's 8-OAM baseboard (UBB 2.0)",
+        "topology": "All-to-all: seven links per GPU, one to each peer",
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/instinct-mi325x-datasheet.pdf -- \"Each discrete MI325X offers a 16-lane PCIe® Gen 5 host interface and seven AMD Infinity Fabric links for full connectivity between eight GPUs in a ring. The MI325X is available in an AMD Instinct MI325X Platform with eight accelerators interconnected by an AMD Universal Base Board (UBB 2.0) with HGX host connectors.\"",
+        "note": "AMD's datasheet calls this full mesh \"a ring\", and its spec page counts eight links where the datasheet has seven plus PCIe."
       }
     },
     {
@@ -3460,6 +3717,16 @@
           "int8:sparse": 3958
         },
         "source": "https://www.nvidia.com/en-us/data-center/h200/"
+      },
+      "peerLink": {
+        "maxCards": 8,
+        "options": [
+          4
+        ],
+        "fabric": "NVLink 4 via NVSwitch (HGX H200)",
+        "topology": "All-to-all, 900 GB/s per GPU",
+        "source": "https://www.nvidia.com/en-us/data-center/h200/ -- \"Max Thermal Design Power (TDP) | Up to 700W (configurable) | Up to 600W (configurable) | ... Form Factor | SXM | PCIe Dual-slot air-cooled | Interconnect | NVIDIA NVLink™: 900GB/s PCIe Gen5: 128GB/s | 2- or 4-way NVIDIA NVLink bridge: 900GB/s per GPU PCIe Gen5: 128GB/s | Server Options | NVIDIA HGX™ H200 partner and NVIDIA-Certified Systems™ with 4 or 8 GPUs | NVIDIA MGX™ H200 NVL partner and NVIDIA-Certified Systems with up to 8 GPUs\"",
+        "note": "Read as the SXM card, which this entry's compute figures match; the H200 NVL PCIe card would be 2 or 4 over bridges."
       }
     },
     {
@@ -3500,6 +3767,13 @@
           "int8:sparse": 9000
         },
         "source": "https://nvdam.widen.net/s/wwnsxrhm2w/blackwell-datasheet-3384703"
+      },
+      "peerLink": {
+        "maxCards": 8,
+        "fabric": "NVLink 5 via NVLink Switch (HGX B200)",
+        "topology": "All-to-all, 1.8 TB/s per GPU",
+        "source": "https://www.nvidia.com/en-us/data-center/hgx/ -- \"NVIDIA HGX is available in a single baseboard with eight NVIDIA Rubin, NVIDIA Blackwell, or NVIDIA Blackwell Ultra SXMs. ... HGX B300 | HGX B200 | Form Factor | 8x NVIDIA Blackwell Ultra SXM | 8x NVIDIA Blackwell SXM | ... NVIDIA NVLink Switch™ | NVLink 5 Switch | NVLink 5 Switch | NVLink GPU-to-GPU Bandwidth | 1.8 TB/s | 1.8 TB/s | Total NVLink Bandwidth | 14.4 TB/s | 14.4 TB/s\"",
+        "note": "GB200 NVL72 joins 72 GPUs, but on Grace-Blackwell boards, not this SXM module."
       }
     },
     {
@@ -3548,6 +3822,13 @@
       },
       "formatOverrides": {
         "int8": "unknown"
+      },
+      "peerLink": {
+        "maxCards": 8,
+        "fabric": "NVLink 5 via NVLink Switch (HGX B300)",
+        "topology": "All-to-all, 1.8 TB/s per GPU",
+        "source": "https://www.nvidia.com/en-us/data-center/hgx/ -- \"HGX B300 | HGX B200 | Form Factor | 8x NVIDIA Blackwell Ultra SXM | 8x NVIDIA Blackwell SXM | ... NVIDIA NVLink Switch™ | NVLink 5 Switch | NVLink 5 Switch | NVLink GPU-to-GPU Bandwidth | 1.8 TB/s | 1.8 TB/s | Total NVLink Bandwidth | 14.4 TB/s | 14.4 TB/s ... 4. HGX B300 and HGX B200 shipping now.\"",
+        "note": "Read as the HGX B300 board. This entry's figures come from the GB300 datasheet, and GB300 NVL72 is a 72-GPU NVLink domain. NVIDIA's \"HGX B300 NVL16\" name counts dies, not the 8 packages."
       }
     },
     {
@@ -3584,7 +3865,12 @@
         "https://www.intel.com/content/www/us/en/products/sku/241598/intel-arc-b580-graphics/specifications.html",
         "https://cdrdv2-public.intel.com/824434/2024_Intel_Tech%20Tour%20TW_Xe2%20and%20Lunar%20Lakes%20GPU.pdf -- p.9: \"XMX FP16 / BF16 8 16 2 4 2 2048\" / \"XMX INT8 8 16 4 4 2 4096\" ops per clock per Xe-core"
       ],
-      "note": "In the catalog for the llama.cpp SYCL tensor-split readings. Intel lists the launch as Q4 2024 and the TBP as 190 W."
+      "note": "In the catalog for the llama.cpp SYCL tensor-split readings. Intel lists the launch as Q4 2024 and the TBP as 190 W.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.intel.com/content/www/us/en/products/sku/241598/intel-arc-b580-graphics/specifications.html -- \"PCI Express Configurations ‡ | PCI Express 4.0 x8\"",
+        "note": "Intel's multi-GPU support for Arc is over PCIe; in Intel's material Xe Link appears only on the Data Center GPU Max series. No statement of absence found."
+      }
     },
     {
       "id": "arc_a770_16",
@@ -3634,7 +3920,12 @@
         "https://pcper.com/2022/09/intel-arc-a770-launches-october-12-starts-at-329/ (launch date and price)",
         "https://gpudojo.com/arc-a770-16gb (street price, 2026-10-21)"
       ],
-      "note": "Alchemist's flagship: full ACM-G10, 16 GB at 560 GB/s, discontinued. The 8 GB A770 (512 GB/s) is not listed; most llama.cpp posts say only \"A770\", so the lines here are put on the 16 GB card only where the model could not fit in 8 GB. The only readings at depth found are from an Intel engineer in llama.cpp PR #24406 (Vulkan, pp8192 and tg128 at 16,384 tokens of context), on Qwen3.5-4B and an unnamed Qwen2-family 14B, neither in the catalog, on a card whose memory size is not stated: 4B 328 / 49 t/s, 14B 56 / 15 t/s. Things that move A770 numbers a lot: the kernel driver (xe against i915: one user measured Llama-2-7B decode 55.5 against 34.5 on the same build), and flash attention, whose oneDNN path in SYCL and the Intel prefill kernel in Vulkan are both switched off on Alchemist because they gave wrong results (PRs #26635 and #29357)."
+      "note": "Alchemist's flagship: full ACM-G10, 16 GB at 560 GB/s, discontinued. The 8 GB A770 (512 GB/s) is not listed; most llama.cpp posts say only \"A770\", so the lines here are put on the 16 GB card only where the model could not fit in 8 GB. The only readings at depth found are from an Intel engineer in llama.cpp PR #24406 (Vulkan, pp8192 and tg128 at 16,384 tokens of context), on Qwen3.5-4B and an unnamed Qwen2-family 14B, neither in the catalog, on a card whose memory size is not stated: 4B 328 / 49 t/s, 14B 56 / 15 t/s. Things that move A770 numbers a lot: the kernel driver (xe against i915: one user measured Llama-2-7B decode 55.5 against 34.5 on the same build), and flash attention, whose oneDNN path in SYCL and the Intel prefill kernel in Vulkan are both switched off on Alchemist because they gave wrong results (PRs #26635 and #29357).",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.intel.com/content/www/us/en/products/sku/229151/intel-arc-a770-graphics-16gb/specifications.html -- \"PCI Express Configurations ‡ | Up to PCI Express 4.0 x16\"",
+        "note": "Intel's multi-GPU support for Arc is over PCIe; in Intel's material Xe Link appears only on the Data Center GPU Max series. No statement of absence found. Deep Link pairs it with an Intel integrated GPU in software, over PCIe."
+      }
     },
     {
       "id": "apple_m4_max",
@@ -3648,7 +3939,12 @@
         "https://www.apple.com/newsroom/2024/10/apple-introduces-m4-pro-and-m4-max/",
         "https://www.notebookcheck.net/Apple-M4-Max-40-core-GPU-Benchmarks-and-Specs.920457.0.html"
       ],
-      "note": "Unified memory, up to 128 GB; the 32-core GPU bin has 410 GB/s. The GPU gets only part of the RAM by default. Bandwidth facts carried over from the old Apple appendix."
+      "note": "Unified memory, up to 128 GB; the 32-core GPU bin has 410 GB/s. The GPU gets only part of the RAM by default. Bandwidth facts carried over from the old Apple appendix.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://developer.apple.com/videos/play/wwdc2026/233/ -- \"Starting in macOS 26.2, Remote Direct Memory Access protocol, shortly RDMA, is supported over Thunderbolt 5. RDMA moves data directly from one machine's memory to another's, avoiding most CPU and operating system overhead.\"",
+        "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      }
     },
     {
       "id": "apple_m5_max",
@@ -3676,6 +3972,11 @@
           "asOf": "2026-10",
           "note": "New at Apple's list price."
         }
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.apple.com/newsroom/2026/08/apple-introduces-new-mac-studio-with-m5-max-and-m5-ultra/ -- \"Users and teams looking to share AI compute can cluster multiple Mac Studio systems together using the built-in support for Thunderbolt 5 and RDMA (remote direct memory access).\"",
+        "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
       }
     },
     {
@@ -3726,7 +4027,12 @@
           "int4"
         ]
       },
-      "note": "A GA100 mining card that becomes a 64 GB inference card through a community unlock (cmpunlocker). The unlock patches the NVIDIA open kernel modules to address the HBM2e already on the card, 4 stacks of 16 GB on a 4096-bit bus, and to lift the compute throttle that left stock cards at 1/32 issue rate. Caveats: only the 8 GB card (PCI 10de:20c2) unlocks to 64 GB; the 10 GB card (10de:2082) reaches 40 GB, and nvidia-smi does not tell them apart. CUDA allocates about 63.4 GiB. Bandwidth depends on the card's VBIOS: 1,769 GB/s is the 300 W image (HBM at 1,728 MHz); the stock 250 W image runs 1,458 MHz for 1,493 GB/s. Both ship under the same ID, and the ceiling takes the faster. The patched driver pins exact versions (610.43.02/.03, 610.57.04, 615.71.09, 615.78.08 as of 2026-10-07), needs Secure Boot off and a cold power cycle, and is Linux-only. ECC is fused off; cmpunlocker reports it enabled since 2026-10-04, but nobody has shown it correcting errors, and one card needed a single-bit HBM page blacklisted by hand. The host link is PCIe Gen1 x4 stock. Gen2 comes from software, x16 from hand-soldering 24 missing capacitors, and Gen3 is unsolved. There is no NVLink. Memory and SM overclocks can corrupt data silently. Passively cooled, on a single EPS 8-pin."
+      "note": "A GA100 mining card that becomes a 64 GB inference card through a community unlock (cmpunlocker). The unlock patches the NVIDIA open kernel modules to address the HBM2e already on the card, 4 stacks of 16 GB on a 4096-bit bus, and to lift the compute throttle that left stock cards at 1/32 issue rate. Caveats: only the 8 GB card (PCI 10de:20c2) unlocks to 64 GB; the 10 GB card (10de:2082) reaches 40 GB, and nvidia-smi does not tell them apart. CUDA allocates about 63.4 GiB. Bandwidth depends on the card's VBIOS: 1,769 GB/s is the 300 W image (HBM at 1,728 MHz); the stock 250 W image runs 1,458 MHz for 1,493 GB/s. Both ship under the same ID, and the ceiling takes the faster. The patched driver pins exact versions (610.43.02/.03, 610.57.04, 615.71.09, 615.78.08 as of 2026-10-07), needs Secure Boot off and a cold power cycle, and is Linux-only. ECC is fused off; cmpunlocker reports it enabled since 2026-10-04, but nobody has shown it correcting errors, and one card needed a single-bit HBM page blacklisted by hand. The host link is PCIe Gen1 x4 stock. Gen2 comes from software, x16 from hand-soldering 24 missing capacitors, and Gen3 is unsolved. There is no NVLink. Memory and SM overclocks can corrupt data silently. Passively cooled, on a single EPS 8-pin.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/nvlink-hardware.md -- \"Bottom line: NVLink on the CMP 170HX does not work, has never worked for anyone, and is disabled by an OTP fuse rather than by software. ... because `FUSE_NVLINK_DIS` at `0x00820684` reads `0x00000007` and no override register exists that could countermand it. ... $ nvidia-smi nvlink -s / Device does not have or support Nvlink.\"",
+        "note": "No NVIDIA source: a community reverse-engineering project reads NVLink as fused off on the chip."
+      }
     },
     {
       "id": "quadro_rtx_8000",
@@ -3768,7 +4074,13 @@
         },
         "note": "Dense, at the 1,770 MHz boost. FP16 runs at full rate with FP16 or FP32 accumulate on this Quadro. INT8 and INT4 come from NVIDIA's GTC Japan 2018 deck and the whitepaper's identical-configuration Quadro RTX 6000 column; the RTX 8000 datasheet itself gives only the 130.5 tensor figure. PNY's page lists INT8 at 206.1 TOPS, which contradicts NVIDIA. No sparsity on Turing."
       },
-      "note": "A passive server variant exists with lower figures (14.9 TFLOPS FP32, 119.4 tensor, up to 624 GB/s, 250 W); third-party pages and used listings often mix the two, and these are the active card's. 260 W is graphics power; the 295 W board figure adds 35 W for the VirtualLink port. NVLink bridges pair two cards; PCIe 3.0 x16 to the host. No BF16: BF16 checkpoints run as FP16."
+      "note": "A passive server variant exists with lower figures (14.9 TFLOPS FP32, 119.4 tensor, up to 624 GB/s, 250 W); third-party pages and used listings often mix the two, and these are the active card's. 260 W is graphics power; the 295 W board figure adds 35 W for the VirtualLink port. NVLink bridges pair two cards; PCIe 3.0 x16 to the host. No BF16: BF16 checkpoints run as FP16.",
+      "peerLink": {
+        "maxCards": 2,
+        "fabric": "NVLink 2 HB bridge (2- or 3-slot)",
+        "topology": "Pairs, 100 GB/s bidirectional",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/quadro-rtx-8000-us-nvidia-946977-r1-web.pdf -- \"NVIDIA NVLink Connects 2 Quadro RTX 8000 GPUs ... NVIDIA NVLink bandwidth 100 GB/s (bidirectional)\""
+      }
     },
     {
       "id": "rtx_2080_ti_22gb",
@@ -3803,7 +4115,14 @@
         },
         "note": "Dense, at the reference 1,545 MHz boost: modded cards are rebuilt on assorted donor boards, so the reference column is the safer default (Founders Edition figures are about 6% higher). FP16 is the FP16-accumulate rate; with FP32 accumulate this GeForce part runs at half (53.8). The memory mod does not change compute. No sparsity on Turing."
       },
-      "note": "Not an NVIDIA product. NVIDIA only shipped the 2080 Ti with 11 GB; this is an aftermarket rework replacing each 1 GB GDDR6 package with a 2 GB one, changing the density straps and flashing a matching VBIOS. Bandwidth is the stock card's 616 GB/s, which every source says is unchanged on the same 352-bit bus, but nobody has published a measurement on a modded card. Released is the stock card's date. Donor boards (often blower \"Turbo\" cards) vary in clocks and power limits, and seller claims about drivers and firmware are untested. No BF16 or FP8: FP8 checkpoints run as 16-bit weights."
+      "note": "Not an NVIDIA product. NVIDIA only shipped the 2080 Ti with 11 GB; this is an aftermarket rework replacing each 1 GB GDDR6 package with a 2 GB one, changing the density straps and flashing a matching VBIOS. Bandwidth is the stock card's 616 GB/s, which every source says is unchanged on the same 352-bit bus, but nobody has published a measurement on a modded card. Released is the stock card's date. Donor boards (often blower \"Turbo\" cards) vary in clocks and power limits, and seller claims about drivers and firmware are untested. No BF16 or FP8: FP8 checkpoints run as 16-bit weights.",
+      "peerLink": {
+        "maxCards": 2,
+        "fabric": "NVLink 2 bridge (3- or 4-slot)",
+        "topology": "Pairs, up to 100 GB/s bidirectional",
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/ -- \"NVIDIA NVLink™ (SLI-Ready) | Yes | Yes | Yes | Yes | - | - | -\"",
+        "note": "The memory mod leaves the connector intact; a 2026 benchmark shows two 22 GB cards still linked, and Puget measured 96 GB/s bidirectional on stock 2080 Tis."
+      }
     },
     {
       "id": "t4",
@@ -3842,7 +4161,12 @@
         },
         "note": "Dense, at the 1,590 MHz boost clock. FP16 is 65 with FP16 or FP32 accumulate. NVIDIA's own whitepaper says the 585 MHz base clock is \"the lowest clock that would typically be seen in very stressful inferencing workloads\"; at that clock the same tensor cores give about 24, 48 and 96 TOPS (FP16, INT8, INT4), so a 70 W T4 can sit well below these ceilings. No sparsity on Turing."
       },
-      "note": "TU104 with 40 SMs; single-slot, passively cooled, 70 W, so it needs server airflow. NVIDIA's figures disagree with each other: the datasheet PDF says 300 GB/s and the whitepapers 320 GB/s (256-bit at 10 Gbps), which is used; the 2018 press release says 75 W, the datasheet 70 W. In the cloud: AWS g4dn.xlarge (one T4) is $0.526 an hour on demand in us-east-1 (October 2026)."
+      "note": "TU104 with 40 SMs; single-slot, passively cooled, 70 W, so it needs server airflow. NVIDIA's figures disagree with each other: the datasheet PDF says 300 GB/s and the whitepapers 320 GB/s (256-bit at 10 Gbps), which is used; the 2018 press release says 75 W, the datasheet 70 W. In the cloud: AWS g4dn.xlarge (one T4) is $0.526 an hour on demand in us-east-1 (October 2026).",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/tesla-t4/t4-tensor-core-datasheet-951643.pdf -- \"Interconnect Bandwidth 32 GB/sec ... System Interface x16 PCIe Gen3 ... Form Factor Low-Profile PCIe\"",
+        "note": "NVIDIA lists only PCIe Gen3 x16 and states no absence; a reseller's copy of NVIDIA's vGPU table says \"No\"."
+      }
     }
   ],
   "lines": [
