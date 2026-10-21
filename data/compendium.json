@@ -1189,6 +1189,97 @@
       "note": "Covers the Mac Studio M3 Ultra in every memory configuration. All eight types are absent because Apple now says so directly: pre-M5 GPUs are \"older GPUs without neural accelerators\", where TensorOps \"falls back to optimized shader implementations\". The APIs still accept types (simdgroup_matrix takes half, bfloat and float; TensorOps take everything in the Metal spec's Table 7.3), but they run on the ALUs at the FMA rate. Unlike RDNA 3's WMMA, no Apple ISA document shows a matrix instruction, and llama.cpp found its tensor path no faster on M2 Ultra, M4 or M4 Max. The M3 Ultra's \"ML accelerators\" are on the CPU side."
     },
     {
+      "id": "xe_hpg",
+      "vendor": "Intel",
+      "label": "Xe-HPG (Alchemist)",
+      "matrixUnits": "XMX (Xe Matrix eXtensions) engines, 16 per Xe-core (one per vector engine)",
+      "formats": {
+        "tf32": "absent",
+        "bf16": "native",
+        "fp16": "native",
+        "fp8": "absent",
+        "fp6": "absent",
+        "fp4": "absent",
+        "int8": "native",
+        "int4": "native"
+      },
+      "sources": [
+        {
+          "url": "https://cdrdv2-public.intel.com/758302/introduction-to-the-xe-hpg-architecture-white-paper.pdf",
+          "quote": "In addition to increasing the peak FP32 performance 5x over Xe-LP, Xe-HPG includes XMX engines built with systolic arrays to enable up to 275 teraOPS (TOPs) of compute performance. Xe-HPG supports FP16, BF16, INT8, INT4, and INT2 data formats to provide a range of quantization for inferencing workloads",
+          "locator": "Intel white paper 'Introduction to the Xe-HPG Architecture' (1122/RMK/RHM3), p.2, 'Deep Learning Inference Support'",
+          "supports": [
+            "int4",
+            "int8",
+            "fp16",
+            "bf16",
+            "fp8:absent",
+            "fp6:absent",
+            "fp4:absent",
+            "mapping:ArcA-series=Xe-HPG"
+          ]
+        },
+        {
+          "url": "https://cdrdv2-public.intel.com/758302/introduction-to-the-xe-hpg-architecture-white-paper.pdf",
+          "quote": "Table 1. EU/XVE throughput rates. ... XMX FP16 Ops per Clock (DPAS) – 128 | XMX BF16 Ops per Clock (DPAS) – 128 | XMX INT8 Ops per Clock (DPAS) – 256 | XMX INT4/INT2 Ops per Clock (DPAS) – 512",
+          "locator": "Same paper, p.6, Table 1, Xe-HPG column (per vector engine; 16 per Xe-core). The table lists no TF32 or FP8 XMX rate.",
+          "supports": [
+            "fp16",
+            "bf16",
+            "int8",
+            "int4"
+          ]
+        },
+        {
+          "url": "https://www.intel.com/content/www/us/en/docs/oneapi/optimization-guide-gpu/2024-0/intel-xe-gpu-architecture.html",
+          "quote": "An Xe-core of the Xe-HPG GPU contains 16 vector and 16 matrix engines. It powers the Intel Arc GPUs. Each vector engine is 256 bit wide, supporting 8 FP32 SIMD operations with fused FMAs. With 16 vector engines, the Xe-core delivers 256 FP32 operations/cycle. Each matrix engine is 1024 bit wide. With 16 matrix engines, the Xe-core delivers 4096 int8 and 2048 FP16/BF16 operations/cycle.",
+          "locator": "Intel oneAPI GPU Optimization Guide 2024-0, 'Intel Xe GPU Architecture', Xe-HPG GPU paragraph (Xe rendered with subscript e on the page)",
+          "supports": [
+            "int8",
+            "fp16",
+            "bf16"
+          ]
+        },
+        {
+          "url": "https://uxlfoundation.github.io/oneDNN/dev_guide_data_types.html",
+          "quote": "Xe-HPG | Intel Arc A-Series Graphics (formerly Achemist) ... uArch | f64 | f32 | bf16 | f16 | s8/u8 | f8 | f4_e2m1 | s4/u4/u2 ... Xe-HPG | | + | + | + | + | . | | . | Legend: + indicates oneDNN uses hardware-native compute support for this data type. . indicates oneDNN supports this data type via conversion to a higher precision data type.",
+          "locator": "oneDNN Developer Guide 'Data Types', Hardware Limitations > Intel Graphics table (\"Achemist\" is the page's spelling). The f4_e2m1 cell is empty: not supported even by conversion.",
+          "supports": [
+            "bf16",
+            "fp16",
+            "int8",
+            "fp8:absent",
+            "fp4:absent"
+          ]
+        },
+        {
+          "url": "https://github.com/intel/llvm/blob/sycl/sycl/doc/extensions/experimental/sycl_ext_matrix/sycl_ext_oneapi_matrix.asciidoc",
+          "quote": "| `matrix_type::tf32` | `matrix_type::tf32` | `matrix_type::fp32` .2+| `matrix_type::fp32` | +<=+ 8 | 16 | 8 | `architecture::intel_gpu_pvc`, `architecture::intel_gpu_bmg_g21`, `architecture::intel_gpu_bmg_g31`, `architecture::intel_gpu_lnl_m`, `architecture::intel_gpu_ptl_h`, `architecture::intel_gpu_ptl_u`, `architecture::intel_gpu_wcl`, `architecture::intel_gpu_nvl_s`, `architecture::intel_gpu_nvl_u`, `architecture::intel_gpu_nvl_p`, `architecture::intel_gpu_cri`",
+          "locator": "intel/llvm SYCL extension spec sycl_ext_oneapi_matrix, 'Intel XMX Supported Combinations' table. The int8, fp16 and bf16 rows list intel_gpu_dg2_g10, dg2_g11 and dg2_g12 (Alchemist); the tf32 row does not.",
+          "supports": [
+            "tf32:absent"
+          ]
+        },
+        {
+          "url": "https://www.iwocl.org/wp-content/uploads/9394-James-Brodman-Intel.pdf",
+          "quote": "Intel XMX Supported Combinations | A type | Btype | Ctype | M | N | K | (u)int8_t | (u)int8_t | int32_t | <=8 | 8 (DG2) 16 (PVC) | 32 | fp16 | fp16 | float | <=8 | 8 (DG2) 16 (PVC) | 16 | bf16 | bf16 | float | <=8 | 8 (DG2) 16 (PVC) | 16 | tf32 | tf32 | float | <=8 | 16 (PVC) |",
+          "locator": "James Brodman (Intel), 'Unified Tensor Interface in DPC++', IWOCL 2024, slide 16. DG2 is Alchemist; its tf32 row has no DG2 entry. The slide lists no INT4 for either chip, which the white paper contradicts for Alchemist, so it is an API list, not a hardware one.",
+          "supports": [
+            "tf32:absent"
+          ]
+        },
+        {
+          "url": "https://github.com/intel/intel-graphics-compiler/blob/master/documentation/visa/instructions/DPAS.md",
+          "quote": "| Signed 4-bits | [-8, 7] | 0x06 | s4 | ... | Signed 8-bits | [-128, 127] | 0x08 | s8 | | bfloat | bfloat16 | 0x09 | bf | | half | fp16 | 0x0a | hf | | tf32 | tf32 | 0x0b | tf32 |",
+          "locator": "Intel Graphics Compiler vISA DPAS instruction doc, operand precision table. No FP6 precision exists in Intel's DPAS ISA.",
+          "supports": [
+            "fp6:absent"
+          ]
+        }
+      ],
+      "note": "Covers Alchemist: Arc A770 16GB. The XMX engines run FP16, BF16, INT8 and INT4/INT2; there is no TF32 path (the SYCL matrix spec lists Alchemist for INT8, FP16 and BF16 but not TF32) and no FP8. oneDNN marks s4/u4 as conversion-only, which reflects oneDNN using int4 only as a weight-storage type; Intel's white paper gives XMX INT4/INT2 at 512 ops per clock per vector engine. Per Xe-core the matrix rate is the same as Xe2's: 2,048 FP16/BF16 and 4,096 INT8 ops per clock (16 engines here, 8 twice as wide there)."
+    },
+    {
       "id": "xe2",
       "vendor": "Intel",
       "label": "Xe2 (Battlemage)",
@@ -1275,7 +1366,7 @@
           ]
         }
       ],
-      "note": "Covers Battlemage: Arc Pro B70, Arc Pro B65. TF32 is marked native on Intel engineering sources: the SYCL joint_matrix spec lists tf32 under 'Intel XMX Supported Combinations' for bmg_g21/bmg_g31, and Intel's driver enables the TF32 subgroup-MMA extension on Xe2. Caveat: Intel's own Xe2 architecture deck lists XMX types as INT2/INT4/INT8/FP16/BF16 only and gives no TF32 rate, so TF32 throughput on Xe2 is undocumented. FP8 is not native on Xe2-HPG: oneDNN marks f8 as handled via conversion (it marks f8 '+' only from Xe3p onward), and Intel's Xe2 deck does not list it. oneDNN's '.' for s4/u4 reflects oneDNN using int4 only as a weight-storage type, not hardware absence; Intel's deck lists XMX INT4/INT2 at 8192 ops/clk per Xe2-core."
+      "note": "Covers Battlemage: Arc Pro B70, B65 and B60, and Arc B580. TF32 is marked native on Intel engineering sources: the SYCL joint_matrix spec lists tf32 under 'Intel XMX Supported Combinations' for bmg_g21/bmg_g31, and Intel's driver enables the TF32 subgroup-MMA extension on Xe2. Caveat: Intel's own Xe2 architecture deck lists XMX types as INT2/INT4/INT8/FP16/BF16 only and gives no TF32 rate, so TF32 throughput on Xe2 is undocumented. FP8 is not native on Xe2-HPG: oneDNN marks f8 as handled via conversion (it marks f8 '+' only from Xe3p onward), and Intel's Xe2 deck does not list it. oneDNN's '.' for s4/u4 reflects oneDNN using int4 only as a weight-storage type, not hardware absence; Intel's deck lists XMX INT4/INT2 at 8192 ops/clk per Xe2-core."
     },
     {
       "id": "xe_hpc",
@@ -3494,6 +3585,56 @@
         "https://cdrdv2-public.intel.com/824434/2024_Intel_Tech%20Tour%20TW_Xe2%20and%20Lunar%20Lakes%20GPU.pdf -- p.9: \"XMX FP16 / BF16 8 16 2 4 2 2048\" / \"XMX INT8 8 16 4 4 2 4096\" ops per clock per Xe-core"
       ],
       "note": "In the catalog for the llama.cpp SYCL tensor-split readings. Intel lists the launch as Q4 2024 and the TBP as 190 W."
+    },
+    {
+      "id": "arc_a770_16",
+      "label": "Arc A770 16GB",
+      "vendor": "Intel",
+      "arch": "xe_hpg",
+      "released": "2022-10",
+      "memoryGB": 16,
+      "memoryBandwidthGBs": 560,
+      "tdpW": 225,
+      "process": "TSMC N6",
+      "compute": {
+        "unit": "Tops",
+        "note": "INT8 262 is Intel's only rating for this card (ARK, \"GPU Peak TOPS (Int8)\"). The rest come from Intel's Xe-HPG white paper, which gives figures for the full ACM-G10 at 2.1 GHz, the configuration ARK lists for the A770 (32 Xe-cores, 2,100 MHz): \"Up to 17.2 TFLOPs\" FP32, \"Up to 137.6 TOPs\" FP16 and \"Up to 275.2 TOPs\" INT8 on XMX. They are Intel's figures for the chip, not ratings for the card, so they are marked unofficial. BF16 and INT4 are derived from the paper's per-clock table (65,536 BF16 and 262,144 INT4/INT2 XMX ops per clock for ACM-G10) at the same 2.1 GHz. Intel's two documents disagree: ARK's 262 INT8 is the per-clock figure at 2.0 GHz, not 2.1, and Intel does not say which clock it used; at 2.0 GHz FP16 would be 131.",
+        "source": "https://www.intel.com/content/www/us/en/products/sku/229151/intel-arc-a770-graphics-16gb/specifications.html (INT8) and https://cdrdv2-public.intel.com/758302/introduction-to-the-xe-hpg-architecture-white-paper.pdf (p.4 rates, p.9 Table 3 per-clock figures)",
+        "values": {
+          "fp32": 17.2,
+          "fp16": 137.6,
+          "bf16": 137.6,
+          "int8": 262,
+          "int4": 550.5
+        },
+        "unofficial": [
+          "fp32",
+          "fp16",
+          "bf16",
+          "int4"
+        ]
+      },
+      "pricing": {
+        "msrp": {
+          "usd": 349,
+          "asOf": "2022-10",
+          "source": "https://pcper.com/2022/09/intel-arc-a770-launches-october-12-starts-at-329/",
+          "note": "Arc A770 Limited Edition 16GB, on sale 2022-10-12 (\"a very attractive $349 USD for that 16GB version\"; $329 was the 8GB card). ARK lists no price."
+        },
+        "street": {
+          "usd": 310,
+          "asOf": "2026-10",
+          "source": "https://gpudojo.com/arc-a770-16gb",
+          "note": "Used, asking: GPUDojo's lowest offer on 2026-10-21 (eBay $309.99; Amazon used $349.99). Completed sales on Jawa averaged $247 ($190-$295) over the past 12 months, 32 sales (jawa.gg/parts/gpus/arc-a770-16gb-92d0fe). New stock is scarce, from $710."
+        }
+      },
+      "sources": [
+        "https://www.intel.com/content/www/us/en/products/sku/229151/intel-arc-a770-graphics-16gb/specifications.html -- \"Graphics Clock 2100 MHz\", \"Xe-cores 32\", \"Intel Xe Matrix Extensions (Intel XMX) Engines 512\", \"Memory Size 16 GB\", \"Graphics Memory Interface 256 bit\", \"Graphics Memory Bandwidth 560 GB/s\", \"Graphics Memory Speed 17.5 Gbps\", \"TBP 225 W\", \"Lithography Type TSMC N6\", \"GPU Peak TOPS (Int8) 262\"",
+        "https://cdrdv2-public.intel.com/758302/introduction-to-the-xe-hpg-architecture-white-paper.pdf -- p.4: \"These improvements allow Xe-HPG to run up to 2.1 GHz in its most performant configuration. This allows Xe-HPG to deliver: Up to 17.2 TFLOPs of peak single precision (FP32) performance. Up to 137.6 TOPs of peak half precision (FP16) performance using XMX. Up to 275.2 TOPs of peak 8bit integer (INT8) performance using XMX.\"; p.9 Table 3, ACM-G10 column: \"XMX FP16 Ops per Clock (DPAS) 65536\", \"XMX BF16 Ops per Clock (DPAS) 65536\", \"XMX INT8 Ops per Clock (DPAS) 131072\", \"XMX INT4/INT2 Ops per Clock (DPAS) 262144\"; p.10: \"Memory Bandwidth (GB/s) 560\"",
+        "https://pcper.com/2022/09/intel-arc-a770-launches-october-12-starts-at-329/ (launch date and price)",
+        "https://gpudojo.com/arc-a770-16gb (street price, 2026-10-21)"
+      ],
+      "note": "Alchemist's flagship: full ACM-G10, 16 GB at 560 GB/s, discontinued. The 8 GB A770 (512 GB/s) is not listed; most llama.cpp posts say only \"A770\", so the lines here are put on the 16 GB card only where the model could not fit in 8 GB. The only readings at depth found are from an Intel engineer in llama.cpp PR #24406 (Vulkan, pp8192 and tg128 at 16,384 tokens of context), on Qwen3.5-4B and an unnamed Qwen2-family 14B, neither in the catalog, on a card whose memory size is not stated: 4B 328 / 49 t/s, 14B 56 / 15 t/s. Things that move A770 numbers a lot: the kernel driver (xe against i915: one user measured Llama-2-7B decode 55.5 against 34.5 on the same build), and flash attention, whose oneDNN path in SYCL and the Intel prefill kernel in Vulkan are both switched off on Alchemist because they gave wrong results (PRs #26635 and #29357)."
     },
     {
       "id": "apple_m4_max",
@@ -9918,6 +10059,252 @@
           "depthNote": "Each stream grows from 64 to 1,088 tokens; 576 is the midpoint."
         }
       ]
+    },
+    {
+      "id": "x_a770x2_qwen38_27b_q4km_sycl_layer",
+      "label": "Qwen3.8 27B · UD-Q4_K_M · llama.cpp SYCL · 2× A770 · layer split",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "arc_a770_16",
+            "count": 2
+          }
+        ],
+        "host": {
+          "note": "Fedora 44, kernel 7.2.11; Ryzen 9 5900X, 15 GiB RAM. Both cards behind an Intel PCIe switch at PCIe 3.0 x8; xe kernel driver (xe.force_probe=56a0); oneAPI 2026.1.1, Level Zero 26.35.39758."
+        }
+      },
+      "parallel": {
+        "mode": "layer"
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "1ae3092",
+        "lineage": "upstream plus three local commits",
+        "note": "SYCL (-DGGML_SYCL_F16=ON), build 1148: upstream master of 2026-10-19 plus three unmerged local SYCL commits. llama-bench -ngl 999 --flash-attn on --batch-size 2048 --ubatch-size 1024 -p 5120 -n 256 -r 3."
+      },
+      "quant": {
+        "format": "UD-Q4_K_M (Unsloth, 15.32 GiB)",
+        "key": "q4_k_m",
+        "bpw": 4.9,
+        "note": "Bits per weight from the 16.46 GB file (unsloth/Qwen3.8-27B-GGUF) over 26.9B parameters."
+      },
+      "kvCache": {
+        "k": "q8_0",
+        "v": "q8_0"
+      },
+      "status": "measured",
+      "observed": "2026-10-20",
+      "recorded": "2026-10-21",
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 5120,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 543.09,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "reps": 3,
+          "note": "llama-bench pp5120 (a 5,120-token prompt into an empty cache), mean of 3: 543.09 ± 2.04"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 14.44,
+          "confidence": "m~",
+          "reps": 3,
+          "note": "llama-bench tg256 from an empty context, mean of 3: 14.44 ± 0.01"
+        }
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/zhaoyshine/dual-intel-arc-a770-llm-bench/blob/6d4bfc790617dfb8a34c6bf4f9dd6588843a0d06/qwen3.8-27b-llama-cpp-q4-k-m/README.md#L101-L102 -- \"| qwen35 27B Q4_K - Medium |  15.32 GiB |    27.32 B | SYCL    | 999 |     1024 |   q8_0 |   q8_0 |   1 | both     | pp5120 | 543.09 ± 2.04 |\"",
+        "reproduced": false,
+        "note": "Personal benchmark repo (zhaoyshine), re-run on 2026-10-20. The README's \"dev\" column reads \"both\", which llama-bench does not print, so the table was edited by hand."
+      },
+      "hazards": [
+        "Three unmerged SYCL commits on top of upstream, so this is not a stock build."
+      ]
+    },
+    {
+      "id": "x_a770x2_qwen38_27b_q4km_sycl_tensor",
+      "label": "Qwen3.8 27B · UD-Q4_K_M · llama.cpp SYCL · 2× A770 · tensor split",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "arc_a770_16",
+            "count": 2
+          }
+        ],
+        "host": {
+          "note": "Fedora 44, kernel 7.2.11; Ryzen 9 5900X, 15 GiB RAM. Both cards behind an Intel PCIe switch at PCIe 3.0 x8; xe kernel driver (xe.force_probe=56a0); oneAPI 2026.1.1, Level Zero 26.35.39758."
+        }
+      },
+      "parallel": {
+        "mode": "tensor"
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "1ae3092",
+        "lineage": "upstream plus three local commits",
+        "note": "SYCL (-DGGML_SYCL_F16=ON), build 1148: upstream master of 2026-10-19 plus three unmerged local SYCL commits. llama-bench -ngl 999 --flash-attn on --batch-size 2048 --ubatch-size 1024 -p 5120 -n 256 -r 3."
+      },
+      "quant": {
+        "format": "UD-Q4_K_M (Unsloth, 15.32 GiB)",
+        "key": "q4_k_m",
+        "bpw": 4.9,
+        "note": "Bits per weight from the 16.46 GB file (unsloth/Qwen3.8-27B-GGUF) over 26.9B parameters."
+      },
+      "kvCache": {
+        "k": "q8_0",
+        "v": "q8_0"
+      },
+      "status": "measured",
+      "observed": "2026-10-20",
+      "recorded": "2026-10-21",
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 5120,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 589.45,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "reps": 3,
+          "note": "llama-bench pp5120 (a 5,120-token prompt into an empty cache), mean of 3: 589.45 ± 0.46"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 16.16,
+          "confidence": "m~",
+          "reps": 3,
+          "note": "llama-bench tg256 from an empty context, mean of 3: 16.16 ± 0.59"
+        }
+      ],
+      "provenance": {
+        "kind": "review",
+        "attestation": "reported",
+        "source": "https://github.com/zhaoyshine/dual-intel-arc-a770-llm-bench/blob/6d4bfc790617dfb8a34c6bf4f9dd6588843a0d06/qwen3.8-27b-llama-cpp-q4-k-m/README.md#L107-L108 -- \"| qwen35 27B Q4_K - Medium |  15.32 GiB |    27.32 B | SYCL    | 999 |     1024 |   q8_0 |   q8_0 | tensor |   1 | both     | pp5120 | 589.45 ± 0.46 |\"",
+        "reproduced": false,
+        "note": "Personal benchmark repo (zhaoyshine), re-run on 2026-10-20. The README's \"dev\" column reads \"both\", which llama-bench does not print, so the table was edited by hand."
+      },
+      "hazards": [
+        "Three unmerged SYCL commits on top of upstream, so this is not a stock build."
+      ]
+    },
+    {
+      "id": "x_a770_qwen38_27b_iq3xxs_sycl",
+      "label": "Qwen3.8 27B · UD-IQ3_XXS · llama.cpp SYCL · A770",
+      "model": "qwen38_27b",
+      "rig": {
+        "units": [
+          {
+            "unit": "arc_a770_16",
+            "count": 1
+          }
+        ],
+        "host": {
+          "note": "Ubuntu 24."
+        }
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "lineage": "upstream",
+        "note": "SYCL, master in its default configuration at the time (build not stated): the \"Base\" column of the SYCL maintainer's comparison table. Flash attention off."
+      },
+      "quant": {
+        "format": "UD-IQ3_XXS (Unsloth)",
+        "key": "iq",
+        "bpw": 3.25,
+        "note": "Bits per weight from the 10.93 GB unsloth/Qwen3.8-27B-GGUF file of that name over 26.9B parameters; the post names the file but not its size. A file that size does not fit the 8 GB A770, so this is the 16 GB card."
+      },
+      "status": "measured",
+      "observed": "2026-10-13",
+      "recorded": "2026-10-21",
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 241.55,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512, flash attention off"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 11.46,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context, flash attention off"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/pull/28725#pullrequestreview-5499565754 -- \"Qwen3.8-27B-UD-IQ3_XXS.gguf | pp512 | 0 | 241.55 | 244.04 | 1.03%\" and \"Qwen3.8-27B-UD-IQ3_XXS.gguf | tg128 | 0 | 11.46 | 12.15 | 6.02%\" (GGUF | Test | fa | Base t/s | Primary t/s | Increase Rate), on \"Arc770 Ubuntu 24\"",
+        "reproduced": false,
+        "note": "SYCL backend maintainer (arthw), measuring a PR (SYCL graphs) against master. The PR's own figures are left out; with flash attention on, master gave pp512 243.42 and tg128 11.36."
+      }
+    },
+    {
+      "id": "x_a770_qwen36_35b_a3b_q2k_vulkan",
+      "label": "Qwen3.6 35B-A3B · Q2_K · llama.cpp Vulkan · A770",
+      "model": "qwen36_35b_a3b",
+      "rig": {
+        "units": [
+          {
+            "unit": "arc_a770_16",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "lineage": "upstream",
+        "note": "Vulkan, upstream master on 2026-10-15 (commit not stated): the \"master\" column of the Vulkan maintainer's table. llama-bench -ngl 99 -p 2048 -n 128 -b 2048 -ub 2048 -r 3; driver not stated."
+      },
+      "quant": {
+        "format": "Q2_K (file not named)",
+        "note": "No file is named, so no width is recorded. A Q2_K of this 35B model is about 12 GB, more than the 8 GB A770 holds, so this is the 16 GB card."
+      },
+      "status": "measured",
+      "observed": "2026-10-15",
+      "recorded": "2026-10-21",
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 2048,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1214.4,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "reps": 3,
+          "note": "llama-bench pp2048 (a 2,048-token prompt into an empty cache), mean of 3"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/pull/30591 -- \"Arc A770 (Alchemist) | Q2_K | 1214.4 | 1257.3 | +3.5% | +1.2%\" (GPU (arch) | quant | pp2048 master | pp2048 PR | Δ pp | tg128 Δ), Qwen3.6-35B-A3B",
+        "reproduced": false,
+        "note": "Vulkan backend maintainer (0cc4m), measuring a PR against master; the PR's own 1257.3 is left out."
+      },
+      "note": "No decode figure: this table gives only a +1.2% change for tg128. Two weeks earlier the same maintainer measured 54.18 t/s for this model and quant on the A770 (PR #29476, merged 2026-09-29; generation length not stated)."
     }
   ],
   "candidates": [
