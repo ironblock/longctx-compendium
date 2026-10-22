@@ -56,6 +56,19 @@ function tooltipBase() {
   };
 }
 
+/** "RTX PRO 5000 Blackwell 48GB" and "RTX PRO 5000 Blackwell 72GB" join as "RTX PRO 5000 Blackwell 48GB / 72GB". */
+const joinLabels = names =>
+  names
+    .map((n, i) => {
+      if (i === 0) return n;
+      const a = names[0].split(' ');
+      const b = n.split(' ');
+      let k = 0;
+      while (k < b.length - 1 && a[k] === b[k]) k++;
+      return b.slice(k).join(' ');
+    })
+    .join(' / ');
+
 /**
  * Direct labels for the highlighted points only, placed greedily so no two
  * collide: right of the point, then left, above, below; a label with nowhere
@@ -77,20 +90,34 @@ const pointLabels = {
     const pts = meta.data.map((el, i) => ({ el, d: chart.data.datasets[ds].data[i] })).sort((p, q) => q.d.y - p.d.y);
     // markers themselves are obstacles too
     for (const { el } of pts) placed.push({ x: el.x - 5, y: el.y - 5, w: 10, h: 10 });
-    for (const { el, d } of pts) {
-      const text = d.short ?? d.label;
-      const w = ctx.measureText(text).width + 4;
+    // Units on the same spot (one card in two memory sizes, the A800 on the
+    // A100's chip) share a label; apart, the second lands by someone else's dot.
+    const groups = [];
+    for (const p of pts) {
+      const g = groups.find(([q]) => Math.abs(q.el.x - p.el.x) < 3 && Math.abs(q.el.y - p.el.y) < 3);
+      if (g) g.push(p);
+      else groups.push([p]);
+    }
+    for (const g of groups) {
+      const { el } = g[0];
+      const names = g.map(({ d }) => d.short ?? d.label);
+      // A shared label too long to fit anywhere shortens to "first +N".
+      const texts = names.length > 1 ? [joinLabels(names), `${names[0]} +${names.length - 1}`] : names;
       const h = 14;
-      const tries = [
-        { x: el.x + 8, y: el.y - h / 2 },
-        { x: el.x - 8 - w, y: el.y - h / 2 },
-        { x: el.x - w / 2, y: el.y - 10 - h },
-        { x: el.x - w / 2, y: el.y + 10 },
-      ];
-      const spot = tries.find(r => r.x >= a.left && r.x + w <= a.right && r.y >= a.top && r.y + h <= a.bottom && !hits({ ...r, w, h }));
-      if (!spot) continue;
-      placed.push({ ...spot, w, h });
-      ctx.fillText(text, spot.x + 2, spot.y + h / 2);
+      for (const text of texts) {
+        const w = ctx.measureText(text).width + 4;
+        const tries = [
+          { x: el.x + 8, y: el.y - h / 2 },
+          { x: el.x - 8 - w, y: el.y - h / 2 },
+          { x: el.x - w / 2, y: el.y - 10 - h },
+          { x: el.x - w / 2, y: el.y + 10 },
+        ];
+        const spot = tries.find(r => r.x >= a.left && r.x + w <= a.right && r.y >= a.top && r.y + h <= a.bottom && !hits({ ...r, w, h }));
+        if (!spot) continue;
+        placed.push({ ...spot, w, h });
+        ctx.fillText(text, spot.x + 2, spot.y + h / 2);
+        break;
+      }
     }
     ctx.restore();
   },
@@ -143,6 +170,9 @@ export function renderScatter(units, matchIds, precision) {
   const on = plotted.filter(u => matchIds.has(u.id)).map(point).sort(byY);
   const off = plotted.filter(u => !matchIds.has(u.id)).map(point).sort(byY);
   const unit = precision.startsWith('int') ? 'TOPS' : 'TFLOPS';
+  // Several units can sit under the cursor at once; then each block names its
+  // own. Chart.js builds the title before the body, so the title sets this.
+  let several = false;
 
   mount('scatterChart', {
     type: 'scatter',
@@ -182,8 +212,12 @@ export function renderScatter(units, matchIds, precision) {
         tooltip: {
           ...tooltipBase(),
           callbacks: {
-            title: items => items[0].raw.label,
+            title: items => {
+              several = items.length > 1;
+              return several ? `${items.length} units here` : items[0].raw.label;
+            },
             label: it => [
+              ...(several ? [it.raw.label] : []),
               `${it.raw.vendor} · ${it.raw.arch ?? 'generation not recorded'}`,
               `${it.raw.x.toLocaleString()} GB/s · ${it.raw.mem ?? '?'} GB`,
               `${it.raw.y.toLocaleString()} ${unit} ${it.raw.vector ? 'vector' : 'dense'} ${precision.toUpperCase()}${it.raw.unofficial ? ' (unofficial)' : ''}`,
