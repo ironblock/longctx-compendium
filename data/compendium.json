@@ -4267,10 +4267,10 @@
     },
     {
       "id": "b200",
-      "label": "B200 192GB",
+      "label": "B200 180GB",
       "vendor": "NVIDIA",
-      "memoryGB": 192,
-      "memoryBandwidthGBs": 8000,
+      "memoryGB": 180,
+      "memoryBandwidthGBs": 7700,
       "tdpW": 1000,
       "pricing": {
         "street": {
@@ -4281,9 +4281,9 @@
       },
       "sources": [
         "AI Inference Hardware Street-Price Spot-Check (research report, Aug 2026)",
-        "https://nvdam.widen.net/s/wwnsxrhm2w/blackwell-datasheet-3384703"
+        "https://dam-cdn.nvd.orangelogic.com/AssetLink/y441155802qub41q118b2852i557jem5.pdf -- NVIDIA Blackwell datasheet, HGX B200 column: \"GPU Memory | Bandwidth ... 180 GB HBM3E | 7.7 TB/s\"; \"Max Thermal Design Power (TDP) ... Configurable up to 1,000 W\" (replaces nvdam.widen.net/s/wwnsxrhm2w, which now returns 404)"
       ],
-      "note": "Reference only -- no benchmarks on this page. SXM-only (no PCIe); requires HGX/UBB baseboard, not a standalone purchase.",
+      "note": "Reference only -- no benchmarks on this page. SXM-only (no PCIe); requires HGX/UBB baseboard, not a standalone purchase. Memory and bandwidth are NVIDIA's HGX B200 ratings, 180 GB at 7.7 TB/s; until October 2026 this entry carried 192 GB at 8 TB/s, which are the chip's physical HBM and the GB200's column of the same datasheet (186 GB at 8 TB/s), not the HGX B200's. NVIDIA's release notes agree: \"HGX B200, 8-GPU, SXM6 180GB HBM3e\".",
       "arch": "blackwell_dc",
       "compute": {
         "unit": "Tops",
@@ -4302,7 +4302,7 @@
           "int8": 4500,
           "int8:sparse": 9000
         },
-        "source": "https://nvdam.widen.net/s/wwnsxrhm2w/blackwell-datasheet-3384703"
+        "source": "https://dam-cdn.nvd.orangelogic.com/AssetLink/y441155802qub41q118b2852i557jem5.pdf"
       },
       "peerLink": {
         "maxCards": 8,
