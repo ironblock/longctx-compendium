@@ -2530,12 +2530,14 @@
         "maxCards": 8,
         "options": [
           2,
-          4
+          3,
+          4,
+          6
         ],
-        "fabric": "NVLink 2 on an SXM2 baseboard (DGX-1 / HGX-1)",
-        "topology": "Hybrid cube-mesh, not all-to-all: six 50 GB/s links per GPU (300 GB/s bidirectional), each GPU wired to 4 of the other 7; collectives relay through neighbours",
+        "fabric": "NVLink 2 on an SXM2 baseboard (DGX-1 / HGX-1, or IBM Power AC922 with POWER9 CPUs)",
+        "topology": "DGX-1 / HGX-1, 8 GPUs: hybrid cube-mesh, not all-to-all, six 50 GB/s links per GPU (300 GB/s bidirectional), each GPU wired to 4 of the other 7; collectives relay through neighbours. IBM AC922, 4 or 6 GPUs: two or three per POWER9, wired to each other and to their CPU by NVLink (3 bricks per link with two per CPU, 2 with three); GPUs on different sockets reach each other through both CPUs and the 64 GBps X Bus, still without PCIe",
         "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"Each Tesla V100 has 6 NVLink connections, each capable of 50 GB/s of bidirectional bandwidth, for an aggregate of up to 300 GB/s bidirectional bandwidth. ... Figure 4 DGX-1 uses an 8-GPU hybrid cube-mesh interconnection network topology. ... Furthermore, this 8-GPU cube-mesh topology is easily subdivided into fully connected halves, or into NVLink-connected GPU pairs.\"",
-        "note": "A single SXM2 module on a PCIe adapter, the usual hobbyist setup, has no NVLink at all."
+        "note": "A single SXM2 module on a PCIe adapter, the usual hobbyist setup, has no NVLink at all. The AC922 cross-socket path is a 64 GBps bidirectional SMP bus, about what PCIe 4.0 x16 gives, so its 4- and 6-GPU groups are joined without PCIe but not at NVLink speed. IBM Redpaper REDP-5472 (Power AC922 Introduction and Technical Overview), p.15: \"six connected GPUs, where the six NVLINK Bricks are divided into three groups of two Bricks, enabling 100 GBps buses between GPUs\"; p.14: \"four GPUs, where the six NVLINK Bricks are divided into groups of three, which enables 150 GBps buses between GPUs\"; p.12: \"Each POWER9 CPU and each GPU have six NVLINK channels, called Bricks, with each one delivering up to 50 GBps bidirectional bandwidth\"; Figures 2-5 and 2-6 show the POWER9s joined by an \"X Bus 64 GBps\"."
       }
     },
     {
