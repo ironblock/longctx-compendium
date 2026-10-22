@@ -515,7 +515,7 @@ check('one row per candidate rig, each with its notes beneath', (await count('#c
   const t = await text('#candTable tbody');
   check('the MI100 rig totals its cards and bridge as a range', /\$4,250–\$4,800/.test(t), 'expected 4 x $900 + $650-$1,200');
   check('the Max pair totals cards plus a $0-$70 bridge', /\$4,000–\$4,070/.test(t), 'expected 2 x $2,000 + $0-$70');
-  check('the V100 rig totals cards and board', /\$3,600/.test(t) && /cards \+ bridge\/board/.test(t), 'expected 4 x $700 + $800');
+  check('the V100 rig totals cards and board', /\$3,960/.test(t) && /cards \+ bridge\/board/.test(t), 'expected 4 x $790 + $800');
   check('peer bandwidth is shown where the vendor states it', /300 GB\/s/.test(t) && /276 GB\/s/.test(t));
   check('a missing peer bandwidth says so', /not stated/.test(t));
   check('host requirements are shown with each candidate', (t.match(/Host:/g) ?? []).length === model.CANDIDATES.length);

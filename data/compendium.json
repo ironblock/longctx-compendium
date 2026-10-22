@@ -2015,10 +2015,10 @@
           "asOf": "2025-10"
         },
         "street": {
-          "usd": 1700,
+          "usd": 1900,
           "asOf": "2026-10",
-          "source": "https://pcpartpicker.com/products/video-card/#T=10,13,15,11,12&P=25769803776,103079215104 (first 100 of 260 results, 24-96 GB filter), clipped by the maintainer 2026-10-15",
-          "note": "New: the ASRock Creator at $1,699.99, the lowest of three R9700 listings on PCPartPicker (the others were $1,959.99 and $1,999.99). The launch price was $1,299."
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking. A week earlier PCPartPicker listed it new from $1,699.99 (the ASRock Creator, 2026-10-15), below this ask. The launch price was $1,299."
         }
       },
       "released": "2025-07",
@@ -2561,10 +2561,10 @@
       "memoryGB": 32,
       "pricing": {
         "street": {
-          "usd": 1300,
+          "usd": 1200,
           "asOf": "2026-10",
-          "source": "https://gpudojo.com/arc-pro-b70",
-          "note": "New: $1,299.99 at Newegg and at Amazon (GPUDojo, 2026-10-15); the lowest eBay offer was $1,999. PCPartPicker's first page that day listed only Intel's own card, at $2,059. MSRP $949."
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking, and below new retail a week earlier: $1,299.99 at Newegg and Amazon on 2026-10-15 (GPUDojo), when the lowest eBay ask was $1,999. MSRP $949."
         },
         "msrp": {
           "usd": 949,
@@ -2630,9 +2630,10 @@
       "memoryGB": 32,
       "pricing": {
         "street": {
-          "usd": 700,
+          "usd": 790,
           "asOf": "2026-10",
-          "note": "The maintainer's observation of used SXM2 32GB listings, Oct 2026; was $1,000 as of 2026-07."
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking, used SXM2 32GB. The maintainer saw $700 earlier in October and $1,000 in July."
         }
       },
       "power": {
@@ -2689,10 +2690,10 @@
       "memoryGB": 24,
       "pricing": {
         "street": {
-          "usd": 1248,
-          "asOf": "2026-08",
-          "source": "resaleprices.com (374 listings)",
-          "note": "Sampled 2026-08-03. Fair range $1,202-$1,296, observed range $1,000-$1,500. Supersedes an earlier $700-$1,050 pull the compiling analyst traced to unfiltered \"No Core, No VRAM\" / parts-only eBay listings ($120-$260, mostly Guangdong/HK sellers) -- a byproduct of the GA102-to-higher-VRAM transplant/mod trade -- dragging an uncondition-filtered average down an estimated $300-$500."
+          "usd": 1500,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking. The last sold-price sample, 374 listings on resaleprices.com (2026-08-03), had a fair range of $1,202-$1,296 once parts-only \"No Core, No VRAM\" boards from the memory-transplant trade were left out; unfiltered averages ran an estimated $300-$500 low because of them."
         }
       },
       "power": {
@@ -2887,9 +2888,10 @@
           "note": "Range $35,000-$40,000 new."
         },
         "street": {
-          "usd": 10000,
-          "asOf": "2026-08",
-          "note": "Used SXM5 as low as $6,000-$15,000; steep depreciation as Blackwell ramps. OEM/HGX-only -- requires compatible baseboard, not a standalone buy."
+          "usd": 14000,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking, for an SXM5 module: it needs an HGX baseboard and is not a standalone card. An unsourced August 2026 figure put used modules at $6,000-$15,000."
         }
       },
       "sources": [
@@ -3314,9 +3316,10 @@
       "memoryBandwidthGBs": 1008,
       "pricing": {
         "street": {
-          "usd": 1900,
-          "asOf": "2026-08",
-          "note": "New $1,650-$3,765 (held 15-35% over $1,599 MSRP for 18+ months); used $1,500-$2,350. NOT independently re-verified the way RTX 3090/3090 Ti were -- the 4090 is also a donor board for the GA102/AD102 VRAM-transplant mod trade (e.g. RTX 4090 48GB mods) that contaminated the 3090 scrape, though the compiling analyst judged the effect \"smaller\" here. Treat with the same skepticism until spot-checked. October 2026 asks are far higher, so this figure is likely stale: in-stock new retail started at $4,399 on PCPartPicker, and Amazon's lowest used offer was $3,280 (GPUDojo, 2026-10-15). It needs a sold-price check."
+          "usd": 3100,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking, a PNY card. This replaces an August figure of $1,900 that predated the October run-up: on 2026-10-15 in-stock new retail started at $4,399 on PCPartPicker and Amazon's lowest used offer was $3,280 (GPUDojo). The 4090 is also a donor board for the 48GB memory-mod trade, which can muddy listing searches."
         }
       },
       "sources": [
@@ -3372,9 +3375,10 @@
           "source": "NVIDIA marketplace"
         },
         "street": {
-          "usd": 3200,
-          "asOf": "2026-08",
-          "note": "Used $2,600-$3,800; supply rising mid-2026 as enterprise contracts expire."
+          "usd": 4500,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking, just under the $4,650 list price. An unsourced August 2026 figure put used cards at $2,600-$3,800."
         }
       },
       "sources": [
@@ -3427,9 +3431,10 @@
       "memoryBandwidthGBs": 960,
       "pricing": {
         "street": {
-          "usd": 9000,
-          "asOf": "2026-08",
-          "note": "Range $7,350-$10,800 new; no reliable used figure in source data."
+          "usd": 7600,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking. An unsourced August 2026 figure put new cards at $7,350-$10,800."
         }
       },
       "sources": [
@@ -3539,7 +3544,7 @@
           "usd": 3436,
           "asOf": "2026-10",
           "source": "eBay completed sales, collected by the maintainer (2026-10-15)",
-          "note": "Median of three eBay sales: $3,435.19 (2026-08-20), $3,436.28 and $3,950.00 (both 2026-10-08); condition not recorded. New, the lowest ask was $3,599 at Newegg on 2026-10-14 (GPUDojo). American Compute's $2,100-$2,400 for the 12 months to August 2026 is well below every sale here."
+          "note": "Median of three eBay sales: $3,435.19 (2026-08-20), $3,436.28 and $3,950.00 (both 2026-10-08); condition not recorded. New, the lowest ask was $3,599 at Newegg on 2026-10-14 (GPUDojo). American Compute's $2,100-$2,400 for the 12 months to August 2026 is well below every sale here. On 2026-10-22 the maintainer saw an eBay ask of $4,200, above every sale here and above the new price a week earlier, so the sold median stays."
         }
       },
       "sources": [
@@ -3599,9 +3604,10 @@
       "process": "TSMC 7nm FinFET",
       "pricing": {
         "street": {
-          "usd": 650,
+          "usd": 700,
           "asOf": "2026-10",
-          "note": "The maintainer's observation, Oct 2026. Undated eBay asks seen in search run $565-$850 used."
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking. The maintainer saw $650 earlier in October; undated eBay asks seen in search ran $565-$850 used."
         }
       },
       "sources": [
@@ -3655,10 +3661,10 @@
           "note": "$3,499 SEP for the Dual-Slot variant."
         },
         "street": {
-          "usd": 3550,
+          "usd": 4000,
           "asOf": "2026-10",
-          "source": "https://gpudojo.com/radeon-pro-w7900",
-          "note": "Used, asking: the lowest eBay offer on GPUDojo's tracker (2026-10-15), up from $3,000 in early September. New: $3,839 at Amazon, the same price PCPartPicker listed that day."
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking. A week earlier the lowest eBay ask on GPUDojo's tracker was $3,550 (2026-10-15), and Amazon had it new at $3,839, the price PCPartPicker listed that day; both are below this ask."
         }
       },
       "sources": [
@@ -4005,9 +4011,10 @@
       "process": "TSMC 7nm FinFET",
       "pricing": {
         "street": {
-          "usd": 600,
-          "asOf": "2026-09",
-          "note": "Used, eBay asking prices, not sales: \"Live eBay asking prices in September 2026 run about $600-830\" (OpenClaw DC, which says it could not verify them against a completed sale). Low confidence; late-2025 forum reports were near $200. AMD never published a list price."
+          "usd": 630,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking; the 16GB card asked $200 the same day. In September OpenClaw DC reported live asks of about $600-$830, which it could not verify against a sale; late-2025 forum reports were near $200. AMD never published a list price."
         }
       },
       "sources": [
@@ -4113,9 +4120,10 @@
       "tdpW": 300,
       "pricing": {
         "street": {
-          "usd": 8000,
-          "asOf": "2026-08",
-          "note": "Range $7,400-$8,700 used/new (eBay)."
+          "usd": 4000,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking, half the August figure of $8,000, which came from a $7,400-$8,700 range of used and new eBay listings."
         }
       },
       "sources": [
@@ -4691,9 +4699,10 @@
           "note": "NVIDIA's \"estimated street price\" at announcement; cut to $5,500 by March 2019 (Techgage)."
         },
         "street": {
-          "usd": 1875,
+          "usd": 2100,
           "asOf": "2026-10",
-          "note": "Used, asking: the lowest eBay offer on GPUDojo's tracker (2026-10-14); RunAIHome saw $1,975-$2,650 in September 2026. Asks, not sold averages, so a typical sale is probably nearer $1,900-$2,300. Listings may not distinguish the passive server variant."
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking: $2,100 for the fan-cooled card this unit describes, $1,900 for the passive server variant. A week earlier the lowest eBay ask on GPUDojo's tracker was $1,875 (2026-10-14), a listing that may have been either variant; RunAIHome saw $1,975-$2,650 in September 2026."
         }
       },
       "sources": [
