@@ -614,6 +614,72 @@
       "note": "Covers B200 (GB100, CC 10.0) and B300 (Blackwell Ultra, CC 10.3). Same matrix formats as the consumer and workstation parts, reached through tcgen05 rather than warp-level mma.sync. Kept apart because llama.cpp compiles its Blackwell tensor-core path only for compute capability 12.x (ggml-cuda/common.cuh: \"While BW spans CC 1000, 1100 & 1200, we are integrating Tensor Core instructions available to 1200 family\"), so these two take the Turing-to-Hopper paths. (2) Blackwell Ultra B300 (CC 10.3): Table 33 still lists INT8 'Yes', but tcgen05.mma .kind::i8 is not supported on sm_103a, and HGX B300 is rated 3 POPS INT8 vs 72 POPS for HGX B200 (sparse, 8 GPUs). Treat B300 INT8 as present but heavily de-rated; NVIDIA does not say whether it is emulated. FP64 Tensor is also blank for 10.3. (3) INT4 is absent: Table 33 is blank for every Blackwell CC and tcgen05 has no int4 kind. Legacy PTX mma.sync .s4/.u4 still compiles for sm_80+ targets, but no INT4 Tensor Core path or rate is documented. (4) Rate note, not a format difference: on GeForce RTX 5090, FP16/BF16 with FP32 accumulate is half the FP16-accumulate rate (209.5 vs 419 dense TFLOPS). On RTX PRO 6000 both are 503.8."
     },
     {
+      "id": "gcn5",
+      "vendor": "AMD",
+      "label": "GCN 5.0 / Vega 10 (gfx900)",
+      "matrixUnits": "None. No matrix instructions, and none of the dot-product instructions Vega 20 (gfx906) added: ML math is packed FP16 and INT16 (VOP3P V_PK_*) on the ordinary SIMDs.",
+      "formats": {
+        "tf32": "absent",
+        "bf16": "absent",
+        "fp16": "absent",
+        "fp8": "absent",
+        "fp6": "absent",
+        "fp4": "absent",
+        "int8": "absent",
+        "int4": "absent"
+      },
+      "sources": [
+        {
+          "url": "https://github.com/llvm/llvm-project/blob/llvmorg-19.1.0/llvm/docs/AMDGPU/AMDGPUAsmGFX9.rst",
+          "quote": "This document describes the syntax of *core* GFX9 instructions.",
+          "locator": "llvm-project llvmorg-19.1.0, llvm/docs/AMDGPU/AMDGPUAsmGFX9.rst. The core GFX9 list includes v_pk_fma_f16, v_pk_mul_f16 and v_pk_mad_i16; a text search finds no v_mfma and no v_dot instruction.",
+          "supports": [
+            "tf32:absent",
+            "bf16:absent",
+            "fp16:absent",
+            "fp8:absent",
+            "fp6:absent",
+            "fp4:absent",
+            "int8:absent",
+            "int4:absent"
+          ]
+        },
+        {
+          "url": "https://github.com/llvm/llvm-project/blob/llvmorg-19.1.0/llvm/docs/AMDGPU/AMDGPUAsmGFX900.rst",
+          "quote": "This document describes the syntax of *instructions specific to gfx900, gfx902, gfx909 and gfx90c*.",
+          "locator": "llvm-project llvmorg-19.1.0, llvm/docs/AMDGPU/AMDGPUAsmGFX900.rst. The whole gfx900-specific list is three VOP3P instructions: v_mad_mix_f32, v_mad_mixhi_f16, v_mad_mixlo_f16.",
+          "supports": [
+            "tf32:absent",
+            "bf16:absent",
+            "fp16:absent",
+            "fp8:absent",
+            "fp6:absent",
+            "fp4:absent",
+            "int8:absent",
+            "int4:absent"
+          ]
+        },
+        {
+          "url": "https://github.com/llvm/llvm-project/blob/llvmorg-19.1.0/llvm/docs/AMDGPU/AMDGPUAsmGFX906.rst",
+          "quote": "Syntax of gfx906 Instructions",
+          "locator": "llvm-project llvmorg-19.1.0, llvm/docs/AMDGPU/AMDGPUAsmGFX906.rst lists v_dot2_f32_f16, v_dot2_i32_i16, v_dot2_u32_u16, v_dot4_i32_i8, v_dot4_u32_u8, v_dot8_i32_i4 and v_dot8_u32_u4 among the gfx906-specific instructions, so gfx900 has none of them.",
+          "supports": [
+            "note:dot-product instructions are gfx906-only",
+            "int8:absent",
+            "int4:absent"
+          ]
+        },
+        {
+          "url": "https://github.com/llvm/llvm-project/blob/llvmorg-19.1.0/llvm/docs/AMDGPUUsage.rst",
+          "quote": "``gfx900`` ``amdgcn`` dGPU ... Radeon Vega Frontier Edition, Radeon RX Vega 56, Radeon RX Vega 64, Radeon RX Vega 64 Liquid, Radeon Instinct MI25",
+          "locator": "llvm-project llvmorg-19.1.0, AMDGPUUsage.rst, processor table, GCN GFX9 (Vega) rows.",
+          "supports": [
+            "note:the MI25 is gfx900"
+          ]
+        }
+      ]
+    },
+    {
       "id": "gcn5_1",
       "vendor": "AMD",
       "label": "GCN 5.1 / Vega 20 (gfx906)",
@@ -3655,6 +3721,123 @@
       }
     },
     {
+      "id": "a2_16",
+      "label": "A2 16GB",
+      "vendor": "NVIDIA",
+      "arch": "ampere",
+      "memoryGB": 16,
+      "memoryBandwidthGBs": 200,
+      "tdpW": 60,
+      "pricing": {
+        "street": {
+          "usd": 450,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking."
+        }
+      },
+      "sources": [
+        "https://www.nvidia.com/content/dam/en-zz/solutions/data-center/a2/pdf/a2-datasheet.pdf -- \"Peak FP32 4.5 TF | TF32 Tensor Core 9 TF | 18 TF¹ | BFLOAT16 Tensor Core 18 TF | 36 TF¹ | Peak FP16 Tensor Core 18 TF | 36 TF¹ | Peak INT8 Tensor Core 36 TOPS | 72 TOPS¹ | Peak INT4 Tensor Core 72 TOPS | 144 TOPS¹ ... GPU memory 16GB GDDR6 | GPU memory bandwidth 200GB/s | Interconnect PCIe Gen4 x8 | Form factor 1-slot, Low-Profile PCIe | Max thermal design power 40-60W (Configurable)\" (¹ With sparsity)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.nvidia.com/content/dam/en-zz/solutions/data-center/a2/pdf/a2-datasheet.pdf",
+        "values": {
+          "fp32": 4.5,
+          "tf32": 9,
+          "tf32:sparse": 18,
+          "bf16": 18,
+          "bf16:sparse": 36,
+          "fp16": 18,
+          "fp16:sparse": 36,
+          "int8": 36,
+          "int8:sparse": 72,
+          "int4": 72,
+          "int4:sparse": 144
+        }
+      },
+      "note": "An entry-level inference card: one slot, low profile, 40-60 W configurable. Its memory, bandwidth and FP32 rating match each of the A16's four GPUs.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.nvidia.com/content/dam/en-zz/solutions/data-center/a2/pdf/a2-datasheet.pdf -- \"Interconnect PCIe Gen4 x8\"",
+        "note": "NVIDIA lists PCIe as the only interconnect."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 1,
+        "source": "https://www.nvidia.com/content/dam/en-zz/solutions/data-center/a2/pdf/a2-datasheet.pdf -- \"Form factor 1-slot, Low-Profile PCIe\"",
+        "note": "NVIDIA's datasheet does not say how it is cooled."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 8,
+        "source": "https://www.nvidia.com/content/dam/en-zz/solutions/data-center/a2/pdf/a2-datasheet.pdf -- \"Interconnect PCIe Gen4 x8\""
+      }
+    },
+    {
+      "id": "a16",
+      "label": "A16 (4 × 16GB)",
+      "vendor": "NVIDIA",
+      "arch": "ampere",
+      "memoryGB": 16,
+      "memoryBandwidthGBs": 200,
+      "tdpW": 250,
+      "board": {
+        "gpus": 4,
+        "source": "https://images.nvidia.com/content/Solutions/data-center/vgpu-a16-datasheet.pdf -- \"GPU memory 4x 16 GB GDDR6 | Memory bandwidth 4x 200 GB/s\"; \"The A16 features a unique quad-GPU board design\"",
+        "note": "The host sees four GPUs (ServeTheHome: \"The A16's show as individual PCIe devices\"). Memory, bandwidth and compute here are one GPU's; the 250 W and the price are the board's."
+      },
+      "pricing": {
+        "street": {
+          "usd": 2000,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking, for the board of four GPUs."
+        }
+      },
+      "sources": [
+        "https://images.nvidia.com/content/Solutions/data-center/vgpu-a16-datasheet.pdf -- datasheet (2022-02): \"GPU Architecture NVIDIA Ampere architecture | GPU memory 4x 16 GB GDDR6 | Memory bandwidth 4x 200 GB/s | FP32 | TF32 | TF32¹ (TFLOPS) 4x 4.5 | 4x 9 | 4x 18 | FP16 | FP16¹ (TFLOPS) 4x 17.9 | 4x 35.9 | INT8 | INT8¹ (TOPS) 4x 35.9 | 4x 71.8 | System interface PCIe Gen4 (x16) | Max power consumption 250W | Thermal solution Passive | Form factor Full height, full length (FHFL) Dual Slot\" (¹ structural sparsity)",
+        "https://www.servethehome.com/?p=66979 -- ServeTheHome, \"NVIDIA A16 with 4x Ampere 16GB GPUs Onboard Quick Look\" (2023-02-08): \"The A16's show as individual PCIe devices that are grouped here.\"",
+        "https://docs.nvidia.com/ai-enterprise/release-8/latest/infra-software/vgpu/features/p2p.html -- NVIDIA AI Enterprise vGPU docs: \"P2P transfers over PCIe are not supported.\""
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://images.nvidia.com/content/Solutions/data-center/vgpu-a16-datasheet.pdf",
+        "values": {
+          "fp32": 4.5,
+          "tf32": 9,
+          "tf32:sparse": 18,
+          "bf16": 17.9,
+          "fp16": 17.9,
+          "fp16:sparse": 35.9,
+          "int8": 35.9,
+          "int8:sparse": 71.8
+        },
+        "unofficial": [
+          "bf16"
+        ],
+        "note": "NVIDIA rates each of the four GPUs (\"4x\"); these are one GPU's. It gives no BF16 rate for the A16: BF16 is filed at the FP16 rate, as NVIDIA rates it on the A2, whose memory, bandwidth and FP32 match one A16 GPU. No INT4 rate is given."
+      },
+      "note": "A VDI board carrying four separate 16 GB GPUs. One model on all 64 GB means splitting it four ways over PCIe, like four 16 GB cards: the ceilings here count GPUs and price whole boards.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://images.nvidia.com/content/Solutions/data-center/vgpu-a16-datasheet.pdf -- \"System interface PCIe Gen4 (x16)\"",
+        "note": "No NVLink. The four GPUs presumably reach one another through a PCIe switch on the board (four GPUs on one x16 connector; NVIDIA's datasheet does not describe it), which is PCIe and so does not count here. Under vGPU NVIDIA supports peer-to-peer only over NVLink; whether CUDA peer-to-peer works across the board on bare metal is unconfirmed."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://images.nvidia.com/content/Solutions/data-center/vgpu-a16-datasheet.pdf -- \"Thermal solution Passive | Form factor Full height, full length (FHFL) Dual Slot\""
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://images.nvidia.com/content/Solutions/data-center/vgpu-a16-datasheet.pdf -- \"System interface PCIe Gen4 (x16)\"",
+        "note": "One x16 link for the board, shared by its four GPUs."
+      }
+    },
+    {
       "id": "radeon_pro_v620",
       "label": "Radeon PRO V620 32GB",
       "vendor": "AMD",
@@ -4120,6 +4303,170 @@
       }
     },
     {
+      "id": "mi50_16",
+      "label": "Instinct MI50 16GB",
+      "vendor": "AMD",
+      "arch": "gcn5_1",
+      "released": "2018-11",
+      "memoryGB": 16,
+      "memoryBandwidthGBs": 1024,
+      "tdpW": 300,
+      "process": "TSMC 7nm FinFET",
+      "pricing": {
+        "street": {
+          "usd": 200,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking."
+        }
+      },
+      "sources": [
+        "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi50.html -- \"Name | Instinct™ MI50 (16GB) | ... Launch Date | 11/18/2018 | GPU Architecture | Vega20 | Lithography | TSMC 7nm FinFET | Stream Processors | 3,840 | Compute Units | 60 | Peak Engine Clock | 1725 MHz | Peak Half Precision (FP16) Performance | 26.5 TFLOPs | Peak Single Precision (FP32) Performance | 13.3 TFLOPs | ... Peak INT8 Performance | 53 TOPs | ... Thermal Design Power (TDP) | 300W Peak | Dedicated Memory Size | 16 GB | Dedicated Memory Type | HBM2 | Memory Interface | 4096-bit | Memory Clock | 1 GHz | Peak Memory Bandwidth | 1 TB/s\"",
+        "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/white-papers/amd-cdna-white-paper.pdf -- \"MI50 does not have specialized hardware and performs matrix operations on the vector execution units\"; footnote gives 1.024 TB/s peak memory bandwidth at 1,000 MHz",
+        "https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html -- \"AMD Instinct MI50 | N/A | GCN5.1 | gfx906 | ❌\" (ROCm 7.14.0)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi50.html",
+        "values": {
+          "fp32": 13.3,
+          "fp16:vector": 26.5,
+          "int8:vector": 53
+        },
+        "note": "All vector: this card has no matrix units. FP16 is packed FP16 on the ALUs; INT8 is the dot4 instruction, at exactly four times the FP32 rate (AMD's datasheet says \"Up to 53.6\"). AMD claims INT4 capability (dot8) but publishes no rate, so none is recorded. At the 1,725 MHz peak engine clock."
+      },
+      "note": "The 16GB MI50: AMD's pages for the two sizes differ only in memory. The 32GB entry's caveats apply: passive, 300 W, \"Above 4G Decoding\"; ROCm has listed gfx906 unsupported since 6.4, while llama.cpp still supports it.",
+      "peerLink": {
+        "maxCards": 4,
+        "options": [
+          2
+        ],
+        "fabric": "Infinity Fabric Link bridge",
+        "topology": "Ring: two links per GPU, so a 4-card hive is a ring, not all-to-all. AMD gave 100 GB/s per link at launch and 92 GB/s later",
+        "source": "https://ir.amd.com/news-events/press-releases/detail/859/amd-unveils-worlds-first-7nm-datacenter-gpus----powering-the-next-era-of-artificial-intelligence-cloud-computing-and-high-performance-computing-hpc -- \"Up to 6X Faster Data Transfer: Two Infinity Fabric™ Links per GPU deliver up to 200 GB/s of peer-to-peer bandwidth – up to 6X faster than PCIe 3.0 alone[4] – and enable the connection of up to 4 GPUs in a hive ring configuration (2 hives in 8 GPU servers).\"",
+        "note": "The bridges (AMD 199-999762 two-way, 199-999764 four-way) are hard to find, per a Debian ROCm maintainer, and MI100 and MI210 bridges do not fit."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi50.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 , | PCIe® 3.0 x16 | Infinity Fabric™ Links | 2 | Peak Infinity Fabric™ Link Bandwidth | 92 GB/s | Cooling | Passive | ... Board Width | Double Slot\"",
+        "note": "Passive: it needs server airflow."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi50.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 , | PCIe® 3.0 x16 | Infinity Fabric™ Links | 2 | Peak Infinity Fabric™ Link Bandwidth | 92 GB/s | Cooling | Passive | ... Board Width | Double Slot\""
+      }
+    },
+    {
+      "id": "mi60",
+      "label": "Instinct MI60 32GB",
+      "vendor": "AMD",
+      "arch": "gcn5_1",
+      "released": "2018-11",
+      "memoryGB": 32,
+      "memoryBandwidthGBs": 1024,
+      "tdpW": 300,
+      "process": "TSMC 7nm FinFET",
+      "pricing": {
+        "street": {
+          "usd": 650,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking."
+        }
+      },
+      "sources": [
+        "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi60.html -- \"Name | Instinct™ MI60 | ... Launch Date | 11/18/2018 | GPU Architecture | Vega20 | Lithography | TSMC 7nm FinFET | Stream Processors | 4,096 | Compute Units | 64 | Peak Engine Clock | 1800 MHz | Peak Half Precision (FP16) Performance | 29.5 TFLOPs | Peak Single Precision (FP32) Performance | 14.7 TFLOPs | Peak Double Precision (FP64) Performance | 7.4 TFLOPs | Peak INT8 Performance | 59 TOPs | ... External Power Connectors | 1x6-Pin + 1x8-Pin | Thermal Design Power (TDP) | 300W Peak | Dedicated Memory Size | 32 GB | Dedicated Memory Type | HBM2 | Memory Interface | 4096-bit | Memory Clock | 1 GHz | Peak Memory Bandwidth | 1 TB/s\"",
+        "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/white-papers/amd-cdna-white-paper.pdf -- \"MI50 does not have specialized hardware and performs matrix operations on the vector execution units\"; footnote gives 1.024 TB/s peak memory bandwidth at 1,000 MHz",
+        "https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html -- \"AMD Instinct MI50 | N/A | GCN5.1 | gfx906 | ❌\" (ROCm 7.14.0)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi60.html",
+        "values": {
+          "fp32": 14.7,
+          "fp16:vector": 29.5,
+          "int8:vector": 59
+        },
+        "note": "All vector, as on the MI50: packed FP16 and dot4 INT8 on the ALUs, at the 1,800 MHz peak engine clock."
+      },
+      "note": "The full Vega 20 (64 compute units to the MI50's 60, at 1,800 MHz to its 1,725) with the same 32 GB of HBM2 at 1 TB/s. Passively cooled, 300 W, 1x 6-pin + 1x 8-pin. Software support is the MI50's (gfx906).",
+      "peerLink": {
+        "maxCards": 4,
+        "options": [
+          2
+        ],
+        "fabric": "Infinity Fabric Link bridge",
+        "topology": "Ring: two links per GPU, so a 4-card hive is a ring, not all-to-all. AMD gave 100 GB/s per link at launch and 92 GB/s later",
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi60.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 , | PCIe® 3.0 x16 | Infinity Fabric™ Links | 2 | Peak Infinity Fabric™ Link Bandwidth | 92 GB/s | Cooling | Passive | ... Board Width | Double Slot\"; https://ir.amd.com/news-events/press-releases/detail/859/amd-unveils-worlds-first-7nm-datacenter-gpus----powering-the-next-era-of-artificial-intelligence-cloud-computing-and-high-performance-computing-hpc -- \"Up to 6X Faster Data Transfer: Two Infinity Fabric™ Links per GPU deliver up to 200 GB/s of peer-to-peer bandwidth – up to 6X faster than PCIe 3.0 alone[4] – and enable the connection of up to 4 GPUs in a hive ring configuration (2 hives in 8 GPU servers).\"",
+        "note": "The bridges (AMD 199-999762 two-way, 199-999764 four-way) are hard to find, per a Debian ROCm maintainer, and MI100 and MI210 bridges do not fit."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi60.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 , | PCIe® 3.0 x16 | Infinity Fabric™ Links | 2 | Peak Infinity Fabric™ Link Bandwidth | 92 GB/s | Cooling | Passive | ... Board Width | Double Slot\"",
+        "note": "Passive: it needs server airflow."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi60.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 , | PCIe® 3.0 x16 | Infinity Fabric™ Links | 2 | Peak Infinity Fabric™ Link Bandwidth | 92 GB/s | Cooling | Passive | ... Board Width | Double Slot\""
+      }
+    },
+    {
+      "id": "mi25",
+      "label": "Instinct MI25 16GB",
+      "vendor": "AMD",
+      "arch": "gcn5",
+      "released": "2017-06",
+      "memoryGB": 16,
+      "memoryBandwidthGBs": 484,
+      "tdpW": 300,
+      "process": "14nm FinFET",
+      "pricing": {
+        "street": {
+          "usd": 100,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking."
+        }
+      },
+      "sources": [
+        "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi25.html -- \"Launch Date | June 2017 | GPU Architecture | Vega | Lithography | 14nm FinFET | Stream Processors | 4,096 | Compute Units | 64 | Peak Half Precision (FP16) Performance | 24.6 TFLOPs | Peak Single Precision (FP32) Performance | 12.29 TFLOPs | Peak Double Precision (FP64) Performance | 768 GFLOPs | ... External Power Connectors | 2x8-Pin | Thermal Design Power (TDP) | 300W Peak | Dedicated Memory Size | 16 GB | Dedicated Memory Type | HBM2 | Peak Memory Bandwidth | 484 GB/s\"",
+        "https://github.com/llvm/llvm-project/blob/llvmorg-19.1.0/llvm/docs/AMDGPUUsage.rst -- processor table: \"``gfx900`` ... Radeon Instinct MI25\""
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi25.html",
+        "values": {
+          "fp32": 12.29,
+          "fp16:vector": 24.6
+        },
+        "note": "All vector: no matrix units, and none of the dot-product instructions Vega 20 added, so there is no INT8 rate; prefill rests on packed FP16 on the ALUs."
+      },
+      "note": "Vega 10 (gfx900): 16 GB of HBM2 at 484 GB/s. Passively cooled, full-height, dual-slot, 2x 8-pin, 300 W.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi25.html -- \"Board Specifications | GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 3.0 x16 | Cooling | Passive | Dimensions | Board Height | Full Height | Board Length | 10.5\\\" (267mm) | Board Width | Double Slot\"",
+        "note": "Inferred from absence: AMD's MI25 page lists no Infinity Fabric links, where its MI50 and MI60 pages list two."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi25.html -- \"Board Specifications | GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 3.0 x16 | Cooling | Passive | Dimensions | Board Height | Full Height | Board Length | 10.5\\\" (267mm) | Board Width | Double Slot\"",
+        "note": "Passive: it needs server airflow."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi25.html -- \"Board Specifications | GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 3.0 x16 | Cooling | Passive | Dimensions | Board Height | Full Height | Board Length | 10.5\\\" (267mm) | Board Width | Double Slot\""
+      }
+    },
+    {
       "id": "mi100",
       "label": "AMD Instinct MI100 32GB",
       "vendor": "AMD",
@@ -4333,6 +4680,66 @@
         "lanes": 16,
         "source": "https://www.nvidia.com/en-us/data-center/h200/ -- \"Max Thermal Design Power (TDP) | Up to 700W (configurable) | Up to 600W (configurable) ... Form Factor | SXM | PCIe Dual-slot air-cooled | Interconnect | NVIDIA NVLink™: 900GB/s PCIe Gen5: 128GB/s\"",
         "note": "x16 is inferred from NVIDIA's 128 GB/s."
+      }
+    },
+    {
+      "id": "h200_nvl",
+      "label": "H200 NVL 141GB",
+      "vendor": "NVIDIA",
+      "arch": "hopper",
+      "memoryGB": 141,
+      "memoryBandwidthGBs": 4800,
+      "tdpW": 600,
+      "pricing": {
+        "street": {
+          "usd": 32000,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking."
+        }
+      },
+      "sources": [
+        "https://www.nvidia.com/en-us/data-center/h200/ -- \"Specifications | NVIDIA H200 GPU | H200 SXM¹ | H200 NVL¹ | FP64 | 34 TFLOPS | 30 TFLOPS | ... FP32 | 67 TFLOPS | 60 TFLOPS | TF32 Tensor Core² | 989 TFLOPS | 835 TFLOPS | BFLOAT16 Tensor Core² | 1,979 TFLOPS | 1,671 TFLOPS | FP16 Tensor Core² | 1,979 TFLOPS | 1,671 TFLOPS | FP8 Tensor Core² | 3,958 TFLOPS | 3,341 TFLOPS | INT8 Tensor Core² | 3,958 TFLOPS | 3,341 TFLOPS | GPU Memory | 141GB | 141GB | GPU Memory Bandwidth | 4.8TB/s | 4.8TB/s | ... Max Thermal Design Power (TDP) | Up to 700W (configurable) | Up to 600W (configurable)\" (² With sparsity)",
+        "https://dam-cdn.nvd.orangelogic.com/AssetLink/7n7vya4684sdccfyy6kv37ek5lw702h7.pdf -- H200 NVL product brief PB-12128-001_v01 (April 2025), linked from NVIDIA's H200 page: \"Memory size | 141 GB | Memory bus width | 6016 bits | Peak memory bandwidth | 4,813 GBps\""
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.nvidia.com/en-us/data-center/h200/",
+        "values": {
+          "fp32": 60,
+          "tf32": 417.5,
+          "tf32:sparse": 835,
+          "bf16": 835.5,
+          "bf16:sparse": 1671,
+          "fp16": 835.5,
+          "fp16:sparse": 1671,
+          "fp8": 1670.5,
+          "fp8:sparse": 3341,
+          "int8": 1670.5,
+          "int8:sparse": 3341
+        },
+        "note": "NVIDIA prints only sparse tensor rates (footnote: \"With sparsity\"); the dense figures are half, as for the SXM H200."
+      },
+      "note": "The PCIe H200: the SXM card's 141 GB at 4.8 TB/s (the product brief says 4,813 GB/s), at up to 600 W rather than 700 and about 84% of its tensor rates. Passive.",
+      "peerLink": {
+        "maxCards": 4,
+        "options": [
+          2
+        ],
+        "fabric": "NVLink 4 bridge (2- or 4-way)",
+        "topology": "A 2-way or 4-way bridge, 900 GB/s per GPU",
+        "source": "https://dam-cdn.nvd.orangelogic.com/AssetLink/7n7vya4684sdccfyy6kv37ek5lw702h7.pdf -- \"If there are four adjacent H200 NVL cards, the four-way NVLink bridge may be used\"; \"Total NVLink bridges supported by NVIDIA H200 NVL | 1 | Total NVLink links supported | 18 | ... Total maximum NVLink bandwidth | 900 gigabytes per second\"; https://www.nvidia.com/en-us/data-center/h200/ -- \"2- or 4-way NVIDIA NVLink bridge: 900GB/s per GPU\""
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://dam-cdn.nvd.orangelogic.com/AssetLink/7n7vya4684sdccfyy6kv37ek5lw702h7.pdf -- \"The NVIDIA H200 NVL card is a dual-slot 10.5-inch PCI Express Gen5 card based on the NVIDIA Hopper™ architecture. It uses a passive heat sink for cooling, which requires system airflow\""
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://dam-cdn.nvd.orangelogic.com/AssetLink/7n7vya4684sdccfyy6kv37ek5lw702h7.pdf -- \"PCI Express interface | PCI Express Gen5 ×16; Gen5 ×8; Gen4 ×16\""
       }
     },
     {
@@ -4726,6 +5133,69 @@
         ]
       },
       "note": "A GA100 mining card that becomes a 64 GB inference card through a community unlock (cmpunlocker). The unlock patches the NVIDIA open kernel modules to address the HBM2e already on the card, 4 stacks of 16 GB on a 4096-bit bus, and to lift the compute throttle that left stock cards at 1/32 issue rate. Caveats: only the 8 GB card (PCI 10de:20c2) unlocks to 64 GB; the 10 GB card (10de:2082) reaches 40 GB, and nvidia-smi does not tell them apart. CUDA allocates about 63.4 GiB. Bandwidth depends on the card's VBIOS: 1,769 GB/s is the 300 W image (HBM at 1,728 MHz); the stock 250 W image runs 1,458 MHz for 1,493 GB/s. Both ship under the same ID, and the ceiling takes the faster. The patched driver pins exact versions (610.43.02/.03, 610.57.04, 615.71.09, 615.78.08 as of 2026-10-07), needs Secure Boot off and a cold power cycle, and is Linux-only. ECC is fused off; cmpunlocker reports it enabled since 2026-10-04, but nobody has shown it correcting errors, and one card needed a single-bit HBM page blacklisted by hand. The host link is PCIe Gen1 x4 stock. Gen2 comes from software, x16 from hand-soldering 24 missing capacitors, and Gen3 is unsolved. There is no NVLink. Memory and SM overclocks can corrupt data silently. Passively cooled, on a single EPS 8-pin.",
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/nvlink-hardware.md -- \"Bottom line: NVLink on the CMP 170HX does not work, has never worked for anyone, and is disabled by an OTP fuse rather than by software. ... because `FUSE_NVLINK_DIS` at `0x00820684` reads `0x00000007` and no override register exists that could countermand it. ... $ nvidia-smi nvlink -s / Device does not have or support Nvlink.\"",
+        "note": "No NVIDIA source: a community reverse-engineering project reads NVLink as fused off on the chip."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/pcie-subsystem.md -- \"A stock CMP 170HX trains at **PCIe Gen1 (2.5 GT/s) by x4**. Those are two entirely separate restrictions that happen to coexist on the same board\"",
+        "note": "Secondary source only: a community reverse-engineering repo."
+      },
+      "hostLink": {
+        "gen": 1,
+        "lanes": 4,
+        "source": "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/pcie-subsystem.md -- \"A stock CMP 170HX trains at **PCIe Gen1 (2.5 GT/s) by x4**. Those are two entirely separate restrictions that happen to coexist on the same board\"",
+        "note": "A stock card trains at PCIe 1.0 x4 though x16 is wired (about 0.8 GB/s measured), a mining-card restriction."
+      }
+    },
+    {
+      "id": "cmp_170hx_40",
+      "label": "CMP 170HX 40GB (unlocked)",
+      "vendor": "NVIDIA",
+      "arch": "ampere",
+      "released": "2021-05",
+      "memoryGB": 40,
+      "memoryBandwidthGBs": 1555.2,
+      "process": "TSMC N7",
+      "pricing": {
+        "street": {
+          "usd": 1350,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking, for the 10 GB card, the one that unlocks to 40 GB."
+        }
+      },
+      "sources": [
+        "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/board-and-variants.md -- \"PCI ID | `10de:20c2` (`0x20C2`) | `10de:2082` (`0x2082`)\"; \"Active stacks / bus width | 4 stacks, 4096-bit | 5 stacks, 5120-bit\"; \"**Unlocks to** | **65536 MiB (64 GB)** | **40960 MiB (40 GB)**\"; \"Unlock target | 4 × 16 GB = 64 GB, **stable** | 5 × 8 GB = 40 GB, **stable**; 80 GB unstable\" (8 GB card | 10 GB card)",
+        "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/overview.md -- \"Memory clock, 10 GB SKU | **1215 MHz**, current = max\"; \"Theoretical peak, 10 GB SKU | 1555.2 GB/s = **1448.4 GiB/s** | 1215 MHz DDR × 5120-bit\"; \"DtoD, 10 GB at 40 GB | 1390 GB/s\"; \"Sustained SM clock (stock) | **1410 MHz**\"; \"Both the 8 GB and the 10 GB SKU expose exactly **70 SMs / 4480 CUDA cores**\"; \"NVML GPC clock VF offset | `[-1000 .. +1000]` MHz on the **8 GB** card; `[0 .. 0]` on the 10 GB card\"",
+        "https://images.nvidia.com/aem-dam/en-zz/Solutions/data-center/nvidia-ampere-architecture-whitepaper.pdf -- \"A100 has four Tensor Cores per SM, which together deliver 1024 dense FP16/FP32 FMA operations per clock\" (per-SM rates the compute figures scale)"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/overview.md",
+        "values": {
+          "fp32": 12.6,
+          "tf32": 101.1,
+          "bf16": 202.1,
+          "fp16": 202.1,
+          "int8": 404.3,
+          "int4": 808.5
+        },
+        "unofficial": [
+          "fp32",
+          "tf32",
+          "bf16",
+          "fp16",
+          "int8",
+          "int4"
+        ],
+        "note": "Derived, not rated: A100's dense per-SM tensor rates (whitepaper) x 70 SMs x 1,410 MHz, the stock sustained clock. Unlike the 8 GB card, this one takes no clock offset, and the 300 W VBIOS behind the 64 GB entry's figures is the 8 GB card's. No FP8, FP6 or FP4 (sm_80)."
+      },
+      "note": "The 10 GB CMP 170HX (PCI 10de:2082) unlocked to 40 GB by the same community driver as the 64 GB card: five stacks of Samsung HBM2 on a 5120-bit bus at a locked 1,215 MHz, the A100 40GB PCIe's memory layout. 80 GB has been tried and is unstable. nvidia-smi does not tell the two cards apart; check the PCI device ID. Measured device-to-device copy: 1,390 GB/s at 40 GB. The 64 GB entry's caveats apply: pinned Linux-only drivers, PCIe 1.0 x4 stock, no NVLink.",
       "peerLink": {
         "maxCards": 0,
         "source": "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/nvlink-hardware.md -- \"Bottom line: NVLink on the CMP 170HX does not work, has never worked for anyone, and is disabled by an OTP fuse rather than by software. ... because `FUSE_NVLINK_DIS` at `0x00820684` reads `0x00000007` and no override register exists that could countermand it. ... $ nvidia-smi nvlink -s / Device does not have or support Nvlink.\"",

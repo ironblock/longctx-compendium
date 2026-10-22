@@ -105,6 +105,7 @@ const canvasPainted = async (id, p = page) =>
     return false;
   }, `#${id}`);
 const settle = () => page.waitForTimeout(60);
+const usd = v => `$${Math.round(v).toLocaleString('en-US')}`;
 // The numeric controls are range inputs: drive them the way a person would,
 // by typing into a slider's number box, or by moving its handle.
 async function setBox(sel, value, p = page) {
@@ -287,6 +288,12 @@ for (const [hash, what, test] of [
 await page.click('#hwReset');
 await settle();
 check('clearing filters lists every unit again', (await count('#hwTable tbody tr')) === model.UNITS.length);
+{
+  // A multi-GPU board: memory per GPU, price per board, $ per GB over the board.
+  const a16 = model.UNITS.find(u => u.id === 'a16');
+  const t = await page.locator('#hwTable tbody tr', { hasText: a16.label }).first().textContent();
+  check('the A16 row shows per-GPU memory and a per-board price', /per GPU · 4 per board/.test(t) && t.includes(`${usd(a16.street)}`) && /per board/.test(t) && t.includes(usd(a16.street / (a16.memoryGB * a16.gpus))), t);
+}
 check('clearing filters empties the slider boxes', (await page.locator('#bwRange .lo-num').inputValue()) === '');
 
 // A two-ended range: cards priced between $1,000 and $2,000.
@@ -360,9 +367,10 @@ check('clearing filters empties the slider boxes', (await page.locator('#bwRange
 }
 
 // Sorting: bandwidth descending is the default; a click reverses it, blanks last both ways.
+// The leading number is the figure: a multi-GPU board's cell adds "per GPU".
 {
   const bws = async () =>
-    (await page.locator('#hwTable tbody tr td:nth-child(3)').allTextContents()).map(t => (t.trim() === '—' ? null : Number(t.replace(/,/g, ''))));
+    (await page.locator('#hwTable tbody tr td:nth-child(3)').allTextContents()).map(t => (t.trim() === '—' ? null : parseFloat(t.replace(/,/g, ''))));
   const isSorted = (xs, dir) => {
     const v = xs.filter(x => x != null);
     const blanksLast = xs.indexOf(null) === -1 || xs.slice(xs.indexOf(null)).every(x => x == null);
@@ -451,6 +459,16 @@ async function decodeAt(modelId, tokens) {
   await settle();
   const three = Number((await row().textContent()).replace(/,/g, ''));
   check('a three-card tensor-parallel split gets three cards of bandwidth', Math.abs(three / layer - 3) < 0.01, `${three} vs ${layer}`);
+  // The A16's GPUs are counted one by one but bought four to a board.
+  const a16 = model.UNITS.find(u => u.id === 'a16');
+  const a16Row = async n => {
+    await setCards(n);
+    await settle();
+    return page.locator('#ceilTable tbody tr', { hasText: a16.label }).first().textContent();
+  };
+  const four = await a16Row(4);
+  const five = await a16Row(5);
+  check('four A16 GPUs cost one board, five cost two', four.includes(usd(a16.street)) && /GPUs on 1 board/.test(four) && five.includes(usd(2 * a16.street)) && /GPUs on 2 boards/.test(five), `${four} | ${five}`);
   await setCards('auto');
   await page.selectOption('#modelSelect', 'qwen38_27b');
   await page.click('#scopeChips button:has-text("Matching section 1")');

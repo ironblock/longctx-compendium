@@ -55,6 +55,8 @@ export function normalize(doc) {
       support,
       formats: Object.fromEntries(FORMATS.map(f => [f, support[f].state])),
       street: u.pricing?.street?.usd ?? null,
+      // GPUs per board: memory, bandwidth and compute are per GPU, the price per board.
+      gpus: u.board?.gpus ?? 1,
       // Largest group joined without PCIe; null when not yet sourced.
       link: u.peerLink ? u.peerLink.maxCards : null,
       // Every group size it can run in, unlinked (0) included; null when not yet sourced.
@@ -73,7 +75,8 @@ export function normalize(doc) {
   const rigTotals = rig => {
     const parts = rig.units.map(c => ({ u: unitById[c.unit], n: c.count }));
     const sum = get => (parts.some(p => get(p.u) == null) ? null : parts.reduce((t, p) => t + get(p.u) * p.n, 0));
-    const cards = sum(u => u?.pricing?.street?.usd);
+    // A board of several GPUs (the A16) is bought whole: four of its GPUs cost one board.
+    const cards = parts.some(p => p.u?.street == null) ? null : parts.reduce((t, p) => t + p.u.street * Math.ceil(p.n / p.u.gpus), 0);
     const link = rig.interconnect;
     return {
       memoryGB: sum(u => u?.memoryGB),

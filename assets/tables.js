@@ -75,10 +75,13 @@ export function unitMatch(u, s) {
 
 const UNOFFICIAL_TIP = "Not the vendor's rating for this card: worked out from other figures, or a third party's. The card's compute note in data/compendium.json says which.";
 
+/** The sub-line that says a figure is one of a board's several GPUs. */
+const perGpu = (u, text) => (u.gpus > 1 ? `<span class="sub">${esc(text)}</span>` : '');
+
 const HW_COLS = (prec) => [
   { key: 'label', label: 'Unit', cls: 'lbl', sort: u => u.label, cell: u => `<td class="lbl"><span>${esc(u.label)}</span><span class="sub">${esc(u.archLabel ?? 'generation not recorded')}${u.released ? ` · ${u.released}` : ''}</span></td>` },
-  { key: 'mem', label: 'Memory GB', sort: u => u.memoryGB, cell: u => `<td class="num">${u.memoryGB ?? DASH}</td>` },
-  { key: 'bw', label: 'Bandwidth GB/s', sort: u => u.memoryBandwidthGBs, cell: u => `<td class="num">${n0(u.memoryBandwidthGBs) ?? DASH}</td>` },
+  { key: 'mem', label: 'Memory GB', sort: u => u.memoryGB, cell: u => `<td class="num">${u.memoryGB ?? DASH}${perGpu(u, `per GPU · ${u.gpus} per board`)}</td>` },
+  { key: 'bw', label: 'Bandwidth GB/s', sort: u => u.memoryBandwidthGBs, cell: u => `<td class="num">${n0(u.memoryBandwidthGBs) ?? DASH}${perGpu(u, 'per GPU')}</td>` },
   { key: 'fmts', label: 'Matrix formats', cls: 'lbl', cell: u => `<td class="lbl fmts">${formatBadges(u)}</td>` },
   {
     key: 'prec',
@@ -127,14 +130,15 @@ const HW_COLS = (prec) => [
     key: 'street',
     label: 'Street',
     sort: u => u.street,
-    cell: u => `<td class="num">${usd(u.street) ?? DASH}${u.pricing?.street?.asOf ? `<span class="sub">${esc(u.pricing.street.asOf)}</span>` : ''}</td>`,
+    cell: u => `<td class="num">${usd(u.street) ?? DASH}${u.pricing?.street?.asOf ? `<span class="sub">${esc(u.pricing.street.asOf)}${u.gpus > 1 ? ' · per board' : ''}</span>` : ''}</td>`,
   },
-  { key: 'perGB', label: '$ per GB', sort: u => (u.street && u.memoryGB ? u.street / u.memoryGB : null), cell: u => `<td class="num">${u.street && u.memoryGB ? usd(u.street / u.memoryGB) : DASH}</td>` },
+  // A multi-GPU board's whole memory and bandwidth against its price.
+  { key: 'perGB', label: '$ per GB', sort: u => (u.street && u.memoryGB ? u.street / (u.memoryGB * u.gpus) : null), cell: u => `<td class="num">${u.street && u.memoryGB ? usd(u.street / (u.memoryGB * u.gpus)) : DASH}</td>` },
   {
     key: 'bwPerK',
     label: 'GB/s per $1k',
-    sort: u => (u.street && u.memoryBandwidthGBs ? u.memoryBandwidthGBs / (u.street / 1000) : null),
-    cell: u => `<td class="num">${u.street && u.memoryBandwidthGBs ? n0(u.memoryBandwidthGBs / (u.street / 1000)) : DASH}</td>`,
+    sort: u => (u.street && u.memoryBandwidthGBs ? (u.memoryBandwidthGBs * u.gpus) / (u.street / 1000) : null),
+    cell: u => `<td class="num">${u.street && u.memoryBandwidthGBs ? n0((u.memoryBandwidthGBs * u.gpus) / (u.street / 1000)) : DASH}</td>`,
   },
 ];
 
@@ -188,7 +192,8 @@ export function ceilingRow(m, u, s) {
   const f = fit(m, u, { cards: n, mode, bpw, depth: s.depth, ...kv });
   const d = decodeCeiling(m, u, { cards: n, mode, bpw, depth: s.depth, ...kv });
   const p = prefillCeiling(m, u, { cards: n, formatKey: s.weights, depth: s.depth });
-  const cost = u.street != null ? u.street * n : null;
+  // GPUs on a multi-GPU board are bought a board at a time.
+  const cost = u.street != null ? u.street * Math.ceil(n / u.gpus) : null;
   return { u, n, mode, fit: f, decode: d?.tps ?? null, prefill: p, cost, perK: d?.tps && cost ? d.tps / (cost / 1000) : null };
 }
 
@@ -226,10 +231,12 @@ export function renderCeilingTable(model, state, units) {
       ? `<td class="lbl">${DASH}<span class="sub">no rated ${prec.precision.toUpperCase()} figure</span></td>`
       : `<td class="lbl"><span class="num">${n0(r.prefill.tps)}</span><span class="sub" title="${esc(prec.note)}">${prec.precision.toUpperCase()}${prec.vector ? ' vector' : ''}${prec.grounded ? '' : ' · assumed'}${prec.unofficial ? ' · unofficial' : ''}</span></td>`;
     const modeWord = r.n === 1 ? '' : r.mode === 'tensor' ? (splitsEvenly(m, r.n) ? 'tensor parallel' : `tensor parallel · ${m.heads} heads don't split ${r.n} ways`) : 'layer split';
+    const boards = Math.ceil(r.n / u.gpus);
+    const boardWord = u.gpus > 1 ? `GPU${r.n > 1 ? 's' : ''} on ${boards} board${boards > 1 ? 's' : ''}` : '';
     return (
       `<tr${f && !f.fits ? ' style="opacity:.55"' : ''}>` +
       `<td class="lbl">${esc(u.label)}<span class="sub">${esc(u.archLabel ?? '')}</span></td>` +
-      `<td class="num">${r.n}<span class="sub">${modeWord}</span></td>` +
+      `<td class="num">${r.n}<span class="sub">${[boardWord, modeWord].filter(Boolean).join(' · ')}</span></td>` +
       mem +
       barCell(r.decode, max) +
       pre +

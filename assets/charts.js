@@ -158,6 +158,7 @@ export function renderScatter(units, matchIds, precision) {
       short: shortLabel(u),
       arch: u.archLabel,
       mem: u.memoryGB,
+      gpus: u.gpus,
       vendor: u.vendor ?? 'Other',
       vector: key.endsWith(':vector'),
       unofficial: !!u.compute.unofficial?.includes(key),
@@ -219,7 +220,7 @@ export function renderScatter(units, matchIds, precision) {
             label: it => [
               ...(several ? [it.raw.label] : []),
               `${it.raw.vendor} · ${it.raw.arch ?? 'generation not recorded'}`,
-              `${it.raw.x.toLocaleString()} GB/s · ${it.raw.mem ?? '?'} GB`,
+              `${it.raw.x.toLocaleString()} GB/s · ${it.raw.mem ?? '?'} GB${it.raw.gpus > 1 ? ` per GPU, ${it.raw.gpus} per board` : ''}`,
               `${it.raw.y.toLocaleString()} ${unit} ${it.raw.vector ? 'vector' : 'dense'} ${precision.toUpperCase()}${it.raw.unofficial ? ' (unofficial)' : ''}`,
               ...(it.raw.vector ? ['no matrix units: shader-ALU rate'] : []),
             ],

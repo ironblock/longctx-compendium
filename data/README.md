@@ -125,6 +125,13 @@ nobody has sourced it yet, and the page says "?" rather than treating the card
 as unlinked. A NIC between machines (ConnectX, Thunderbolt) is a network, not a
 peer link, and does not count.
 
+`board` marks a card that carries several GPUs the host sees as separate
+devices, such as the A16's four. `gpus` says how many, with a `source`. Memory,
+bandwidth, compute and links are then one GPU's, so a model on the whole board
+is split across GPUs like any multi-card rig, while `street` is the board's
+price. The page counts GPUs and charges whole boards: four A16 GPUs cost one
+board, five cost two. Its $ per GB and GB/s per $1k use the whole board.
+
 ### Specifications need a source
 
 A unit carrying `released`, `memoryBandwidthGBs`, `tdpW`, `process` or any

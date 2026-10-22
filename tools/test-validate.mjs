@@ -95,6 +95,12 @@ const CASES = [
   ['a host link with lanes no slot has', 'must be one of [1,2,4,8,16]', d => {
     unit(d, 'rtx_3090').hostLink = { gen: 4, lanes: 12, source: 'x' };
   }],
+  ['a multi-GPU board with no source', 'missing required property "source"', d => {
+    unit(d, 'a16').board = { gpus: 4 };
+  }],
+  ['a "board" of one GPU', 'must be >= 2', d => {
+    unit(d, 'a16').board.gpus = 1;
+  }],
   ['an offload with no note', 'missing required property "note"', d => {
     line(d, L).offload = { to: 'Apple Neural Engine', metrics: ['prefill'] };
   }],

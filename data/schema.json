@@ -321,6 +321,28 @@
             }
           }
         },
+        "board": {
+          "description": "Set when one board carries several GPUs that the host sees as separate devices (the A16's four). Memory, bandwidth, compute and links are then per GPU, and the price is per board.",
+          "type": "object",
+          "required": [
+            "gpus",
+            "source"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "gpus": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "source": {
+              "description": "Where it is stated: a URL, then a verbatim quote.",
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
         "power": {
           "$ref": "#/definitions/power"
         },
