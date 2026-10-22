@@ -56,7 +56,9 @@ export function unitMatch(u, s) {
   if (!within(u.street, s.priceMin, s.priceMax)) return { ok: false };
   // An unsourced link is not a missing one: say so instead of hiding it silently.
   if (s.formsOff?.has(u.form ?? 'not recorded')) return { ok: false };
-  if ((s.linkMin != null || s.linkMax != null) && !within(u.link, s.linkMin, s.linkMax)) return { ok: false, linkUnknown: u.link == null };
+  // A card matches when it can run in some group size inside the range: a 3090
+  // pairs or runs alone (0 or 2), so [2, 2] keeps it and [4, 6] does not.
+  if ((s.linkMin != null || s.linkMax != null) && !u.linkSizes?.some(n => within(n, s.linkMin, s.linkMax))) return { ok: false, linkUnknown: u.linkSizes == null };
   if (!within(u.hostGBs, s.hostMin, s.hostMax)) return { ok: false };
   const unknown = [];
   for (const f of s.fmt) {

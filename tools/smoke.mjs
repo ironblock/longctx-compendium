@@ -171,6 +171,23 @@ check('hardware summary rendered', /of \d+ units match/.test(await text('#hwSumm
   await p.close();
 }
 
+// The PCIe host-link slider and the form-factor chips.
+{
+  const p = await browser.newPage();
+  const names = () => p.locator('#hwTable tbody tr > td:first-child > span:first-child').allTextContents();
+  await p.goto(`${base}/index.html#host=60`, { waitUntil: 'networkidle' });
+  const fast = await names();
+  const wantFast = model.UNITS.filter(u => u.hostGBs >= 60).length;
+  check('a host-link minimum keeps the PCIe 5.0 x16 and faster cards', fast.length === wantFast && wantFast > 0 && !fast.some(l => /RTX 4090|Mac Studio/.test(l)), `${fast.length} rows for ${wantFast}`);
+  check('and says integrated GPUs drop out', /integrated GPUs drop out/.test(await text('#hwSummary', p)));
+  await p.goto(`${base}/index.html#ffoff=PCIe,integrated`, { waitUntil: 'networkidle' });
+  const modules = await names();
+  check('hiding PCIe cards and integrated GPUs leaves the SXM and OAM modules', modules.length === model.UNITS.filter(u => u.form === 'SXM' || u.form === 'OAM').length && modules.some(l => /H100 SXM/.test(l)) && modules.some(l => /MI300X/.test(l)), modules.join(', '));
+  const cell = await p.locator('#hwTable tbody tr', { hasText: 'H100 SXM' }).locator('td', { hasText: 'PCIe 5.0' }).first().textContent();
+  check('the table gives form factor and host link', /SXM5\s*PCIe 5\.0 ×16 · 63 GB\/s/.test(cell ?? ''), cell);
+  await p.close();
+}
+
 // Cards joined without PCIe: "2+" means any direct link at all.
 {
   const p = await browser.newPage();
@@ -185,6 +202,15 @@ check('hardware summary rendered', /of \d+ units match/.test(await text('#hwSumm
   const four = await rowsAt(4);
   check('4+ keeps the 4-card hives and drops the pairs', four.some(l => /MI100/.test(l)) && four.some(l => /Max 1100/.test(l)) && !four.some(l => /RTX 3090/.test(l)), four.join(', '));
   check('the link filter is in the summary', /cards joined without PCIe/.test(await text('#hwSummary', p)));
+  // A range matches any group size a card supports: exactly 2 keeps bridge pairs
+  // and cards whose smaller options include a pair, not 4-only hives or 8-GPU boards.
+  await p.goto(`${base}/index.html#link=2&linkmax=2`, { waitUntil: 'networkidle' });
+  const pairs = await p.locator('#hwTable tbody tr > td:first-child > span:first-child').allTextContents();
+  const wantPairs = model.UNITS.filter(u => u.linkSizes?.includes(2)).length;
+  check('exactly 2 cards keeps every card that can pair', pairs.length === wantPairs && pairs.includes('GeForce RTX 3090 24GB') && pairs.some(l => /V100 SXM2/.test(l)) && !pairs.some(l => /MI100|H100 SXM/.test(l)), pairs.join(', '));
+  await p.goto(`${base}/index.html#link=5&linkmax=6`, { waitUntil: 'networkidle' });
+  const six = await p.locator('#hwTable tbody tr > td:first-child > span:first-child').allTextContents();
+  check('5 to 6 cards finds the AC922\'s six-GPU V100s', six.length === model.UNITS.filter(u => u.linkSizes?.some(n => n >= 5 && n <= 6)).length && six.some(l => /V100 SXM2/.test(l)), six.join(', '));
   await p.close();
 }
 

@@ -57,6 +57,8 @@ export function normalize(doc) {
       street: u.pricing?.street?.usd ?? null,
       // Largest group joined without PCIe; null when not yet sourced.
       link: u.peerLink ? u.peerLink.maxCards : null,
+      // Every group size it can run in, unlinked (0) included; null when not yet sourced.
+      linkSizes: u.peerLink ? [0, ...(u.peerLink.options ?? []), u.peerLink.maxCards] : null,
       // PCIe host link, per direction; null for an integrated GPU or an unsourced one.
       hostGBs: u.hostLink ? PCIE[u.hostLink.gen].laneGBs * u.hostLink.lanes : null,
       form: formKind(u.formFactor?.name),

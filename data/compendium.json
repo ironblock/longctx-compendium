@@ -1711,6 +1711,17 @@
         "maxCards": 0,
         "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/data-center/rtx-pro-6000-blackwell-workstation-edition/workstation-blackwell-rtx-pro-6000-workstation-edition-nvidia-us-3519208-web.pdf -- \"System Interface PCIe 5.0 x16\"",
         "note": "The datasheet lists only PCIe 5.0 x16. NVIDIA's brief for the sibling Server Edition says \"NVIDIA NVLink: Not supported\", and Lenovo lists the Max-Q as \"NVLink support: No\"."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "active",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/data-center/rtx-pro-6000-blackwell-workstation-edition/workstation-blackwell-rtx-pro-6000-workstation-edition-nvidia-us-3519208-web.pdf -- \"System Interface PCIe 5.0 x16 ... Thermal Solution Double-flow-through | Form Factor 5.4” H x 12” L, dual slot, extended height\""
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/data-center/rtx-pro-6000-blackwell-workstation-edition/workstation-blackwell-rtx-pro-6000-workstation-edition-nvidia-us-3519208-web.pdf -- \"System Interface PCIe 5.0 x16 ... Thermal Solution Double-flow-through | Form Factor 5.4” H x 12” L, dual slot, extended height\""
       }
     },
     {
@@ -1769,6 +1780,17 @@
         "maxCards": 0,
         "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/professional-desktop-gpus/rtx-pro-5000-blackwell/workstation-datasheet-blackwell-rtx-pro-5000-5488550-nvidia.pdf -- \"System Interface PCIe 5.0 x16\"",
         "note": "The datasheet lists only PCIe 5.0 x16; NVIDIA states no NVLink for the sibling RTX PRO 6000 Server Edition."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "active",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/professional-desktop-gpus/rtx-pro-5000-blackwell/workstation-datasheet-blackwell-rtx-pro-5000-5488550-nvidia.pdf -- \"GPU Memory 48 GB GDDR7 with ECC 72 GB GDDR7 with ECC ... System Interface PCIe 5.0 x16 ... Thermal Solution Active | Form Factor 4.4” x 10.5” L, dual slot, full height\""
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/professional-desktop-gpus/rtx-pro-5000-blackwell/workstation-datasheet-blackwell-rtx-pro-5000-5488550-nvidia.pdf -- \"GPU Memory 48 GB GDDR7 with ECC 72 GB GDDR7 with ECC ... System Interface PCIe 5.0 x16 ... Thermal Solution Active | Form Factor 4.4” x 10.5” L, dual slot, full height\""
       }
     },
     {
@@ -1828,6 +1850,17 @@
         "maxCards": 0,
         "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/professional-desktop-gpus/rtx-pro-5000-blackwell/workstation-datasheet-blackwell-rtx-pro-5000-5488550-nvidia.pdf -- \"GPU Memory 48 GB GDDR7 with ECC 72 GB GDDR7 with ECC ... System Interface PCIe 5.0 x16\"",
         "note": "Same datasheet as the 48 GB card: PCIe 5.0 x16 only."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "active",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/professional-desktop-gpus/rtx-pro-5000-blackwell/workstation-datasheet-blackwell-rtx-pro-5000-5488550-nvidia.pdf -- \"GPU Memory 48 GB GDDR7 with ECC 72 GB GDDR7 with ECC ... System Interface PCIe 5.0 x16 ... Thermal Solution Active | Form Factor 4.4” x 10.5” L, dual slot, full height\""
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/professional-desktop-gpus/rtx-pro-5000-blackwell/workstation-datasheet-blackwell-rtx-pro-5000-5488550-nvidia.pdf -- \"GPU Memory 48 GB GDDR7 with ECC 72 GB GDDR7 with ECC ... System Interface PCIe 5.0 x16 ... Thermal Solution Active | Form Factor 4.4” x 10.5” L, dual slot, full height\""
       }
     },
     {
@@ -1886,6 +1919,18 @@
       "peerLink": {
         "maxCards": 0,
         "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5090/ -- \"NVIDIA NVLink™ (SLI-Ready) | No\""
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "active",
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5090/ -- \"PCI Express Gen 5 | Yes ... Card Dimensions: Length 304 mm | Width 137 mm | Slot 2-Slot\"",
+        "note": "NVIDIA states only \"PCI Express Gen 5\"; x16 is from PNY. The Founders Edition is 2-slot; partner cards run to 3.5."
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5090/ -- \"PCI Express Gen 5 | Yes ... Card Dimensions: Length 304 mm | Width 137 mm | Slot 2-Slot\""
       }
     },
     {
@@ -1945,6 +1990,18 @@
       "peerLink": {
         "maxCards": 0,
         "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5060-family/ -- \"NVIDIA NVLink™ (SLI-Ready) | No | No\""
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "cooling": "active",
+        "source": "https://www.pny.com/geforce-rtx-5060-ti-16gb-models -- \"Bus Type PCI-Express 5.0 x8 | Card Dimensions 11.77\" x 4.72\" x1.57\"; 2 Slot ... PCI Express-compliant motherboard with one 2-width x8 graphics slot\"",
+        "note": "No Founders Edition; partner cards vary."
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 8,
+        "source": "https://www.pny.com/geforce-rtx-5060-ti-16gb-models -- \"Bus Type PCI-Express 5.0 x8 | Card Dimensions 11.77\" x 4.72\" x1.57\"; 2 Slot ... PCI Express-compliant motherboard with one 2-width x8 graphics slot\"",
+        "note": "Eight lanes, not sixteen (PNY: \"PCI-Express 5.0 x8\"); some retailer listings say x16."
       }
     },
     {
@@ -2000,6 +2057,17 @@
         "maxCards": 0,
         "source": "https://www.amd.com/en/products/graphics/workstations/radeon-ai-pro/ai-9000-series/amd-radeon-ai-pro-r9700.html -- \"Bus Type | PCIe® 5.0 x16\"",
         "note": "AMD markets it for multi-GPU workstations, over PCIe peer-to-peer."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "active",
+        "source": "https://www.amd.com/en/products/graphics/workstations/radeon-ai-pro/ai-9000-series/amd-radeon-ai-pro-r9700.html -- \"Board Specifications | Bus Type | PCIe® 5.0 x16 | Cooling | Active | ... Dimensions | Board Width | Double Slot\""
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.amd.com/en/products/graphics/workstations/radeon-ai-pro/ai-9000-series/amd-radeon-ai-pro-r9700.html -- \"Board Specifications | Bus Type | PCIe® 5.0 x16 | Cooling | Active | ... Dimensions | Board Width | Double Slot\""
       }
     },
     {
@@ -2055,6 +2123,11 @@
         "maxCards": 0,
         "source": "https://www.nvidia.com/en-us/products/workstations/dgx-spark/ -- \"Up to 4 DGX Spark systems can be connected using NVIDIA ConnectX-7 networking. You can cluster two or three systems with a single QSFP cable; clustering 4 systems requires an external network switch. ... 4 × DGX Spark | 256 GB | 512 GB | 200 GbE switch (QSFP56-DD, RoCE v2)\"",
         "note": "Its ConnectX-7 joins up to four Sparks over 200 GbE with RoCE: a network between machines, reached over PCIe, so it does not count."
+      },
+      "formFactor": {
+        "name": "integrated",
+        "source": "https://nvidianews.nvidia.com/news/nvidia-announces-dgx-spark-and-dgx-station-personal-ai-computers -- \"The GB10 Superchip uses NVIDIA NVLink™-C2C interconnect technology to deliver a CPU+GPU-coherent memory model with 5x the bandwidth of fifth-generation PCIe.\"",
+        "note": "GPU and CPU share the GB10 package and talk over NVLink-C2C, not PCIe."
       }
     },
     {
@@ -2110,6 +2183,11 @@
         "maxCards": 0,
         "source": "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/ -- \"Apple’s custom-built UltraFusion packaging technology uses an embedded silicon interposer that connects two M3 Max dies across more than 10,000 signals, providing over 2.5TB/s of low-latency interprocessor bandwidth, and making M3 Ultra appear as a single chip to software.\"",
         "note": "One GPU per machine. Clustering Macs over Thunderbolt 5 with RDMA joins machines over a network, so it does not count. No statement of absence is needed or found."
+      },
+      "formFactor": {
+        "name": "integrated",
+        "source": "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/ -- \"M3 Ultra features a 32-core CPU, an 80-core GPU, double the Neural Engine cores, Thunderbolt 5, and support for the most unified memory ever in a personal computer. ... “M3 Ultra is the pinnacle of our scalable system-on-a-chip architecture, aimed specifically at users who run the most heavily threaded and bandwidth-intensive applications,”\"",
+        "note": "One SoC with unified memory: no PCIe link between GPU and CPU, and Apple silicon does not support external GPUs."
       }
     },
     {
@@ -2160,6 +2238,11 @@
           "fp32",
           "fp16:vector"
         ]
+      },
+      "formFactor": {
+        "name": "integrated",
+        "source": "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/ -- \"M3 Ultra features a 32-core CPU, an 80-core GPU, double the Neural Engine cores, Thunderbolt 5, and support for the most unified memory ever in a personal computer. ... “M3 Ultra is the pinnacle of our scalable system-on-a-chip architecture, aimed specifically at users who run the most heavily threaded and bandwidth-intensive applications,”\"",
+        "note": "One SoC with unified memory: no PCIe link between GPU and CPU, and Apple silicon does not support external GPUs."
       }
     },
     {
@@ -2210,6 +2293,11 @@
           "fp32",
           "fp16:vector"
         ]
+      },
+      "formFactor": {
+        "name": "integrated",
+        "source": "https://www.apple.com/newsroom/2025/03/apple-reveals-m3-ultra-taking-apple-silicon-to-a-new-extreme/ -- \"M3 Ultra features a 32-core CPU, an 80-core GPU, double the Neural Engine cores, Thunderbolt 5, and support for the most unified memory ever in a personal computer. ... “M3 Ultra is the pinnacle of our scalable system-on-a-chip architecture, aimed specifically at users who run the most heavily threaded and bandwidth-intensive applications,”\"",
+        "note": "One SoC with unified memory: no PCIe link between GPU and CPU, and Apple silicon does not support external GPUs."
       }
     },
     {
@@ -2260,6 +2348,11 @@
           "fp16",
           "int8"
         ]
+      },
+      "formFactor": {
+        "name": "integrated",
+        "source": "https://www.apple.com/newsroom/2026/08/apple-introduces-m6-and-m5-ultra-for-a-big-leap-in-performance-and-ai-compute/ -- \"M5 Ultra uses UltraFusion to connect two dual-die M5 Max chips to form the quad-die architecture — a first for Apple silicon. UltraFusion increases the inter-die bandwidth to over 4.4TB/s and the connection density by over 6x. Together, these ultra-low-latency, high-bandwidth interconnects allow the four dies to behave as a single unified processor.\"",
+        "note": "One SoC with unified memory: no PCIe link between GPU and CPU, and Apple silicon does not support external GPUs."
       }
     },
     {
@@ -2311,6 +2404,11 @@
           "fp16",
           "int8"
         ]
+      },
+      "formFactor": {
+        "name": "integrated",
+        "source": "https://www.apple.com/newsroom/2026/08/apple-introduces-m6-and-m5-ultra-for-a-big-leap-in-performance-and-ai-compute/ -- \"M5 Ultra uses UltraFusion to connect two dual-die M5 Max chips to form the quad-die architecture — a first for Apple silicon. UltraFusion increases the inter-die bandwidth to over 4.4TB/s and the connection density by over 6x. Together, these ultra-low-latency, high-bandwidth interconnects allow the four dies to behave as a single unified processor.\"",
+        "note": "One SoC with unified memory: no PCIe link between GPU and CPU, and Apple silicon does not support external GPUs."
       }
     },
     {
@@ -2347,6 +2445,11 @@
           "fp16",
           "int8"
         ]
+      },
+      "formFactor": {
+        "name": "integrated",
+        "source": "https://www.apple.com/newsroom/2026/08/apple-introduces-m6-and-m5-ultra-for-a-big-leap-in-performance-and-ai-compute/ -- \"M5 Ultra uses UltraFusion to connect two dual-die M5 Max chips to form the quad-die architecture — a first for Apple silicon. UltraFusion increases the inter-die bandwidth to over 4.4TB/s and the connection density by over 6x. Together, these ultra-low-latency, high-bandwidth interconnects allow the four dies to behave as a single unified processor.\"",
+        "note": "One SoC with unified memory: no PCIe link between GPU and CPU, and Apple silicon does not support external GPUs."
       }
     },
     {
@@ -2393,6 +2496,11 @@
         "maxCards": 0,
         "source": "https://www.amd.com/en/developer/resources/technical-articles/2026/how-to-run-a-one-trillion-parameter-llm-locally-an-amd.html -- \"A four-node cluster of Framework Desktop systems is used to demonstrate distributed local inference of the state-of-the-art one trillion-parameter Kimi K2.5 open-source model. ... Network Interconnect | 5Gbps over Ethernet\"",
         "note": "One integrated GPU per machine; AMD's own multi-machine guide joins them over Ethernet."
+      },
+      "formFactor": {
+        "name": "integrated",
+        "source": "https://www.amd.com/en/products/processors/laptop/ryzen/ai-300-series/amd-ryzen-ai-max-plus-395.html -- \"Form Factor | Laptops , | Desktops | ... PCI Express® Version | PCIe® 4.0 | Native PCIe® Lanes (Total/Usable) | 16 , | 16 | ... Graphics Capabilities | Graphics Model | Radeon 8060S Graphics\"",
+        "note": "One APU: its 16 PCIe 4.0 lanes go to storage and slots, not to the built-in GPU."
       }
     },
     {
@@ -2432,6 +2540,18 @@
         "maxCards": 0,
         "source": "https://leikoe.github.io/posts/automotive-gpu-maxxxing -- \"NVLINK doesn't work. (unknown reasons to me at this point) ... From what I know, the chip supports NVLINK but the pcb misses the NVLINK traces so they change it. It's not a software side problem. The gsp reports that the card doesn't support NVLINK\"",
         "note": "No NVIDIA source. A modder says the board lacks the NVLink traces; a community fuse survey says NVLink is fused off. Either way, none."
+      },
+      "formFactor": {
+        "name": "SXM2",
+        "cooling": "passive",
+        "source": "https://leikoe.github.io/posts/automotive-gpu-maxxxing -- \"It also confirmed the card was actually SXM2! This is pretty weird because A100 are normally SXM4. ... This is were I got some official specs: Description Details ... PCI Express Interface PCI Express 4.0 x16 Total frame buffer 32GB\"",
+        "note": "Secondary sources only. A builder's blog found the board is SXM2-format, not the SXM4 of a datacenter A100."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://leikoe.github.io/posts/automotive-gpu-maxxxing -- \"It also confirmed the card was actually SXM2! This is pretty weird because A100 are normally SXM4. ... This is were I got some official specs: Description Details ... PCI Express Interface PCI Express 4.0 x16 Total frame buffer 32GB\"",
+        "note": "PCIe 4.0 x16 is the rating NVIDIA's DRIVE Hyperion page gave (per the same blog; that page could not be fetched); on V100-era SXM2 carriers it runs at PCIe 3.0."
       }
     },
     {
@@ -2489,6 +2609,18 @@
         "maxCards": 0,
         "source": "https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2026-03/datasheet-b70-gpu.pdf -- \"Scale up with Linux multi-GPU compatibility, supporting OneAPI for faster AI processing with greater throughput and capacity for massive models. ... PCIe® Support Gen 5 x16 Native\"",
         "note": "Intel's multi-GPU support for Arc is over PCIe; in Intel's material Xe Link appears only on the Data Center GPU Max series. No statement of absence found."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "blower",
+        "source": "https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2026-03/datasheet-b70-gpu.pdf -- \"PCIe® Support | Gen 5 x16 Native | ... Form Factor | Varies by Partner\"",
+        "note": "Intel's own card is a dual-slot blower; partner cards vary."
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2026-03/datasheet-b70-gpu.pdf -- \"PCIe® Support | Gen 5 x16 Native | ... Form Factor | Varies by Partner\""
       }
     },
     {
@@ -2538,6 +2670,16 @@
         "topology": "DGX-1 / HGX-1, 8 GPUs: hybrid cube-mesh, not all-to-all, six 50 GB/s links per GPU (300 GB/s bidirectional), each GPU wired to 4 of the other 7; collectives relay through neighbours. IBM AC922, 4 or 6 GPUs: two or three per POWER9, wired to each other and to their CPU by NVLink (3 bricks per link with two per CPU, 2 with three); GPUs on different sockets reach each other through both CPUs and the 64 GBps X Bus, still without PCIe",
         "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"Each Tesla V100 has 6 NVLink connections, each capable of 50 GB/s of bidirectional bandwidth, for an aggregate of up to 300 GB/s bidirectional bandwidth. ... Figure 4 DGX-1 uses an 8-GPU hybrid cube-mesh interconnection network topology. ... Furthermore, this 8-GPU cube-mesh topology is easily subdivided into fully connected halves, or into NVLink-connected GPU pairs.\"",
         "note": "A single SXM2 module on a PCIe adapter, the usual hobbyist setup, has no NVLink at all. The AC922 cross-socket path is a 64 GBps bidirectional SMP bus, about what PCIe 4.0 x16 gives, so its 4- and 6-GPU groups are joined without PCIe but not at NVLink speed. IBM Redpaper REDP-5472 (Power AC922 Introduction and Technical Overview), p.15: \"six connected GPUs, where the six NVLINK Bricks are divided into three groups of two Bricks, enabling 100 GBps buses between GPUs\"; p.14: \"four GPUs, where the six NVLINK Bricks are divided into groups of three, which enables 150 GBps buses between GPUs\"; p.12: \"Each POWER9 CPU and each GPU have six NVLINK channels, called Bricks, with each one delivering up to 50 GBps bidirectional bandwidth\"; Figures 2-5 and 2-6 show the POWER9s joined by an \"X Bus 64 GBps\"."
+      },
+      "formFactor": {
+        "name": "SXM2",
+        "cooling": "passive",
+        "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"V100 also supports 16 lanes of PCIe 3.0. In DGX-1, these are used for connecting between the CPUs and GPUs and high-speed IB network interface cards.\""
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"V100 also supports 16 lanes of PCIe 3.0. In DGX-1, these are used for connecting between the CPUs and GPUs and high-speed IB network interface cards.\""
       }
     },
     {
@@ -2587,6 +2729,18 @@
         "topology": "Pairs, 112.5 GB/s bidirectional",
         "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/30-series/rtx-3090-3090ti/ -- \"NVIDIA NVLink™ (SLI-Ready) | Yes | Yes\"",
         "note": "Two-way only. CUDA peer-to-peer runs over the bridge on Linux (users measure about 52 GB/s each way); without it, GeForce drivers report no peer-to-peer."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 3,
+        "cooling": "active",
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/30-series/rtx-3090-3090ti/ -- \"PCI Express Gen 4 | Yes ... Founders Edition Card Dimensions: Length 12.3\" (313 mm) | 12.3\" (313 mm) ... Slot 3-Slot | 3-Slot\"",
+        "note": "The Founders Edition is 3-slot; partner cards vary."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/30-series/rtx-3090-3090ti/ -- \"PCI Express Gen 4 | Yes ... Founders Edition Card Dimensions: Length 12.3\" (313 mm) | 12.3\" (313 mm) ... Slot 3-Slot | 3-Slot\""
       }
     },
     {
@@ -2643,6 +2797,18 @@
         "topology": "Pairs, 600 GB/s bidirectional; pairs reach other pairs over PCIe",
         "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-nvidia-us-2188504-web.pdf -- \"A100 80GB PCIe ... Interconnect: NVIDIA® NVLink® Bridge for 2 GPUs: 600GB/s ** PCIe Gen4: 64GB/s ... ** SXM4 GPUs via HGX A100 server boards; PCIe GPUs via NVLink Bridge for up to two GPUs\"",
         "note": "This is the PCIe card; the SXM4 A100 80GB would be 8 on an HGX board."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/PB-10577-001_v02.pdf -- \"The NVIDIA A100 80GB card is a dual-slot 10.5 inch PCI Express Gen4 card based on the NVIDIA Ampere GA100 graphics processing unit (GPU). It uses a passive heat sink for cooling ... PCI Express interface PCI Express 4.0 ×16\"",
+        "note": "A single-slot liquid-cooled variant also exists."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/PB-10577-001_v02.pdf -- \"The NVIDIA A100 80GB card is a dual-slot 10.5 inch PCI Express Gen4 card based on the NVIDIA Ampere GA100 graphics processing unit (GPU). It uses a passive heat sink for cooling ... PCI Express interface PCI Express 4.0 ×16\""
       }
     },
     {
@@ -2693,6 +2859,17 @@
         "fabric": "NVLink 3 bridge (three bridges per pair)",
         "topology": "Pairs, 600 GB/s bidirectional; pairs reach other pairs over PCIe",
         "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/A100-PCIE-Prduct-Brief.pdf -- \"The NVIDIA A100 card supports NVLink bridge connection with a single adjacent A100 card. Each of the three attached bridges spans two PCIe slots. ... Total NVLink bridges supported by NVIDIA A100 3 | Total NVLink Rx and Tx lanes supported 96 | Data rate per NVIDIA A100 NVLink lane (each direction) 50 Gbps | Total maximum NVLink bandwidth 600 Gbytes per second\""
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/A100-PCIE-Prduct-Brief.pdf -- \"The NVIDIA® A100 GPU is a dual-slot 10.5 inch PCI Express Gen4 card based on the NVIDIA Ampere GA100 graphics processing unit (GPU). It uses a passive heat sink for cooling ... PCI Express interface PCI Express 4.0 ×16\""
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/A100-PCIE-Prduct-Brief.pdf -- \"The NVIDIA® A100 GPU is a dual-slot 10.5 inch PCI Express Gen4 card based on the NVIDIA Ampere GA100 graphics processing unit (GPU). It uses a passive heat sink for cooling ... PCI Express interface PCI Express 4.0 ×16\""
       }
     },
     {
@@ -2747,6 +2924,16 @@
         "fabric": "NVLink 4 via NVSwitch (HGX H100)",
         "topology": "8-GPU board: all-to-all through NVSwitch, 900 GB/s per GPU. 4-GPU board: directly linked, no switch",
         "source": "https://www.nvidia.com/en-us/data-center/h100/ -- \"Interconnect | NVIDIA NVLink™: 900GB/s PCIe Gen5: 128GB/s | ... Server Options | NVIDIA HGX H100 Partner and NVIDIA-Certified Systems™ with 4 or 8 GPUs NVIDIA DGX H100 with 8 GPUs\""
+      },
+      "formFactor": {
+        "name": "SXM5",
+        "cooling": "passive",
+        "source": "https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/ -- \"H100 incorporates a PCI Express Gen 5 x16 lane interface, providing 128 GB/sec total bandwidth (64 GB/sec in each direction) ... GPU Board Form Factor SXM4 | SXM5 | PCIe Gen 5\""
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/ -- \"H100 incorporates a PCI Express Gen 5 x16 lane interface, providing 128 GB/sec total bandwidth (64 GB/sec in each direction) ... GPU Board Form Factor SXM4 | SXM5 | PCIe Gen 5\""
       }
     },
     {
@@ -2799,6 +2986,17 @@
         "fabric": "NVLink 4 bridge (three bridges per pair)",
         "topology": "Pairs, 600 GB/s bidirectional",
         "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/gtcs22/data-center/h100/PB-11133-001_v01.pdf -- \"The NVIDIA H100 card supports NVLink bridge connection with a single adjacent NVIDIA H100 card. Each of the three attached bridges spans two PCIe slots. ... Total NVLink bridges supported by NVIDIA H100 3 | Total NVLink Rx and Tx lanes supported 48 | Data rate per NVIDIA H100 NVLink lane (each direction) 100 Gbps | Total maximum NVLink bandwidth 600 Gbytes per second\""
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/gtcs22/data-center/h100/PB-11133-001_v01.pdf -- \"The NVIDIA H100 card is a dual-slot 10.5 inch PCI Express Gen5 card based on the NVIDIA Hopper™ architecture. It uses a passive heat sink for cooling ... PCI Express interface PCI Express Gen5 x16; Gen5 x8; Gen4 x16\""
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/gtcs22/data-center/h100/PB-11133-001_v01.pdf -- \"The NVIDIA H100 card is a dual-slot 10.5 inch PCI Express Gen5 card based on the NVIDIA Hopper™ architecture. It uses a passive heat sink for cooling ... PCI Express interface PCI Express Gen5 x16; Gen5 x8; Gen4 x16\""
       }
     },
     {
@@ -2853,6 +3051,17 @@
         "topology": "Pairs, 600 GB/s bidirectional",
         "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/h100/PB-11773-001_v01.pdf -- \"The NVIDIA H100 NVL card supports NVLink bridge connection with a single adjacent NVIDIA H100 NVL card. Each of the three attached bridges spans two PCIe slots. ... Total maximum NVLink bandwidth 600 Gbytes per second\"",
         "note": "NVIDIA offers no 4-way bridge for the H100 NVL (it does for the H200 NVL)."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/h100/PB-11773-001_v01.pdf -- \"The NVIDIA H100 NVL card is a dual-slot 10.5 inch PCI Express Gen5 card based on the NVIDIA Hopper™ architecture. It uses a passive heat sink for cooling ... PCI Express interface PCI Express Gen5 x16; Gen5 x8; Gen4 x16\""
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/h100/PB-11773-001_v01.pdf -- \"The NVIDIA H100 NVL card is a dual-slot 10.5 inch PCI Express Gen5 card based on the NVIDIA Hopper™ architecture. It uses a passive heat sink for cooling ... PCI Express interface PCI Express Gen5 x16; Gen5 x8; Gen4 x16\""
       }
     },
     {
@@ -2911,6 +3120,18 @@
         "topology": "Switched all-to-all, inferred from the HGX Hopper design",
         "source": "https://docs.nvidia.com/590trd1-trusted-computing-solutions-release-notes.pdf -- \"In the PPCIe mode, multiple Hopper-architecture GPUs interconnected by NVSwitch or NVLink can be passed through to one CVM. ... Following are the hardware SKUs that support PPCIe mode: ● HGX H100 8-GPU 80GB (Air Cooled) ... ● HGX H20A HBM3 96GB 8-GPU (Air Cooled) ● HGX H200 8-GPU 141GB (Air Cooled)\"",
         "note": "NVIDIA publishes no H20 datasheet; the board is listed in its release notes, and the 900 GB/s link figure comes only from a third party (LMSYS)."
+      },
+      "formFactor": {
+        "name": "SXM5",
+        "cooling": "passive",
+        "source": "https://viperatech.com/product/nvidia-hgx-h20 -- \"Power 400 W Form Factor 8-way HGX Interconnect PCIe Gen5 x16: 128 GB/s, NVLink: 900GB/s\"",
+        "note": "NVIDIA publishes no H20 datasheet; SXM5 is inferred from the HGX Hopper board."
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://viperatech.com/product/nvidia-hgx-h20 -- \"Power 400 W Form Factor 8-way HGX Interconnect PCIe Gen5 x16: 128 GB/s, NVLink: 900GB/s\"",
+        "note": "From a reseller's listing (\"PCIe Gen5 x16: 128 GB/s\")."
       }
     },
     {
@@ -2966,6 +3187,16 @@
         "topology": "All-to-all: seven 128 GB/s links per GPU, one to each peer",
         "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/data-sheets/amd-instinct-mi300x-platform-data-sheet.pdf -- \"The eight Open Compute Project (OCP) Accelerator Modules (OAMs) are connected with an AMD Infinity Fabric™ mesh that provides direct connectivity between each of the GPUs over 128 GB/s bidirectional links. Each MI300X connects with its peers through seven links, plus one PCIe® Gen 5 x16 connection per OAM device provides upstream server and/or I/O connectivity.\"",
         "note": "AMD sells it only on the 8-GPU board."
+      },
+      "formFactor": {
+        "name": "OAM",
+        "cooling": "passive",
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/data-sheets/amd-instinct-mi300x-data-sheet.pdf -- \"Form factor | OAM module | ... I/O to host CPU | 1 PCIe® Gen 5 x16 (128 GB/s) | ... Each discrete MI300X offers a 16-lane PCIe® Gen 5 host interface and seven AMD Infinity Fabric links for full connectivity between eight GPUs in a ring.\""
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/data-sheets/amd-instinct-mi300x-data-sheet.pdf -- \"Form factor | OAM module | ... I/O to host CPU | 1 PCIe® Gen 5 x16 (128 GB/s) | ... Each discrete MI300X offers a 16-lane PCIe® Gen 5 host interface and seven AMD Infinity Fabric links for full connectivity between eight GPUs in a ring.\""
       }
     },
     {
@@ -3014,6 +3245,16 @@
         "fabric": "Infinity Fabric on AMD's 8-OAM baseboard (UBB 2.0)",
         "topology": "All-to-all: seven links per GPU at 153.6 GB/s (other AMD documents say 153 or 160)",
         "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/amd-instinct-miI355x-platform-brochure.pdf -- \"The eight Open Compute Project (OCP) Accelerator Modules (OAMs) are connected with an AMD Infinity Fabric™ mesh that provides direct connectivity between each of the GPUs over 153.6 GB/s bidirectional links. Each MI355X connects with its peers through seven links, plus one PCIe® Gen 5 x16 connection per OAM device for upstream server and/or I/O connectivity.\""
+      },
+      "formFactor": {
+        "name": "OAM",
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/amd-instinct-mi355x-gpu-brochure.pdf -- \"FORM FACTOR | OAM module | ... I/O INTERCONNECT | 1 PCIe® Gen 5 x16 (128 GB/s)\"",
+        "note": "AMD's product page says \"Passive & Active\" cooling; its platform brochure describes direct liquid cooling."
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/amd-instinct-mi355x-gpu-brochure.pdf -- \"FORM FACTOR | OAM module | ... I/O INTERCONNECT | 1 PCIe® Gen 5 x16 (128 GB/s)\""
       }
     },
     {
@@ -3051,6 +3292,18 @@
         "topology": "Pairs, 112.5 GB/s bidirectional",
         "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/30-series/rtx-3090-3090ti/ -- \"NVIDIA NVLink™ (SLI-Ready) | Yes | Yes\"",
         "note": "The last GeForce card with NVLink."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 3,
+        "cooling": "active",
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/30-series/rtx-3090-3090ti/ -- \"PCI Express Gen 4 | Yes ... Slot 3-Slot | 3-Slot\"",
+        "note": "The Founders Edition is 3-slot; partner cards vary."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/30-series/rtx-3090-3090ti/ -- \"PCI Express Gen 4 | Yes ... Slot 3-Slot | 3-Slot\""
       }
     },
     {
@@ -3092,6 +3345,18 @@
         "maxCards": 0,
         "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/40-series/rtx-4090/ -- \"NVIDIA NVLink™ (SLI-Ready) | No\"",
         "note": "Puget Systems reports that GeForce drivers also disable PCIe peer-to-peer on this card, so two of them exchange data through host memory."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 3,
+        "cooling": "active",
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/40-series/rtx-4090/ -- \"PCI Express Gen 4 | Yes ... Card Dimensions: Length 304 mm | Width 137 mm | Slots 3-Slot (61mm)\"",
+        "note": "The Founders Edition is 3-slot; partner cards vary."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/40-series/rtx-4090/ -- \"PCI Express Gen 4 | Yes ... Card Dimensions: Length 304 mm | Width 137 mm | Slots 3-Slot (61mm)\""
       }
     },
     {
@@ -3141,6 +3406,17 @@
         "topology": "Pairs, 112.5 GB/s bidirectional",
         "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/nvidia-rtx-a6000-datasheet.pdf -- \"NVIDIA NVLink Connects two NVIDIA RTX A6000 GPUs ... NVIDIA NVLink bandwidth 112.5 GB/s (bidirectional)\"",
         "note": "\"Four-way VR SLI\" is two NVLink pairs."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "active",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/nvidia-rtx-a6000-datasheet.pdf -- \"System interface PCIe 4.0 x16 | Power consumption Total board power: 300 W | Thermal solution Active | Form factor 4.4” H x 10.5” L, dual slot, full height\""
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/nvidia-rtx-a6000-datasheet.pdf -- \"System interface PCIe 4.0 x16 | Power consumption Total board power: 300 W | Thermal solution Active | Form factor 4.4” H x 10.5” L, dual slot, full height\""
       }
     },
     {
@@ -3183,6 +3459,17 @@
       "peerLink": {
         "maxCards": 0,
         "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/rtx-6000/proviz-print-rtx6000-datasheet-web-2504660.pdf -- \"NVIDIA NVLink® No\""
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "active",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/rtx-6000/proviz-print-rtx6000-datasheet-web-2504660.pdf -- \"System interface PCIe 4.0 x16 | Power consumption Total board power: 300 W | Thermal solution Active | Form factor 4.4” H x 10.5” L, dual slot, full height\""
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/rtx-6000/proviz-print-rtx6000-datasheet-web-2504660.pdf -- \"System interface PCIe 4.0 x16 | Power consumption Total board power: 300 W | Thermal solution Active | Form factor 4.4” H x 10.5” L, dual slot, full height\""
       }
     },
     {
@@ -3224,6 +3511,17 @@
       "peerLink": {
         "maxCards": 0,
         "source": "https://www.nvidia.com/en-us/data-center/l40s/ -- \"Interconnect Interface | PCIe Gen4 x16: 64GB/s bidirectional | ... NVIDIA® NVLink® Support | No\""
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://www.nvidia.com/en-us/data-center/l40s/ -- \"Interconnect Interface PCIe Gen4 x16: 64GB/s bidirectional ... Form Factor 4.4\" (H) x 10.5\" (L), dual slot ... Thermal Passive\""
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/en-us/data-center/l40s/ -- \"Interconnect Interface PCIe Gen4 x16: 64GB/s bidirectional ... Form Factor 4.4\" (H) x 10.5\" (L), dual slot ... Thermal Passive\""
       }
     },
     {
@@ -3276,6 +3574,17 @@
       "peerLink": {
         "maxCards": 0,
         "source": "https://docs.nvidia.com/vgpu/sizing/virtual-workstation/latest/gpus-vws.html -- \"Table 1 NVIDIA GPUs Recommended for RTX vWS | RTX PRO 6000 Blackwell Server Edition | RTX PRO 4500 Blackwell Server Edition | L40S | L4 | A40 | A10 | ... NVLink Support | No | No | No | No | Yes | No\""
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 1,
+        "cooling": "passive",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/l4/PB-11316-001_v01.pdf -- \"It is a half-height (low profile), half-length, single slot card featuring 24 GB of GDDR6 memory, x16 PCIe Gen4 connectivity at a 72 W maximum power envelope. It is a passively cooled card\""
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/l4/PB-11316-001_v01.pdf -- \"It is a half-height (low profile), half-length, single slot card featuring 24 GB of GDDR6 memory, x16 PCIe Gen4 connectivity at a 72 W maximum power envelope. It is a passively cooled card\""
       }
     },
     {
@@ -3319,6 +3628,18 @@
         "maxCards": 0,
         "source": "https://www.amd.com/en/products/accelerators/radeon-pro/amd-radeon-pro-v620.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16\"",
         "note": "AMD's spec page lists only PCIe 4.0 x16 and has no link row, unlike its Instinct pages; no bridge part was found."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://www.amd.com/en/products/accelerators/radeon-pro/amd-radeon-pro-v620.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 | Cooling | Passive | ... Board Width | Double Slot\"",
+        "note": "Passive: it needs server airflow."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.amd.com/en/products/accelerators/radeon-pro/amd-radeon-pro-v620.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 | Cooling | Passive | ... Board Width | Double Slot\""
       }
     },
     {
@@ -3364,6 +3685,18 @@
         "maxCards": 0,
         "source": "https://www.amd.com/en/products/graphics/workstations/radeon-pro/w7900.html -- \"Bus Type | PCIe® 4.0 x16 (3.0 Backward Compatible)\"",
         "note": "The spec page has no link row and AMD sells no bridge; its multi-GPU guidance is about PCIe slots."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 3,
+        "cooling": "active",
+        "source": "https://www.amd.com/en/products/graphics/workstations/radeon-pro/w7900.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 (3.0 Backward Compatible) | Cooling | Active | ... Board Height | Full Height | Board Length | 11\" (280 mm) | Board Width | Triple Slot\"",
+        "note": "The original W7900 is triple-slot; a later \"W7900 Dual Slot\" model is dual."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.amd.com/en/products/graphics/workstations/radeon-pro/w7900.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 (3.0 Backward Compatible) | Cooling | Active | ... Board Height | Full Height | Board Length | 11\" (280 mm) | Board Width | Triple Slot\""
       }
     },
     {
@@ -3401,6 +3734,18 @@
         "maxCards": 0,
         "source": "https://rocm.docs.amd.com/projects/radeon-ryzen/en/docs-6.1.3/docs/install/native_linux/mgpu.html -- \"When using two AMD Radeon 7900XTX GPUs, the following HIP error is observed when running PyTorch micro-benchmarking if any one of the two GPUs are connected to a non-CPU PCIe slot (PCIe on chipset):\"",
         "note": "No bridge exists; AMD's multi-GPU guidance is about PCIe slot placement."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2.5,
+        "source": "https://www.sapphiretech.com/en/consumer/pulse-radeon-rx-7900-xtx-24g-gddr6 -- \"Interface | PCI-Express 4.0 x16 | ... Form Factor | 2.7 slot, ATX | ... PCI Express® based PC is required with one X16 lane graphics slot available on the motherboard.\"",
+        "note": "The reference card is 2.5 slots; partner cards vary."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.sapphiretech.com/en/consumer/pulse-radeon-rx-7900-xtx-24g-gddr6 -- \"Interface | PCI-Express 4.0 x16 | ... Form Factor | 2.7 slot, ATX | ... PCI Express® based PC is required with one X16 lane graphics slot available on the motherboard.\"",
+        "note": "AMD's spec page lists no bus type: PCIe 4.0 x16 is from Sapphire's PULSE page, and matches the W7900, which uses the same die."
       }
     },
     {
@@ -3443,6 +3788,17 @@
         "maxCards": 0,
         "source": "https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2026-03/intel-arc-pro-b-series-graphics-quick-reference-guide-v1-0.pdf -- \"Scale up with Linux multi-GPU compatibility, up to 100+ GB combined graphics memory, and oneAPI support for faster AI processing, higher throughput, and massive models.\"",
         "note": "Intel's multi-GPU support for Arc is over PCIe; in Intel's material Xe Link appears only on the Data Center GPU Max series. No statement of absence found."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "source": "https://www.igorslab.de/en/intel-arc-pro-b70-review-teardown-topology-material-tests-workstation-ai-benchmarks/ -- \"PCIe connectivity | PCIe 5.0 x16, x8 electrically | PCIe 5.0 x16, x8 electrically | PCIe 5.0 x16 native | PCIe 5.0 x16 native (columns: Intel Arc Pro B50 | Intel Arc Pro B60 | Intel Arc Pro B65 | Intel Arc Pro B70 Reference Design)\"",
+        "note": "Partner cards only."
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.igorslab.de/en/intel-arc-pro-b70-review-teardown-topology-material-tests-workstation-ai-benchmarks/ -- \"PCIe connectivity | PCIe 5.0 x16, x8 electrically | PCIe 5.0 x16, x8 electrically | PCIe 5.0 x16 native | PCIe 5.0 x16 native (columns: Intel Arc Pro B50 | Intel Arc Pro B60 | Intel Arc Pro B65 | Intel Arc Pro B70 Reference Design)\"",
+        "note": "Secondary: PCIe 5.0 x16 is from igor'sLAB and PC Games Hardware; Intel's datasheet could not be fetched."
       }
     },
     {
@@ -3493,6 +3849,17 @@
         "maxCards": 0,
         "source": "https://www.intel.com/content/www/us/en/products/sku/243916/intel-arc-pro-b60-graphics/specifications.html -- \"PCI Express Configurations ‡ | PCI Express 5.0 x8\"",
         "note": "Intel's multi-GPU support for Arc is over PCIe; in Intel's material Xe Link appears only on the Data Center GPU Max series. No statement of absence found. Dual-GPU B60 boards join their two GPUs through PCIe bifurcation."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "source": "https://www.intel.com/content/www/us/en/products/sku/243916/intel-arc-pro-b60-graphics/specifications.html -- \"PCI Express Configurations ‡ | PCI Express 5.0 x8\"",
+        "note": "Partner cards only: dual-slot blowers are common, passive versions exist."
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 8,
+        "source": "https://www.intel.com/content/www/us/en/products/sku/243916/intel-arc-pro-b60-graphics/specifications.html -- \"PCI Express Configurations ‡ | PCI Express 5.0 x8\"",
+        "note": "Eight lanes on an x16 connector. Dual-GPU boards split one x16 slot into x8/x8, one link per GPU."
       }
     },
     {
@@ -3554,6 +3921,18 @@
         "topology": "All-to-all: six Xe Link connections between two cards, or two between each pair of four",
         "source": "https://cdrdv2-public.intel.com/817799/817799_Intel%20Data%20Center%20GPU%20Max%201100%20Datasheet_Rev_1_0.pdf -- \"The Intel Data Center GPU Max 1100 can run in one, two, or four card configurations. Two and four-card configurations can use Intel® Xe Link connections for direct all-to-all card-to-card communication. ... X2 bridges connect two cards and provide six Intel Xe Link connections between them. X4 bridges connect four cards and provide two Intel Xe Link connections between each card.\"",
         "note": "Intel lists both bridges (99ARXG, 99ARXX) as discontinued."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://cdrdv2-public.intel.com/817799/817799_Intel%20Data%20Center%20GPU%20Max%201100%20Datasheet_Rev_1_0.pdf -- \"Table 2-1. Intel® Data Center GPU Max Series AIC SKU Information | SKU | Card Size | ... 1100 | Full height, three-quarter length, dual slot width | ... 300W | ... PCIe 5.0 (x16 32GT/s) interface to the host platform.\"",
+        "note": "Passive is inferred: Intel's datasheet gives host airflow requirements and describes no fan."
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://cdrdv2-public.intel.com/817799/817799_Intel%20Data%20Center%20GPU%20Max%201100%20Datasheet_Rev_1_0.pdf -- \"Table 2-1. Intel® Data Center GPU Max Series AIC SKU Information | SKU | Card Size | ... 1100 | Full height, three-quarter length, dual slot width | ... 300W | ... PCIe 5.0 (x16 32GT/s) interface to the host platform.\""
       }
     },
     {
@@ -3601,6 +3980,17 @@
         "topology": "All-to-all within the 4-card subsystem",
         "source": "https://download.intel.com/newsroom/archive/2025/en-us-2022-11-09-intel-max-series-brings-breakthrough-memory-bandwidth-and-performance-to-hpc-and-ai.pdf -- \"Beyond individual cards and modules, Intel will offer the Intel Data Center GPU Max Series subsystem with x4 GPU OAM carrier board and Intel Xe Link to enable high performance multiGPU communication within the subsystem.\"",
         "note": "Aurora runs six per node, all linked, on blades built for Argonne rather than a board anyone could order."
+      },
+      "formFactor": {
+        "name": "OAM",
+        "source": "https://download.intel.com/newsroom/archive/2025/en-us-2022-11-09-intel-max-series-brings-breakthrough-memory-bandwidth-and-performance-to-hpc-and-ai.pdf -- \"Max Series 1550 GPU: Intel’s maximum performance 600-watt OAM module with 128 Xe cores and 128GB of HBM.\"",
+        "note": "Cooling depends on the platform (Lenovo's is direct water-cooled)."
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://download.intel.com/newsroom/archive/2025/en-us-2022-11-09-intel-max-series-brings-breakthrough-memory-bandwidth-and-performance-to-hpc-and-ai.pdf -- \"Max Series 1550 GPU: Intel’s maximum performance 600-watt OAM module with 128 Xe cores and 128GB of HBM.\"",
+        "note": "PCIe 5.0 per Lenovo (\"PCIe Gen5: 128 GB/s\", bidirectional); x16 is worked out from that figure, since Intel's pages could not be fetched."
       }
     },
     {
@@ -3646,6 +4036,18 @@
         "topology": "Ring: two links per GPU, so a 4-card hive is a ring, not all-to-all. AMD gave 100 GB/s per link at launch and 92 GB/s later",
         "source": "https://ir.amd.com/news-events/press-releases/detail/859/amd-unveils-worlds-first-7nm-datacenter-gpus----powering-the-next-era-of-artificial-intelligence-cloud-computing-and-high-performance-computing-hpc -- \"Up to 6X Faster Data Transfer: Two Infinity Fabric™ Links per GPU deliver up to 200 GB/s of peer-to-peer bandwidth – up to 6X faster than PCIe 3.0 alone[4] – and enable the connection of up to 4 GPUs in a hive ring configuration (2 hives in 8 GPU servers).\"",
         "note": "The bridges (AMD 199-999762 two-way, 199-999764 four-way) are hard to find, per a Debian ROCm maintainer, and MI100 and MI210 bridges do not fit."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi50-32gb.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 , | PCIe® 3.0 x16 | ... Cooling | Passive | ... Board Width | Double Slot\"",
+        "note": "Passive: it needs server airflow."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi50-32gb.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 , | PCIe® 3.0 x16 | ... Cooling | Passive | ... Board Width | Double Slot\""
       }
     },
     {
@@ -3688,6 +4090,18 @@
         "topology": "All-to-all within a 4-card hive, three links per GPU",
         "source": "https://rocm.docs.amd.com/en/latest/reference/gpu-arch/mi100.html -- \"Each hive of four GPUs can participate in a fully connected, coherent AMD Instinct™ fabric that connects the four GPUs using 23 GT/sec AMD Infinity fabric links that run at a higher frequency than the inter-processor links. This inter-GPU link can be established in certified server systems if the GPUs are mounted in neighboring PCIe slots by installing the AMD Infinity Fabric™ bridge for the AMD Instinct™ GPUs.\"",
         "note": "An 8-GPU MI100 server is two separate hives. No 2-card bridge was found."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://www.amd.com/en/products/accelerators/instinct/mi100.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 , | PCIe® 3.0 x16 | ... Cooling | Passive | ... Board Height | Full Height | Board Length | 10.5\" (267mm) | Board Width | Double Slot\"",
+        "note": "Passive: it needs server airflow."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.amd.com/en/products/accelerators/instinct/mi100.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 , | PCIe® 3.0 x16 | ... Cooling | Passive | ... Board Height | Full Height | Board Length | 10.5\" (267mm) | Board Width | Double Slot\""
       }
     },
     {
@@ -3730,6 +4144,18 @@
         "fabric": "Infinity Fabric Link bridge (2- or 4-way)",
         "topology": "Direct-connect dual or quad hives; in a quad, one link to each peer",
         "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-business-docs/product-briefs/instinct-mi210-brochure.pdf -- \"The AMD Infinity Architecture enables platform designs with dual and quad, direct-connect, GPU hives with high-speed P2P connectivity and delivers up to 1.2 TB/s of total theoretical GPU bandwidth within a server design.\""
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://www.amd.com/en/products/accelerators/instinct/mi200/mi210.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 | ... Cooling | Passive | ... Board Height | Full Height | Board Length | 10.5\" (267mm) | Board Width | Double Slot\"",
+        "note": "Passive: it needs server airflow."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.amd.com/en/products/accelerators/instinct/mi200/mi210.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 | ... Cooling | Passive | ... Board Height | Full Height | Board Length | 10.5\" (267mm) | Board Width | Double Slot\""
       }
     },
     {
@@ -3768,6 +4194,16 @@
         "topology": "All-to-all: seven links per GPU, one to each peer",
         "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/instinct-mi325x-datasheet.pdf -- \"Each discrete MI325X offers a 16-lane PCIe® Gen 5 host interface and seven AMD Infinity Fabric links for full connectivity between eight GPUs in a ring. The MI325X is available in an AMD Instinct MI325X Platform with eight accelerators interconnected by an AMD Universal Base Board (UBB 2.0) with HGX host connectors.\"",
         "note": "AMD's datasheet calls this full mesh \"a ring\", and its spec page counts eight links where the datasheet has seven plus PCIe."
+      },
+      "formFactor": {
+        "name": "OAM",
+        "cooling": "passive",
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/instinct-mi325x-datasheet.pdf -- \"Form factor | OAM module | ... I/O to host CPU | 1 PCIe® Gen 5 x16 (128 GB/s) | ... Each discrete MI325X offers a 16-lane PCIe® Gen 5 host interface and seven AMD Infinity Fabric links for full connectivity between eight GPUs in a ring.\""
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/product-briefs/instinct-mi325x-datasheet.pdf -- \"Form factor | OAM module | ... I/O to host CPU | 1 PCIe® Gen 5 x16 (128 GB/s) | ... Each discrete MI325X offers a 16-lane PCIe® Gen 5 host interface and seven AMD Infinity Fabric links for full connectivity between eight GPUs in a ring.\""
       }
     },
     {
@@ -3815,6 +4251,18 @@
         "topology": "All-to-all, 900 GB/s per GPU",
         "source": "https://www.nvidia.com/en-us/data-center/h200/ -- \"Max Thermal Design Power (TDP) | Up to 700W (configurable) | Up to 600W (configurable) | ... Form Factor | SXM | PCIe Dual-slot air-cooled | Interconnect | NVIDIA NVLink™: 900GB/s PCIe Gen5: 128GB/s | 2- or 4-way NVIDIA NVLink bridge: 900GB/s per GPU PCIe Gen5: 128GB/s | Server Options | NVIDIA HGX™ H200 partner and NVIDIA-Certified Systems™ with 4 or 8 GPUs | NVIDIA MGX™ H200 NVL partner and NVIDIA-Certified Systems with up to 8 GPUs\"",
         "note": "Read as the SXM card, which this entry's compute figures match; the H200 NVL PCIe card would be 2 or 4 over bridges."
+      },
+      "formFactor": {
+        "name": "SXM5",
+        "cooling": "passive",
+        "source": "https://www.nvidia.com/en-us/data-center/h200/ -- \"Max Thermal Design Power (TDP) | Up to 700W (configurable) | Up to 600W (configurable) ... Form Factor | SXM | PCIe Dual-slot air-cooled | Interconnect | NVIDIA NVLink™: 900GB/s PCIe Gen5: 128GB/s\"",
+        "note": "NVIDIA says \"SXM\"; Lenovo says SXM5."
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/en-us/data-center/h200/ -- \"Max Thermal Design Power (TDP) | Up to 700W (configurable) | Up to 600W (configurable) ... Form Factor | SXM | PCIe Dual-slot air-cooled | Interconnect | NVIDIA NVLink™: 900GB/s PCIe Gen5: 128GB/s\"",
+        "note": "x16 is inferred from NVIDIA's 128 GB/s."
       }
     },
     {
@@ -3862,6 +4310,18 @@
         "topology": "All-to-all, 1.8 TB/s per GPU",
         "source": "https://www.nvidia.com/en-us/data-center/hgx/ -- \"NVIDIA HGX is available in a single baseboard with eight NVIDIA Rubin, NVIDIA Blackwell, or NVIDIA Blackwell Ultra SXMs. ... HGX B300 | HGX B200 | Form Factor | 8x NVIDIA Blackwell Ultra SXM | 8x NVIDIA Blackwell SXM | ... NVIDIA NVLink Switch™ | NVLink 5 Switch | NVLink 5 Switch | NVLink GPU-to-GPU Bandwidth | 1.8 TB/s | 1.8 TB/s | Total NVLink Bandwidth | 14.4 TB/s | 14.4 TB/s\"",
         "note": "GB200 NVL72 joins 72 GPUs, but on Grace-Blackwell boards, not this SXM module."
+      },
+      "formFactor": {
+        "name": "SXM6",
+        "cooling": "passive",
+        "source": "https://dam-cdn.nvd.orangelogic.com/AssetLink/y441155802qub41q118b2852i557jem5.pdf -- \"GB200 NVL72 | GB200 NVL4 | HGX B200 ... Max Thermal Design Power (TDP) Configurable up to 1,200 W | Configurable up to 1,200 W | Configurable up to 1,000 W | Interconnect Fifth-generation NVLink: 1.8 TB/s PCIe Gen5: 128 GB/s\"",
+        "note": "NVIDIA's release notes call the HGX B200 module SXM6."
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://dam-cdn.nvd.orangelogic.com/AssetLink/y441155802qub41q118b2852i557jem5.pdf -- \"GB200 NVL72 | GB200 NVL4 | HGX B200 ... Max Thermal Design Power (TDP) Configurable up to 1,200 W | Configurable up to 1,200 W | Configurable up to 1,000 W | Interconnect Fifth-generation NVLink: 1.8 TB/s PCIe Gen5: 128 GB/s\"",
+        "note": "x16 is inferred from NVIDIA's 128 GB/s."
       }
     },
     {
@@ -3917,6 +4377,18 @@
         "topology": "All-to-all, 1.8 TB/s per GPU",
         "source": "https://www.nvidia.com/en-us/data-center/hgx/ -- \"HGX B300 | HGX B200 | Form Factor | 8x NVIDIA Blackwell Ultra SXM | 8x NVIDIA Blackwell SXM | ... NVIDIA NVLink Switch™ | NVLink 5 Switch | NVLink 5 Switch | NVLink GPU-to-GPU Bandwidth | 1.8 TB/s | 1.8 TB/s | Total NVLink Bandwidth | 14.4 TB/s | 14.4 TB/s ... 4. HGX B300 and HGX B200 shipping now.\"",
         "note": "Read as the HGX B300 board. This entry's figures come from the GB300 datasheet, and GB300 NVL72 is a 72-GPU NVLink domain. NVIDIA's \"HGX B300 NVL16\" name counts dies, not the 8 packages."
+      },
+      "formFactor": {
+        "name": "SXM6",
+        "cooling": "passive",
+        "source": "https://dam-cdn.nvd.orangelogic.com/AssetLink/1k0p832eq8r5ca0u5383ie5o4tp3bst1.pdf -- \"GB300 NVL72 | HGX B300 ... Max Thermal Design Power (TDP) Configurable up to 1,400 W | Configurable up to 1,100 W | Interconnect Fifth-Generation NVLink: 1.8 TB/s PCIe Gen6: 256 GB/s\"",
+        "note": "NVIDIA's pages say \"SXM\"; SXM6 appears only in its SKU string (\"NVIDIA-B300-SXM6-AC\")."
+      },
+      "hostLink": {
+        "gen": 6,
+        "lanes": 16,
+        "source": "https://dam-cdn.nvd.orangelogic.com/AssetLink/1k0p832eq8r5ca0u5383ie5o4tp3bst1.pdf -- \"GB300 NVL72 | HGX B300 ... Max Thermal Design Power (TDP) Configurable up to 1,400 W | Configurable up to 1,100 W | Interconnect Fifth-Generation NVLink: 1.8 TB/s PCIe Gen6: 256 GB/s\"",
+        "note": "PCIe Gen6 at 256 GB/s per NVIDIA's Blackwell Ultra datasheet; x16 is inferred from that figure."
       }
     },
     {
@@ -3958,6 +4430,19 @@
         "maxCards": 0,
         "source": "https://www.intel.com/content/www/us/en/products/sku/241598/intel-arc-b580-graphics/specifications.html -- \"PCI Express Configurations ‡ | PCI Express 4.0 x8\"",
         "note": "Intel's multi-GPU support for Arc is over PCIe; in Intel's material Xe Link appears only on the Data Center GPU Max series. No statement of absence found."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "active",
+        "source": "https://www.intel.com/content/www/us/en/products/sku/241598/intel-arc-b580-graphics/specifications.html -- \"PCI Express Configurations ‡ | PCI Express 4.0 x8\"",
+        "note": "The Intel Limited Edition is dual-slot with two fans."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 8,
+        "source": "https://www.intel.com/content/www/us/en/products/sku/241598/intel-arc-b580-graphics/specifications.html -- \"PCI Express Configurations ‡ | PCI Express 4.0 x8\"",
+        "note": "Eight lanes at PCIe 4.0, though the same die runs PCIe 5.0 x8 as the Pro B60."
       }
     },
     {
@@ -4013,6 +4498,18 @@
         "maxCards": 0,
         "source": "https://www.intel.com/content/www/us/en/products/sku/229151/intel-arc-a770-graphics-16gb/specifications.html -- \"PCI Express Configurations ‡ | Up to PCI Express 4.0 x16\"",
         "note": "Intel's multi-GPU support for Arc is over PCIe; in Intel's material Xe Link appears only on the Data Center GPU Max series. No statement of absence found. Deep Link pairs it with an Intel integrated GPU in software, over PCIe."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "active",
+        "source": "https://www.intel.com/content/www/us/en/products/sku/229151/intel-arc-a770-graphics-16gb/specifications.html -- \"PCI Express Configurations ‡ | Up to PCI Express 4.0 x16\"",
+        "note": "The Intel Limited Edition is dual-slot with two fans."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.intel.com/content/www/us/en/products/sku/229151/intel-arc-a770-graphics-16gb/specifications.html -- \"PCI Express Configurations ‡ | Up to PCI Express 4.0 x16\""
       }
     },
     {
@@ -4046,6 +4543,11 @@
           "fp32",
           "fp16:vector"
         ]
+      },
+      "formFactor": {
+        "name": "integrated",
+        "source": "https://www.apple.com/newsroom/2024/10/apple-introduces-m4-pro-and-m4-max/ -- \"Apple today announced M4 Pro and M4 Max, two new chips that — along with M4 — bring far more power-efficient performance and advanced capabilities to the Mac. ... The massive 40-core GPU of M4 Max is up to 1.9x faster than M1 Max, and up to 4x faster than the latest AI PC chip. ... M4 Max supports up to 128GB of fast unified memory and up to 546GB/s of memory bandwidth, which is 4x the bandwidth of the latest AI PC chip.\"",
+        "note": "One SoC with unified memory: no PCIe link between GPU and CPU, and Apple silicon does not support external GPUs."
       }
     },
     {
@@ -4097,6 +4599,11 @@
           "fp16",
           "int8"
         ]
+      },
+      "formFactor": {
+        "name": "integrated",
+        "source": "https://www.apple.com/newsroom/2026/03/apple-debuts-m5-pro-and-m5-max-to-supercharge-the-most-demanding-pro-workflows/ -- \"The chips are built using a new Apple-designed Fusion Architecture. This innovative design combines two dies into a single system on a chip (SoC), which includes a powerful CPU, scalable GPU, Media Engine, unified memory controller, Neural Engine, and Thunderbolt 5 capabilities. ... Featuring the same breakthrough GPU architecture with double the cores as M5 Pro, M5 Max pairs the 18-core CPU with an up-to-40-core GPU.\"",
+        "note": "One SoC with unified memory: no PCIe link between GPU and CPU, and Apple silicon does not support external GPUs."
       }
     },
     {
@@ -4152,6 +4659,19 @@
         "maxCards": 0,
         "source": "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/nvlink-hardware.md -- \"Bottom line: NVLink on the CMP 170HX does not work, has never worked for anyone, and is disabled by an OTP fuse rather than by software. ... because `FUSE_NVLINK_DIS` at `0x00820684` reads `0x00000007` and no override register exists that could countermand it. ... $ nvidia-smi nvlink -s / Device does not have or support Nvlink.\"",
         "note": "No NVIDIA source: a community reverse-engineering project reads NVLink as fused off on the chip."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/pcie-subsystem.md -- \"A stock CMP 170HX trains at **PCIe Gen1 (2.5 GT/s) by x4**. Those are two entirely separate restrictions that happen to coexist on the same board\"",
+        "note": "Secondary source only: a community reverse-engineering repo."
+      },
+      "hostLink": {
+        "gen": 1,
+        "lanes": 4,
+        "source": "https://github.com/Consensus-Protocol/cmp170hx/blob/d923a25fb2ecb6ee3d62654983f453194b66485f/docs/hardware/pcie-subsystem.md -- \"A stock CMP 170HX trains at **PCIe Gen1 (2.5 GT/s) by x4**. Those are two entirely separate restrictions that happen to coexist on the same board\"",
+        "note": "A stock card trains at PCIe 1.0 x4 though x16 is wired (about 0.8 GB/s measured), a mining-card restriction."
       }
     },
     {
@@ -4200,6 +4720,17 @@
         "fabric": "NVLink 2 HB bridge (2- or 3-slot)",
         "topology": "Pairs, 100 GB/s bidirectional",
         "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/quadro-rtx-8000-us-nvidia-946977-r1-web.pdf -- \"NVIDIA NVLink Connects 2 Quadro RTX 8000 GPUs ... NVIDIA NVLink bandwidth 100 GB/s (bidirectional)\""
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "active",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/quadro-rtx-8000-us-nvidia-946977-r1-web.pdf -- \"System Interface PCI Express 3.0 x 16 | Power Consumption Total board power: 295 W Total graphics power: 260 W | Thermal Solution Active | Form Factor 4.4” H x 10.5” L, Dual Slot, Full Height\""
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/quadro-rtx-8000-us-nvidia-946977-r1-web.pdf -- \"System Interface PCI Express 3.0 x 16 | Power Consumption Total board power: 295 W Total graphics power: 260 W | Thermal Solution Active | Form Factor 4.4” H x 10.5” L, Dual Slot, Full Height\""
       }
     },
     {
@@ -4242,6 +4773,18 @@
         "topology": "Pairs, up to 100 GB/s bidirectional",
         "source": "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/ -- \"NVIDIA NVLink™ (SLI-Ready) | Yes | Yes | Yes | Yes | - | - | -\"",
         "note": "The memory mod leaves the connector intact; a 2026 benchmark shows two 22 GB cards still linked, and Puget measured 96 GB/s bidirectional on stock 2080 Tis."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "active",
+        "source": "https://www.pny.com/file%20library/company/support/product%20brochures/geforce%20graphics/english/pny-rtx-2080ti-blower.pdf -- \"TDP 250 W ... Bus Type PCI-Express 3.0 x16 ... PNY Part Number VCG2080T11BLMPB ... Card Dimensions 1.38˝ x 10.50˝ x 4.50˝; Dual-Slot\"",
+        "note": "Sourced for the stock 2080 Ti; the memory mod leaves the board and its interface alone."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "https://www.pny.com/file%20library/company/support/product%20brochures/geforce%20graphics/english/pny-rtx-2080ti-blower.pdf -- \"TDP 250 W ... Bus Type PCI-Express 3.0 x16 ... PNY Part Number VCG2080T11BLMPB ... Card Dimensions 1.38˝ x 10.50˝ x 4.50˝; Dual-Slot\""
       }
     },
     {
@@ -4286,6 +4829,17 @@
         "maxCards": 0,
         "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/tesla-t4/t4-tensor-core-datasheet-951643.pdf -- \"Interconnect Bandwidth 32 GB/sec ... System Interface x16 PCIe Gen3 ... Form Factor Low-Profile PCIe\"",
         "note": "NVIDIA lists only PCIe Gen3 x16 and states no absence; a reseller's copy of NVIDIA's vGPU table says \"No\"."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 1,
+        "cooling": "passive",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/tesla-t4/t4-tensor-core-datasheet-951643.pdf -- \"Interconnect Bandwidth 32 GB/sec | System Interface x16 PCIe Gen3 | Form Factor Low-Profile PCIe | Thermal Solution Passive\""
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/tesla-t4/t4-tensor-core-datasheet-951643.pdf -- \"Interconnect Bandwidth 32 GB/sec | System Interface x16 PCIe Gen3 | Form Factor Low-Profile PCIe | Thermal Solution Passive\""
       }
     }
   ],
