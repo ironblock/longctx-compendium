@@ -25,6 +25,23 @@ export function formatSupport(unit, arch, f) {
   return { state: 'unknown', from: 'none' };
 }
 
+/**
+ * PCIe transfer rate (GT/s) and usable throughput per lane per direction
+ * (GB/s): 8b/10b encoding for generations 1-2, 128b/130b for 3-5, and FLIT
+ * mode (242 useful bytes in 256) for 6.
+ */
+export const PCIE = {
+  1: { gts: 2.5, laneGBs: 0.25 },
+  2: { gts: 5, laneGBs: 0.5 },
+  3: { gts: 8, laneGBs: (8 * 128) / 130 / 8 },
+  4: { gts: 16, laneGBs: (16 * 128) / 130 / 8 },
+  5: { gts: 32, laneGBs: (32 * 128) / 130 / 8 },
+  6: { gts: 64, laneGBs: (64 * 242) / 256 / 8 },
+};
+
+/** The form-factor filter's groups: every SXM generation is one. */
+export const formKind = name => (name == null ? null : name.startsWith('SXM') ? 'SXM' : name);
+
 export function normalize(doc) {
   const archById = Object.fromEntries((doc.architectures ?? []).map(a => [a.id, a]));
 
@@ -40,6 +57,9 @@ export function normalize(doc) {
       street: u.pricing?.street?.usd ?? null,
       // Largest group joined without PCIe; null when not yet sourced.
       link: u.peerLink ? u.peerLink.maxCards : null,
+      // PCIe host link, per direction; null for an integrated GPU or an unsourced one.
+      hostGBs: u.hostLink ? PCIE[u.hostLink.gen].laneGBs * u.hostLink.lanes : null,
+      form: formKind(u.formFactor?.name),
     };
   });
   const unitById = Object.fromEntries(UNITS.map(u => [u.id, u]));

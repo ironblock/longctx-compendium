@@ -206,6 +206,82 @@
         "pricing": {
           "$ref": "#/definitions/pricing"
         },
+        "formFactor": {
+          "description": "What the GPU physically is: an add-in card, a module for a vendor baseboard, or part of an SoC or APU.",
+          "type": "object",
+          "required": [
+            "name",
+            "source"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "enum": [
+                "PCIe",
+                "SXM",
+                "SXM2",
+                "SXM3",
+                "SXM4",
+                "SXM5",
+                "SXM6",
+                "OAM",
+                "integrated",
+                "other"
+              ]
+            },
+            "slots": {
+              "description": "Slot width of an add-in card: 1, 2, 3 ...",
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "cooling": {
+              "enum": [
+                "passive",
+                "active",
+                "blower",
+                "liquid"
+              ]
+            },
+            "source": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "hostLink": {
+          "description": "The GPU's PCIe link to the host CPU as the vendor rates it: generation and lanes. Per-direction throughput is derived from these. Left out for an integrated GPU, which has none.",
+          "type": "object",
+          "required": [
+            "gen",
+            "lanes",
+            "source"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "gen": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 6
+            },
+            "lanes": {
+              "enum": [
+                1,
+                2,
+                4,
+                8,
+                16
+              ]
+            },
+            "source": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
         "peerLink": {
           "description": "The largest group of these cards that can exchange data GPU to GPU without going through PCIe (NVLink, Infinity Fabric, Xe Link), on vendor-supported hardware: a bridge for an add-in card, the vendor's baseboard for an SXM or OAM module. 0 means the card has no such link. Left out, the card's link is not yet sourced.",
           "type": "object",

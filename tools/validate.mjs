@@ -151,6 +151,8 @@ for (const u of doc.units ?? []) {
     if (!(key in (u.compute.values ?? {}))) fail(at, `marks ${key} unofficial, but has no ${key} figure`);
   }
   if (u.compute?.unofficial?.length && !u.compute.note) fail(at, 'marks figures unofficial without a compute note saying where they come from');
+  if (u.formFactor?.name === 'integrated' && u.hostLink) fail(at, 'is an integrated GPU but records a PCIe host link');
+  if (u.hostLink && !u.formFactor) warn(at, 'records a host link but no form factor');
   const link = u.peerLink;
   if (link) {
     if (link.maxCards > 0 && !link.fabric) fail(at, `links ${link.maxCards} cards without naming the fabric`);

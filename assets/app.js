@@ -34,9 +34,8 @@ const el = id => document.getElementById(id);
 
 const FMT_LABEL = { tf32: 'TF32', bf16: 'BF16', fp16: 'FP16', fp8: 'FP8', fp6: 'FP6', fp4: 'FP4', int8: 'INT8', int4: 'INT4' };
 const SCATTER_PRECS = ['fp16', 'bf16', 'fp8', 'int8', 'fp4'];
-const SORT_KEYS = ['label', 'mem', 'bw', 'prec', 'link', 'tdp', 'street', 'perGB', 'bwPerK'];
-/** Minimum direct-link group sizes the filter offers. */
-const LINK_STEPS = [2, 4, 8];
+const SORT_KEYS = ['label', 'mem', 'bw', 'prec', 'host', 'link', 'tdp', 'street', 'perGB', 'bwPerK'];
+
 /** The "Not recorded" choice in the observation model filter. */
 export const NO_MODEL = '__none';
 
@@ -55,6 +54,10 @@ const DEFAULTS = {
   priceMin: null,
   priceMax: null,
   linkMin: null,
+  linkMax: null,
+  hostMin: null,
+  hostMax: null,
+  formsOff: [],
   vendorsOff: [],
   scatterPrec: 'fp16',
   hwSort: 'bw:desc',
@@ -89,6 +92,8 @@ function readState() {
   const [bwMin, bwMax] = span(num('bw'), num('bwmax'));
   const [memMin, memMax] = span(num('mem'), num('memmax'));
   const [priceMin, priceMax] = span(num('pricemin'), num('price'));
+  const [linkMin, linkMax] = span(num('link'), num('linkmax'));
+  const [hostMin, hostMax] = span(num('host'), num('hostmax'));
   const d = q.has('d') && q.get('d') !== '' && Number.isFinite(Number(q.get('d'))) ? Number(q.get('d')) : DEFAULTS.depth;
   return {
     fmt: new Set(list('fmt').filter(f => FORMATS.includes(f))),
@@ -101,7 +106,11 @@ function readState() {
     memMax,
     priceMin,
     priceMax,
-    linkMin: LINK_STEPS.includes(num('link')) ? num('link') : null,
+    linkMin,
+    linkMax,
+    hostMin,
+    hostMax,
+    formsOff: new Set(list('ffoff')),
     vendorsOff: new Set(list('voff')),
     // With no chart precision in the address, the chart follows the first format asked for.
     scatterPrec: q.has('prec') ? str('prec', SCATTER_PRECS) : inferredPrec(list('fmt')),
@@ -121,7 +130,7 @@ function readState() {
   };
 }
 // The keys DEFAULTS uses under their address names.
-Object.assign(DEFAULTS, { link: null, bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all', ospec: 'all' });
+Object.assign(DEFAULTS, { link: null, linkmax: null, host: null, hostmax: null, ffoff: DEFAULTS.formsOff, bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all', ospec: 'all' });
 
 function writeState(s) {
   const q = new URLSearchParams();
@@ -137,6 +146,10 @@ function writeState(s) {
   put('pricemin', s.priceMin, null);
   put('price', s.priceMax, null);
   put('link', s.linkMin, null);
+  put('linkmax', s.linkMax, null);
+  put('host', s.hostMin, null);
+  put('hostmax', s.hostMax, null);
+  put('ffoff', [...s.formsOff].join(','), '');
   put('voff', [...s.vendorsOff].join(','), '');
   put('prec', s.scatterPrec, inferredPrec(s.fmt));
   put('sort', `${s.hwSort.key}:${s.hwSort.dir}`, DEFAULTS.hwSort);
@@ -207,6 +220,14 @@ try {
   const state = readState();
 
   const vendors = [...new Set(model.UNITS.map(u => u.vendor ?? 'Other'))];
+  const FORM_ORDER = ['PCIe', 'SXM', 'OAM', 'integrated', 'other', 'not recorded'];
+  const FORM_TITLE = {
+    PCIe: 'Add-in cards. Click to hide or show',
+    SXM: "NVIDIA's SXM modules (SXM2 to SXM6), which need a vendor baseboard. Click to hide or show",
+    OAM: 'OCP Accelerator Modules, which need a baseboard. Click to hide or show',
+    integrated: 'A GPU inside an SoC or APU, with no PCIe link of its own. Click to hide or show',
+  };
+  const forms = FORM_ORDER.filter(f => model.UNITS.some(u => (u.form ?? 'not recorded') === f));
 
   const matchesNow = () => new Map(model.UNITS.map(u => [u.id, unitMatch(u, state)]));
 
@@ -223,10 +244,18 @@ try {
     sliders.bw.set([state.bwMin, state.bwMax]);
     sliders.mem.set([state.memMin, state.memMax]);
     sliders.price.set([state.priceMin, state.priceMax]);
-    chips('linkChips', [{ v: null, label: 'any' }, ...LINK_STEPS.map(n => ({ v: n, label: `${n}+ cards` }))], v => state.linkMin === v, v => {
-      state.linkMin = v;
-      update('hw');
-    });
+    sliders.link.set([state.linkMin, state.linkMax]);
+    sliders.host.set([state.hostMin, state.hostMax]);
+    chips(
+      'formChips',
+      forms.map(f => ({ v: f, label: f === 'integrated' ? 'Integrated' : f, title: FORM_TITLE[f] ?? 'Click to hide or show' })),
+      v => !state.formsOff.has(v),
+      v => {
+        state.formsOff.has(v) ? state.formsOff.delete(v) : state.formsOff.add(v);
+        update('hw');
+      },
+      v => (state.formsOff.has(v) ? 'off' : '')
+    );
     chips(
       'vendorChips',
       vendors.map(v => ({ v, label: v, title: 'Click to hide or show', dot: vendorColor(v) })),
@@ -257,10 +286,12 @@ try {
     }
     if (state.memMin != null || state.memMax != null) parts.push(`${spanText([state.memMin, state.memMax], v => `${v} GB`)} per card`);
     if (state.priceMin != null || state.priceMax != null) parts.push(`street price ${spanText([state.priceMin, state.priceMax], usd)} (unpriced units drop out)`);
-    if (state.linkMin != null) parts.push(`${state.linkMin}+ cards joined without PCIe`);
+    if (state.linkMin != null || state.linkMax != null) parts.push(`${spanText([state.linkMin, state.linkMax], n => `${n}`)} cards joined without PCIe`);
+    if (state.hostMin != null || state.hostMax != null) parts.push(`PCIe host link ${spanText([state.hostMin, state.hostMax], v => `${v} GB/s`)} each way (integrated GPUs drop out)`);
+    if (state.formsOff.size) parts.push(`hiding ${[...state.formsOff].join(', ')}`);
     if (state.vendorsOff.size) parts.push(`hiding ${[...state.vendorsOff].join(', ')}`);
     // Cards out only because nobody has sourced their link yet.
-    const linkUnknown = model.UNITS.filter(u => matches.get(u.id).linkUnknown && unitMatch(u, { ...state, linkMin: null }).ok);
+    const linkUnknown = model.UNITS.filter(u => matches.get(u.id).linkUnknown && unitMatch(u, { ...state, linkMin: null, linkMax: null }).ok);
     el('hwSummary').innerHTML =
       `<b>${ok.length}</b> of ${model.UNITS.length} units match${parts.length ? `: ${esc(parts.join(' · '))}` : ' (no filter set)'}.` +
       (almost.length
@@ -466,6 +497,10 @@ try {
   const [bwLo, bwHi] = extent(u => u.memoryBandwidthGBs);
   const [memLo, memHi] = extent(u => u.memoryGB);
   const [priceLo, priceHi] = extent(u => u.street);
+  // Link groups count cards, so that scale is linear and whole; host links run
+  // from a mining card's PCIe 1.0 x4 to PCIe 5.0 x16, so that one is a log scale.
+  const linkHi = Math.max(8, ...model.UNITS.map(u => u.link ?? 0));
+  const [hostLo, hostHi] = model.UNITS.some(u => u.hostGBs) ? extent(u => u.hostGBs) : [1, 100];
   let lastCards = state.cards === 'auto' ? 4 : Number(state.cards);
   const sliders = {
     bw: rangeSlider(el('bwRange'), { min: bwLo, max: bwHi, log: true, snap: snapBandwidth, unit: 'GB/s', label: 'memory bandwidth', onChange: ([a, b], live) => {
@@ -481,6 +516,16 @@ try {
     price: rangeSlider(el('priceRange'), { min: priceLo, max: priceHi, log: true, snap: snapPrice, unit: 'USD', label: 'street price per card', onChange: ([a, b], live) => {
       state.priceMin = a;
       state.priceMax = b;
+      live ? updateSoon('hw') : update('hw');
+    } }),
+    link: rangeSlider(el('linkRange'), { min: 0, max: linkHi, snap: Math.round, unit: 'cards', label: 'cards joined without PCIe', onChange: ([a, b], live) => {
+      state.linkMin = a;
+      state.linkMax = b;
+      live ? updateSoon('hw') : update('hw');
+    } }),
+    host: rangeSlider(el('hostRange'), { min: hostLo, max: hostHi, log: true, snap: v => (v < 10 ? Math.round(v * 2) / 2 : Math.round(v)), unit: 'GB/s', label: 'PCIe host link each way', onChange: ([a, b], live) => {
+      state.hostMin = a;
+      state.hostMax = b;
       live ? updateSoon('hw') : update('hw');
     } }),
     depth: slider(el('depthSlider'), { min: DEFAULTS.depthMin, max: DEFAULTS.depthMax, log: true, snap: snapDepth, format: fmtDepth, label: 'context depth', onChange: (v, live) => {
@@ -502,7 +547,7 @@ try {
   // Built once and only shown or hidden: a button rebuilt by the render its own
   // click triggers can vanish between mousedown and click.
   el('hwReset').addEventListener('click', () => {
-    Object.assign(state, { fmt: new Set(), fmtUnknownOk: false, bwMin: null, bwMax: null, memMin: null, memMax: null, priceMin: null, priceMax: null, linkMin: null, vendorsOff: new Set() });
+    Object.assign(state, { fmt: new Set(), fmtUnknownOk: false, bwMin: null, bwMax: null, memMin: null, memMax: null, priceMin: null, priceMax: null, linkMin: null, linkMax: null, hostMin: null, hostMax: null, formsOff: new Set(), vendorsOff: new Set() });
     update('hw');
   });
   el('fmtUnknownOk').addEventListener('change', e => {

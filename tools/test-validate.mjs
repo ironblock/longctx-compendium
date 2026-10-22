@@ -89,6 +89,12 @@ const CASES = [
   ['a link group size that is not smaller than the largest', 'not smaller than its maxCards', d => {
     unit(d, 'rtx_3090').peerLink = { maxCards: 2, options: [2], fabric: 'NVLink 3 bridge', source: 'x' };
   }],
+  ['an integrated GPU with a PCIe host link', 'is an integrated GPU but records a PCIe host link', d => {
+    Object.assign(unit(d, 'mac_m3_ultra'), { formFactor: { name: 'integrated', source: 'x' }, hostLink: { gen: 4, lanes: 16, source: 'x' } });
+  }],
+  ['a host link with lanes no slot has', 'must be one of [1,2,4,8,16]', d => {
+    unit(d, 'rtx_3090').hostLink = { gen: 4, lanes: 12, source: 'x' };
+  }],
   ['an offload with no note', 'missing required property "note"', d => {
     line(d, L).offload = { to: 'Apple Neural Engine', metrics: ['prefill'] };
   }],

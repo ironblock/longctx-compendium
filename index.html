@@ -60,9 +60,17 @@
     <div class="tglabel" id="priceLabel">Street price per card, USD</div>
     <div id="priceRange" role="group" aria-labelledby="priceLabel"></div>
   </div>
+  <div class="fgroup slide">
+    <div class="tglabel" id="linkLabel" title="The largest group of these cards that NVLink, Infinity Fabric or Xe Link joins, on a vendor bridge or baseboard">Cards joined without PCIe</div>
+    <div id="linkRange" role="group" aria-labelledby="linkLabel"></div>
+  </div>
+  <div class="fgroup slide">
+    <div class="tglabel" id="hostLabel" title="The GPU's PCIe link to the host, per direction: what all-reduce over PCIe runs at">PCIe host link, GB/s each way</div>
+    <div id="hostRange" role="group" aria-labelledby="hostLabel"></div>
+  </div>
   <div class="fgroup">
-    <div class="tglabel" title="NVLink, Infinity Fabric or Xe Link, on a vendor bridge or baseboard">Cards joined without PCIe</div>
-    <div class="chips" id="linkChips" role="group" aria-label="Cards joined without PCIe"></div>
+    <div class="tglabel">Form factor</div>
+    <div class="chips" id="formChips"></div>
   </div>
   <div class="fgroup">
     <div class="tglabel">Vendors</div>
