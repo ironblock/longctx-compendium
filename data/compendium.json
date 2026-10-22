@@ -2874,6 +2874,68 @@
       }
     },
     {
+      "id": "a800_40_active",
+      "label": "A800 40GB Active",
+      "vendor": "NVIDIA",
+      "arch": "ampere",
+      "memoryGB": 40,
+      "memoryBandwidthGBs": 1555.2,
+      "tdpW": 240,
+      "pricing": {
+        "street": {
+          "usd": 9361,
+          "asOf": "2026-10",
+          "source": "eBay listing, screenshot from the maintainer (2026-10-22)",
+          "note": "Asking: \"Dell NVIDIA RTX A800 40GB Graphics Card | YYJ7R\" from ETB Technologies at $9,360.98 or best offer, the listing's last unit. Dell says \"RTX A800\"; NVIDIA's name is A800 40GB Active. The same month a used A100 40GB PCIe, with the same chip, memory and bandwidth, asked about $4,500."
+        }
+      },
+      "sources": [
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/nvidia-a800-40gb-active-datasheet.pdf -- datasheet 2819988 (OCT23): \"GPU Memory 40GB HBM2 | Memory Interface 5,120-bit | Memory Bandwidth 1.5 TB/s | CUDA® Cores 6,912 | Tensor Cores 432 | Double-Precision Performance 9.7 TFLOPS | Single-Precision Performance 19.5 TFLOPS | Peak Tensor Performance 623.8 TFLOPS | Multi-Instance GPU Up to 7 MIG instances @ 5GB | NVIDIA NVLink Yes | NVLink Bandwidth 400GB/s | Graphics Bus PCIe 4.0 x 16 | Power Consumption 240W | Thermal Active | Form Factor 4.4” H x 10.5” L, dual slot\"; \"The A800 40GB Active does not come equipped with display ports.\"",
+        "https://www.nvidia.com/en-us/design-visualization/a800/ -- \"Memory Bandwidth 1,555.2 GB/s\"; \"Peak Tensor Performance 1,247 AI TOPS | 623.8 TFLOPS\" (footnote: \"Theoretical INT8 TOPS using sparsity\"); \"Peak rates based on GPU Boost Clock.\"; \"Max Power Consumption 240W\""
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.nvidia.com/en-us/design-visualization/a800/",
+        "values": {
+          "fp64": 9.7,
+          "fp32": 19.5,
+          "tf32": 155.9,
+          "bf16": 311.9,
+          "fp16": 311.9,
+          "fp16:sparse": 623.8,
+          "int8": 623.8,
+          "int8:sparse": 1247,
+          "int4": 1247.6
+        },
+        "unofficial": [
+          "tf32",
+          "bf16",
+          "fp16",
+          "int8",
+          "int4"
+        ],
+        "note": "NVIDIA rates FP64 at 9.7 and FP32 at 19.5 TFLOPS on 6,912 CUDA cores and 432 Tensor Cores: the A100 PCIe's figures on the A100's 108 SMs, which puts the boost clock at the same 1,410 MHz. Its only tensor figures are \"1,247 AI TOPS | 623.8 TFLOPS\", the first footnoted as sparse INT8. 623.8 is half of it; on GA100 that is the sparse FP16 rate (and also the dense INT8 rate), so it is filed as sparse FP16, the reading its TFLOPS unit suggests. The dense TF32, BF16, FP16, INT8 and INT4 figures are derived, not rated: the A100's dense per-SM tensor rates at 108 SMs and 1,410 MHz."
+      },
+      "note": "A GA100 workstation card: the A100 40GB PCIe's core counts, memory and bandwidth (the chip is inferred from those, not named by NVIDIA), with a blower fan instead of a passive heatsink, and NVLink at 400 GB/s for a pair instead of 600. No display outputs. Not the A800 80GB parts, which are A100 variants for the Chinese market.",
+      "peerLink": {
+        "maxCards": 2,
+        "fabric": "NVLink 3 bridge",
+        "topology": "Pairs, 400 GB/s bidirectional; pairs reach other pairs over PCIe",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/nvidia-a800-40gb-active-datasheet.pdf -- \"Third-Generation NVIDIA® NVLink™ > Connect two A800 GPUs to scale up to 80 gigabytes (GB) of memory > 400 gigabytes per second (GB/s) of bidirectional bandwidth\""
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "active",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/nvidia-a800-40gb-active-datasheet.pdf -- \"Graphics Bus PCIe 4.0 x 16 | Power Consumption 240W | Thermal Active | Form Factor 4.4” H x 10.5” L, dual slot\""
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/products/workstations/nvidia-a800-40gb-active-datasheet.pdf -- \"Graphics Bus PCIe 4.0 x 16\""
+      }
+    },
+    {
       "id": "h100_sxm",
       "label": "H100 SXM 80GB",
       "vendor": "NVIDIA",
@@ -4625,9 +4687,10 @@
       "process": "TSMC N7",
       "pricing": {
         "street": {
-          "usd": 1095,
-          "asOf": "2026-09",
-          "note": "Low confidence. A used stock 8 GB card, which the buyer unlocks in software. bytwork (updated 2026-09-28): \"On marketplaces the price started at $122–146 and settled at $1095 ... on eBay in the US from $150 to $1400\". Tested or x16-modded 64 GB boards ask about twice that ($2,706 on eBay per traictory, 2026-09-20). No dated sold-price series was found. The card launched around $4,300 in 2021 (press reports; NVIDIA never listed it)."
+          "usd": 2650,
+          "asOf": "2026-10",
+          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
+          "note": "Asking, for the 8 GB card, the one that unlocks to 64 GB; the 10 GB card, which reaches 40 GB, asked $1,350 the same day. In September bytwork reported stock cards settling at $1,095 (\"on eBay in the US from $150 to $1400\"), and tested or x16-modded 64 GB boards asked about $2,706 (traictory, 2026-09-20). The card launched around $4,300 in 2021 (press reports; NVIDIA never listed it)."
         }
       },
       "sources": [
