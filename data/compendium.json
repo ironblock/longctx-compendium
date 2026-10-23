@@ -3963,8 +3963,10 @@
       },
       "formFactor": {
         "name": "MPX",
-        "source": "https://support.apple.com/en-us/118461 -- \"Two MPX Modules or up to four PCI Express card slots\"; the W6800X Duo is an MPX module",
-        "note": "Fits only the Mac Pro (2019) and its rack version. Apple's pages do not state the cooling."
+        "source": "https://support.apple.com/en-us/118461 -- \"Two MPX Modules or up to four PCI Express card slots\"; the W6800X Duo is an MPX module; \"Alternatively, each MPX bay can support: One full-length, double-wide x16 gen 3 slot and one full-length, double-wide x8 gen 3 slot (MPX bay 1); Or two full-length, double-wide x16 gen 3 slots (MPX bay 2); Up to 300W auxiliary power via two 8-pin connectors\"",
+        "note": "Fits only the Mac Pro (2019) and its rack version. Passive, cooled by the Mac Pro's fans, and four slots wide, per the maintainer (2026-10-23); Apple's pages state neither, though a full-height module fills a bay that otherwise holds two double-wide slots. Apple's half-height modules (580X, W5500X, W6600X) are two slots wide.",
+        "slots": 4,
+        "cooling": "passive"
       },
       "hostLink": {
         "gen": 3,
@@ -4545,8 +4547,10 @@
       },
       "formFactor": {
         "name": "MPX",
-        "source": "https://support.apple.com/en-us/118461 -- Radeon Pro Vega II: \"Full-height MPX Module fills an MPX bay and uses extra power and PCIe bandwidth\"",
-        "note": "Fits only the Mac Pro (2019) and its rack version. Apple's pages do not state the cooling."
+        "source": "https://support.apple.com/en-us/118461 -- Radeon Pro Vega II: \"Full-height MPX Module fills an MPX bay and uses extra power and PCIe bandwidth\"; \"Alternatively, each MPX bay can support: One full-length, double-wide x16 gen 3 slot and one full-length, double-wide x8 gen 3 slot (MPX bay 1); Or two full-length, double-wide x16 gen 3 slots (MPX bay 2); Up to 300W auxiliary power via two 8-pin connectors\"",
+        "note": "Fits only the Mac Pro (2019) and its rack version. Passive, cooled by the Mac Pro's fans, and four slots wide, per the maintainer (2026-10-23); Apple's pages state neither, though a full-height module fills a bay that otherwise holds two double-wide slots. Apple's half-height modules (580X, W5500X, W6600X) are two slots wide.",
+        "slots": 4,
+        "cooling": "passive"
       },
       "hostLink": {
         "gen": 3,
