@@ -220,11 +220,12 @@ try {
   const state = readState();
 
   const vendors = [...new Set(model.UNITS.map(u => u.vendor ?? 'Other'))];
-  const FORM_ORDER = ['PCIe', 'SXM', 'OAM', 'integrated', 'other', 'not recorded'];
+  const FORM_ORDER = ['PCIe', 'SXM', 'OAM', 'MPX', 'integrated', 'other', 'not recorded'];
   const FORM_TITLE = {
     PCIe: 'Add-in cards. Click to hide or show',
     SXM: "NVIDIA's SXM modules (SXM2 to SXM6), which need a vendor baseboard. Click to hide or show",
     OAM: 'OCP Accelerator Modules, which need a baseboard. Click to hide or show',
+    MPX: "Apple's MPX modules, which fit only the Mac Pro (2019). Click to hide or show",
     integrated: 'A GPU inside an SoC or APU, with no PCIe link of its own. Click to hide or show',
   };
   const forms = FORM_ORDER.filter(f => model.UNITS.some(u => (u.form ?? 'not recorded') === f));

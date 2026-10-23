@@ -183,7 +183,7 @@ check('hardware summary rendered', /of \d+ units match/.test(await text('#hwSumm
   check('and says integrated GPUs drop out', /integrated GPUs drop out/.test(await text('#hwSummary', p)));
   await p.goto(`${base}/index.html#ffoff=PCIe,integrated`, { waitUntil: 'networkidle' });
   const modules = await names();
-  check('hiding PCIe cards and integrated GPUs leaves the SXM and OAM modules', modules.length === model.UNITS.filter(u => u.form === 'SXM' || u.form === 'OAM').length && modules.some(l => /H100 SXM/.test(l)) && modules.some(l => /MI300X/.test(l)), modules.join(', '));
+  check('hiding PCIe cards and integrated GPUs leaves the SXM, OAM and MPX modules', modules.length === model.UNITS.filter(u => ['SXM', 'OAM', 'MPX'].includes(u.form)).length && modules.some(l => /H100 SXM/.test(l)) && modules.some(l => /MI300X/.test(l)) && modules.some(l => /Vega II Duo/.test(l)), modules.join(', '));
   const cell = await p.locator('#hwTable tbody tr', { hasText: 'H100 SXM' }).locator('td', { hasText: 'PCIe 5.0' }).first().textContent();
   check('the table gives form factor and host link', /SXM5\s*PCIe 5\.0 ×16 · 63 GB\/s/.test(cell ?? ''), cell);
   await p.close();
@@ -293,6 +293,10 @@ check('clearing filters lists every unit again', (await count('#hwTable tbody tr
   const a16 = model.UNITS.find(u => u.id === 'a16');
   const t = await page.locator('#hwTable tbody tr', { hasText: a16.label }).first().textContent();
   check('the A16 row shows per-GPU memory and a per-board price', /per GPU · 4 per board/.test(t) && t.includes(`${usd(a16.street)}`) && /per board/.test(t) && t.includes(usd(a16.street / (a16.memoryGB * a16.gpus))), t);
+  // A board's direct link counts GPUs: the W6800X Duo's on-board pair, or two bridged modules.
+  const w = model.UNITS.find(u => u.id === 'radeon_pro_w6800x_duo');
+  const wt = await page.locator('#hwTable tbody tr', { hasText: w.label }).first().textContent();
+  check('the W6800X Duo row is an MPX module whose link joins 2 or 4 GPUs', /MPX/.test(wt) && /2 or 4 GPUs/.test(wt), wt);
 }
 check('clearing filters empties the slider boxes', (await page.locator('#bwRange .lo-num').inputValue()) === '');
 

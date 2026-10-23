@@ -207,7 +207,7 @@
           "$ref": "#/definitions/pricing"
         },
         "formFactor": {
-          "description": "What the GPU physically is: an add-in card, a module for a vendor baseboard, or part of an SoC or APU.",
+          "description": "What the GPU physically is: an add-in card, a module for a vendor baseboard, Apple's MPX module for the Mac Pro (2019), or part of an SoC or APU.",
           "type": "object",
           "required": [
             "name",
@@ -225,6 +225,7 @@
                 "SXM5",
                 "SXM6",
                 "OAM",
+                "MPX",
                 "integrated",
                 "other"
               ]

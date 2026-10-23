@@ -130,7 +130,8 @@ devices, such as the A16's four. `gpus` says how many, with a `source`. Memory,
 bandwidth, compute and links are then one GPU's, so a model on the whole board
 is split across GPUs like any multi-card rig, while `street` is the board's
 price. The page counts GPUs and charges whole boards: four A16 GPUs cost one
-board, five cost two. Its $ per GB and GB/s per $1k use the whole board.
+board, five cost two. Its $ per GB and GB/s per $1k use the whole board, and its
+`peerLink` counts GPUs, not boards (the Vega II Duo's on-board link joins 2).
 
 ### Specifications need a source
 

@@ -765,9 +765,17 @@
           "supports": [
             "note:llama.cpp treats gfx906 as dp4a-capable, MFMA-less"
           ]
+        },
+        {
+          "url": "https://github.com/pciutils/pciids/blob/a35010c3d4f58119d4894d8b770bc66a6439b552/pci.ids",
+          "quote": "66a1  Vega 20 [Radeon Pro VII/Radeon Instinct MI50] ... 66a3  Vega 20 [Radeon Pro Vega II/Radeon Pro Vega II Duo] ... 66af  Vega 20 [Radeon VII]",
+          "locator": "pci.ids at a35010c, vendor 1002 (AMD) device list",
+          "supports": [
+            "mapping:Vega II/Vega II Duo=Vega 20, the MI50's chip"
+          ]
         }
       ],
-      "note": "Covers gfx906: Instinct MI50 (16GB and 32GB), MI60, Radeon VII and Radeon Pro VII. No matrix instructions of any kind: MFMA arrived with CDNA 1 (gfx908, MI100) and WMMA with RDNA 3. AMD's CDNA white paper: the \"MI50 does not have specialized hardware and performs matrix operations on the vector execution units\", so all eight formats are absent. What gfx906 does have is packed FP16 (V_PK_FMA_F16, twice the FP32 rate) and dot products (V_DOT2_F32_F16, V_DOT4_I32_I8, V_DOT8_I32_I4), recorded on units as vector rates; llama.cpp uses the INT8 dot4 for quantized matrix multiplies. There is no BF16 instruction at all. AMD support: ROCm 5.7 was the last fully supported release, 6.0-6.3 deprecated it, and 6.4 onward lists it unsupported, though people still run it on ROCm 7 with workarounds."
+      "note": "Covers gfx906: Instinct MI50 (16GB and 32GB), MI60, Radeon VII, Radeon Pro VII, and Apple's Radeon Pro Vega II and Vega II Duo. No matrix instructions of any kind: MFMA arrived with CDNA 1 (gfx908, MI100) and WMMA with RDNA 3. AMD's CDNA white paper: the \"MI50 does not have specialized hardware and performs matrix operations on the vector execution units\", so all eight formats are absent. What gfx906 does have is packed FP16 (V_PK_FMA_F16, twice the FP32 rate) and dot products (V_DOT2_F32_F16, V_DOT4_I32_I8, V_DOT8_I32_I4), recorded on units as vector rates; llama.cpp uses the INT8 dot4 for quantized matrix multiplies. There is no BF16 instruction at all. AMD support: ROCm 5.7 was the last fully supported release, 6.0-6.3 deprecated it, and 6.4 onward lists it unsupported, though people still run it on ROCm 7 with workarounds."
     },
     {
       "id": "cdna1",
@@ -1059,9 +1067,17 @@
           "supports": [
             "note:llama.cpp uses dp4a (sdot4), not WMMA, on RDNA2"
           ]
+        },
+        {
+          "url": "https://github.com/pciutils/pciids/blob/a35010c3d4f58119d4894d8b770bc66a6439b552/pci.ids",
+          "quote": "73a1  Navi 21 [Radeon Pro V620] 73a2  Navi 21 Pro-XTA [Radeon Pro W6900X] 73a3  Navi 21 GL-XL [Radeon PRO W6800] ... 73ab  Navi 21 Pro-XLA [Radeon Pro W6800X/Radeon Pro W6800X Duo]",
+          "locator": "pci.ids at a35010c, vendor 1002 (AMD) device list",
+          "supports": [
+            "mapping:W6800X/W6800X Duo/W6900X=Navi 21, the V620's chip"
+          ]
         }
       ],
-      "note": "Covers gfx1030 (Navi 21): Radeon PRO V620, Radeon PRO W6800, RX 6800/6800 XT/6900 XT. No matrix instructions: WMMA first appears with RDNA 3, and the complete RDNA 2 VALU and VOP3P opcode lists hold only packed FP16 and DOT2/DOT4/DOT8 dot products, so all eight formats are absent. llama.cpp uses the INT8 dot4 (dp4a), not WMMA, on RDNA 2. There is no BF16 instruction. Contradiction: ROCm's \"Data types and precision support\" page marks RDNA 2 as having matrix-core INT8, FP16 and BF16; the ISA and rocWMMA's target list both say otherwise, and the ISA is taken as authoritative."
+      "note": "Covers gfx1030 (Navi 21): Radeon PRO V620, Radeon PRO W6800, RX 6800/6800 XT/6900 XT, and Apple's Radeon Pro W6800X, W6800X Duo and W6900X. No matrix instructions: WMMA first appears with RDNA 3, and the complete RDNA 2 VALU and VOP3P opcode lists hold only packed FP16 and DOT2/DOT4/DOT8 dot products, so all eight formats are absent. llama.cpp uses the INT8 dot4 (dp4a), not WMMA, on RDNA 2. There is no BF16 instruction. Contradiction: ROCm's \"Data types and precision support\" page marks RDNA 2 as having matrix-core INT8, FP16 and BF16; the ISA and rocWMMA's target list both say otherwise, and the ISA is taken as authoritative."
     },
     {
       "id": "rdna3",
@@ -3895,6 +3911,69 @@
       }
     },
     {
+      "id": "radeon_pro_w6800x_duo",
+      "label": "Radeon Pro W6800X Duo (2 × 32GB)",
+      "vendor": "AMD",
+      "arch": "rdna2",
+      "memoryGB": 32,
+      "memoryBandwidthGBs": 512,
+      "board": {
+        "gpus": 2,
+        "source": "https://support.apple.com/en-us/118461 -- \"AMD Radeon Pro W6800X Duo: Two W6800X GPUs, each with 60 compute units and 3840 stream processors; 64GB of GDDR6 memory (32GB per GPU), each with 512GB/s memory bandwidth\"",
+        "note": "Memory, bandwidth and compute here are one GPU's; the price is the module's."
+      },
+      "pricing": {
+        "street": {
+          "usd": 3500,
+          "asOf": "2026-10",
+          "source": "Asking price reported by the maintainer (2026-10-23)",
+          "note": "Asking, for the module of two GPUs."
+        }
+      },
+      "sources": [
+        "https://support.apple.com/en-us/118461 -- \"AMD Radeon Pro W6800X Duo: Two W6800X GPUs, each with 60 compute units and 3840 stream processors; 64GB of GDDR6 memory (32GB per GPU), each with 512GB/s memory bandwidth; Up to 30.2 teraflops single precision or 60.4 teraflops half precision; Onboard Infinity Fabric Link connection connects two W6800X GPUs at up to 84GB/s in each direction; external Infinity Fabric Link connection enables two W6800X Duo modules to connect four W6800X GPUs\"; single W6800X: \"Up to 16.0 teraflops single precision or 32.0 teraflops half precision\"",
+        "https://github.com/pciutils/pciids/blob/a35010c3d4f58119d4894d8b770bc66a6439b552/pci.ids -- \"73ab  Navi 21 Pro-XLA [Radeon Pro W6800X/Radeon Pro W6800X Duo]\" (the V620 is \"73a1  Navi 21 [Radeon Pro V620]\")",
+        "https://github.com/ggml-org/llama.cpp/discussions/19187 -- Basten7 (2026-02-04), \"AMD Radeon PRO W6800X Duo\" in an Intel Mac, llama-bench: Metal build 4535082a4 (7910) \"qwen3vl 8B Q4_K - Medium 4.68 GiB ... pp512 136.28 ± 0.02\", tg128 66.95 ± 0.27; Vulkan (MoltenVK) build b536eb0 (7939) pp512 77.18 ± 0.03, tg128 68.68 ± 0.06",
+        "https://github.com/ggml-org/llama.cpp/issues/30702 -- \"Eval bug: Metal backend silently produces corrupted output on Intel Mac with AMD GPU (no error, no CPU fallback)\" (open, filed 2026-10-17, Radeon Pro 5500M); it cites #19563, closed unfixed by the stale bot on 2026-05-07, whose proposed fix PR #19567 also went stale",
+        "https://developer.apple.com/forums/thread/820642?answerId=885680022#885680022 -- Faisal_Biyari (April 2026), on Linux: \"ROCm's documentation does not mention the W6800X or W6800X Duo; but only mentions the W6800. However, the W6800X & Duo work right out of the box.\""
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://support.apple.com/en-us/118461",
+        "values": {
+          "fp32": 15.1,
+          "fp16:vector": 30.2,
+          "int8:vector": 60.4
+        },
+        "unofficial": [
+          "int8:vector"
+        ],
+        "note": "All vector: RDNA 2 has no matrix units. FP32 and packed FP16 are half Apple's figures for the two-GPU module (30.2 and 60.4); the Duo's GPUs are rated below the single W6800X's 16.0 and 32.0. INT8 is derived, not rated: four times FP32 for the dot4, as on the V620."
+      },
+      "note": "Apple's MPX module for the Mac Pro (2019), and nothing else: two Navi 21 GPUs, the V620's chip (gfx1030) cut to 60 compute units, each with 32 GB of GDDR6 at 512 GB/s. Two modules fill both MPX bays, for four GPUs and 128 GB. Measured on macOS (discussion #19187): Qwen3-VL 8B at Q4_K_M decoded at 67 tokens/s with Metal, about two-thirds of one GPU's bandwidth, but prefilled at 136 tokens/s, a few percent of the vector rate. Upstream Metal's corrupted output on AMD GPUs (issue #30702, open) applies; whether that build carried patches is not stated. On Linux, ROCm supports gfx1030, and a Mac Pro owner reports the W6800X and Duo work. Apple states no TDP; an MPX bay supplies up to 500 W.",
+      "peerLink": {
+        "maxCards": 4,
+        "options": [
+          2
+        ],
+        "fabric": "Infinity Fabric Link, on the module, and a bridge between two modules",
+        "topology": "Up to 84 GB/s each way between a module's two GPUs (Apple). How the four GPUs of two bridged modules are wired is not stated",
+        "source": "https://support.apple.com/en-us/118461 -- \"Onboard Infinity Fabric Link connection connects two W6800X GPUs at up to 84GB/s in each direction\"; \"external Infinity Fabric Link connection enables two W6800X Duo modules to connect four W6800X GPUs\"",
+        "note": "Whether Linux or llama.cpp uses the link is unverified."
+      },
+      "formFactor": {
+        "name": "MPX",
+        "source": "https://support.apple.com/en-us/118461 -- \"Two MPX Modules or up to four PCI Express card slots\"; the W6800X Duo is an MPX module",
+        "note": "Fits only the Mac Pro (2019) and its rack version. Apple's pages do not state the cooling."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "https://support.apple.com/en-us/118461 -- Mac Pro (2019) technical specifications, Expansion: \"Each MPX bay provides: x16 gen 3 bandwidth for graphics; x8 gen 3 bandwidth for Thunderbolt; Up to 500W power for an MPX Module\"",
+        "note": "One x16 link per MPX bay, shared by the module's two GPUs; Apple does not say how they are joined to it."
+      }
+    },
+    {
       "id": "radeon_pro_w7900",
       "label": "Radeon Pro W7900 48GB",
       "vendor": "AMD",
@@ -4415,6 +4494,65 @@
         "gen": 4,
         "lanes": 16,
         "source": "https://www.amd.com/en/support/downloads/drivers.html/accelerators/instinct/instinct-mi-series/instinct-mi60.html -- \"GPU Form Factor | PCIe® Add-in Card | Bus Type | PCIe® 4.0 x16 , | PCIe® 3.0 x16 | Infinity Fabric™ Links | 2 | Peak Infinity Fabric™ Link Bandwidth | 92 GB/s | Cooling | Passive | ... Board Width | Double Slot\""
+      }
+    },
+    {
+      "id": "radeon_pro_vega_ii_duo",
+      "label": "Radeon Pro Vega II Duo (2 × 32GB)",
+      "vendor": "AMD",
+      "arch": "gcn5_1",
+      "memoryGB": 32,
+      "memoryBandwidthGBs": 1024,
+      "board": {
+        "gpus": 2,
+        "source": "https://support.apple.com/en-us/118461 -- \"AMD Radeon Pro Vega II Duo: Two Vega II GPUs, each with 64 compute units and 4096 stream processors; 64GB of HBM2 memory (32GB per GPU), each with 1TB/s memory bandwidth\"",
+        "note": "Memory, bandwidth and compute here are one GPU's; the price is the module's."
+      },
+      "pricing": {
+        "street": {
+          "usd": 1400,
+          "asOf": "2026-10",
+          "source": "Asking price reported by the maintainer (2026-10-23)",
+          "note": "Asking, for the module of two GPUs."
+        }
+      },
+      "sources": [
+        "https://support.apple.com/en-us/118461 -- \"AMD Radeon Pro Vega II Duo: Two Vega II GPUs, each with 64 compute units and 4096 stream processors; 64GB of HBM2 memory (32GB per GPU), each with 1TB/s memory bandwidth; Up to 28.3 teraflops single precision or 56.6 teraflops half precision; Onboard Infinity Fabric Link connection connects the two Vega II GPUs at up to 84GB/s\"",
+        "https://github.com/pciutils/pciids/blob/a35010c3d4f58119d4894d8b770bc66a6439b552/pci.ids -- \"66a3  Vega 20 [Radeon Pro Vega II/Radeon Pro Vega II Duo]\" (the MI50 is \"66a1  Vega 20 [Radeon Pro VII/Radeon Instinct MI50]\")",
+        "https://github.com/ggml-org/llama.cpp/issues/30702 -- \"Eval bug: Metal backend silently produces corrupted output on Intel Mac with AMD GPU (no error, no CPU fallback)\" (open, filed 2026-10-17, Radeon Pro 5500M); it cites #19563, closed unfixed by the stale bot on 2026-05-07, whose proposed fix PR #19567 also went stale",
+        "https://github.com/ggml-org/llama.cpp/issues/19563 -- sunrunnerfire (2026-05-31): ggml \"enables `simdgroup_reduction` + `bfloat` on any `MTLGPUFamilyMetal3` device (incl. AMD discrete on Intel Mac)\"; \"We run these as build-time patches in production on a Vega II (32 GB)\""
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://support.apple.com/en-us/118461",
+        "values": {
+          "fp32": 14.15,
+          "fp16:vector": 28.3,
+          "int8:vector": 56.6
+        },
+        "unofficial": [
+          "int8:vector"
+        ],
+        "note": "All vector, as on the MI50 and MI60. FP32 and packed FP16 are half Apple's figures for the two-GPU module (28.3 and 56.6), matching what Apple gives the single Vega II (14.1 and 28.3). INT8 is derived, not rated: four times FP32 for the dot4, the ratio AMD rates the MI60's identical 64-CU Vega 20 at (14.7 FP32, 59 INT8)."
+      },
+      "note": "Apple's MPX module for the Mac Pro (2019), and nothing else: two Vega 20 GPUs, the MI50/MI60 chip (gfx906) with all 64 compute units like the MI60, each with 32 GB of HBM2 at 1 TB/s. Two modules fill both MPX bays, for four GPUs and 128 GB. On macOS, upstream llama.cpp's Metal backend silently produces garbage on AMD GPUs in Intel Macs (issue #30702, open); patched builds exist, and one project says it runs its patches on a Vega II. On Linux it is the MI50's software: ROCm through 6.4, and llama.cpp's HIP backend. Apple states no TDP; an MPX bay supplies up to 500 W.",
+      "peerLink": {
+        "maxCards": 2,
+        "fabric": "Infinity Fabric Link, on the module",
+        "topology": "The module's two GPUs, at up to 84 GB/s (Apple). Apple describes no link between two Duo modules, so four GPUs are two linked pairs joined by PCIe",
+        "source": "https://support.apple.com/en-us/118461 -- \"Onboard Infinity Fabric Link connection connects the two Vega II GPUs at up to 84GB/s\"; https://support.apple.com/en-us/101899 -- Infinity Fabric Link \"comes preinstalled on your MPX module\"; \"As long as the Infinity Fabric Link jumper remains installed, apps that support Infinity Fabric Link can use it.\"",
+        "note": "Users on Apple's forum (thread 251427427, June 2020) say the external bridge joins two single Vega II modules only. Whether Linux or llama.cpp uses the on-module link is unverified."
+      },
+      "formFactor": {
+        "name": "MPX",
+        "source": "https://support.apple.com/en-us/118461 -- Radeon Pro Vega II: \"Full-height MPX Module fills an MPX bay and uses extra power and PCIe bandwidth\"",
+        "note": "Fits only the Mac Pro (2019) and its rack version. Apple's pages do not state the cooling."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "https://support.apple.com/en-us/118461 -- Mac Pro (2019) technical specifications, Expansion: \"Each MPX bay provides: x16 gen 3 bandwidth for graphics; x8 gen 3 bandwidth for Thunderbolt; Up to 500W power for an MPX Module\"",
+        "note": "One x16 link per MPX bay, shared by the module's two GPUs; Apple does not say how they are joined to it."
       }
     },
     {

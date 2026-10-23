@@ -122,7 +122,7 @@ const HW_COLS = (prec) => [
       if (!l.maxCards) return `<td class="num"${tip ? ` title="${esc(tip)}"` : ''}>none</td>`;
       const all = [...(l.options ?? []), l.maxCards].sort((a, b) => a - b);
       const sizes = all.length > 1 ? `${all.slice(0, -1).join(', ')} or ${all.at(-1)}` : `${all[0]}`;
-      return `<td class="num link" title="${esc(tip)}">${sizes} cards<span class="sub">${esc(l.fabric ?? '')}</span></td>`;
+      return `<td class="num link" title="${esc(tip)}">${sizes} ${u.gpus > 1 ? 'GPUs' : 'cards'}<span class="sub">${esc(l.fabric ?? '')}</span></td>`;
     },
   },
   { key: 'tdp', label: 'TDP W', sort: u => u.tdpW, cell: u => `<td class="num">${u.tdpW ?? DASH}</td>` },
