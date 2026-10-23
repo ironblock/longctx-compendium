@@ -3766,7 +3766,8 @@
         "name": "PCIe",
         "slots": 1,
         "source": "https://www.nvidia.com/content/dam/en-zz/solutions/data-center/a2/pdf/a2-datasheet.pdf -- \"Form factor 1-slot, Low-Profile PCIe\"",
-        "note": "NVIDIA's datasheet does not say how it is cooled."
+        "note": "Passive per the maintainer (2026-10-23); NVIDIA's datasheet does not say.",
+        "cooling": "passive"
       },
       "hostLink": {
         "gen": 4,
@@ -4690,14 +4691,6 @@
       "memoryGB": 141,
       "memoryBandwidthGBs": 4800,
       "tdpW": 600,
-      "pricing": {
-        "street": {
-          "usd": 32000,
-          "asOf": "2026-10",
-          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
-          "note": "Asking."
-        }
-      },
       "sources": [
         "https://www.nvidia.com/en-us/data-center/h200/ -- \"Specifications | NVIDIA H200 GPU | H200 SXM¹ | H200 NVL¹ | FP64 | 34 TFLOPS | 30 TFLOPS | ... FP32 | 67 TFLOPS | 60 TFLOPS | TF32 Tensor Core² | 989 TFLOPS | 835 TFLOPS | BFLOAT16 Tensor Core² | 1,979 TFLOPS | 1,671 TFLOPS | FP16 Tensor Core² | 1,979 TFLOPS | 1,671 TFLOPS | FP8 Tensor Core² | 3,958 TFLOPS | 3,341 TFLOPS | INT8 Tensor Core² | 3,958 TFLOPS | 3,341 TFLOPS | GPU Memory | 141GB | 141GB | GPU Memory Bandwidth | 4.8TB/s | 4.8TB/s | ... Max Thermal Design Power (TDP) | Up to 700W (configurable) | Up to 600W (configurable)\" (² With sparsity)",
         "https://dam-cdn.nvd.orangelogic.com/AssetLink/7n7vya4684sdccfyy6kv37ek5lw702h7.pdf -- H200 NVL product brief PB-12128-001_v01 (April 2025), linked from NVIDIA's H200 page: \"Memory size | 141 GB | Memory bus width | 6016 bits | Peak memory bandwidth | 4,813 GBps\""
@@ -4720,7 +4713,7 @@
         },
         "note": "NVIDIA prints only sparse tensor rates (footnote: \"With sparsity\"); the dense figures are half, as for the SXM H200."
       },
-      "note": "The PCIe H200: the SXM card's 141 GB at 4.8 TB/s (the product brief says 4,813 GB/s), at up to 600 W rather than 700 and about 84% of its tensor rates. Passive.",
+      "note": "The PCIe H200: the SXM card's 141 GB at 4.8 TB/s (the product brief says 4,813 GB/s), at up to 600 W rather than 700 and about 84% of its tensor rates. Passive. Unpriced: the only ask seen, $32,000 on eBay on 2026-10-22, was a scam listing.",
       "peerLink": {
         "maxCards": 4,
         "options": [
