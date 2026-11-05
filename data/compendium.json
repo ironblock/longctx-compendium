@@ -14272,6 +14272,310 @@
         "source": "https://github.com/1CatAI/1Cat-vLLM/issues/1100 (squibloads): \"with the lanes prepared (288 / 36 / 96) decode is 95.1 tok/s at a 6k-token context and 81.6 tok/s at 160k; with the lanes off it is 74.6 and 66.1 tok/s.\" \"Prefill is unchanged (160k time to first token 36.8 vs 36.6 s)\""
       },
       "note": "With the lanes off, decode fell 21% (74.6 and 66.1 tok/s) on the same hardware and build."
+    },
+    {
+      "status": "measured",
+      "observed": "2026-10-03",
+      "recorded": "2026-11-05",
+      "id": "x_v100x4_qwen38_27b_quasar_dflash2_1cat_v151",
+      "label": "Qwen3.8-27B · QUASAR NVFP4 · 1Cat-vLLM 1.5.1 · DFlash2 q7 · 4× V100 SXM2, tensor parallel",
+      "model": "qwen38_27b",
+      "modelNote": "QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4, an NVFP4 checkpoint of Qwen3.8-27B; the page assumes the architecture is unchanged.",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm2",
+            "count": 4
+          }
+        ],
+        "note": "The README says \"4× V100-SXM2-32GB / TP4\" and nothing about the interconnect."
+      },
+      "parallel": {
+        "mode": "tensor",
+        "degree": 4
+      },
+      "engine": {
+        "name": "1Cat-vLLM",
+        "version": "1.5.1",
+        "lineage": "fork of vLLM for SM70",
+        "note": "Official wheels; FP16 compute, CUDA 12.8 / Torch 2.10, prefix caching, asynchronous scheduling and CUDA graphs; 262144 maximum context, 8192-token prefill budget, four sequence slots, memory utilization 0.80, KV/Mamba blocks 2048/8192."
+      },
+      "quant": {
+        "format": "NVFP4 (QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4)",
+        "key": "nvfp4",
+        "note": "Which tensors stay in higher precision is not recorded, so the ceiling at 4.5 bits may be generous."
+      },
+      "kvCache": {
+        "k": "fp8_e4m3",
+        "v": "fp8_e4m3",
+        "note": "E4M3 target KV, FP16 draft KV."
+      },
+      "spec": {
+        "method": "dflash2",
+        "draftN": 7,
+        "drafter": "incoai/Qwen3.8-27B-DFlash2",
+        "note": "A block-diffusion draft model proposes several tokens and the target verifies them together (1Cat's description); \"q7\" is seven draft tokens per round."
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 4096,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 229.34,
+          "confidence": "m",
+          "note": "single request, pure decode (TTFT excluded), median of three warm requests"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 201.18,
+          "confidence": "m",
+          "note": "as above"
+        },
+        {
+          "metric": "decode",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 171.43,
+          "confidence": "m",
+          "note": "as above"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 4,
+          "basis": "aggregate",
+          "value": 445.45,
+          "confidence": "m",
+          "note": "four requests, aggregate over the window when all four decode; fixed 32K synthetic inputs, 256 forced output tokens, T 0.7 / top-p 0.8 / top-k 20"
+        }
+      ],
+      "hazards": [
+        "Single requests sample at T 1, top-p 0.95, top-k 20 with up to 256 output tokens and natural EOS, so speed moves with draft acceptance, which the release table does not give.",
+        "At 32K the measured request recomputed its prompt; the README notes the older wheel reused a 28,672-token prefix in its comparison row."
+      ],
+      "provenance": {
+        "kind": "vendor",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/1CatAI/1Cat-vLLM/blob/3c051b52ed873475b01da07be3e9e1fe9ab8ae7e/README.md, \"v1.5.1: Measured Release-to-Release Decode\": \"| 4K · single request | 103.87 tok/s | **229.34 tok/s** |\", \"| 32K · single request | 49.04 tok/s | **201.18 tok/s** |\", \"| 128K · single request | No completed baseline | **171.43 tok/s** |\", \"| 32K · C4 common decode window | Not measured under the same contract | **445.45 aggregate tok/s** |\"; settings and evidence in the v1.5.1 release notes (https://github.com/1CatAI/1Cat-vLLM/releases/tag/v1.5.1)."
+      },
+      "note": "The fork's release benchmark. The same table gives v1.5.0 at 103.87 tok/s (4K) and 49.04 (32K) under the same recipe: software alone moved this rig 2.2-4.1x in one release."
+    },
+    {
+      "status": "measured",
+      "observed": "2026-10-13",
+      "recorded": "2026-11-05",
+      "id": "x_v100pcie2_qwen38_27b_quasar_dflash2_1cat",
+      "label": "Qwen3.8-27B · QUASAR NVFP4 · 1Cat-vLLM 1.5.1 · DFlash2 q7 · 2× V100 PCIe, no NVLink or P2P",
+      "model": "qwen38_27b",
+      "modelNote": "QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4, an NVFP4 checkpoint of Qwen3.8-27B; the page assumes the architecture is unchanged. Target revision d9af17e20644c5b9a6d66dff1d14f349e2e61b05.",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_pcie_32",
+            "count": 2
+          }
+        ],
+        "powerCapW": 250,
+        "interconnect": {
+          "kind": "pcie",
+          "note": "\"Two Tesla V100 PCIe 32 GiB, PCIe 3.0 x16 each; GPU–GPU topology PHB; CUDA peer access unavailable in this VM.\" So every all-reduce stages through host memory."
+        },
+        "host": {
+          "note": "\"PowerEdge R730; two Xeon E5-2673 v4 CPUs; ESXi 7.0 U3 ... guest Debian 12, 32 vCPU, 32 GiB RAM\". Driver 580.178.04, PyTorch 2.10.0+cu128, FlashV100 1.2.0."
+        }
+      },
+      "parallel": {
+        "mode": "tensor",
+        "degree": 2
+      },
+      "engine": {
+        "name": "1Cat-vLLM",
+        "version": "1.5.1",
+        "lineage": "fork of vLLM for SM70",
+        "note": "FP16 compute; 262144 combined context limit, 8192 batched-token budget, max sequences 4, memory utilization 0.85, attention block 2048, aligned Mamba block 8192, automatic prefix caching. The default 8K prefill route crashed; the run sets VLLM_FLASH_V100_PREFILL_D256_GQA_ARCH_128K_EXPERIMENTAL=0."
+      },
+      "quant": {
+        "format": "NVFP4 (QUASAR-QAT/Qwen3.8-27B-QUASAR-NVFP4)",
+        "key": "nvfp4",
+        "note": "Which tensors stay in higher precision is not recorded, so the ceiling at 4.5 bits may be generous."
+      },
+      "kvCache": {
+        "k": "fp8_e4m3",
+        "v": "fp8_e4m3"
+      },
+      "spec": {
+        "method": "dflash2",
+        "draftN": 7,
+        "drafter": "incoai/Qwen3.8-27B-DFlash2",
+        "note": "A block-diffusion draft model proposes several tokens and the target verifies them together (1Cat's description); \"q7\" is seven draft tokens per round."
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 4096,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 103.9,
+          "confidence": "m~",
+          "note": "cold single client, server-reported decode, 256 forced output tokens",
+          "depthNote": "the issue's \"4K\" point"
+        },
+        {
+          "metric": "decode",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 94.5,
+          "confidence": "m~",
+          "note": "cold single client, server-reported decode, 256 forced output tokens",
+          "depthNote": "the issue's \"8K\" point"
+        },
+        {
+          "metric": "decode",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 90.2,
+          "confidence": "m~",
+          "note": "cold single client, server-reported decode, 256 forced output tokens",
+          "depthNote": "the issue's \"16K\" point"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 83.7,
+          "confidence": "m~",
+          "note": "cold single client, server-reported decode, 256 forced output tokens",
+          "depthNote": "the issue's \"32K\" point"
+        },
+        {
+          "metric": "decode",
+          "depth": 65536,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 81.3,
+          "confidence": "m~",
+          "note": "cold single client, server-reported decode, 256 forced output tokens",
+          "depthNote": "the issue's \"64K\" point"
+        },
+        {
+          "metric": "decode",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 68.0,
+          "confidence": "m~",
+          "note": "cold single client, server-reported decode, 256 forced output tokens",
+          "depthNote": "the issue's \"128K\" point"
+        },
+        {
+          "metric": "prefill",
+          "depth": 4096,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1724,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "the issue's computed rate; cold TTFT 2.38 s",
+          "depthNote": "the issue's \"4K\" point"
+        },
+        {
+          "metric": "prefill",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1623,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "the issue's computed rate; cold TTFT 5.07 s",
+          "depthNote": "the issue's \"8K\" point"
+        },
+        {
+          "metric": "prefill",
+          "depth": 16384,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1635,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "the issue's computed rate; cold TTFT 10.05 s",
+          "depthNote": "the issue's \"16K\" point"
+        },
+        {
+          "metric": "prefill",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1554,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "the issue's computed rate; cold TTFT 21.13 s",
+          "depthNote": "the issue's \"32K\" point"
+        },
+        {
+          "metric": "prefill",
+          "depth": 65536,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1404,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "the issue's computed rate; cold TTFT 46.77 s",
+          "depthNote": "the issue's \"64K\" point"
+        },
+        {
+          "metric": "prefill",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1161,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "the issue's computed rate; cold TTFT 113.11 s",
+          "depthNote": "the issue's \"128K\" point"
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 57.3,
+          "confidence": "m~",
+          "note": "cold single client at the \"256K capacity\" point",
+          "depthNote": "the issue's 256K point inside a 262,144-token combined limit; the exact input length was not captured"
+        },
+        {
+          "metric": "prefill",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 862,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "the issue's computed rate; cold TTFT 304.00 s",
+          "depthNote": "as for the 256K decode point"
+        }
+      ],
+      "hazards": [
+        "A VM without CUDA peer access: the slowest way two GPUs can talk, so this is a floor for a PCIe pair, not a typical one.",
+        "Peak sampled power was \"325.6\" W and \"320.6\" W against the stated 250 W cap; the issue does not explain the difference.",
+        "Speed runs sample at T 1, top-p 0.95, top-k 20 with 256 forced output tokens; acceptance is shown only in a linked chart."
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/1CatAI/1Cat-vLLM/issues/1202 (AiRC-ai, \"[Community benchmark] 2× V100 PCIe 32GB TP2: QUASAR NVFP4 DFlash2 q7, 4K–256K\"): \"Cold single-client generation: 103.9 tok/s at 4K, 68.0 tok/s at 128K, and 57.3 tok/s at 256K capacity.\" Cold C1 TG 4K-256K \"103.9 / 94.5 / 90.2 / 83.7 / 81.3 / 68.0 / 57.3\"; computed PP \"1,724 / 1,623 / 1,635 / 1,554 / 1,404 / 1,161 / 862\"; cold C1 TTFT \"2.38 / 5.07 / 10.05 / 21.13 / 46.77 / 113.11 / 304.00\" s"
+      },
+      "note": "Two clients at 8K-32K reached 132.8-136.6 tok/s aggregate and four reached 163-204; four cold 256K clients took 1,209.48 s in all."
     }
   ],
   "candidates": [
