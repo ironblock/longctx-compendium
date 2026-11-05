@@ -13998,9 +13998,9 @@
         "note": "No width recorded, so no ceiling."
       },
       "kvCache": {
-        "k": "fp8_e4m3",
-        "v": "fp8_e4m3",
-        "note": "Calibrated E4M3 KV scales."
+        "k": "fp8",
+        "v": "fp8",
+        "note": "E4M3. Calibrated E4M3 KV scales."
       },
       "spec": {
         "method": "mtp",
@@ -14306,9 +14306,9 @@
         "note": "Which tensors stay in higher precision is not recorded, so the ceiling at 4.5 bits may be generous."
       },
       "kvCache": {
-        "k": "fp8_e4m3",
-        "v": "fp8_e4m3",
-        "note": "E4M3 target KV, FP16 draft KV."
+        "k": "fp8",
+        "v": "fp8",
+        "note": "E4M3. E4M3 target KV, FP16 draft KV."
       },
       "spec": {
         "method": "dflash2",
@@ -14406,8 +14406,9 @@
         "note": "Which tensors stay in higher precision is not recorded, so the ceiling at 4.5 bits may be generous."
       },
       "kvCache": {
-        "k": "fp8_e4m3",
-        "v": "fp8_e4m3"
+        "k": "fp8",
+        "v": "fp8",
+        "note": "E4M3."
       },
       "spec": {
         "method": "dflash2",
