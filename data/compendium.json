@@ -2766,6 +2766,44 @@
       }
     },
     {
+      "id": "v100_pcie_32",
+      "label": "Tesla V100 PCIe 32GB",
+      "vendor": "NVIDIA",
+      "arch": "volta",
+      "memoryGB": 32,
+      "memoryBandwidthGBs": 900,
+      "tdpW": 250,
+      "sources": [
+        "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf -- \"Tesla V100 PCIe ... Double-Precision Performance 7 TFLOPS ... Single-Precision Performance 14 TFLOPS ... Tensor Performance 112 TFLOPS ... Memory Bandwidth 900GB/sec ... Max Power Comsumption 250 W\"",
+        "values": {
+          "fp64": 7,
+          "fp32": 14,
+          "fp16": 112
+        }
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "cooling": "passive",
+        "source": "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf -- \"Form Factor PCIe Full Height/Length ... Thermal Solution Passive\""
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf -- \"Interconnect Bandwidth 32GB/sec ... System Interface PCIe Gen3\"",
+        "note": "The datasheet gives Gen3 and 32 GB/s, not a lane count; x16 is what 32 GB/s at Gen3 implies."
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf -- \"Interconnect Bandwidth 32GB/sec [PCIe] 300GB/sec [SXM2] ... System Interface PCIe Gen3 [PCIe] NVIDIA NVLink [SXM2]\"",
+        "note": "NVIDIA lists NVLink only for the SXM2 module; PCIe cards talk to each other over PCIe."
+      },
+      "note": "The PCIe card of the same chip as the SXM2 module: the same 900 GB/s, at 250 W instead of 300 W and with lower rated compute (14 FP32 and 112 tensor TFLOPS against 15.7 and 125). No street price recorded."
+    },
+    {
       "id": "rtx_3090",
       "label": "GeForce RTX 3090 24GB",
       "vendor": "NVIDIA",
@@ -13730,6 +13768,510 @@
         "Read through a page-fetch tool, which did not keep the ± spreads; spot-check against the table."
       ],
       "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The row is undated. Decode beats the ROCm rows on the same card by 10-12%; prefill trails ROCm with FA off and leads it with FA on."
+    },
+    {
+      "status": "measured",
+      "observed": "2026-09-27",
+      "recorded": "2026-11-05",
+      "id": "x_v100x4_flashnext_1cat_nomtp",
+      "label": "Qwen3.8-Flash-Next · NVFP4 experts · 1Cat-vLLM · 4× V100, tensor parallel, no MTP",
+      "model": "qwen38_flash_next",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm2",
+            "count": 4
+          }
+        ],
+        "host": {
+          "note": "Torch 2.10.0+cu128, CUDA 12.8.93, driver 580.173.02. The PLE (n-gram) table is \"entirely in pinned host memory, approximately 11.92 GiB per rank\"."
+        },
+        "note": "The document says \"TP4 on four NVIDIA V100-SXM2-32GB GPUs\" and nothing about how they are connected: not whether this is a 1CatAI carrier board, nor the NVLink topology."
+      },
+      "parallel": {
+        "mode": "tensor",
+        "degree": 4
+      },
+      "engine": {
+        "name": "1Cat-vLLM",
+        "commit": "6337a96",
+        "lineage": "fork of vLLM for SM70",
+        "note": "PR #703 (db292f9) plus the compilation-guard fix 6337a96, which the target-only control carries. FP16 activations, V2 model runner, FULL_AND_PIECEWISE CUDA graphs, max_num_seqs 1, max_num_batched_tokens 2048, gpu_memory_utilization 0.97. Speculation disabled with VLLM_1CAT_DISABLE_SM70_MTP_DEFAULTS=1; the other PR #703 acceleration switches stay on."
+      },
+      "quant": {
+        "format": "NVFP4 experts, BF16 dense (RadixArk/Qwen3.8-Flash-Next-NVFP4)",
+        "key": "nvfp4",
+        "note": "From the checkpoint's files: the routed experts take 67.99 GB (4.50 bits per weight over their 120.8B parameters), the other weights 16.01 GB of BF16 (including the MTP head), and the PLE table 51.20 GB of FP8, kept in host memory. By the config's shape about 3.6B of the ~6B weights read per token are BF16, so a decode step moves nearly three times the bytes the ceiling assumes at 4.5 bits: the ceiling is generous by about that factor."
+      },
+      "kvCache": {
+        "k": "f16",
+        "v": "f16",
+        "note": "\"kv_cache_dtype=auto (FP16 main QSA cache)\", FP16 Mamba convolution cache and FP32 SSM state."
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 97.38,
+          "confidence": "m",
+          "note": "512 generated tokens after an 8,192-token prompt"
+        },
+        {
+          "metric": "decode",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 83.01,
+          "confidence": "m",
+          "note": "512 generated tokens after a 131,072-token prompt"
+        },
+        {
+          "metric": "decode",
+          "depth": 261631,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 72.98,
+          "confidence": "m",
+          "note": "512 generated tokens after a 261,631-token prompt, ending at exactly 262,144"
+        },
+        {
+          "metric": "prefill",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 3413,
+          "confidence": "m",
+          "prefillBasis": "cold",
+          "note": "131,072 prompt tokens over a 38.404 s time to first token, prefix cache reset before the request; the TTFT also holds scheduling and the first decode step"
+        },
+        {
+          "metric": "prefill",
+          "depth": 261631,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 3374,
+          "confidence": "m",
+          "prefillBasis": "cold",
+          "note": "261,631 prompt tokens over a 77.555 s time to first token, as above"
+        }
+      ],
+      "hazards": [
+        "Speed rows are forced-length stress runs (exact prompt lengths, 513 output tokens, temperature 0, ignore_eos), one run each; the document warns the outputs are not natural answers.",
+        "The automatic KV budget did not survive a 256K request (the draft model's indexer ran out of workspace at about 225K tokens); these rows come from the follow-up with kv_cache_memory_bytes set to 4 GiB.",
+        "The 8K time to first token (3.302 s) includes first-use QSA JIT compilation by the document's account, so no 8K prefill rate is recorded."
+      ],
+      "provenance": {
+        "kind": "vendor",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/1CatAI/1Cat-vLLM/blob/3c051b52ed873475b01da07be3e9e1fe9ab8ae7e/docs/design/sm70_flash_next_mtp4_256k_eval_20260927.md (raw rows: https://github.com/1CatAI/1Cat-vLLM/blob/3c051b52ed873475b01da07be3e9e1fe9ab8ae7e/docs/design/sm70_flash_next_mtp4_256k_eval_20260927.csv, mode nomtp_4g): \"| 8192 + 513 | 72.250 | 97.380 | 0.742x | 2.520 | 3.302 | 13.98% |\", \"| 131072 + 513 | 196.362 | 83.014 | 2.365x | 40.148 | 38.404 | 100.00% |\", \"| 261631 + 513 | 100.357 | 72.978 | 1.375x | 86.780 | 77.555 | 100.00% |\" (columns: MTP4 decode, no-MTP decode, ratio, MTP4 TTFT, no-MTP TTFT, MTP4 acceptance)"
+      },
+      "note": "The fork maintainers' own frozen evaluation. Decode loses 3.4 ms per token between 8K and 256K (10.3 to 13.7 ms) while prefill holds about 3,400 tok/s from 128K to 256K."
+    },
+    {
+      "status": "measured",
+      "observed": "2026-09-27",
+      "recorded": "2026-11-05",
+      "id": "x_v100x4_flashnext_1cat_mtp4",
+      "label": "Qwen3.8-Flash-Next · NVFP4 experts · 1Cat-vLLM · MTP n=4 · 4× V100, tensor parallel",
+      "model": "qwen38_flash_next",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm2",
+            "count": 4
+          }
+        ],
+        "host": {
+          "note": "Torch 2.10.0+cu128, CUDA 12.8.93, driver 580.173.02. The PLE (n-gram) table is \"entirely in pinned host memory, approximately 11.92 GiB per rank\"."
+        },
+        "note": "The document says \"TP4 on four NVIDIA V100-SXM2-32GB GPUs\" and nothing about how they are connected: not whether this is a 1CatAI carrier board, nor the NVLink topology."
+      },
+      "parallel": {
+        "mode": "tensor",
+        "degree": 4
+      },
+      "engine": {
+        "name": "1Cat-vLLM",
+        "commit": "db292f9",
+        "lineage": "fork of vLLM for SM70",
+        "note": "PR #703 with all its acceleration switches. MTP4 with greedy draft sampling; target verification is a five-token batch decode. Otherwise as the no-MTP line."
+      },
+      "quant": {
+        "format": "NVFP4 experts, BF16 dense (RadixArk/Qwen3.8-Flash-Next-NVFP4)",
+        "key": "nvfp4",
+        "note": "From the checkpoint's files: the routed experts take 67.99 GB (4.50 bits per weight over their 120.8B parameters), the other weights 16.01 GB of BF16 (including the MTP head), and the PLE table 51.20 GB of FP8, kept in host memory. By the config's shape about 3.6B of the ~6B weights read per token are BF16, so a decode step moves nearly three times the bytes the ceiling assumes at 4.5 bits: the ceiling is generous by about that factor."
+      },
+      "kvCache": {
+        "k": "f16",
+        "v": "f16",
+        "note": "\"kv_cache_dtype=auto (FP16 main QSA cache)\"."
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 4
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 127.262,
+          "confidence": "m",
+          "acceptance": 0.4913,
+          "depthNote": "GSM8K: 64 questions of 93-216 prompt tokens, up to 4,096 output tokens",
+          "note": "thinking on, temperature 1.0, top-p 0.95, top-k 20, normal EOS"
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 123.64,
+          "confidence": "m",
+          "acceptance": 0.464,
+          "depthNote": "MATH-500: 64 questions of 85-344 prompt tokens, up to 8,192 output tokens",
+          "note": "as above"
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 113.903,
+          "confidence": "m",
+          "acceptance": 0.4084,
+          "depthNote": "HumanEval: 64 tasks of 118-411 prompt tokens, up to 4,096 output tokens",
+          "note": "as above"
+        }
+      ],
+      "hazards": [
+        "Acceptance is the engine's accepted over proposed draft tokens. Decode is the document's \"sum(output_tokens - 1) / sum(last_token - first_token)\" across each 64-question set.",
+        "The same run's forced-length long-context rows (196.4 tok/s at 128K, 100.4 at 256K) are left out: their 100% acceptance comes from repeated benchmark text, which the document says not to generalize."
+      ],
+      "provenance": {
+        "kind": "vendor",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/1CatAI/1Cat-vLLM/blob/3c051b52ed873475b01da07be3e9e1fe9ab8ae7e/docs/design/sm70_flash_next_mtp4_256k_eval_20260927.md (raw rows: https://github.com/1CatAI/1Cat-vLLM/blob/3c051b52ed873475b01da07be3e9e1fe9ab8ae7e/docs/design/sm70_flash_next_mtp4_256k_eval_20260927.csv, mode mtp_auto_kv): \"| gsm8k | 61/64 | 95.31% | 1 | 127.262 | 49.13% | 2.9654 | 23.1924 | 0.2080 |\", \"| math500 | 61/64 | 95.31% | 2 | 123.640 | 46.40% | 2.8560 | 23.0695 | 0.2060 |\", \"| humaneval | 56/64 | 87.50% | 8 | 113.903 | 40.84% | 2.6337 | 23.0887 | 0.2092 |\""
+      },
+      "note": "Natural-EOS runs at short context. Accuracy on these 64-question samples: GSM8K 95.31%, MATH-500 95.31%, HumanEval 87.50%."
+    },
+    {
+      "status": "measured",
+      "observed": "2026-10",
+      "recorded": "2026-11-05",
+      "id": "x_v100pcie4_flashnext_awq_1cat_mtp4",
+      "label": "Qwen3.8-Flash-Next · AWQ g32 · 1Cat-vLLM · MTP n=4 · 4× V100 PCIe at 200 W, no NVLink",
+      "model": "qwen38_flash_next",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_pcie_32",
+            "count": 4
+          }
+        ],
+        "powerCapW": 200,
+        "interconnect": {
+          "kind": "pcie",
+          "note": "\"4x Tesla V100-PCIE-32GB, PCIe only (PIX/PXB, no NVLink)\""
+        },
+        "host": {
+          "note": "\"48 vCPU (EPYC 7K62), 160 GiB RAM\"; driver 580.159.04, CUDA 12.8 image."
+        }
+      },
+      "parallel": {
+        "mode": "tensor",
+        "degree": 4,
+        "note": "Plus --decode-context-parallel-size 2 (DCP2) for the QSA cache."
+      },
+      "engine": {
+        "name": "1Cat-vLLM",
+        "lineage": "fork of vLLM for SM70",
+        "note": "main at 1e90d17f2c when the issue opened, later a692497bc9 and f551e0afea plus #828; the page does not tie each table to one build. --dtype half, --attention-backend FLASH_ATTN_V100, --no-async-scheduling, --mamba-cache-mode align, chunked prefill and prefix caching; gpu_memory_utilization 0.93 for these benchmarks."
+      },
+      "quant": {
+        "format": "AWQ W4A16 g32 (leoncca/Qwen3.8-Flash-Next-AWQ-g32) with an FP8 MTP draft",
+        "note": "No width recorded, so no ceiling."
+      },
+      "kvCache": {
+        "k": "fp8_e4m3",
+        "v": "fp8_e4m3",
+        "note": "Calibrated E4M3 KV scales."
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 4
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 1024,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 67.7,
+          "confidence": "m~",
+          "note": "one request, the issue's \"1K\" column"
+        },
+        {
+          "metric": "decode",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 75.9,
+          "confidence": "m~",
+          "note": "one request, \"8K\""
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 75.8,
+          "confidence": "m~",
+          "note": "one request, \"32K\""
+        },
+        {
+          "metric": "decode",
+          "depth": 1024,
+          "streams": 4,
+          "basis": "aggregate",
+          "value": 163.7,
+          "confidence": "m~",
+          "note": "four requests, aggregate"
+        },
+        {
+          "metric": "decode",
+          "depth": 8192,
+          "streams": 4,
+          "basis": "aggregate",
+          "value": 160.3,
+          "confidence": "m~",
+          "note": "four requests, aggregate"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 4,
+          "basis": "aggregate",
+          "value": 97.9,
+          "confidence": "m~",
+          "note": "four requests, aggregate"
+        },
+        {
+          "metric": "decode",
+          "depth": 211271,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 78.0,
+          "confidence": "m~",
+          "note": "the 512K build (--max-model-len 524288)"
+        },
+        {
+          "metric": "decode",
+          "depth": 496907,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 72.8,
+          "confidence": "m~",
+          "note": "the 512K build"
+        },
+        {
+          "metric": "prefill",
+          "depth": 211271,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 2176,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "211,271 tokens over the reported 97.1 s time to first token, 512K build"
+        },
+        {
+          "metric": "prefill",
+          "depth": 496907,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1910,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "496,907 tokens over the reported 260.1 s time to first token, 512K build"
+        }
+      ],
+      "hazards": [
+        "Filed under the PCIe V100 at a 200 W cap, against the card's 250 W rating; the ceiling assumes full clocks.",
+        "The issue body was revised as the build moved (opened 2026-10-01, updated through 2026-10-21); the readings are its tables as they stood when read on 2026-11-05.",
+        "Later comments report a PCIe decode build that roughly doubled single-request decode; they were read only through a summary and are not recorded."
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/1CatAI/1Cat-vLLM/issues/746 (Leonccaa, \"[Report] Qwen3.8-Flash-Next on 4x V100-32G (200 W cap)\"), table \"Decode, MTP4 with the fused GDN path and NCCL_GRAPH_REGISTER=0\": 1 request 1K \"67.7\", 8K \"75.9\", 32K \"75.8\"; 4 requests aggregate \"163.7\", \"160.3\", \"97.9\"; 512K build: \"211,271\" TTFT \"97.1 s\" decode \"78.0 tok/s\", \"496,907\" TTFT \"260.1 s\" decode \"72.8 tok/s\"; \"Mean accepted draft tokens per step: 2.65.\""
+      },
+      "note": "The author's production report. In 22 hours of production: \"aggregate decode is around 100 tok/s, with 25–40 tok/s per request at 3–4 concurrent long-context requests\"; \"Two concurrent ~400K prefills achieved 1,067 tok/s in total, against 1,949 tok/s for a single one.\""
+    },
+    {
+      "status": "measured",
+      "observed": "2026-10-28",
+      "recorded": "2026-11-05",
+      "id": "x_v100x4_nvlink_plx_flashnext_nvfp4_1cat_mtp4",
+      "label": "Qwen3.8-Flash-Next · NVFP4 · 1Cat-vLLM 1.5.1 · MTP n=4 · 4× V100 SXM2, NVLink behind a PLX switch",
+      "model": "qwen38_flash_next",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm2",
+            "count": 4
+          }
+        ],
+        "interconnect": {
+          "kind": "nvlink",
+          "topology": "\"NVLink NV2 all-to-all\"",
+          "note": "\"behind a PLX PEX 8748 (each card Gen3 x8, x8 uplink)\": the four GPUs share one Gen3 x8 link to the host."
+        },
+        "host": {
+          "note": "\"Intel i7-7820X (8C/16T), 219 GiB RAM\"; NVIDIA 580.196.07, CUDA 12.8, torch 2.10.0+cu128. VLLM_PLE_CPU_OFFLOAD=1 and VLLM_PLE_DISK_OFFLOAD=1."
+        }
+      },
+      "parallel": {
+        "mode": "tensor",
+        "degree": 4
+      },
+      "engine": {
+        "name": "1Cat-vLLM",
+        "version": "1.5.1",
+        "lineage": "fork of vLLM for SM70",
+        "note": "1Cat wheel. Config C1b: --dtype half --max-model-len 262144 --max-num-batched-tokens 2048 --max-num-seqs 4 --gpu-memory-utilization 0.92 --no-async-scheduling --mamba-cache-mode align --enable-prefix-caching; vision tower enabled."
+      },
+      "quant": {
+        "format": "NVFP4 (ModelOpt, local checkpoint; repository not named)",
+        "key": "nvfp4",
+        "note": "If this is the usual NVFP4 recipe, its dense weights are BF16 and the ceiling at 4.5 bits is generous; the issue does not say."
+      },
+      "kvCache": {
+        "k": "f16",
+        "v": "f16",
+        "note": "--kv-cache-dtype auto"
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 4
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 135,
+          "confidence": "m~",
+          "note": "p50 per-request decode as the client saw it, 512 output tokens, temperature 0",
+          "depthNote": "a prompt of 470-512 tokens"
+        },
+        {
+          "metric": "decode",
+          "depth": 8192,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 118,
+          "confidence": "m~",
+          "note": "as above",
+          "depthNote": "the issue's \"8K\" prompt"
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 124,
+          "confidence": "m~",
+          "note": "as above",
+          "depthNote": "the issue's \"32K\" prompt"
+        }
+      ],
+      "hazards": [
+        "Client-side streaming figures (p50 over the run), so they hold streaming and network overhead.",
+        "The author found single-request prefill slower on this config than on their previous one: \"8K TTFT 1.96 s vs 1.4 s, 32K 8.1 s vs 5.9 s\"."
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/1CatAI/1Cat-vLLM/issues/1285 (andyelka-creator, \"[Report][SM70] Qwen3.8-Flash-Next NVFP4 on 4x V100-SXM2-32GB (NVLink), 1.5.1\"), C1b table (TTFT p50 s / decode p50 tok/s / aggregate tok/s / E2E p50 s): short, 1 client \"0.34 / 135 / 124 / 4.1\"; 8K, 1 client \"1.96 / 118 / 81 / 6.3\"; 32K, 1 client \"8.09 / 124 / 42 / 12.2\""
+      },
+      "note": "The same board's KV offload to host RAM moved \"GPU → CPU 30.97 GB, 23.6 s, 1.31 GB/s\" and \"CPU → GPU 89.00 GB, 61.4 s, 1.45 GB/s\", well under a Gen3 x8 link's line rate; the offload run then stalled with no error. At 4 clients the short-prompt aggregate was 240 tok/s."
+    },
+    {
+      "status": "measured",
+      "observed": "2026-10-08",
+      "recorded": "2026-11-05",
+      "id": "x_v100x4_flashnext_nvfp4_1cat_nomtp_lanes",
+      "label": "Qwen3.8-Flash-Next · NVFP4 · 1Cat-vLLM · 4× V100 SXM2, tensor parallel, no MTP, vision on",
+      "model": "qwen38_flash_next",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm2",
+            "count": 4
+          }
+        ],
+        "note": "The issue says \"4x Tesla V100-SXM2-32GB (SM70), TP4\" and nothing about the interconnect."
+      },
+      "parallel": {
+        "mode": "tensor",
+        "degree": 4
+      },
+      "engine": {
+        "name": "1Cat-vLLM",
+        "commit": "c4f6245f8",
+        "lineage": "fork of vLLM for SM70",
+        "note": "Built from source with CUDA 12.6; FP16 compute, no speculative decoding, served with its vision input and the FP16 GEMV/HC/GDN-input lanes prepared."
+      },
+      "quant": {
+        "format": "NVFP4",
+        "key": "nvfp4",
+        "note": "Repository not named; see the 1Cat evaluation line for what the usual NVFP4 checkpoint keeps in BF16."
+      },
+      "kvCache": {
+        "k": "f16",
+        "v": "f16",
+        "note": "\"KV dtype auto\""
+      },
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 6000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 95.1,
+          "confidence": "m~",
+          "note": "lanes prepared",
+          "depthNote": "\"a 6k-token context\""
+        },
+        {
+          "metric": "decode",
+          "depth": 160000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 81.6,
+          "confidence": "m~",
+          "note": "lanes prepared",
+          "depthNote": "\"160k\""
+        }
+      ],
+      "hazards": [
+        "One author's A/B for a feature request; single stream."
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "reproduced": false,
+        "source": "https://github.com/1CatAI/1Cat-vLLM/issues/1100 (squibloads): \"with the lanes prepared (288 / 36 / 96) decode is 95.1 tok/s at a 6k-token context and 81.6 tok/s at 160k; with the lanes off it is 74.6 and 66.1 tok/s.\" \"Prefill is unchanged (160k time to first token 36.8 vs 36.6 s)\""
+      },
+      "note": "With the lanes off, decode fell 21% (74.6 and 66.1 tok/s) on the same hardware and build."
     }
   ],
   "candidates": [
