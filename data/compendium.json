@@ -12661,6 +12661,1075 @@
         }
       ],
       "note": "Nine more runs on an 80-core M5 Ultra on 2026-10-16, listed on the board with speculative-prefill runs hidden, agree: prefill 6,289-6,332 at 8K over seven runs, 6,273 at 16K, 6,271 at 32K. MacStories measured this model on the same machine with oMLX 0.7.0.dev2 at 2,732 t/s at 65K (x_m5ultra256_flashnext_omlx); this run gives 6,127 at 64K. The version and the settings both differ, so the gap cannot be put down to either alone."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "id": "x_v100_llama2_7b_q40_cuda_fa_off",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp CUDA · FA off · V100",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm2",
+            "count": 1
+          }
+        ],
+        "note": "The scoreboard says \"Tesla V100\" with \"32 GB / HBM2 / 4096 bit\" and does not say SXM2 or PCIe; filed under SXM2. Both have 900 GB/s, so the decode ceiling is the same either way, but NVIDIA's V100 datasheet rates the PCIe card at 112 tensor TFLOPS against the SXM2's 125, so if this was a PCIe card its prefill share here reads about 10% low."
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "51f5a45",
+        "lineage": "upstream",
+        "note": "CUDA; llama-bench, flash attention off. CUDA version not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "The scoreboard's standard Llama 2 7B Q4_0 file; the exact file name was not captured from this scoreboard."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 3042.64,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 129.08,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15013 (scoreboard table in the opening post, \"Tesla V100\" row, \"32 GB / HBM2 / 4096 bit\", commit 51f5a45, credited to Hedede; flash attention off): pp512 \"3042.64 ± 40.71\", tg128 \"129.08 ± 0.05\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The row is undated; the scoreboard opened on 2025-08-01."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "id": "x_v100_llama2_7b_q40_cuda_fa_on",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp CUDA · FA on · V100",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm2",
+            "count": 1
+          }
+        ],
+        "note": "The scoreboard says \"Tesla V100\" with \"32 GB / HBM2 / 4096 bit\" and does not say SXM2 or PCIe; filed under SXM2. Both have 900 GB/s, so the decode ceiling is the same either way, but NVIDIA's V100 datasheet rates the PCIe card at 112 tensor TFLOPS against the SXM2's 125, so if this was a PCIe card its prefill share here reads about 10% low."
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "51f5a45",
+        "lineage": "upstream",
+        "note": "CUDA; llama-bench, flash attention on. CUDA version not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "The scoreboard's standard Llama 2 7B Q4_0 file; the exact file name was not captured from this scoreboard."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 2973.78,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 134.76,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15013 (scoreboard table in the opening post, \"Tesla V100\" row, \"32 GB / HBM2 / 4096 bit\", commit 51f5a45, credited to Hedede; flash attention on): pp512 \"2973.78 ± 3.62\", tg128 \"134.76 ± 0.02\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The row is undated; the scoreboard opened on 2025-08-01."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "observed": "2025-08-01",
+      "id": "x_3090_llama2_7b_q40_cuda_fa_off",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp CUDA · FA off · RTX 3090",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "c76b420",
+        "lineage": "upstream",
+        "note": "CUDA; llama-bench, flash attention off. CUDA version and power limit not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "The scoreboard's standard Llama 2 7B Q4_0 file; the exact file name was not captured from this scoreboard."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 5174.69,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 158.16,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15013#discussioncomment-13960712 (m18coppola, 2025-08-01, commit c76b420, the row the scoreboard table carries; flash attention off): pp512 \"5174.69 ± 21.83\", tg128 \"158.16 ± 0.21\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "observed": "2025-08-01",
+      "id": "x_3090_llama2_7b_q40_cuda_fa_on",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp CUDA · FA on · RTX 3090",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "c76b420",
+        "lineage": "upstream",
+        "note": "CUDA; llama-bench, flash attention on. CUDA version and power limit not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "The scoreboard's standard Llama 2 7B Q4_0 file; the exact file name was not captured from this scoreboard."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 5560.06,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 161.89,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15013#discussioncomment-13960712 (m18coppola, 2025-08-01, commit c76b420, the row the scoreboard table carries; flash attention on): pp512 \"5560.06 ± 16.28\", tg128 \"161.89 ± 0.18\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "observed": "2025-08-01",
+      "id": "x_3090_250w_llama2_7b_q40_cuda_fa_off",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp CUDA · FA off · RTX 3090 at 250 W",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "powerCapW": 250
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "9c35706",
+        "version": "6060",
+        "lineage": "upstream",
+        "note": "CUDA; llama-bench, flash attention off. CUDA version not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "The scoreboard's standard Llama 2 7B Q4_0 file; the exact file name was not captured from this scoreboard."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 4175.47,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 137.72,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15013 (RodriMora, 2025-08-01, build 9c35706 (6060), \"Device 0: 3090. Power limit to 250w\"; flash attention off): pp512 \"4175.47 ± 27.79\", tg128 \"137.72 ± 0.46\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The same contributor ran the same build at 250 W and 390 W: going from 390 W to 250 W cost prefill 23-26% and decode 9-11%, which is the pattern of a compute-bound prefill and a mostly bandwidth-bound decode."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "observed": "2025-08-01",
+      "id": "x_3090_250w_llama2_7b_q40_cuda_fa_on",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp CUDA · FA on · RTX 3090 at 250 W",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "powerCapW": 250
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "9c35706",
+        "version": "6060",
+        "lineage": "upstream",
+        "note": "CUDA; llama-bench, flash attention on. CUDA version not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "The scoreboard's standard Llama 2 7B Q4_0 file; the exact file name was not captured from this scoreboard."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 4377.03,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 138.34,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15013 (RodriMora, 2025-08-01, build 9c35706 (6060), \"Device 0: 3090. Power limit to 250w\"; flash attention on): pp512 \"4377.03 ± 89.10\", tg128 \"138.34 ± 0.96\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The same contributor ran the same build at 250 W and 390 W: going from 390 W to 250 W cost prefill 23-26% and decode 9-11%, which is the pattern of a compute-bound prefill and a mostly bandwidth-bound decode."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "observed": "2025-08-02",
+      "id": "x_3090_390w_llama2_7b_q40_cuda_fa_off",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp CUDA · FA off · RTX 3090 at 390 W",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "powerCapW": 390
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "9c35706",
+        "version": "6060",
+        "lineage": "upstream",
+        "note": "CUDA; llama-bench, flash attention off. CUDA version not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "The scoreboard's standard Llama 2 7B Q4_0 file; the exact file name was not captured from this scoreboard."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 5405.83,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 151.04,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15013 (RodriMora, 2025-08-02, build 9c35706 (6060), \"NVIDIA GeForce RTX 3090, compute capability 8.6\", at 390 W; flash attention off): pp512 \"5405.83 ± 5.80\", tg128 \"151.04 ± 0.24\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The same contributor ran the same build at 250 W and 390 W: going from 390 W to 250 W cost prefill 23-26% and decode 9-11%, which is the pattern of a compute-bound prefill and a mostly bandwidth-bound decode."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "observed": "2025-08-02",
+      "id": "x_3090_390w_llama2_7b_q40_cuda_fa_on",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp CUDA · FA on · RTX 3090 at 390 W",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "powerCapW": 390
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "9c35706",
+        "version": "6060",
+        "lineage": "upstream",
+        "note": "CUDA; llama-bench, flash attention on. CUDA version not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "The scoreboard's standard Llama 2 7B Q4_0 file; the exact file name was not captured from this scoreboard."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 5932.44,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 155.36,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15013 (RodriMora, 2025-08-02, build 9c35706 (6060), \"NVIDIA GeForce RTX 3090, compute capability 8.6\", at 390 W; flash attention on): pp512 \"5932.44 ± 10.87\", tg128 \"155.36 ± 0.09\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The same contributor ran the same build at 250 W and 390 W: going from 390 W to 250 W cost prefill 23-26% and decode 9-11%, which is the pattern of a compute-bound prefill and a mostly bandwidth-bound decode."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "observed": "2025-08-02",
+      "id": "x_mi100_llama2_7b_q40_rocm_fa_off",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp ROCm · FA off · MI100",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mi100",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "9c35706",
+        "version": "6060",
+        "lineage": "upstream",
+        "note": "HIP, ROCm 6.4.1 on Ubuntu 24.04.2; llama-bench, flash attention off."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "llama-2-7b.Q4_0.gguf, the file the scoreboard's opening post names."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 2732.83,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 110.48,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15021 (firefox42, 2025-08-02, build 9c35706 (6060), ROCm 6.4.1; flash attention off): pp512 \"2732.83 ± 1.98\", tg128 \"110.48 ± 0.14\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. llama.cpp's code marks gfx908 as the first AMD target with MFMA; whether this build's prefill used the matrix cores, and how fully, the run does not show."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "observed": "2025-08-02",
+      "id": "x_mi100_llama2_7b_q40_rocm_fa_on",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp ROCm · FA on · MI100",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mi100",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "9c35706",
+        "version": "6060",
+        "lineage": "upstream",
+        "note": "HIP, ROCm 6.4.1 on Ubuntu 24.04.2; llama-bench, flash attention on."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "llama-2-7b.Q4_0.gguf, the file the scoreboard's opening post names."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 2755.0,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 104.71,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15021 (firefox42, 2025-08-02, build 9c35706 (6060), ROCm 6.4.1; flash attention on): pp512 \"2755.00 ± 3.68\", tg128 \"104.71 ± 0.10\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. llama.cpp's code marks gfx908 as the first AMD target with MFMA; whether this build's prefill used the matrix cores, and how fully, the run does not show."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "id": "x_mi50_llama2_7b_q40_rocm_fa_off",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp ROCm · FA off · MI50",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mi50_32",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "97d5117",
+        "lineage": "upstream",
+        "note": "HIP; llama-bench, flash attention off. ROCm version not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "llama-2-7b.Q4_0.gguf, the file the scoreboard's opening post names."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1057.24,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 98.95,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15021 (scoreboard table, Instinct MI50 row, \"32 GB / HBM2 / 4096 bit\", commit 97d5117, credited to wtarreau; flash attention off): pp512 \"1057.24 ± 0.53\", tg128 \"98.95 ± 0.25\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The row is undated."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "id": "x_mi50_llama2_7b_q40_rocm_fa_on",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp ROCm · FA on · MI50",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mi50_32",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "97d5117",
+        "lineage": "upstream",
+        "note": "HIP; llama-bench, flash attention on. ROCm version not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "llama-2-7b.Q4_0.gguf, the file the scoreboard's opening post names."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1129.43,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 105.82,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15021 (scoreboard table, Instinct MI50 row, \"32 GB / HBM2 / 4096 bit\", commit 97d5117, credited to wtarreau; flash attention on): pp512 \"1129.43 ± 0.15\", tg128 \"105.82 ± 0.07\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The row is undated."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "id": "x_mi50_llama2_7b_q40_vulkan_fa_off",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp Vulkan · FA off · MI50",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mi50_32",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "3af34b9",
+        "lineage": "upstream",
+        "note": "Vulkan; llama-bench, flash attention off. Driver not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "The scoreboard's standard Llama 2 7B Q4_0 file; the exact file name was not captured from this scoreboard."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1119.55,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 108.51,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/10879 (Vulkan scoreboard table, MI50 row, commit 3af34b9; flash attention off): pp512 1119.55, tg128 108.51",
+        "reproduced": false
+      },
+      "hazards": [
+        "The Vulkan scoreboard does not give the card's memory size; filed under the 32GB MI50. The 16GB card has the same bandwidth and compute, so the ceiling is the same.",
+        "Read through a page-fetch tool, which did not keep the ± spreads; spot-check against the table."
+      ],
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The row is undated. On decode it beats the ROCm row on the same card by about 10% (FA off) and 11% (FA on)."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "id": "x_mi50_llama2_7b_q40_vulkan_fa_on",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp Vulkan · FA on · MI50",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mi50_32",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "3af34b9",
+        "lineage": "upstream",
+        "note": "Vulkan; llama-bench, flash attention on. Driver not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "The scoreboard's standard Llama 2 7B Q4_0 file; the exact file name was not captured from this scoreboard."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1127.37,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 117.94,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/10879 (Vulkan scoreboard table, MI50 row, commit 3af34b9; flash attention on): pp512 1127.37, tg128 117.94",
+        "reproduced": false
+      },
+      "hazards": [
+        "The Vulkan scoreboard does not give the card's memory size; filed under the 32GB MI50. The 16GB card has the same bandwidth and compute, so the ceiling is the same.",
+        "Read through a page-fetch tool, which did not keep the ± spreads; spot-check against the table."
+      ],
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The row is undated. On decode it beats the ROCm row on the same card by about 10% (FA off) and 11% (FA on)."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "observed": "2025-08-02",
+      "id": "x_mi60_llama2_7b_q40_rocm_fa_off",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp ROCm · FA off · MI60",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "mi60",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "504af20",
+        "version": "4476",
+        "lineage": "upstream",
+        "note": "HIP, ROCm 6.3.4; llama-bench, flash attention off. No FA-on run was posted."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "llama-2-7b.Q4_0.gguf, the file the scoreboard's opening post names."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1289.11,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 91.46,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15021 (Said-Akbar, 2025-08-02, build 504af20 (4476), ROCm 6.3.4; flash attention off): pp512 \"1289.11 ± 0.62\", tg128 \"91.46 ± 0.13\"",
+        "reproduced": false
+      },
+      "hazards": [
+        "Build 4476 is about 1,600 builds older than the 6060-6075 the MI100 and V620 rows ran, so differences against them are partly software age."
+      ],
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "observed": "2025-08-02",
+      "id": "x_v620_llama2_7b_q40_rocm_fa_off",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp ROCm · FA off · Radeon Pro V620",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "radeon_pro_v620",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "5c0eb5e",
+        "version": "6075",
+        "lineage": "upstream",
+        "note": "HIP, ROCm 6.4.1; llama-bench -sm none -mg 0, flash attention off."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "llama-2-7b.Q4_0.gguf, the file the scoreboard's opening post names."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1803.65,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 74.66,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15021 (samteezy, 2025-08-02, build 5c0eb5e (6075), ROCm 6.4.1, the rerun the scoreboard table carries; flash attention off): pp512 \"1803.65 ± 2.54\", tg128 \"74.66 ± 0.01\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "observed": "2025-08-02",
+      "id": "x_v620_llama2_7b_q40_rocm_fa_on",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp ROCm · FA on · Radeon Pro V620",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "radeon_pro_v620",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "5c0eb5e",
+        "version": "6075",
+        "lineage": "upstream",
+        "note": "HIP, ROCm 6.4.1; llama-bench -sm none -mg 0, flash attention on."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "llama-2-7b.Q4_0.gguf, the file the scoreboard's opening post names."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1256.86,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 70.83,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/15021 (samteezy, 2025-08-02, build 5c0eb5e (6075), ROCm 6.4.1, the rerun the scoreboard table carries; flash attention on): pp512 \"1256.86 ± 0.55\", tg128 \"70.83 ± 0.02\"",
+        "reproduced": false
+      },
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. Flash attention cut prefill by 30% on this card and build; the contributor asked why."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "id": "x_v620_llama2_7b_q40_vulkan_fa_off",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp Vulkan · FA off · Radeon Pro V620",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "radeon_pro_v620",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "03d4698",
+        "lineage": "upstream",
+        "note": "Vulkan; llama-bench, flash attention off. Driver and Mesa version not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "The scoreboard's standard Llama 2 7B Q4_0 file; the exact file name was not captured from this scoreboard."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1595.32,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 81.78,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/10879 (Vulkan scoreboard table, \"AMD Radeon Pro V620\" row, commit 03d4698; flash attention off): pp512 1595.32, tg128 81.78",
+        "reproduced": false
+      },
+      "hazards": [
+        "Read through a page-fetch tool, which did not keep the ± spreads; spot-check against the table."
+      ],
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The row is undated. Decode beats the ROCm rows on the same card by 10-12%; prefill trails ROCm with FA off and leads it with FA on."
+    },
+    {
+      "status": "measured",
+      "recorded": "2026-11-05",
+      "id": "x_v620_llama2_7b_q40_vulkan_fa_on",
+      "label": "Llama 2 7B · Q4_0 · llama.cpp Vulkan · FA on · Radeon Pro V620",
+      "model": "llama2_7b",
+      "rig": {
+        "units": [
+          {
+            "unit": "radeon_pro_v620",
+            "count": 1
+          }
+        ]
+      },
+      "engine": {
+        "name": "llama.cpp",
+        "commit": "03d4698",
+        "lineage": "upstream",
+        "note": "Vulkan; llama-bench, flash attention on. Driver and Mesa version not stated."
+      },
+      "quant": {
+        "format": "Q4_0",
+        "key": "q4_0",
+        "note": "The scoreboard's standard Llama 2 7B Q4_0 file; the exact file name was not captured from this scoreboard."
+      },
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 512,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1556.31,
+          "confidence": "m~",
+          "prefillBasis": "cold",
+          "note": "llama-bench pp512"
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 79.24,
+          "confidence": "m~",
+          "note": "llama-bench tg128 from an empty context"
+        }
+      ],
+      "provenance": {
+        "kind": "issue-report",
+        "attestation": "reported",
+        "source": "https://github.com/ggml-org/llama.cpp/discussions/10879 (Vulkan scoreboard table, \"AMD Radeon Pro V620\" row, commit 03d4698; flash attention on): pp512 1556.31, tg128 79.24",
+        "reproduced": false
+      },
+      "hazards": [
+        "Read through a page-fetch tool, which did not keep the ± spreads; spot-check against the table."
+      ],
+      "note": "Short-context baseline from llama.cpp's cross-GPU scoreboard: the same model, quant and llama-bench test on every card, which makes it the ledger's one like-for-like comparison across vendors. It says nothing about long context. The row is undated. Decode beats the ROCm rows on the same card by 10-12%; prefill trails ROCm with FA off and leads it with FA on."
     }
   ],
   "candidates": [

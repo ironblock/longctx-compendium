@@ -621,6 +621,30 @@ export const MODELS = {
     maxPositions: 131072,
     note: "Read from the ungated unsloth mirror; the gated official repo reports the same parameter count."
   },
+  llama2_7b: {
+    label: "Llama-2-7B",
+    repo: "NousResearch/Llama-2-7b-hf",
+    source: "https://huggingface.co/NousResearch/Llama-2-7b-hf/raw/main/config.json",
+    revision: "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    mirrorOf: "meta-llama/Llama-2-7b-hf",
+    params: {
+      total: 6738415616,
+      active: 6738415616,
+      source: "https://huggingface.co/NousResearch/Llama-2-7b-hf/blob/main/README.md",
+      quote: "Llama 2 is a collection of pretrained and fine-tuned generative text models ranging in scale from 7 billion to 70 billion parameters. This is the repository for the 7B pretrained model, converted for the Hugging Face Transformers format.",
+      inputEmbedding: 131072000,
+      tiedEmbeddings: false
+    },
+    layers: 32,
+    layerTypes: {
+      full_attention: 32
+    },
+    heads: 32,
+    kvHeads: 32,
+    headDim: 128,
+    maxPositions: 4096,
+    note: "Read from the ungated NousResearch mirror. The total is the mirror's F16 count in its safetensors metadata, which the config's shape reproduces exactly; the 2,048 F32 values listed beside it are not weights. No grouped-query attention (32 KV heads for 32 query heads), so its cache grows four times faster per token than Llama-3.1-8B's, and it stops at 4,096 positions: it is here for llama.cpp's cross-GPU llama-bench scoreboards, not for long context."
+  },
   llama31_8b: {
     label: "Llama-3.1-8B-Instruct",
     repo: "NousResearch/Meta-Llama-3.1-8B-Instruct",
