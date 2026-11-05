@@ -14611,6 +14611,36 @@
       "note": "The engine in play is 1Cat-vLLM, a one-team vLLM fork for SM70. The only report so far is one unreproduced GitHub issue (1CatAI/1Cat-vLLM#746), which describes a different variant: four PCIe cards, no NVLink, 200 W caps. The stack is a dead end upstream: CUDA 13, PyTorch after 2.14 and upstream vLLM all exclude Volta, so this rig stays on CUDA 12.x, the R580 driver branch (supported to June 2028) and SM70 forks."
     },
     {
+      "id": "c_v100x2_dual_pcie_carrier",
+      "label": "2× V100 SXM2 32GB on a dual-SXM2 PCIe x16 carrier",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm2",
+            "count": 2
+          }
+        ],
+        "interconnect": {
+          "kind": "nvlink",
+          "bridge": "Dual-SXM2 PCIe x16 carrier with an onboard Broadcom/PLX switch (\"Tesla V100 SXM2 Dual-GPU NVLink Adapter Board (300 GB/s)\")",
+          "topology": "Two GPUs, all six NVLink 2.0 links between them",
+          "linksPerGpu": 6,
+          "peakP2pGBsPerGpu": 300,
+          "hostLinkGBs": 16,
+          "source": "https://miyagadget.page/en/blog/2026/09/17/tesla-v100-dual-sxm2-nvlink-review-en/ -- \"All 6 NVLink 2.0 sub-links (50 GB/s each, 300 GB/s bidirectional) are hardwired directly between GPU0 and GPU1.\" ... \"Broadcom / PLX PEX8747 or PEX8749 onboard\" ... \"Standard PCIe 3.0 x16 edge connector\" ... \"without requiring motherboard PCIe bifurcation\"; listing caption \"SXM2×2 to PCIe x8/x8\"",
+          "note": "The 300 GB/s is NVIDIA's V100 rating and the review's; no peer bandwidth or latency has been published for this board. The review names the switch as \"PEX8747 or PEX8749\" without settling which. Host link: one PCIe 3.0 x16 uplink shared by two GPUs; the 16 GB/s per GPU (both directions, line rate) is Gen3 x8, which is each GPU's share when both stream and, if the listing's \"x8/x8\" is right, also its ceiling when the other is idle. No host-to-device bandwidth has been measured. A consumer board that drops to x8/x8 with two cards installed halves each carrier's uplink. Unpriced: the review's yen listings (¥52,634 and ¥42,942 tax included) and its \"$700 – $800 (for 64GB setup)\" total do not reconcile."
+        },
+        "host": {
+          "note": "A PCIe add-in card, so the host supplies one x16 slot (\"zero motherboard BIOS tweaking required\") and four PCIe 8-pin power leads (\"PCIe 8-pin × 4 Headers (up to 600W)\"); the board has 4 PWM fan headers. It usually sells with short acrylic-and-copper SXM2 water blocks, per the maintainer (2026-11-05), so a loaded carrier fits dual-slot spacing and two fit side by side; the loop is not priced. GPUs on different carriers talk over PCIe, so tensor parallel across two carriers puts PCIe back into every all-reduce."
+        }
+      },
+      "models": [
+        "qwen38_27b"
+      ],
+      "status": "preregistered",
+      "note": "Made by 39com, \"working in close collaboration with the AI hardware initiative 1CATai\", per the review, which is a secondary source. 64 GB holds Qwen3.8-27B NVFP4 with DFlash2 (a single 32 GB V100 cannot, per 1Cat-vLLM #1087) but not Qwen3.8-Flash-Next NVFP4, which needs about 84 GB on the GPUs. The review's own benchmarks (QwQ-32B at TP2, 29.9 tok/s single and 50.9 at four streams; DeepSeek-R1-Distill-Llama-70B, 12.7 and 36.0) give no quant, engine version or context and are not recorded."
+    },
+    {
       "id": "c_mi100x4",
       "label": "4× Instinct MI100 32GB with an Infinity Fabric bridge",
       "rig": {
