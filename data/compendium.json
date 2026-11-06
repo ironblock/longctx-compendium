@@ -6055,6 +6055,49 @@
         "https://leikoe.github.io/posts/automotive-gpu-maxxxing -- a documented four-PG199 build on the carrier, with 2025 prices"
       ],
       "note": "The Supermicro carrier hobbyists used for four NVLinked V100s before the Chinese quad boards. Dell's SXM2 boards are a different case: \"The Dell boards are Dell locked\" (bayleyw, 2024-07)."
+    },
+    {
+      "id": "sxm2_quad_pex8796",
+      "label": "Four-SXM2 NVLink board with a PEX8796 (Alibaba listing)",
+      "maker": "not stated in what was read",
+      "socket": "SXM2",
+      "slots": 4,
+      "peer": {
+        "kind": "nvlink",
+        "wiring": "per the listing title (\"SXM2-NVLINK\", \"NVLink No Speed Drop\")",
+        "source": "https://www.alibaba.com/product-detail/4-GPU-V100-Motherboard-with-Cpu_1601675663766.html -- title \"4-card SXM2-NVLINK Server Graphics Card Motherboard Full Speed PCIe X16 Bandwidth NVLink No Speed Drop Good Compatibility\", per the maintainer's screenshot (2026-11-06)",
+        "note": "No link count, topology or GB/s in what was read, and no owner report."
+      },
+      "switch": {
+        "present": true,
+        "chip": "PEX8796, per the listing (the maintainer's reading)",
+        "note": "The PEX8796 is a 96-lane PCIe 3.0 switch. Four GPUs at x16 take 64 lanes, leaving 32 for uplinks, so all four can sit on the one switch, and PCIe peer traffic between them would then never cross the host, unlike on the AOM-SXMV with its switch per pair. That is an inference from the claimed chip, not a stated topology. The listing photo shows one fan-cooled heatsink in the middle of the board, presumably the switch (this page's reading of the photo)."
+      },
+      "pricing": {
+        "usd": 761,
+        "asOf": "2026-11",
+        "includes": "the board; whether the host card and cables in the first photo come with it is not stated in what was read",
+        "source": "Alibaba listing, the maintainer's screenshot (2026-11-06)",
+        "note": "$761 for one, $755 for 10-99, $716 for 100 or more; \"No reviews yet\". The listing page could not be read here (it rendered empty), so the price and title come from the maintainer's screenshot."
+      },
+      "fits": [
+        {
+          "unit": "v100_sxm2",
+          "status": "reported",
+          "peer": "nvlink",
+          "source": "https://www.alibaba.com/product-detail/4-GPU-V100-Motherboard-with-Cpu_1601675663766.html -- the listing names it a \"4-GPU V100 Motherboard\" (URL) and an \"SXM2-NVLINK\" board (title)"
+        },
+        {
+          "unit": "pg199_card",
+          "status": "untested",
+          "peer": "pcie",
+          "note": "No report either way. If all four GPUs share the one switch, four PG199s would meet over PCIe without crossing the host, the best PCIe peer path among the quad boards here; that rests on the claimed chip. A PG199 draws 400-465 W under dense work with no power limit, against the V100's 300 W rating; in inference it stays near 250 W."
+        }
+      ],
+      "sources": [
+        "https://www.alibaba.com/product-detail/4-GPU-V100-Motherboard-with-Cpu_1601675663766.html -- the listing; its page rendered empty here, so the details are from the maintainer's screenshot and description"
+      ],
+      "note": "The maintainer reads it as a copy of the AOM-SXMV with parts moved around. The listing photo shows four sockets, the central heatsink, two cable ports wired to a single PCIe x16 host card, two edge connectors like the AOM-SXMV's proprietary host slots, an ATX 24-pin input and several 8-pin inputs (this page's reading of the photo). The uplink's width and generation, and whether the edge connectors are a second uplink, are not known, so the host link is unrecorded. The URL calls it a \"4-GPU V100 Motherboard with Cpu\", which the screenshot's title does not repeat."
     }
   ],
   "lines": [
