@@ -541,6 +541,7 @@ check('one row per candidate rig, each with its notes beneath', (await count('#c
   check('peer bandwidth is shown where the vendor states it', /300 GB\/s/.test(t) && /276 GB\/s/.test(t));
   check('a missing peer bandwidth says so', /not stated/.test(t));
   check('host requirements are shown with each candidate', (t.match(/Host:/g) ?? []).length === model.CANDIDATES.length);
+  check('rig sources render as links', (await count('#candTable tbody tr.cand-notes a[href^="https://"]')) >= model.CANDIDATES.filter(c => c.sources?.length).length && (await count('#candTable tbody tr.cand-notes a[href*="rexyuan.com"]')) >= 1);
   check('each rig shows ceilings for its models', (t.match(/TP decode/g) ?? []).length === model.CANDIDATES.reduce((n, c) => n + c.models.length, 0));
   check('rigs render no NaN/undefined/null', !BROKEN.test(t), brokenAt(t));
 }

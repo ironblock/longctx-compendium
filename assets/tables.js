@@ -384,6 +384,42 @@ export function renderObservations(model, state) {
 
 // --- 4. Rigs under consideration --------------------------------------------
 
+/**
+ * A rig's sources as links: an entry that starts with an https URL links to
+ * it by host name, with the whole entry (URL and quote) as the hover text;
+ * anything else is shown as text. Entries sharing a URL become one link whose
+ * hover text holds each of them. Empty when there are none.
+ */
+function sourceLinks(entries) {
+  const byUrl = new Map();
+  const items = [];
+  for (const s of entries.filter(Boolean)) {
+    const m = /^(https:\/\/\S+)/.exec(s);
+    let host = null;
+    try {
+      host = m && new URL(m[1]).hostname.replace(/^www\./, '');
+    } catch {
+      host = null;
+    }
+    if (!host) {
+      items.push({ text: s.length > 90 ? `${s.slice(0, 88)}…` : s, titles: [s] });
+      continue;
+    }
+    if (byUrl.has(m[1])) byUrl.get(m[1]).titles.push(s);
+    else {
+      const item = { url: m[1], text: host, titles: [s] };
+      byUrl.set(m[1], item);
+      items.push(item);
+    }
+  }
+  const html = items.map(i =>
+    i.url
+      ? `<a href="${esc(i.url)}" title="${esc(i.titles.join('\n\n'))}" rel="noopener noreferrer">${esc(i.text)}</a>`
+      : `<span title="${esc(i.titles.join('\n\n'))}">${esc(i.text)}</span>`,
+  );
+  return html.length ? `<br><b style="color:var(--text)">Sources:</b> ${html.join(' · ')}` : '';
+}
+
 export function renderCandidates(model, state) {
   const tb = el('candTable').querySelector('tbody');
   const { bpw } = bpwOf(state.weights);
@@ -417,7 +453,7 @@ export function renderCandidates(model, state) {
       `<td class="lbl">${ic?.peakP2pGBsPerGpu != null ? `<span class="num">${ic.peakP2pGBsPerGpu} GB/s</span>` : '<span class="dash" title="The vendor states no GB/s figure">not stated</span>'}<span class="sub">peak P2P per GPU${ic?.linksPerGpu ? ` · ${ic.linksPerGpu} links` : ''}</span><span class="sub">${ic?.hostLinkGBs ? `host link ${ic.hostLinkGBs} GB/s` : 'host link unverified'}</span></td>` +
       `<td class="lbl wrap" style="font-size:11.5px;color:var(--muted)">${ceil}<span class="sub">at ${fmtDepth(state.depth)} deep, ${esc(WEIGHT_FORMATS[state.weights].label)}, KV ${esc(state.kv)}</span></td>` +
       '</tr>' +
-      `<tr class="cand-notes"><td colspan="7">${esc(c.note ?? '')}${c.rig.host?.note ? `<br><b style="color:var(--text)">Host:</b> ${esc(c.rig.host.note)}` : ''}${ic?.note ? `<br><b style="color:var(--text)">Interconnect:</b> ${esc(ic.note)}` : ''}</td></tr>`
+      `<tr class="cand-notes"><td colspan="7">${esc(c.note ?? '')}${c.rig.host?.note ? `<br><b style="color:var(--text)">Host:</b> ${esc(c.rig.host.note)}` : ''}${ic?.note ? `<br><b style="color:var(--text)">Interconnect:</b> ${esc(ic.note)}` : ''}${sourceLinks([ic?.source, ...(c.sources ?? [])])}</td></tr>`
     );
   }).join('');
 }

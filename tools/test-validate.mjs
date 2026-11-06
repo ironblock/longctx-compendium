@@ -191,6 +191,9 @@ const CASES = [
   ['a high bridge price with no low one', 'no low one', d => {
     delete candidate(d, 'c_mi100x4').rig.interconnect.costUsd;
   }],
+  ['a rig source that is not a link', 'does not match', d => {
+    candidate(d, 'c_mi100x4').sources = ['somewhere on a forum'];
+  }],
   ['a negative peer bandwidth', 'must be > 0', d => {
     candidate(d, 'c_mi100x4').rig.interconnect.peakP2pGBsPerGpu = -1;
   }],

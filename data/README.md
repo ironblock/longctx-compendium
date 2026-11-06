@@ -331,6 +331,11 @@ bridge or carrier board, which belongs to no card, plus parts an SXM carrier
 cannot run without (cables, heatsinks, its power supply) when the note itemises
 them; `costHighUsd` records the top of an observed range.
 
+A candidate's `sources` lists write-ups, reports and listings behind its
+description beyond the interconnect's own `source`: each entry starts with an
+https URL, optionally followed by ` -- ` and what it supports. The page links
+each one by host name under the rig, with the whole entry as hover text.
+
 Peer bandwidth does not set single-stream decode under a layer split, which
 follows one card's memory bandwidth. It decides how close tensor parallel gets
 to its ceiling, and matters for prefill, concurrent streams, and anything

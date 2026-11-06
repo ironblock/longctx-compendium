@@ -973,6 +973,15 @@
         },
         "note": {
           "type": "string"
+        },
+        "sources": {
+          "description": "Where this rig's description came from, beyond its interconnect source: write-ups, reports, listings. Each entry starts with an https URL, optionally followed by ' -- ' and what it supports. The page shows them as links under the rig.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^https://\\S+( -- .+)?$"
+          }
         }
       }
     },
