@@ -121,7 +121,7 @@ check(doc, schema, '');
 // turn a number into folklore.
 
 const seenIds = new Map();
-for (const rec of [...(doc.architectures ?? []), ...(doc.units ?? []), ...(doc.lines ?? []), ...(doc.candidates ?? [])]) {
+for (const rec of [...(doc.architectures ?? []), ...(doc.units ?? []), ...(doc.carriers ?? []), ...(doc.lines ?? []), ...(doc.candidates ?? [])]) {
   if (seenIds.has(rec.id)) fail(`id "${rec.id}"`, 'duplicate id');
   seenIds.set(rec.id, rec);
 }
@@ -193,6 +193,45 @@ for (const a of doc.architectures ?? []) {
   }
 }
 
+// --- Carriers
+// A carrier is shared by every rig on it, so its claims are checked once here.
+const carrierById = Object.fromEntries((doc.carriers ?? []).map(k => [k.id, k]));
+for (const k of doc.carriers ?? []) {
+  const at = `carrier "${k.id}"`;
+  const pr = k.peer;
+  if (pr && (pr.peakP2pGBsPerGpu != null || pr.linksPerGpu != null) && !pr.source) {
+    fail(at, 'peer link carries figures but no source -- say where they came from');
+  }
+  if (pr && pr.kind !== 'nvlink' && (pr.peakP2pGBsPerGpu != null || pr.linksPerGpu != null)) {
+    fail(at, `peer kind "${pr.kind}" cannot carry link counts or GB/s`);
+  }
+  if (k.hostLink && k.hostLink.gpusPerUplink > k.slots) {
+    fail(at, `has ${k.slots} slot(s) but says ${k.hostLink.gpusPerUplink} GPUs share an uplink`);
+  }
+  for (const [name, p] of [['pricing', k.pricing], ['parts', k.parts]]) {
+    if (p?.highUsd != null && p.highUsd < p.usd) fail(at, `${name} range is reversed: ${p.usd} to ${p.highUsd}`);
+  }
+  if (k.parts && !k.pricing) fail(at, 'prices its parts but not the board itself');
+  const seen = new Set();
+  (k.fits ?? []).forEach((f, i) => {
+    const ft = `${at} fits[${i}]`;
+    const u = unitById[f.unit];
+    if (!u) {
+      fail(ft, `references unknown unit "${f.unit}" -- add it to the units catalog`);
+      return;
+    }
+    if (seen.has(f.unit)) fail(ft, `lists "${f.unit}" twice`);
+    seen.add(f.unit);
+    if (u.formFactor?.name !== k.socket) {
+      fail(ft, `"${f.unit}" is ${u.formFactor?.name ?? 'of unrecorded form factor'}, but the carrier takes ${k.socket}`);
+    }
+    if (f.peer === 'nvlink' && pr?.kind !== 'nvlink') fail(ft, 'says its peers meet over NVLink on a carrier that wires none');
+    if (f.peer === 'nvlink' && !(u.peerLink?.maxCards > 0)) fail(ft, `says its peers meet over NVLink, but "${f.unit}" has no peer link`);
+    if (f.status !== 'untested' && !f.source) fail(ft, `a ${f.status} fit needs a source`);
+    if (f.status === 'untested' && !f.note) fail(ft, 'an untested fit needs a note saying what is and is not known');
+  });
+}
+
 // --- Rigs
 const exists = (id, at) => {
   if (!unitById[id]) fail(at, `references unknown unit "${id}" -- add it to the units catalog`);
@@ -200,6 +239,22 @@ const exists = (id, at) => {
 };
 const checkRig = (rig, at) => {
   (rig.units ?? []).forEach((c, i) => exists(c.unit, `${at} rig.units[${i}]`));
+  if (rig.carrier != null) {
+    const k = carrierById[rig.carrier];
+    if (!k) fail(at, `names unknown carrier "${rig.carrier}" -- add it to the carriers catalog`);
+    else {
+      const n = (rig.units ?? []).reduce((t, c) => t + c.count, 0);
+      if (n > k.slots) fail(at, `puts ${n} GPUs on "${k.id}", which has ${k.slots} slot(s)`);
+      for (const c of rig.units ?? []) {
+        const f = k.fits.find(x => x.unit === c.unit);
+        if (!f) fail(at, `"${c.unit}" is not in carrier "${k.id}"'s fit list -- add it there, untested if nobody has said`);
+        else if (f.status === 'fails') fail(at, `"${c.unit}" is reported not to work on carrier "${k.id}"`);
+      }
+    }
+    // The carrier owns the bridge, links, host link and price; a rig may only annotate.
+    const extra = Object.keys(rig.interconnect ?? {}).filter(x => !['note', 'p2p'].includes(x));
+    if (extra.length) fail(at, `sits on carrier "${rig.carrier}", so its interconnect may only add a note or p2p, not ${extra.join(', ')}`);
+  }
   // An interconnect rating is a vendor claim like any other spec: say whose.
   const ic = rig.interconnect;
   if (ic && (ic.peakP2pGBsPerGpu != null || ic.hostLinkGBs != null || ic.linksPerGpu != null) && !ic.source) {
@@ -291,5 +346,5 @@ const points = (doc.lines ?? []).reduce((n, l) => n + (l.results?.length ?? 0), 
 for (const w of warnings) console.warn(`  ! ${w}`);
 console.log(
   `✓ ${rel} — ${(doc.architectures ?? []).length} chip generations, ${(doc.units ?? []).length} catalog units, ` +
-    `${(doc.lines ?? []).length} serving lines with ${points} readings, ${(doc.candidates ?? []).length} candidates`
+    `${(doc.carriers ?? []).length} carriers, ${(doc.lines ?? []).length} serving lines with ${points} readings, ${(doc.candidates ?? []).length} candidates`
 );

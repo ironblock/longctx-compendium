@@ -39,6 +39,13 @@ export const PCIE = {
   6: { gts: 64, laneGBs: (64 * 242) / 256 / 8 },
 };
 
+/**
+ * A carrier's host link per GPU: line rate x lanes, both directions, divided
+ * among the GPUs that share an uplink when all of them stream. Encoding
+ * overhead is not subtracted, matching hostLinkGBs elsewhere.
+ */
+export const carrierHostGBs = k => (k?.hostLink ? ((PCIE[k.hostLink.gen].gts / 8) * k.hostLink.lanes * 2) / k.hostLink.gpusPerUplink : null);
+
 /** The form-factor filter's groups: every SXM generation is one. */
 export const formKind = name => (name == null ? null : name.startsWith('SXM') ? 'SXM' : name);
 
@@ -67,6 +74,44 @@ export function normalize(doc) {
     };
   });
   const unitById = Object.fromEntries(UNITS.map(u => [u.id, u]));
+  const CARRIERS = doc.carriers ?? [];
+  const carrierById = Object.fromEntries(CARRIERS.map(k => [k.id, k]));
+
+  /**
+   * The interconnect a rig actually has. On a carrier the board supplies the
+   * bridge, link figures, host link and price, and each module's fit decides
+   * whether NVLink is in use; without one, the rig's own record stands.
+   */
+  const linkOf = rig => {
+    const k = rig.carrier ? carrierById[rig.carrier] : null;
+    if (!k) return rig.interconnect ?? null;
+    const fits = rig.units.map(c => ({ unit: c.unit, ...(k.fits.find(f => f.unit === c.unit) ?? { status: 'untested', peer: 'pcie' }) }));
+    const nvlink = k.peer?.kind === 'nvlink' && fits.every(f => f.peer === 'nvlink');
+    const n = rig.units.reduce((t, c) => t + c.count, 0);
+    const g = k.hostLink?.gpusPerUplink;
+    let pciePath = null;
+    if (!nvlink && n > 1) {
+      if (k.switch == null) pciePath = 'PCIe peer path not recorded';
+      else if (!k.switch.present) pciePath = 'PCIe peers meet through the host';
+      else if (g && g < n) pciePath = `PCIe peers meet inside a switch in groups of ${g}, through the host between groups`;
+      else pciePath = 'PCIe peers meet inside a switch';
+    }
+    return {
+      kind: nvlink ? 'nvlink' : 'pcie',
+      bridge: k.label,
+      carrier: k,
+      fits,
+      linksPerGpu: nvlink ? k.peer.linksPerGpu : undefined,
+      peakP2pGBsPerGpu: nvlink ? k.peer.peakP2pGBsPerGpu : undefined,
+      hostLinkGBs: carrierHostGBs(k),
+      costUsd: k.pricing ? k.pricing.usd + (k.parts?.usd ?? 0) : undefined,
+      costHighUsd: k.pricing ? (k.pricing.highUsd ?? k.pricing.usd) + (k.parts?.highUsd ?? k.parts?.usd ?? 0) : undefined,
+      pciePath,
+      source: nvlink ? k.peer?.source : undefined,
+      note: rig.interconnect?.note,
+      p2p: rig.interconnect?.p2p,
+    };
+  };
 
   /**
    * Cost, capacity and draw summed from the catalog. One unpriced card makes
@@ -77,7 +122,7 @@ export function normalize(doc) {
     const sum = get => (parts.some(p => get(p.u) == null) ? null : parts.reduce((t, p) => t + get(p.u) * p.n, 0));
     // A board of several GPUs (the A16) is bought whole: four of its GPUs cost one board.
     const cards = parts.some(p => p.u?.street == null) ? null : parts.reduce((t, p) => t + p.u.street * Math.ceil(p.n / p.u.gpus), 0);
-    const link = rig.interconnect;
+    const link = linkOf(rig);
     return {
       memoryGB: sum(u => u?.memoryGB),
       cards: parts.reduce((t, p) => t + p.n, 0),
@@ -97,7 +142,7 @@ export function normalize(doc) {
     }),
   }));
 
-  const CANDIDATES = (doc.candidates ?? []).map(c => ({ ...c, rigTotals: rigTotals(c.rig) }));
+  const CANDIDATES = (doc.candidates ?? []).map(c => ({ ...c, link: linkOf(c.rig), rigTotals: rigTotals(c.rig) }));
 
   return {
     UNITS,
@@ -106,6 +151,8 @@ export function normalize(doc) {
     archById,
     LINES,
     CANDIDATES,
+    CARRIERS,
+    carrierById,
     KWH: doc.meta?.electricityUsdPerKwh,
     raw: doc,
   };
@@ -128,6 +175,12 @@ export function audit(model) {
     for (const c of l.rig.units) {
       if (!model.unitById[c.unit]) problems.push(`"${l.id}" references unknown unit "${c.unit}"`);
     }
+  }
+  for (const l of [...model.LINES, ...model.CANDIDATES]) {
+    if (l.rig.carrier && !model.carrierById[l.rig.carrier]) problems.push(`"${l.id}" names unknown carrier "${l.rig.carrier}"`);
+  }
+  for (const k of model.CARRIERS) {
+    for (const f of k.fits ?? []) if (!model.unitById[f.unit]) problems.push(`carrier "${k.id}" lists unknown unit "${f.unit}"`);
   }
   return problems;
 }

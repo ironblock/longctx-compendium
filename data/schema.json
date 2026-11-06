@@ -29,6 +29,12 @@
         "$ref": "#/definitions/catalogUnit"
       }
     },
+    "carriers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/carrier"
+      }
+    },
     "lines": {
       "description": "The observation ledger: every measured number on the page, each inside the serving line that produced it. Nothing interpolated, extrapolated or modeled belongs here.",
       "type": "array",
@@ -486,6 +492,10 @@
         },
         "note": {
           "type": "string"
+        },
+        "carrier": {
+          "type": "string",
+          "description": "Id of the carrier board the units mount on. The carrier supplies the bridge, peer wiring, host link, price and fit; the rig's own interconnect may then only add a note or p2p."
         }
       }
     },
@@ -982,6 +992,264 @@
             "type": "string",
             "pattern": "^https://\\S+( -- .+)?$"
           }
+        }
+      }
+    },
+    "carrier": {
+      "description": "A board that GPU modules mount on (an SXM2 carrier, adapter or baseboard): what it wires between its slots and to the host, what it costs, and which catalog units are known to work in it. Rigs name a carrier instead of repeating these facts, so every rig on one board shares one record.",
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "socket",
+        "slots",
+        "fits",
+        "sources"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "label": {
+          "type": "string"
+        },
+        "maker": {
+          "type": "string"
+        },
+        "socket": {
+          "type": "string",
+          "description": "Module socket, matched against each unit's formFactor.name (SXM2, SXM4 ...)."
+        },
+        "slots": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "peer": {
+          "description": "How the board joins its slots to each other. Absent means nobody has looked.",
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string",
+              "description": "nvlink, or none when slots meet only over PCIe."
+            },
+            "wiring": {
+              "type": "string"
+            },
+            "topology": {
+              "type": "string"
+            },
+            "linksPerGpu": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "peakP2pGBsPerGpu": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Peak GPU-to-GPU bandwidth per GPU, both directions summed over every link, as a vendor or write-up states it. A rating, not a measurement."
+            },
+            "source": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "switch": {
+          "description": "Whether a PCIe switch sits on the board. With one, PCIe peer traffic between GPUs on the same switch stays off the host. Absent means not recorded.",
+          "type": "object",
+          "required": [
+            "present"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "present": {
+              "type": "boolean"
+            },
+            "chip": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "hostLink": {
+          "description": "The board's PCIe uplinks. The page derives each GPU's host link as line rate x lanes, both directions, divided among the GPUs sharing an uplink, encoding overhead not subtracted. Absent means not recorded.",
+          "type": "object",
+          "required": [
+            "gen",
+            "lanes",
+            "gpusPerUplink",
+            "source"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "gen": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 6
+            },
+            "lanes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "gpusPerUplink": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "GPUs sharing one uplink when all of them stream."
+            },
+            "attach": {
+              "type": "string",
+              "description": "What the host needs: slots, cables, risers, adapter cards."
+            },
+            "source": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "power": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "cooling": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "included"
+          ],
+          "properties": {
+            "included": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "pricing": {
+          "description": "The board's own price. Absent means unpriced, and a rig total that leaves it out says so.",
+          "type": "object",
+          "required": [
+            "usd",
+            "asOf",
+            "includes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "usd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "highUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "asOf": {
+              "type": "string",
+              "pattern": "^[0-9]{4}(-[0-9]{2})?$"
+            },
+            "includes": {
+              "type": "string",
+              "description": "What the price buys: the board alone, or the board with cables, a host card, water blocks ..."
+            },
+            "source": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "parts": {
+          "description": "Parts the board cannot run without that its price leaves out (host cables, an enclosure and supply), summed into rig totals. Cooling that depends on the module stays in notes.",
+          "type": "object",
+          "required": [
+            "usd",
+            "note"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "usd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "highUsd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "fits": {
+          "description": "Which catalog units work in the board, and how their peers meet on it. verified: an owner ran it and said so; reported: a vendor, seller or second-hand claim; untested: nobody has said either way; fails: reported not to work.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "unit",
+              "status",
+              "peer"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "unit": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "verified",
+                  "reported",
+                  "untested",
+                  "fails"
+                ]
+              },
+              "peer": {
+                "enum": [
+                  "nvlink",
+                  "pcie"
+                ],
+                "description": "How this unit's peers meet on this board: nvlink only when both the board and the module wire it."
+              },
+              "source": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^https://\\S+( -- .+)?$"
+          }
+        },
+        "note": {
+          "type": "string"
         }
       }
     },

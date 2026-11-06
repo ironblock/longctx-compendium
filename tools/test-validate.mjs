@@ -19,6 +19,8 @@ const unit = (doc, id) => doc.units.find(u => u.id === id);
 const arch = (doc, id) => doc.architectures.find(a => a.id === id);
 const line = (doc, id) => doc.lines.find(l => l.id === id);
 const candidate = (doc, id) => doc.candidates.find(c => c.id === id);
+const carrier = (doc, id) => doc.carriers.find(k => k.id === id);
+const fitOf = (doc, id, u) => carrier(doc, id).fits.find(f => f.unit === u);
 // A first-party line with decode and prefill points.
 const L = 'l_3090_27b_iq3s_dflash2';
 // A reported line from a review site, single card, no depth on its decode point.
@@ -190,6 +192,49 @@ const CASES = [
   }],
   ['a high bridge price with no low one', 'no low one', d => {
     delete candidate(d, 'c_mi100x4').rig.interconnect.costUsd;
+  }],
+  ['a rig on a carrier that does not exist', 'unknown carrier', d => {
+    candidate(d, 'c_pg199x4_aomsxmv').rig.carrier = 'aom_sxm9';
+  }],
+  ['more GPUs than the carrier has slots', 'slot(s)', d => {
+    candidate(d, 'c_v100x2_dual_pcie_carrier').rig.units[0].count = 3;
+  }],
+  ['a rig unit missing from its carrier\'s fit list', 'fit list', d => {
+    const k = carrier(d, 'onecat_quad');
+    k.fits = k.fits.filter(f => f.unit !== 'pg199_card');
+  }],
+  ['a rig on a carrier its unit is reported to fail on', 'reported not to work', d => {
+    Object.assign(fitOf(d, 'onecat_quad', 'pg199_card'), { status: 'fails', source: 'https://example.com/' });
+  }],
+  ['a carrier rig restating the carrier\'s price', 'only add a note or p2p', d => {
+    candidate(d, 'c_v100x4_aomsxmv').rig.interconnect = { costUsd: 900 };
+  }],
+  ['NVLink claimed for a module with no peer link', 'has no peer link', d => {
+    fitOf(d, 'aom_sxmv', 'pg199_card').peer = 'nvlink';
+  }],
+  ['NVLink claimed on a carrier that wires none', 'wires none', d => {
+    fitOf(d, 'sxm2_single_adapter', 'v100_sxm2').peer = 'nvlink';
+  }],
+  ['a fit for a module of another form factor', 'but the carrier takes SXM2', d => {
+    carrier(d, 'aom_sxmv').fits.push({ unit: 'v100_pcie_32', status: 'untested', peer: 'pcie', note: 'x' });
+  }],
+  ['a verified fit with no source', 'needs a source', d => {
+    delete fitOf(d, 'aom_sxmv', 'pg199_card').source;
+  }],
+  ['an untested fit that says nothing', 'needs a note', d => {
+    delete fitOf(d, 'onecat_quad', 'pg199_card').note;
+  }],
+  ['carrier link figures with no source', 'no source', d => {
+    delete carrier(d, 'onecat_quad').peer.source;
+  }],
+  ['a carrier price range that runs backwards', 'is reversed', d => {
+    carrier(d, 'aom_sxmv').parts.highUsd = 10;
+  }],
+  ['an uplink shared by more GPUs than the carrier holds', 'share an uplink', d => {
+    carrier(d, 'sxm2_single_adapter').hostLink.gpusPerUplink = 2;
+  }],
+  ['a carrier id colliding with a unit id', 'duplicate id', d => {
+    carrier(d, 'aom_sxmv').id = 'v100_sxm2';
   }],
   ['a rig source that is not a link', 'does not match', d => {
     candidate(d, 'c_mi100x4').sources = ['somewhere on a forum'];

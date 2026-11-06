@@ -15,12 +15,13 @@ node tools/check-ceilings.mjs  # no reading above its own ceiling
 node tools/coverage.mjs        # what the catalog is still missing
 ```
 
-## The four collections
+## The five collections
 
 | collection | what it is | changes when |
 |---|---|---|
 | `architectures` | a chip generation and which matrix formats its silicon takes | a whitepaper was misread |
 | `units` | a purchasable card or machine — what a datasheet describes | a price moves, a spec is corrected |
+| `carriers` | a board modules mount on: its wiring, host link, price, and what fits in it | a board is found, priced or tested with a module |
 | `lines` | the ledger: every reading, inside the serving line that produced it | someone measures something |
 | `candidates` | rigs under consideration that have no measured line yet | a rig is proposed or measured |
 
@@ -318,7 +319,7 @@ cost (drafters, workspaces and padding add to it).
 ## Candidates
 
 `candidates` are rigs under consideration with no measured line yet: units, an
-`interconnect`, the models they are meant to serve, and a note. Price and
+`interconnect` or a `carrier`, the models they are meant to serve, and a note. Price and
 capacity are derived from their units; the page shows each listed model's fit
 and decode ceiling at the calculator's current settings. Leave `interconnect`
 fields out rather than guessing; absent means nobody has looked.
@@ -331,10 +332,42 @@ bridge or carrier board, which belongs to no card, plus parts an SXM carrier
 cannot run without (cables, heatsinks, its power supply) when the note itemises
 them; `costHighUsd` records the top of an observed range.
 
+A rig that names a `carrier` takes its bridge, link figures, host link and
+price from that carrier, and its own `interconnect` may only add a `note` or
+`p2p`; the validator rejects anything else, so two rigs on one board cannot
+disagree about it.
+
 A candidate's `sources` lists write-ups, reports and listings behind its
 description beyond the interconnect's own `source`: each entry starts with an
 https URL, optionally followed by ` -- ` and what it supports. The page links
 each one by host name under the rig, with the whole entry as hover text.
+
+## Carriers
+
+`carriers` are the boards modules mount on (SXM2 adapters, dual and quad
+carriers, baseboards), kept apart from rigs because any SXM2 module can in
+principle sit on any SXM2 board. A carrier records:
+
+- `socket` and `slots`, checked against each fitted unit's `formFactor.name`;
+- `peer`: `kind` (`nvlink` or `none`), with `wiring`, `topology`,
+  `linksPerGpu` and `peakP2pGBsPerGpu` when a source states them;
+- `switch`: whether a PCIe switch sits on the board (absent means not
+  recorded). Over PCIe, peers on one switch stay off the host;
+- `hostLink`: `gen`, `lanes` and `gpusPerUplink`. The page derives each GPU's
+  host link as line rate x lanes, both directions, divided among the GPUs on
+  one uplink, with encoding overhead not subtracted;
+- `power`, `cooling`;
+- `pricing` (`usd`, `highUsd`, `asOf`, and `includes`, which says what the
+  price buys) and `parts`, the parts it cannot run without that the price
+  leaves out (host cables, say), summed into rig totals. Cooling that depends
+  on the module stays in notes;
+- `fits`: one entry per catalog unit, with a `status` and the `peer` path
+  that unit gets on this board. `verified` means an owner ran it and said so,
+  `reported` a vendor, seller or second-hand claim, `untested` that nobody has
+  said either way, `fails` that it is reported not to work. Anything but
+  untested needs a `source`; untested needs a `note`. A unit with no peer link
+  of its own (the PG199) cannot be marked `nvlink`, and a rig cannot use a
+  unit its carrier does not list, or one that fails on it.
 
 Peer bandwidth does not set single-stream decode under a layer split, which
 follows one card's memory bandwidth. It decides how close tensor parallel gets

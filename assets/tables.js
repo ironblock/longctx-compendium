@@ -1,6 +1,6 @@
 // DOM rendering for the four tables. Each is a pure function of (model, state).
 
-import { FORMATS, PCIE } from './data.js';
+import { FORMATS, PCIE, carrierHostGBs } from './data.js';
 import {
   modelById,
   WEIGHT_FORMATS,
@@ -420,16 +420,24 @@ function sourceLinks(entries) {
   return html.length ? `<br><b style="color:var(--text)">Sources:</b> ${html.join(' · ')}` : '';
 }
 
+const FIT_CLASS = { verified: 't-ok', reported: '', untested: 'fit-untested', fails: 't-bad' };
+const unitLabel = (model, id) => model.unitById[id]?.label ?? id;
+const gbs = v => (Number.isInteger(v) ? v.toLocaleString() : sig(v));
+const usdRange = (lo, hi) => usd(lo) + (hi != null && hi > lo ? `–${usd(hi)}` : '');
+
 export function renderCandidates(model, state) {
   const tb = el('candTable').querySelector('tbody');
   const { bpw } = bpwOf(state.weights);
   tb.innerHTML = model.CANDIDATES.map(c => {
     const u = model.unitById[c.rig.units[0].unit];
     const n = c.rig.units.reduce((t, x) => t + x.count, 0);
-    const ic = c.rig.interconnect;
+    const ic = c.link;
+    const k = ic?.carrier;
     const t = c.rigTotals;
-    const price = t.costUsd == null ? DASH : usd(t.costUsd) + (t.costHighUsd > t.costUsd ? `–${usd(t.costHighUsd)}` : '');
-    const priceSub = t.costUsd == null ? 'unpriced' : t.linkPriced === false ? 'cards only · bridge/board unpriced' : t.linkPriced ? 'cards + bridge/board' : 'cards, street';
+    const price = t.costUsd == null ? DASH : usdRange(t.costUsd, t.costHighUsd);
+    const what = k ? `cards + carrier${k.parts ? ' + parts' : ''}` : 'cards + bridge/board';
+    const priceSub = t.costUsd == null ? 'unpriced' : t.linkPriced === false ? `cards only · ${k ? 'carrier' : 'bridge/board'} unpriced` : t.linkPriced ? what : 'cards, street';
+    const priceTip = k?.pricing ? `Carrier: ${k.pricing.includes} (${k.pricing.asOf}).${k.parts ? ` Parts: ${k.parts.note}` : ''}` : '';
     const ceil = c.models
       .map(id => {
         const m = modelById(id);
@@ -443,17 +451,78 @@ export function renderCandidates(model, state) {
         return `<b>${esc(m.label)}</b>: ${fits}<br><span class="num">${dl ? sig(dl.tps) : '—'}</span> layer · <span class="num">${dt ? sig(dt.tps) : '—'}</span> TP decode`;
       })
       .join('<br>');
+    const fitSubs = (ic?.fits ?? [])
+      .map(f => `<span class="sub ${FIT_CLASS[f.status] ?? ''}" title="${esc(f.note ?? '')}">${esc(unitLabel(model, f.unit))}: ${esc(f.status)} on this carrier</span>`)
+      .join('');
+    const peerCell =
+      ic?.kind === 'pcie' && ic.pciePath
+        ? `<span class="num">PCIe</span><span class="sub">${esc(ic.pciePath)}</span>`
+        : `${ic?.peakP2pGBsPerGpu != null ? `<span class="num">${ic.peakP2pGBsPerGpu} GB/s</span>` : '<span class="dash" title="The vendor states no GB/s figure">not stated</span>'}<span class="sub">peak P2P per GPU${ic?.linksPerGpu ? ` · ${ic.linksPerGpu} links` : ''}</span>`;
+    const host = c.rig.host?.note ?? k?.hostLink?.attach ?? (k ? 'What the host must supply is not recorded for this carrier.' : null);
+    const fitNotes = (ic?.fits ?? []).filter(f => f.note).map(f => `${esc(unitLabel(model, f.unit))} here (${esc(f.status)}): ${esc(f.note)}`).join(' ');
     return (
       '<tr class="cand-main">' +
-      `<td class="lbl wrap" style="min-width:200px">${esc(c.label)}<span class="sub">${esc(c.status)}</span></td>` +
+      `<td class="lbl wrap" style="min-width:180px">${esc(c.label)}<span class="sub">${esc(c.status)}</span></td>` +
       `<td class="num">${t.memoryGB ?? '—'} GB</td>` +
       `<td class="num">${u?.memoryBandwidthGBs ?? '—'}<span class="sub">GB/s per card</span></td>` +
-      `<td class="num">${price}<span class="sub">${priceSub}</span></td>` +
-      `<td class="lbl wrap" style="min-width:160px;font-size:11.5px">${esc(ic?.kind ?? 'not recorded')}<span class="sub" title="${esc(ic?.note ?? '')}">${esc(ic?.bridge ?? '')}</span></td>` +
-      `<td class="lbl">${ic?.peakP2pGBsPerGpu != null ? `<span class="num">${ic.peakP2pGBsPerGpu} GB/s</span>` : '<span class="dash" title="The vendor states no GB/s figure">not stated</span>'}<span class="sub">peak P2P per GPU${ic?.linksPerGpu ? ` · ${ic.linksPerGpu} links` : ''}</span><span class="sub">${ic?.hostLinkGBs ? `host link ${ic.hostLinkGBs} GB/s` : 'host link unverified'}</span></td>` +
+      `<td class="num" title="${esc(priceTip)}">${price}<span class="sub">${priceSub}</span></td>` +
+      `<td class="lbl wrap" style="min-width:150px;font-size:11.5px">${esc(ic?.kind ?? 'not recorded')}<span class="sub" title="${esc((k ? k.peer?.note : ic?.note) ?? '')}">${esc(ic?.bridge ?? '')}</span>${fitSubs}</td>` +
+      `<td class="lbl wrap" style="min-width:140px;max-width:200px">${peerCell}<span class="sub">${ic?.hostLinkGBs ? `host link ${gbs(ic.hostLinkGBs)} GB/s` : 'host link unverified'}</span></td>` +
       `<td class="lbl wrap" style="font-size:11.5px;color:var(--muted)">${ceil}<span class="sub">at ${fmtDepth(state.depth)} deep, ${esc(WEIGHT_FORMATS[state.weights].label)}, KV ${esc(state.kv)}</span></td>` +
       '</tr>' +
-      `<tr class="cand-notes"><td colspan="7">${esc(c.note ?? '')}${c.rig.host?.note ? `<br><b style="color:var(--text)">Host:</b> ${esc(c.rig.host.note)}` : ''}${ic?.note ? `<br><b style="color:var(--text)">Interconnect:</b> ${esc(ic.note)}` : ''}${sourceLinks([ic?.source, ...(c.sources ?? [])])}</td></tr>`
+      `<tr class="cand-notes"><td colspan="7">${esc(c.note ?? '')}` +
+      `${host ? `<br><b style="color:var(--text)">Host:</b> ${esc(host)}` : ''}` +
+      `${k ? `<br><b style="color:var(--text)">Carrier:</b> <a href="#carrier-${esc(k.id)}">${esc(k.label)}</a>, shared with every rig on it.${fitNotes ? ` ${fitNotes}` : ''}` : ''}` +
+      `${ic?.note ? `<br><b style="color:var(--text)">Interconnect:</b> ${esc(ic.note)}` : ''}` +
+      `${sourceLinks([ic?.source, ...(c.sources ?? []), ...(k?.sources ?? [])])}</td></tr>`
+    );
+  }).join('');
+}
+
+/** The carrier catalog: one row per board, with what fits in it and how. */
+export function renderCarriers(model) {
+  const tb = el('carrierTable')?.querySelector('tbody');
+  if (!tb) return;
+  const yes = b => (b ? 'yes' : 'no');
+  tb.innerHTML = model.CARRIERS.map(k => {
+    const pr = k.peer;
+    const peer = !pr
+      ? '<span class="dash">not recorded</span>'
+      : pr.kind === 'none'
+        ? 'none<span class="sub">peers meet over PCIe</span>'
+        : `${esc(pr.kind)}${pr.wiring ? `<span class="sub">${esc(pr.wiring)}</span>` : ''}<span class="sub">${pr.peakP2pGBsPerGpu != null ? `${pr.peakP2pGBsPerGpu} GB/s per GPU` : 'GB/s not stated'}${pr.linksPerGpu ? ` · ${pr.linksPerGpu} links` : ''}</span>`;
+    const hl = k.hostLink;
+    const sw = k.switch == null ? 'switch not recorded' : k.switch.present ? esc(k.switch.chip ?? 'switch, model not stated') : 'no switch';
+    const host = hl
+      ? `<span class="num">${gbs(carrierHostGBs(k))} GB/s</span><span class="sub">Gen ${hl.gen} x${hl.lanes}${hl.gpusPerUplink > 1 ? `, shared by ${hl.gpusPerUplink}` : ''}</span>`
+      : '<span class="dash">not recorded</span>';
+    const price = k.pricing
+      ? `${usdRange(k.pricing.usd, k.pricing.highUsd)}<span class="sub prose">${esc(k.pricing.includes)} · ${esc(k.pricing.asOf)}</span>${k.parts ? `<span class="sub">+ ${usdRange(k.parts.usd, k.parts.highUsd)} parts</span>` : ''}`
+      : `${DASH}<span class="sub">unpriced</span>`;
+    const fits = k.fits
+      .map(f => `<span class="${FIT_CLASS[f.status] ?? ''}" title="${esc(f.note ?? '')}">${esc(unitLabel(model, f.unit))}</span>: ${esc(f.status)} · ${esc(f.peer === 'nvlink' ? 'NVLink' : 'PCIe')}`)
+      .join('<br>');
+    const notes = [
+      k.note && esc(k.note),
+      pr?.note && `<b style="color:var(--text)">Peer link:</b> ${esc(pr.note)}`,
+      k.switch?.note && `<b style="color:var(--text)">Switch:</b> ${esc(k.switch.note)}`,
+      hl && `<b style="color:var(--text)">Host:</b> ${esc([hl.attach, hl.note].filter(Boolean).join(' '))}`,
+      k.power && `<b style="color:var(--text)">Power:</b> ${esc([k.power.input, k.power.note].filter(Boolean).join('. '))}`,
+      k.cooling && `<b style="color:var(--text)">Cooling included:</b> ${yes(k.cooling.included)}${k.cooling.note ? `. ${esc(k.cooling.note)}` : ''}`,
+      k.pricing?.note && `<b style="color:var(--text)">Price:</b> ${esc(k.pricing.note)}`,
+      k.parts && `<b style="color:var(--text)">Parts:</b> ${esc(k.parts.note)}`,
+      ...k.fits.filter(f => f.note).map(f => `<b style="color:var(--text)">${esc(unitLabel(model, f.unit))} (${esc(f.status)}):</b> ${esc(f.note)}`),
+    ].filter(Boolean);
+    const body = notes.join('<br>');
+    return (
+      `<tr class="cand-main" id="carrier-${esc(k.id)}">` +
+      `<td class="lbl wrap" style="min-width:180px">${esc(k.label)}<span class="sub">${esc([k.maker, `${k.socket} × ${k.slots}`].filter(Boolean).join(' · '))}</span></td>` +
+      `<td class="lbl wrap" style="font-size:11.5px;min-width:130px">${peer}</td>` +
+      `<td class="lbl wrap" style="font-size:11.5px;min-width:150px">${host}<span class="sub">${sw}</span></td>` +
+      `<td class="num wrap" style="min-width:150px;max-width:230px">${price}</td>` +
+      `<td class="lbl wrap" style="font-size:11.5px;min-width:210px">${fits}</td>` +
+      '</tr>' +
+      `<tr class="cand-notes"><td colspan="5">${body}${sourceLinks([pr?.source, hl?.source, ...k.fits.map(f => f.source), ...(k.sources ?? [])])}</td></tr>`
     );
   }).join('');
 }

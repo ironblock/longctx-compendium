@@ -200,10 +200,18 @@
 <!-- ===================================================================== 4 -->
 <section id="rigs">
 <h2>4 · Rigs under consideration <span class="tail">no measured line yet · ceilings at the settings in section 2</span></h2>
-<p class="intro">Peer bandwidth is the vendor's peak rating per GPU, both directions summed, and only as good as what the board actually wires. Single-stream decode follows memory bandwidth — one card's under a layer split, all of them under tensor parallel; peer links decide how close tensor parallel gets to that, and matter for prefill, concurrent streams, and anything streamed from host RAM.</p>
+<p class="intro">A rig on a carrier board takes its bridge, peer wiring, host link and price from the carrier (below), so every rig on one board shares one record; a module without NVLink meets its peers over PCIe even on an NVLink carrier. Peer bandwidth is the vendor's peak rating per GPU, both directions summed, and only as good as what the board actually wires. Single-stream decode follows memory bandwidth — one card's under a layer split, all of them under tensor parallel; peer links decide how close tensor parallel gets to that, and matter for prefill, concurrent streams, and anything streamed from host RAM.</p>
 <div class="tscroll"><table id="candTable">
   <thead><tr>
     <th class="lbl">Rig</th><th>VRAM</th><th>Bandwidth</th><th>Price</th><th class="lbl">Interconnect</th><th class="lbl">Peer bandwidth · host link</th><th class="lbl" style="min-width:230px">Ceilings for its models</th>
+  </tr></thead>
+  <tbody></tbody>
+</table></div>
+<h3 id="carriers">Carriers</h3>
+<p class="intro">The boards SXM modules mount on, and which catalog units fit each. <b>Fit</b>: verified means an owner ran it and said so; reported, a vendor, seller or second-hand claim; untested, nobody has said either way; fails, reported not to work. Host link is per GPU, both directions at line rate, shared among the GPUs on one uplink. Over PCIe, peers on one switch stay off the host; without a switch every all-reduce crosses it.</p>
+<div class="tscroll"><table id="carrierTable">
+  <thead><tr>
+    <th class="lbl">Carrier</th><th class="lbl">Peer link</th><th class="lbl">Host link per GPU · switch</th><th>Price</th><th class="lbl">Fits</th>
   </tr></thead>
   <tbody></tbody>
 </table></div>

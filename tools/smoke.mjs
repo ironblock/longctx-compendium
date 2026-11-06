@@ -537,13 +537,27 @@ check('one row per candidate rig, each with its notes beneath', (await count('#c
   const t = await text('#candTable tbody');
   check('the MI100 rig totals its cards and bridge as a range', /\$4,250–\$4,800/.test(t), 'expected 4 x $900 + $650-$1,200');
   check('the Max pair totals cards plus a $0-$70 bridge', /\$4,000–\$4,070/.test(t), 'expected 2 x $2,000 + $0-$70');
-  check('the V100 rig totals cards and board', /\$3,960/.test(t) && /cards \+ bridge\/board/.test(t), 'expected 4 x $790 + $800');
+  check('the V100 rig totals cards and its carrier', /\$3,960\s*cards \+ carrier/.test(t), 'expected 4 x $790 + $800 for the 1CATai board');
+  check('rigs on one carrier share its price: board plus host cables', /\$4,500–\$4,575/.test(t) && /\$7,340–\$7,415/.test(t), 'expected 4 x $790 or 4 x $1,500, plus $1,300 and $40-$115');
+  check('a module without NVLink meets its peers over PCIe, by the carrier\'s switches', /PCIe peers meet inside a switch in groups of 2, through the host between groups/.test(t) && /PCIe peer path not recorded/.test(t));
+  check('each rig on a carrier shows the fit of its modules', /PG199 \/ DRIVE A100: untested on this carrier/.test(t) && /PG199 \/ DRIVE A100: verified on this carrier/.test(t));
+  check('carrier rigs link to their carrier', (await count('#candTable tbody a[href^="#carrier-"]')) === model.CANDIDATES.filter(c => c.rig.carrier).length);
   check('peer bandwidth is shown where the vendor states it', /300 GB\/s/.test(t) && /276 GB\/s/.test(t));
   check('a missing peer bandwidth says so', /not stated/.test(t));
   check('host requirements are shown with each candidate', (t.match(/Host:/g) ?? []).length === model.CANDIDATES.length);
   check('rig sources render as links', (await count('#candTable tbody tr.cand-notes a[href^="https://"]')) >= model.CANDIDATES.filter(c => c.sources?.length).length && (await count('#candTable tbody tr.cand-notes a[href*="rexyuan.com"]')) >= 1);
   check('each rig shows ceilings for its models', (t.match(/TP decode/g) ?? []).length === model.CANDIDATES.reduce((n, c) => n + c.models.length, 0));
   check('rigs render no NaN/undefined/null', !BROKEN.test(t), brokenAt(t));
+}
+
+// --- 4b. Carriers ----------------------------------------------------------
+check('one row per carrier, each with its notes beneath', (await count('#carrierTable tbody tr.cand-main')) === model.CARRIERS.length && (await count('#carrierTable tbody tr.cand-notes')) === model.CARRIERS.length && model.CARRIERS.length > 0);
+{
+  const t = await text('#carrierTable tbody');
+  check('carrier host links are per GPU, shared per uplink', /16 GB\/s\s*Gen 3 x16, shared by 2/.test(t) && /32 GB\/s\s*Gen 3 x16/.test(t));
+  check('every carrier lists what fits in it', (t.match(/verified|reported|untested|fails/g) ?? []).length >= model.CARRIERS.reduce((n, k) => n + k.fits.length, 0));
+  check('a carrier price says what it includes', /\$1,300\s*the board alone/.test(t) && /\+ \$40–\$115 parts/.test(t));
+  check('carriers render no NaN/undefined/null', !BROKEN.test(t), brokenAt(t));
 }
 
 check('still no console or page errors after every interaction', consoleErrors.length === 0, consoleErrors.join(' | '));

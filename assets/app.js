@@ -26,6 +26,7 @@ import {
   renderCeilingTable,
   renderObservations,
   renderCandidates,
+  renderCarriers,
   fmtDepth,
   esc,
 } from './tables.js';
@@ -473,6 +474,7 @@ try {
     if (all || scope === 'hw' || scope === 'model' || scope === 'calc') renderCeilTable(hwOk);
     if (all || scope === 'obs') renderObs();
     if (all || scope === 'model' || scope === 'calc') renderCandidates(model, state);
+    if (all) renderCarriers(model);
     writeState(state);
   }
 
