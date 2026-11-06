@@ -2997,6 +2997,126 @@
       }
     },
     {
+      "id": "a100_sxm4_40",
+      "label": "A100 40GB SXM4",
+      "vendor": "NVIDIA",
+      "arch": "ampere",
+      "memoryGB": 40,
+      "memoryBandwidthGBs": 1555,
+      "tdpW": 400,
+      "pricing": {
+        "street": {
+          "usd": 2400,
+          "asOf": "2026-11",
+          "source": "The maintainer's observation (2026-11-06)",
+          "note": "The maintainer's observation, 2026-11-06; where the asks were seen is not recorded. The module sells for far less than the PCIe card of the same memory, as the A100 40GB PCIe entry's price note warns. In 2023 l4rz put 40GB modules at \"$2500-$3000\" on eBay."
+        }
+      },
+      "sources": [
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf -- \"NVIDIA A100 TENSOR CORE GPU SPECIFICATIONS (SXM4 AND PCIE FORM FACTORS)\": FP64 9.7 TFLOPS; FP32 19.5 TFLOPS; \"Tensor Float 32 (TF32) 156 TFLOPS | 312 TFLOPS*\"; \"BFLOAT16 Tensor Core 312 TFLOPS | 624 TFLOPS*\"; \"FP16 Tensor Core 312 TFLOPS | 624 TFLOPS*\"; \"INT8 Tensor Core 624 TOPS | 1248 TOPS*\" (* with sparsity); \"A100 40GB SXM ... 40GB HBM2 ... 1,555GB/s ... 400W\"; \"A100 80GB SXM ... 80GB HBM2e ... 2,039GB/s ... 400W\"; \"Form Factor ... SXM\"; \"NVLink: 600GB/s PCIe Gen4: 64GB/s\"; \"NVIDIA HGX A100-Partner and NVIDIA-Certified Systems with 4,8, or 16 GPUs\"",
+        "https://github.com/l4rz/running-nvidia-sxm-gpus-in-consumer-pcs/blob/4bd574d0a6245c83364b9d1823cdbfaaf2df18a6/README.md"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf",
+        "values": {
+          "fp64": 9.7,
+          "fp32": 19.5,
+          "fp16": 312,
+          "tf32": 156,
+          "tf32:sparse": 312,
+          "bf16": 312,
+          "bf16:sparse": 624,
+          "int8": 624,
+          "int8:sparse": 1248
+        },
+        "note": "NVIDIA gives one set of rates for all four A100s (40GB and 80GB, PCIe and SXM4); the SXM4 module runs them at 400 W against the PCIe cards' 250-300 W."
+      },
+      "peerLink": {
+        "maxCards": 16,
+        "options": [
+          4,
+          8
+        ],
+        "fabric": "NVLink 3 on an HGX A100 server board",
+        "topology": "HGX A100 boards for 4, 8 or 16 GPUs; \"When combined with NVIDIA NVSwitch, up to 16 A100 GPUs can be interconnected at up to 600 gigabytes per second (GB/sec)\"",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf -- \"NVLink: 600GB/s\" ... \"NVLink is available in A100 SXM GPUs via HGX A100 server boards and in PCIe GPUs via an NVLink Bridge for up to 2 GPUs.\" ... \"NVIDIA HGX A100-Partner and NVIDIA-Certified Systems with 4,8, or 16 GPUs\"",
+        "note": "A module on a single SXM4-to-PCIe evaluation board, the desktop route l4rz documents, has no peer link."
+      },
+      "formFactor": {
+        "name": "SXM4",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf -- \"Form Factor ... SXM\"; https://github.com/l4rz/running-nvidia-sxm-gpus-in-consumer-pcs/blob/4bd574d0a6245c83364b9d1823cdbfaaf2df18a6/README.md -- SXM3 and SXM4 use \"an updated power delivery architecture, based on 48V power input (instead of typical 12V)\"",
+        "note": "48 V input. In a desktop, l4rz (2023) ran an A100-SXM4-40GB on an SXM4-to-PCIe evaluation board bought \"for ~$500\" on Xianyu, fed 48 V through a Vicor NBM2317 12V-to-48V converter (\"purchased for $80 from Mouser\") from an 850 W supply, with the board's two server fans drawing \"approximately 26W each\" at full speed; it idled at \"50-70W\"."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf -- \"PCIe Gen4: 64GB/s\"",
+        "note": "The datasheet gives Gen4 and 64 GB/s, not a lane count; x16 is what 64 GB/s at Gen4 implies."
+      },
+      "note": "The SXM4 module of the A100 40GB: HBM2, the same 1,555 GB/s and rated math as the PCIe card, at 400 W instead of 250 W."
+    },
+    {
+      "id": "a100_sxm4_80",
+      "label": "A100 80GB SXM4",
+      "vendor": "NVIDIA",
+      "arch": "ampere",
+      "memoryGB": 80,
+      "memoryBandwidthGBs": 2039,
+      "tdpW": 400,
+      "pricing": {
+        "street": {
+          "usd": 7000,
+          "asOf": "2026-11",
+          "source": "The maintainer's observation (2026-11-06)",
+          "note": "The maintainer's observation, 2026-11-06; where the asks were seen is not recorded."
+        }
+      },
+      "sources": [
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf -- \"NVIDIA A100 TENSOR CORE GPU SPECIFICATIONS (SXM4 AND PCIE FORM FACTORS)\": FP64 9.7 TFLOPS; FP32 19.5 TFLOPS; \"Tensor Float 32 (TF32) 156 TFLOPS | 312 TFLOPS*\"; \"BFLOAT16 Tensor Core 312 TFLOPS | 624 TFLOPS*\"; \"FP16 Tensor Core 312 TFLOPS | 624 TFLOPS*\"; \"INT8 Tensor Core 624 TOPS | 1248 TOPS*\" (* with sparsity); \"A100 40GB SXM ... 40GB HBM2 ... 1,555GB/s ... 400W\"; \"A100 80GB SXM ... 80GB HBM2e ... 2,039GB/s ... 400W\"; \"Form Factor ... SXM\"; \"NVLink: 600GB/s PCIe Gen4: 64GB/s\"; \"NVIDIA HGX A100-Partner and NVIDIA-Certified Systems with 4,8, or 16 GPUs\"",
+        "https://github.com/l4rz/running-nvidia-sxm-gpus-in-consumer-pcs/blob/4bd574d0a6245c83364b9d1823cdbfaaf2df18a6/README.md"
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf",
+        "values": {
+          "fp64": 9.7,
+          "fp32": 19.5,
+          "fp16": 312,
+          "tf32": 156,
+          "tf32:sparse": 312,
+          "bf16": 312,
+          "bf16:sparse": 624,
+          "int8": 624,
+          "int8:sparse": 1248
+        },
+        "note": "NVIDIA gives one set of rates for all four A100s (40GB and 80GB, PCIe and SXM4); the SXM4 module runs them at 400 W against the PCIe cards' 250-300 W."
+      },
+      "peerLink": {
+        "maxCards": 16,
+        "options": [
+          4,
+          8
+        ],
+        "fabric": "NVLink 3 on an HGX A100 server board",
+        "topology": "HGX A100 boards for 4, 8 or 16 GPUs; \"When combined with NVIDIA NVSwitch, up to 16 A100 GPUs can be interconnected at up to 600 gigabytes per second (GB/sec)\"",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf -- \"NVLink: 600GB/s\" ... \"NVLink is available in A100 SXM GPUs via HGX A100 server boards and in PCIe GPUs via an NVLink Bridge for up to 2 GPUs.\" ... \"NVIDIA HGX A100-Partner and NVIDIA-Certified Systems with 4,8, or 16 GPUs\"",
+        "note": "A module on a single SXM4-to-PCIe evaluation board, the desktop route l4rz documents, has no peer link."
+      },
+      "formFactor": {
+        "name": "SXM4",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf -- \"Form Factor ... SXM\"; https://github.com/l4rz/running-nvidia-sxm-gpus-in-consumer-pcs/blob/4bd574d0a6245c83364b9d1823cdbfaaf2df18a6/README.md -- SXM3 and SXM4 use \"an updated power delivery architecture, based on 48V power input (instead of typical 12V)\"",
+        "note": "48 V input. In a desktop, l4rz (2023) ran an A100-SXM4-40GB on an SXM4-to-PCIe evaluation board bought \"for ~$500\" on Xianyu, fed 48 V through a Vicor NBM2317 12V-to-48V converter (\"purchased for $80 from Mouser\") from an 850 W supply, with the board's two server fans drawing \"approximately 26W each\" at full speed; it idled at \"50-70W\"."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf -- \"PCIe Gen4: 64GB/s\"",
+        "note": "The datasheet gives Gen4 and 64 GB/s, not a lane count; x16 is what 64 GB/s at Gen4 implies."
+      },
+      "note": "The SXM4 module of the A100 80GB: HBM2e at 2,039 GB/s, against 1,935 GB/s for the 80GB PCIe card, at 400 W."
+    },
+    {
       "id": "a800_40_active",
       "label": "A800 40GB Active",
       "vendor": "NVIDIA",
