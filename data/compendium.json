@@ -2603,7 +2603,7 @@
         "source": "https://leikoe.github.io/posts/automotive-gpu-maxxxing",
         "note": "Load is the post author's figure under a gpu-fryer matmul burn (not LLM inference) with the card held at 1,140 MHz, \"the lowest it accepts\"; the card has no power limit (\"the cards don't support power limiting AT ALL\"), so downclocking is the only cap, and the author says an unclocked card \"can draw 600W if it wants to\" (not measured on the page). Idle is the post's nvidia-smi screenshot: 40-45 W across four cards in P0 with Xorg attached."
       },
-      "note": "Bandwidth: the source table says \"1433Gbps\", read here as GB/s. 1,433 Gbit/s would be 179 GB/s, less than one HBM2 stack, and 32 GB of HBM2 as four 8 GB stacks (4,096 bits) at 2.8 Gbit/s per pin gives 1,433.6 GB/s; the post itself reads it as \"1.4TBps\". INT8: NVIDIA does not say whether 900 TOPS is dense or sparse, and the post's author flags the same doubt (\"sparsity??\"). It is filed as sparse because a dense 900 is out of reach for GA100: dense INT8 is 4,096 ops per clock per SM, so 900 TOPS needs about 2.0 GHz on 108 SMs or 1.7 GHz on all 128, against 1.41 GHz on every datacenter A100. That is an inference, not a published fact. No dense figure is recorded, so this card has no INT8 prefill ceiling. Measured: the post's gpu-fryer run reads 207 TFLOPS per card at 1,140 MHz (precision not shown; the author reports \"around 250TF\" at stock clocks, not shown). It must be a 16-bit rate, since GA100 TF32 cannot reach it, and it shows the die is not GA102. The same holds for HBM2, which among Ampere dies only GA100 has. A measurement is a floor, not a rating, so it is not stored as a ceiling. Board: SXM2-format with 36 mm heatsink holes, not the standard 32 mm. NVLink does not work: the GSP reports no NVLink support, and the author understands the board lacks the traces (\"the chip supports NVLINK but the pcb misses the NVLINK traces\"). Rated PCIe 4.0 x16; it ran at PCIe 3.0 on the post's AOM-SXMV carrier. Do not substitute datacenter A100 SXM4 figures: the memory, interconnect and form factor all differ. MLPerf Inference v2.0 (Edge, Closed, ID 2.0-112) lists an \"NVIDIA Drive-A100-PCIe\"; that is a PCIe variant running non-LLM benchmarks, so it is not used here.",
+      "note": "Bandwidth: the source table says \"1433Gbps\", read here as GB/s. 1,433 Gbit/s would be 179 GB/s, less than one HBM2 stack, and 32 GB of HBM2 as four 8 GB stacks (4,096 bits) at 2.8 Gbit/s per pin gives 1,433.6 GB/s; the post itself reads it as \"1.4TBps\". INT8: NVIDIA does not say whether 900 TOPS is dense or sparse, and the post's author flags the same doubt (\"sparsity??\"). It is filed as sparse because a dense 900 is out of reach for GA100: dense INT8 is 4,096 ops per clock per SM, so 900 TOPS needs about 2.0 GHz on 108 SMs or 1.7 GHz on all 128, against 1.41 GHz on every datacenter A100. That is an inference, not a published fact. No dense figure is recorded, so this card has no INT8 prefill ceiling. Measured: the post's gpu-fryer text says \"only 210TF\" at 1,140 MHz (an earlier reading of its screenshot gave 207 per card; precision not shown) and \"around 250TF\" at normal clocks. It must be a 16-bit rate, since GA100 TF32 cannot reach it, and it shows the die is not GA102. The same holds for HBM2, which among Ampere dies only GA100 has. A measurement is a floor, not a rating, so it is not stored as a ceiling. Board: SXM2-format with 36 mm heatsink holes, not the standard 32 mm. NVLink does not work: the GSP reports no NVLink support, and the author understands the board lacks the traces (\"the chip supports NVLINK but the pcb misses the NVLINK traces\"). Rated PCIe 4.0 x16; it ran at PCIe 3.0 on the post's AOM-SXMV carrier. Do not substitute datacenter A100 SXM4 figures: the memory, interconnect and form factor all differ. MLPerf Inference v2.0 (Edge, Closed, ID 2.0-112) lists an \"NVIDIA Drive-A100-PCIe\"; that is a PCIe variant running non-LLM benchmarks, so it is not used here.",
       "sources": [
         "https://leikoe.github.io/posts/automotive-gpu-maxxxing -- the post's spec table transcribes NVIDIA's archived DRIVE Hyperion page: \"Tensor core peak performance | 900 TOPS (INT8) (sparsity??)\", \"PCI Express 4.0 x16\", \"Total frame buffer | 32GB\", \"Memory bandwidth | 1433Gbps\". Its nvidia-smi screenshot (driver 570.124.04) shows \"NVIDIA DRIVE-PG199-PROD\", 32768MiB, and a power cap of N/A.",
         "Archived NVIDIA DRIVE Hyperion page (Wayback Machine, captured 2022-05-27) -- the original of the table above; the live page is gone."
@@ -2621,7 +2621,7 @@
       "peerLink": {
         "maxCards": 0,
         "source": "https://leikoe.github.io/posts/automotive-gpu-maxxxing -- \"NVLINK doesn't work. (unknown reasons to me at this point) ... From what I know, the chip supports NVLINK but the pcb misses the NVLINK traces so they change it. It's not a software side problem. The gsp reports that the card doesn't support NVLINK\"",
-        "note": "No NVIDIA source. A modder says the board lacks the NVLink traces; a community fuse survey says NVLink is fused off. Either way, none."
+        "note": "No NVIDIA source. A modder says the board lacks the NVLink traces; a community fuse survey says NVLink is fused off. Either way, none. The post says a Xianyu seller offers an NVLink modification, with a \"50 qty minimum\"; nothing about its result is published."
       },
       "formFactor": {
         "name": "SXM2",
@@ -2715,7 +2715,7 @@
           "usd": 790,
           "asOf": "2026-10",
           "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
-          "note": "Asking, used SXM2 32GB. The maintainer saw $700 earlier in October and $1,000 in July. On Taobao, Rex Yuan (2025-09-30) found SXM2 modules \"for as low as around 400 RMB(~56 USD)\", capacity not stated."
+          "note": "Asking, used SXM2 32GB. The maintainer saw $700 earlier in October and $1,000 in July. On Taobao, Rex Yuan (2025-09-30) found SXM2 modules \"for as low as around 400 RMB(~56 USD)\", capacity not stated. In June 2023 l4rz put 32GB modules at \"approximately $900\" on eBay and a single-module PCIe adapter build at \"$100-200 in parts (the adapter plus a high performace heatsink)\"."
         }
       },
       "power": {
@@ -2729,7 +2729,8 @@
       "sources": [
         "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf",
         "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
-        "https://blog.rexyuan.com/2025/09/30/v100/"
+        "https://blog.rexyuan.com/2025/09/30/v100/",
+        "https://github.com/l4rz/running-nvidia-sxm-gpus-in-consumer-pcs/blob/4bd574d0a6245c83364b9d1823cdbfaaf2df18a6/README.md"
       ],
       "note": "Rated throughput is NVIDIA's own V100 datasheet for the SXM2 module -- 7.8 / 15.7 / 125 TFLOPS (FP64 / FP32 / Tensor, which implies a 1,530 MHz boost clock), 900 GB/s, 300 W, passively cooled, NVLink 300 GB/s. An earlier revision followed Wikipedia's Tesla template at a lower clock (7.45 / 14.9 / 119.2, about 5% below the datasheet). The Tesla table gives one row for the 16 GB and 32 GB SXM2 parts; clocks, bandwidth and throughput are identical across both, so only the capacity differs. The release date is the 32 GB part's (announced March 2018), not the 16 GB module's May 2017; the shared row dates the product line. FP16 is the tensor-core rate with FP32 accumulate — Volta has no structured-sparsity path. No INT8 figure recorded: Volta's Tensor Cores are hard-wired FP16-input/FP32-accumulate only -- NVIDIA's own current Tensor Core page attributes full FP32/FP16/INT8/INT4 inference precision support to Turing onward, not Volta. No official DP4A/integer-ALU INT8 figure was ever published for V100 either (the Volta architecture whitepaper gives an INT8 figure for sibling Pascal parts P40/P4 but conspicuously omits one for V100). Unsourced ~62-63 TOPS figures circulating on aggregator sites appear to be an unofficial 4x-of-FP32 estimate, not a published spec -- not used. Also lacks BF16 (arrived with Ampere, later still than Turing) -- the same FP16-input/FP32-accumulate-only tensor path that rules out INT8 rules out BF16 too. Software support is ending: CUDA 13 cannot target Volta, R580 is its last driver branch (supported to June 2028), and PyTorch 2.14 is the last release with Volta wheels; see the volta generation.",
       "arch": "volta",
@@ -2758,7 +2759,8 @@
       "formFactor": {
         "name": "SXM2",
         "cooling": "passive",
-        "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"V100 also supports 16 lanes of PCIe 3.0. In DGX-1, these are used for connecting between the CPUs and GPUs and high-speed IB network interface cards.\""
+        "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"V100 also supports 16 lanes of PCIe 3.0. In DGX-1, these are used for connecting between the CPUs and GPUs and high-speed IB network interface cards.\"",
+        "note": "The SXM2 interface is two Amphenol Meg-Array connectors, \"one containing all the PCIe signals and power and the another being used for, inter alia, NVLink\" (l4rz, 2023). That fits why a single-module PCIe adapter gives no NVLink while the dual and quad boards route the second connector; the inference is this page's."
       },
       "hostLink": {
         "gen": 3,
@@ -14681,7 +14683,8 @@
       "status": "preregistered",
       "note": "39com's board, which 1CATai builds its two-GPU system on. 64 GB holds Qwen3.8-27B NVFP4 with DFlash2 but not Qwen3.8-Flash-Next NVFP4. 1CATai's published benchmarks, quoted by Rex Yuan from its Bilibili video (QwQ-32B 29.9 tok/s single and 50.9 at four streams; DeepSeek-R1-Distill-Llama-70B 12.7 and 36), name no quant, engine, context or hardware configuration and are not recorded.",
       "sources": [
-        "https://blog.rexyuan.com/2025/09/30/v100/ -- the board, its SlimSAS I/O, host options, Taobao prices and 1CATai's two-GPU system"
+        "https://blog.rexyuan.com/2025/09/30/v100/ -- the board, its SlimSAS I/O, host options, Taobao prices and 1CATai's two-GPU system",
+        "https://github.com/l4rz/running-nvidia-sxm-gpus-in-consumer-pcs/blob/4bd574d0a6245c83364b9d1823cdbfaaf2df18a6/README.md -- the server precedent for cabled SXM2: Dell C4130/C4140 interposer boards link each GPU \"either via a PCIE PLX switch ... or directly\", the direct board giving \"a dedicated 16-lane PCIe connection from each GPU to CPU\" over \"Slimline SAS (SFF-8654 8i)\""
       ]
     },
     {
@@ -14764,10 +14767,10 @@
           "costHighUsd": 1520,
           "hostLinkGBs": 32,
           "source": "https://leikoe.github.io/posts/automotive-gpu-maxxxing",
-          "note": "Cost covers the carrier and the parts it cannot run without, at the post's 2025 prices before VAT, shipping and buying-agent fees. The carrier is about $690 (no AOM-SXMV below 5,000 yuan on Xianyu when the author came to buy, down from about 2,000 yuan earlier) to $900 (a Supermicro refurbished-parts quote, two-unit minimum). On top of that: a case with fans and a 1,400 W power supply (about $300), two JPCIE-to-PCIe cables (about $20 each) and four heatsinks (about $20 each). The high end adds four $50 brackets for the PG199's 36 mm heatsink-hole spacing, which the author avoided by filing the heatsinks by hand. NVLink does not work on these cards, so peers talk over PCIe. The post's cards ran at PCIe 3.0 x16 at best, two GPUs sharing each of the carrier's switches, and slower behind a bifurcated host slot. The host link is therefore PCIe 3.0 x16, not the card's rated 4.0."
+          "note": "Cost covers the carrier and the parts it cannot run without, at the post's 2025 prices before VAT, shipping and buying-agent fees. The carrier is about $690 (no AOM-SXMV below 5,000 yuan on Xianyu when the author came to buy, up from \"around 2000yuan\" earlier) to $900 (a Supermicro refurbished-parts quote, two-unit minimum). On top of that: a case with fans and a 1,400 W power supply (about $300), two JPCIE-to-PCIe cables (about $20 each) and four heatsinks (about $20 each). The high end adds four $50 brackets for the PG199's 36 mm heatsink-hole spacing, which the author avoided by filing the heatsinks by hand. NVLink does not work on these cards, so peers talk over PCIe. The post's cards ran at PCIe 3.0 x16 at best, two GPUs sharing each of the carrier's switches, and slower behind a bifurcated host slot. The host link is therefore PCIe 3.0 x16, not the card's rated 4.0."
         },
         "host": {
-          "note": "Two host x16 slots feed the carrier, one per switch. The post's Ryzen 9 7950X has 24 CPU lanes, which forced bifurcation and slowed the second pair (\"I should have at least 32\"). The case supplies the GPUs' power independently of the host. The host is not priced."
+          "note": "Two host x16 slots feed the carrier, one per switch. The post's Ryzen 9 7950X has 24 CPU lanes, so the second slot bifurcates and runs slower (\"bifurcation happens and that slot runs slower\"; \"I should have at least 32\"). The case supplies the GPUs' power independently of the host. The host is not priced."
         }
       },
       "models": [
@@ -14775,7 +14778,7 @@
         "qwen38_flash_next"
       ],
       "status": "preregistered",
-      "note": "One person's documented build, used for RL work, not LLM serving, so there are no inference figures. The cards have no power limit: the author holds them at 1,140 MHz, the lowest clock they accept, for about 250 W each, and says an unclocked card \"can draw 600W if it wants to\". The four cards on the 1,400 W supply only fit with the downclock. The author also suspects dried thermal paste under the heat spreader, and Xianyu sellers list delidded cards. Card supply and prices vary widely."
+      "note": "One person's documented build, used for RL work, not LLM serving, so there are no inference figures. The cards have no power limit: the author holds them at 1,140 MHz, the lowest clock they accept, for about 250 W each, and says an unclocked card \"can draw 600W if it wants to\". The four cards on the 1,400 W supply only fit with the downclock. The author also suspects dried thermal paste under the heat spreader, and Xianyu sellers list delidded cards. Card supply and prices vary widely. The post (2025-05-31) puts the whole build at \"less than two 4090s\" and gives no total."
     }
   ]
 }
