@@ -5882,7 +5882,63 @@
         "https://blog.rexyuan.com/2025/09/30/v100/ -- the board, its SlimSAS I/O, host options, Taobao prices and 1CATai's two-GPU system",
         "https://github.com/l4rz/running-nvidia-sxm-gpus-in-consumer-pcs/blob/4bd574d0a6245c83364b9d1823cdbfaaf2df18a6/README.md -- the server precedent for cabled SXM2: Dell C4130/C4140 interposer boards link each GPU \"either via a PCIE PLX switch ... or directly\", the direct board giving \"a dedicated 16-lane PCIe connection from each GPU to CPU\" over \"Slimline SAS (SFF-8654 8i)\""
       ],
-      "note": "39com's board, which 1CATai builds its two-GPU system on."
+      "note": "39com's board, which 1CATai builds its two-GPU system on. A board with the same I/O, the TNS-2SXM2-4P54, has an owner's report with all six NVLink links up; see its record."
+    },
+    {
+      "id": "tns_2sxm2_4p54",
+      "label": "TNS-2SXM2-4P54 external dual-SXM2 board",
+      "maker": "not stated (\"made by who knows\")",
+      "socket": "SXM2",
+      "slots": 2,
+      "peer": {
+        "kind": "nvlink",
+        "wiring": "all six links between the pair",
+        "linksPerGpu": 6,
+        "peakP2pGBsPerGpu": 300,
+        "source": "https://angrysysadmins.tech/2026/03/grassyloki/cheapish-ai-homelab-on-a-budget-v100s-custom-boards-and-nvlink/ -- screenshot of nvidia-smi nvlink -s with two Tesla V100-SXM2-32GB: \"Link 0: 25.781 GB/s\" through \"Link 5: 25.781 GB/s\" on each GPU (2026-03-17); \"NVLink also works!\"",
+        "note": "The screenshot is a link-rate readout, not a transfer: six links at 25.781 GB/s each way is about 155 GB/s per direction, NVIDIA's 300 GB/s bidirectional rating. It does show all six links up on both modules, which no other board here has shown. No peer bandwidth, latency or all-reduce figure is posted; the author says only \"Going over the nvlink bridge slows down execution for sure, but its still reasonable\"."
+      },
+      "switch": {
+        "present": false,
+        "note": "None in the kit: its host cards are plain \"PCIe 3.0 x16 to 2x SFF-8654\" adapters, and the author advises \"get a PLX chip version of the kit if your motherboard does not support PCIe bifurcation\". The board photo shows no switch-sized chip on the top side (this page's reading of the photo). Without NVLink, peers would meet through the host."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "gpusPerUplink": 1,
+        "attach": "Four SFF-8654 ports, two per GPU, cabled to the kit's two \"PCIe 3.0 x16 to 2x SFF-8654 external connectors\" cards in two x16 slots; or one slot split x8/x8 (\"you would need 8x/8x pcie bifurcation configured in the bios\"), which halves each GPU's link. The author calls the cables MCIO, while the kit lists SFF-8654. The author's BIOS list: UEFI boot, CSM off, \"Above 4G Decoding\" and Resizable BAR on.",
+        "source": "https://angrysysadmins.tech/2026/03/grassyloki/cheapish-ai-homelab-on-a-budget-v100s-custom-boards-and-nvlink/ -- the kit \"came with\" \"2x PCIe 3.0 x16 to 2x SFF-8654 external connectors\" and \"4xSFF-8654 cables\"; \"Both the GPU's show up at 16x lanes!\"",
+        "note": "Each GPU gets its own x16, 32 GB/s (both directions, line rate), in the two-slot setup the author used on a Threadripper 2950X. The first boot failed until the cables were swapped between ports (\"I swapped the sff cable locations and it worked fine after that\")."
+      },
+      "power": {
+        "input": "ATX 24-pin plus two EPS 8-pin",
+        "note": "\"I connected the ATX connector as well as 2x cpu power connectors with a 700 watt psu\" (the build list says 750 W), a supply separate from the host's 600 W. The photo shows four 8-pin inputs besides the ATX connector (this page's reading). The board has an AT/MT switch for power control, six fan headers (DC and PWM) and debug headers. Idle draw is 42 W per module in nvidia-smi."
+      },
+      "cooling": {
+        "included": false,
+        "note": "The kit list names no heatsinks or blocks. The author zip-tied four 80 mm Arctic P8 fans on and says temperatures \"never have gone above 55c\", though his own benchmark table records peaks of 58-83 °C."
+      },
+      "fits": [
+        {
+          "unit": "v100_sxm2",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://angrysysadmins.tech/2026/03/grassyloki/cheapish-ai-homelab-on-a-budget-v100s-custom-boards-and-nvlink/ -- \"I went with two of the 32GB ones for a total of 64GB of HBM2\"; nvidia-smi shows two Tesla V100-SXM2-32GB, driver 580.126.18",
+          "note": "\"For these boards, there are 2 options you can use. Nvidia TESLA V100 32GB or Nvidia TESLA V100 16GB\" (the author). The open kernel modules do not drive Volta: \"the nvidia-open drivers don't work\", so the author runs the proprietary 580 branch. \"Its been rock solid\" after three weeks."
+        },
+        {
+          "unit": "pg199_card",
+          "status": "untested",
+          "peer": "pcie",
+          "note": "No report either way. Without NVLink, and with no switch in the kit, the pair would meet through the host. A PG199 draws 400-465 W under dense work with no power limit, against the V100's 300 W rating; in inference it stays near 250 W."
+        }
+      ],
+      "sources": [
+        "https://angrysysadmins.tech/2026/03/grassyloki/cheapish-ai-homelab-on-a-budget-v100s-custom-boards-and-nvlink/ -- Ryan Parker, \"Cheap(ish) AI Homelab on a budget\" (2026-03-17, revised by 2026-08-11): the kit, its host cards and cables, power, NVLink status, BIOS settings, drivers",
+        "https://www.ebay.com/itm/136861481597 -- the kit's eBay listing, linked from the post; not read here, so the kit is unpriced",
+        "https://www.ebay.com/itm/298083941971 -- the four-GPU version, model YMZX-4GPU-Q1, linked from the post; the author owns one but has not reported running it"
+      ],
+      "note": "Same I/O as 39com's external board (four SFF-8654 8i ports, two per GPU, host cards with two ports each), but the post does not name the maker, so whether it is 39com's board is not established. The kit's price is not in the post; the author's whole build, with two 32 GB modules, came to \"$1300 out of my pocket\". The same author owns a four-GPU version, model YMZX-4GPU-Q1, not yet run."
     },
     {
       "id": "onecat_quad",
