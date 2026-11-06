@@ -14753,6 +14753,37 @@
       ]
     },
     {
+      "id": "c_v100x4_aomsxmv",
+      "label": "4× V100 SXM2 32GB on a Supermicro AOM-SXMV",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm2",
+            "count": 4
+          }
+        ],
+        "interconnect": {
+          "kind": "nvlink",
+          "bridge": "Supermicro AOM-SXMV 4× SXM2 carrier (NVLink as passive traces; two PLX switches, each with one x16 uplink)",
+          "hostLinkGBs": 16,
+          "source": "https://forums.servethehome.com/index.php?threads/sxm2-over-pcie.38066/ -- \"each pair of GPUs are connected by x16 to a PLX which connects a single x16 to the CPUs. The NVLinks are just passive traces on the carrier\" (bayleyw, 2022); \"One PLX has one upstream port and three downstream ports\" (RGL, 2024-03-26)",
+          "note": "Supermicro's link count, topology and GB/s for this board are not recorded here, and no owner has measured peer bandwidth, so the link count and peak peer-to-peer figure are left out. Owners report NVLink working (\"nvlink is still working fine from the few commands to check it like the nvlink bandwidth tests and whatnot\", gsrcrxsi, 2024-06-12) but post no figures. NVIDIA rates the module at 300 GB/s per GPU over six links, which holds only if the carrier wires all six. Host link: each pair shares one PCIe 3.0 x16 uplink, so 16 GB/s per GPU (both directions, line rate) when both stream and 32 when one is idle. Unpriced pending current prices. Price history from the thread: the board cost about $200 from China in March 2024, \"None of the sellers are actually selling the board only\" by July 2024, and \"getting AOM-SXMV for less than $500 USD is already almost impossible\" by January 2025 (all gsrcrxsi); a pair of RGL's AOM-SXMV-PIO host cables was about $115 (2024-03)."
+        },
+        "host": {
+          "note": "The carrier connects through Supermicro's proprietary slots, not standard PCIe: two host x16 slots, one per switch, through a pair of RGL's AOM-SXMV-PIO cables (\"AOM-SXMV and AOM-SXM2 requires two cables to support 4 sxm cards\", RGL, 2024-03-02), or through Supermicro RSC-G-6 risers and male-to-male jumpers, which have to be bent around the power input (MildHotSauce, 2023-12-07). A connection through the JPCIE/8611 connectors alone reportedly does not work. One owner found the board did not work until two of its four OCuLink connectors were plugged into a host card (MildHotSauce, 2024-06-11); another says those ports \"aren't used for PCIe communication with the host PC\" (gsrcrxsi, 2024-03). Signal integrity is the usual failure: GPUs dropped while the board hung off an x16 slot of an EPYC Naples host, cured by an x8 slot or a Milan CPU, and 60 cm risers gave \"immediate PCIe errors\" where 40 cm ones worked (gsrcrxsi, 2024-03). Power comes in on EPS connectors, not PCIe; owners use PCIe-to-EPS adapters or a dedicated server supply, and a 12 V rail sagging to 11.3 V through cheap cables crashed one build (Skripthut, 2024-10). Idle with four V100s is 140-150 W at the wall (gsrcrxsi, 2024-07). Chinese sellers make enclosures for the board with fans and a 1,400 W, 240 V-only supply, about $190 shipped (gsrcrxsi, 2024-07). Cooling is the builder's job: owners cut down Dell C4140 heatsinks, use 2U copper heatsinks or Bykski water blocks; loaded V100s reached about 80 °C in a 2U case (d450d112, 2024-07)."
+        }
+      },
+      "models": [
+        "qwen38_27b",
+        "qwen38_flash_next"
+      ],
+      "status": "preregistered",
+      "note": "Recorded for completeness rather than appeal: the Supermicro carrier hobbyists used for four NVLinked V100s before the Chinese quad boards, and the one the PG199 rig sits on. NVLink is Volta-only: \"will work with any and only Volta SXM2 cards\" (CyklonDX, 2024-03-07), though the PG199, which has no NVLink, runs on it over PCIe; the similar AOM-SXM2 is the Pascal (P100) board. No owner in the thread confirms 32 GB modules on it. The builds there used 16 GB modules, which this catalog does not carry; a 16 GB build has half the memory at the same bandwidth. No LLM serving figures were posted from this board. Software is the same as for the 1CATai rig: 1Cat-vLLM on SM70, CUDA 12.x and the R580 driver branch (supported to June 2028).",
+      "sources": [
+        "https://forums.servethehome.com/index.php?threads/sxm2-over-pcie.38066/ -- ServeTheHome \"SXM2 over PCIe\", all 15 pages: the carrier's wiring, host cables and risers, NVLink reports, power, cooling, failures, prices"
+      ]
+    },
+    {
       "id": "c_v100x2_dual_pcie_carrier",
       "label": "2× V100 SXM2 32GB on a dual-SXM2 PCIe x16 carrier",
       "rig": {
@@ -14900,9 +14931,9 @@
           "bridge": "Supermicro AOM-SXMV 4× SXM2 carrier (PCIe switches; NVLink unused)",
           "costUsd": 1110,
           "costHighUsd": 1520,
-          "hostLinkGBs": 32,
+          "hostLinkGBs": 16,
           "source": "https://leikoe.github.io/posts/automotive-gpu-maxxxing",
-          "note": "Cost covers the carrier and the parts it cannot run without, at the post's 2025 prices before VAT, shipping and buying-agent fees. The carrier is about $690 (no AOM-SXMV below 5,000 yuan on Xianyu when the author came to buy, up from \"around 2000yuan\" earlier) to $900 (a Supermicro refurbished-parts quote, two-unit minimum). On top of that: a case with fans and a 1,400 W power supply (about $300), two JPCIE-to-PCIe cables (about $20 each) and four heatsinks (about $20 each). The high end adds four $50 brackets for the PG199's 36 mm heatsink-hole spacing, which the author avoided by filing the heatsinks by hand. NVLink does not work on these cards, so peers talk over PCIe. The post's cards ran at PCIe 3.0 x16 at best, two GPUs sharing each of the carrier's switches, and slower behind a bifurcated host slot. The host link is therefore PCIe 3.0 x16, not the card's rated 4.0."
+          "note": "Cost covers the carrier and the parts it cannot run without, at the post's 2025 prices before VAT, shipping and buying-agent fees. The carrier is about $690 (no AOM-SXMV below 5,000 yuan on Xianyu when the author came to buy, up from \"around 2000yuan\" earlier) to $900 (a Supermicro refurbished-parts quote, two-unit minimum). On top of that: a case with fans and a 1,400 W power supply (about $300), two JPCIE-to-PCIe cables (about $20 each) and four heatsinks (about $20 each). The high end adds four $50 brackets for the PG199's 36 mm heatsink-hole spacing, which the author avoided by filing the heatsinks by hand. NVLink does not work on these cards, so peers talk over PCIe. The post's cards ran at PCIe 3.0 x16 at best, two GPUs sharing each of the carrier's switches, and slower behind a bifurcated host slot. The host link is therefore PCIe 3.0 x16 per pair, not the card's rated 4.0: 16 GB/s per GPU (both directions, line rate) when both GPUs on a switch stream, the convention the dual carriers use, and 32 when one is idle."
         },
         "host": {
           "note": "Two host x16 slots feed the carrier, one per switch. The post's Ryzen 9 7950X has 24 CPU lanes, so the second slot bifurcates and runs slower (\"bifurcation happens and that slot runs slower\"; \"I should have at least 32\"). The case supplies the GPUs' power independently of the host. The host is not priced."
