@@ -2729,7 +2729,7 @@
           "usd": 790,
           "asOf": "2026-10",
           "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
-          "note": "Asking, used SXM2 32GB. The maintainer saw $700 earlier in October and $1,000 in July. On Taobao, Rex Yuan (2025-09-30) found SXM2 modules \"for as low as around 400 RMB(~56 USD)\", capacity not stated. In June 2023 l4rz put 32GB modules at \"approximately $900\" on eBay and a single-module PCIe adapter build at \"$100-200 in parts (the adapter plus a high performace heatsink)\". In November 2022 a ServeTheHome thread saw \"many V100 SXM2 cards popping on ebay for 400-700 USD\". ServeTheHome, 2024: 16 GB modules at about $175 (\"~$175/ea\", gsrcrxsi, March; \"V100s are going for $185 now\", July) and £177 in the UK with tax; the cheapest 32 GB module on eBay about $500 (gsrcrxsi, 2024-10-30). Single adapters were about $75 each in a 2024 batch (the $7 on a buying-agent listing was \"JUST the metal back plate\") and $60 in 2025; Bykski water blocks about $60 each (gsrcrxsi, 2024-03)."
+          "note": "Asking, used SXM2 32GB. The maintainer saw $700 earlier in October and $1,000 in July. On Taobao, Rex Yuan (2025-09-30) found SXM2 modules \"for as low as around 400 RMB(~56 USD)\", capacity not stated. In June 2023 l4rz put 32GB modules at \"approximately $900\" on eBay and a single-module PCIe adapter build at \"$100-200 in parts (the adapter plus a high performace heatsink)\". In November 2022 a ServeTheHome thread saw \"many V100 SXM2 cards popping on ebay for 400-700 USD\". ServeTheHome, 2024: the cheapest 32 GB module on eBay about $500 (gsrcrxsi, 2024-10-30). Single adapters were about $75 each in a 2024 batch (the $7 on a buying-agent listing was \"JUST the metal back plate\") and $60 in 2025; Bykski water blocks about $60 each (gsrcrxsi, 2024-03)."
         }
       },
       "power": {
@@ -2747,7 +2747,71 @@
         "https://github.com/l4rz/running-nvidia-sxm-gpus-in-consumer-pcs/blob/4bd574d0a6245c83364b9d1823cdbfaaf2df18a6/README.md",
         "https://forums.servethehome.com/index.php?threads/sxm2-over-pcie.38066/"
       ],
-      "note": "Rated throughput is NVIDIA's own V100 datasheet for the SXM2 module -- 7.8 / 15.7 / 125 TFLOPS (FP64 / FP32 / Tensor, which implies a 1,530 MHz boost clock), 900 GB/s, 300 W, passively cooled, NVLink 300 GB/s. An earlier revision followed Wikipedia's Tesla template at a lower clock (7.45 / 14.9 / 119.2, about 5% below the datasheet). The Tesla table gives one row for the 16 GB and 32 GB SXM2 parts; clocks, bandwidth and throughput are identical across both, so only the capacity differs. The release date is the 32 GB part's (announced March 2018), not the 16 GB module's May 2017; the shared row dates the product line. FP16 is the tensor-core rate with FP32 accumulate — Volta has no structured-sparsity path. No INT8 figure recorded: Volta's Tensor Cores are hard-wired FP16-input/FP32-accumulate only -- NVIDIA's own current Tensor Core page attributes full FP32/FP16/INT8/INT4 inference precision support to Turing onward, not Volta. No official DP4A/integer-ALU INT8 figure was ever published for V100 either (the Volta architecture whitepaper gives an INT8 figure for sibling Pascal parts P40/P4 but conspicuously omits one for V100). Unsourced ~62-63 TOPS figures circulating on aggregator sites appear to be an unofficial 4x-of-FP32 estimate, not a published spec -- not used. Also lacks BF16 (arrived with Ampere, later still than Turing) -- the same FP16-input/FP32-accumulate-only tensor path that rules out INT8 rules out BF16 too. Software support is ending: CUDA 13 cannot target Volta, R580 is its last driver branch (supported to June 2028), and PyTorch 2.14 is the last release with Volta wheels; see the volta generation. Variant hazard: a 16 GB module that reports as \"Tesla V100-SXM2-16GB-N\" defaults to 160 W (150-240 W) with an 810 MHz memory clock, against the standard part's 300 W (150-300 W) and 877 MHz, and is \"considerably slower on the same workloads\" (gsrcrxsi, of a friend's card, ServeTheHome, 2025-10-19). At 810 MHz the 4,096-bit bus gives about 830 GB/s; that arithmetic is this page's.",
+      "note": "Rated throughput is NVIDIA's own V100 datasheet for the SXM2 module -- 7.8 / 15.7 / 125 TFLOPS (FP64 / FP32 / Tensor, which implies a 1,530 MHz boost clock), 900 GB/s, 300 W, passively cooled, NVLink 300 GB/s. An earlier revision followed Wikipedia's Tesla template at a lower clock (7.45 / 14.9 / 119.2, about 5% below the datasheet). The Tesla table gives one row for the 16 GB and 32 GB SXM2 parts; clocks, bandwidth and throughput are identical across both, so only the capacity differs. The release date is the 32 GB part's (announced March 2018), not the 16 GB module's May 2017; the shared row dates the product line. FP16 is the tensor-core rate with FP32 accumulate — Volta has no structured-sparsity path. No INT8 figure recorded: Volta's Tensor Cores are hard-wired FP16-input/FP32-accumulate only -- NVIDIA's own current Tensor Core page attributes full FP32/FP16/INT8/INT4 inference precision support to Turing onward, not Volta. No official DP4A/integer-ALU INT8 figure was ever published for V100 either (the Volta architecture whitepaper gives an INT8 figure for sibling Pascal parts P40/P4 but conspicuously omits one for V100). Unsourced ~62-63 TOPS figures circulating on aggregator sites appear to be an unofficial 4x-of-FP32 estimate, not a published spec -- not used. Also lacks BF16 (arrived with Ampere, later still than Turing) -- the same FP16-input/FP32-accumulate-only tensor path that rules out INT8 rules out BF16 too. Software support is ending: CUDA 13 cannot target Volta, R580 is its last driver branch (supported to June 2028), and PyTorch 2.14 is the last release with Volta wheels; see the volta generation. A 16 GB variant that reports as \"Tesla V100-SXM2-16GB-N\" runs at a lower power limit and memory clock; see the 16 GB entry.",
+      "arch": "volta",
+      "compute": {
+        "unit": "Tops",
+        "source": "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf",
+        "values": {
+          "fp64": 7.8,
+          "fp32": 15.7,
+          "fp16": 125
+        }
+      },
+      "peerLink": {
+        "maxCards": 8,
+        "options": [
+          2,
+          3,
+          4,
+          6
+        ],
+        "fabric": "NVLink 2 on an SXM2 baseboard (DGX-1 / HGX-1, or IBM Power AC922 with POWER9 CPUs)",
+        "topology": "DGX-1 / HGX-1, 8 GPUs: hybrid cube-mesh, not all-to-all, six 50 GB/s links per GPU (300 GB/s bidirectional), each GPU wired to 4 of the other 7; collectives relay through neighbours. IBM AC922, 4 or 6 GPUs: two or three per POWER9, wired to each other and to their CPU by NVLink (3 bricks per link with two per CPU, 2 with three); GPUs on different sockets reach each other through both CPUs and the 64 GBps X Bus, still without PCIe",
+        "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"Each Tesla V100 has 6 NVLink connections, each capable of 50 GB/s of bidirectional bandwidth, for an aggregate of up to 300 GB/s bidirectional bandwidth. ... Figure 4 DGX-1 uses an 8-GPU hybrid cube-mesh interconnection network topology. ... Furthermore, this 8-GPU cube-mesh topology is easily subdivided into fully connected halves, or into NVLink-connected GPU pairs.\"",
+        "note": "A single SXM2 module on a PCIe adapter, the usual hobbyist setup, has no NVLink at all. The AC922 cross-socket path is a 64 GBps bidirectional SMP bus, about what PCIe 4.0 x16 gives, so its 4- and 6-GPU groups are joined without PCIe but not at NVLink speed. IBM Redpaper REDP-5472 (Power AC922 Introduction and Technical Overview), p.15: \"six connected GPUs, where the six NVLINK Bricks are divided into three groups of two Bricks, enabling 100 GBps buses between GPUs\"; p.14: \"four GPUs, where the six NVLINK Bricks are divided into groups of three, which enables 150 GBps buses between GPUs\"; p.12: \"Each POWER9 CPU and each GPU have six NVLINK channels, called Bricks, with each one delivering up to 50 GBps bidirectional bandwidth\"; Figures 2-5 and 2-6 show the POWER9s joined by an \"X Bus 64 GBps\". Supermicro's AOM-SXMV four-GPU carrier also wires NVLink, as \"just passive traces on the carrier\", with each pair behind a PLX switch on one x16 to the CPU (bayleyw, ServeTheHome, 2022); its link topology is not stated. Only V100s link on it: \"This board only supports V100 SXM2 card\" (CyklonDX, 2023). Owners report NVLink working on it (\"nvlink is still working fine from the few commands to check it like the nvlink bandwidth tests\", gsrcrxsi, 2024-06-12), but neither ServeTheHome thread posts a peer-to-peer bandwidth, latency or all-reduce figure."
+      },
+      "formFactor": {
+        "name": "SXM2",
+        "cooling": "passive",
+        "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"V100 also supports 16 lanes of PCIe 3.0. In DGX-1, these are used for connecting between the CPUs and GPUs and high-speed IB network interface cards.\"",
+        "note": "The SXM2 interface is two Amphenol Meg-Array connectors, \"one containing all the PCIe signals and power and the another being used for, inter alia, NVLink\" (l4rz, 2023). That fits why a single-module PCIe adapter gives no NVLink while the dual and quad boards route the second connector; the inference is this page's. Signal integrity limits the host side: a single adapter on a Dell R720 worked only on a 6-inch x8 riser after several x16 risers failed (bill4, ServeTheHome, 2025-09), and quad-carrier owners report PCIe errors with long or adapter-chained cables (\"Too many adapters degrades the signal\", gsrcrxsi, 2026-03). Dell's SXM2 boards are \"Dell locked\" (bayleyw, 2024-07); one owner failed to power a C4140 board from an x86 host over SFF-8654 (joetler, 2023-06)."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"V100 also supports 16 lanes of PCIe 3.0. In DGX-1, these are used for connecting between the CPUs and GPUs and high-speed IB network interface cards.\""
+      }
+    },
+    {
+      "id": "v100_sxm2_16",
+      "label": "Tesla V100 SXM2 16GB",
+      "vendor": "NVIDIA",
+      "memoryGB": 16,
+      "pricing": {
+        "street": {
+          "usd": 190,
+          "asOf": "2026-11",
+          "source": "eBay asking prices, collected by the maintainer (2026-11-07)",
+          "note": "Asking, used SXM2 16GB; whether a listing is the standard part or the -N variant is not stated. eBay sellers also offer a dual-SXM2 PCIe card pre-populated with two for $680 (see that carrier). ServeTheHome, 2024: about $175 (\"~$175/ea\", gsrcrxsi, March; \"V100s are going for $185 now\", July) and £177 in the UK with tax."
+        }
+      },
+      "power": {
+        "loadW": 125,
+        "idleW": 40,
+        "confidence": "i"
+      },
+      "released": "2017-05",
+      "memoryBandwidthGBs": 900,
+      "tdpW": 300,
+      "sources": [
+        "https://images.nvidia.com/content/technologies/volta/pdf/tesla-volta-v100-datasheet-letter-fnl-web.pdf",
+        "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla",
+        "https://blog.rexyuan.com/2025/09/30/v100/",
+        "https://github.com/l4rz/running-nvidia-sxm-gpus-in-consumer-pcs/blob/4bd574d0a6245c83364b9d1823cdbfaaf2df18a6/README.md",
+        "https://forums.servethehome.com/index.php?threads/sxm2-over-pcie.38066/"
+      ],
+      "note": "The 32 GB module with half the capacity: NVIDIA's Tesla table gives one row for both SXM2 parts, with the same clocks, 900 GB/s and rates, so see the 32 GB entry for the datasheet figures, the missing INT8 and BF16 paths and software support. The release date is the 16 GB module's (May 2017). Variant hazard: a 16 GB module that reports as \"Tesla V100-SXM2-16GB-N\" defaults to 160 W (150-240 W) with an 810 MHz memory clock, against the standard part's 300 W (150-300 W) and 877 MHz, and is \"considerably slower on the same workloads\" (gsrcrxsi, of a friend's card, ServeTheHome, 2025-10-19). At 810 MHz the 4,096-bit bus gives about 830 GB/s; that arithmetic is this page's. Listings rarely say which part they are; nvidia-smi's product name and default power limit tell them apart.",
       "arch": "volta",
       "compute": {
         "unit": "Tops",
@@ -5736,6 +5800,12 @@
       },
       "fits": [
         {
+          "unit": "v100_sxm2_16",
+          "status": "reported",
+          "peer": "pcie",
+          "source": "https://forums.servethehome.com/index.php?threads/sxm2-over-pcie.38066/ -- \"Yes, all GPUs with sxm2 interface are compatible\" (RGL, who makes the adapters, 2024-08-21)"
+        },
+        {
           "unit": "v100_sxm2",
           "status": "verified",
           "peer": "pcie",
@@ -5799,9 +5869,15 @@
         "asOf": "2026-11",
         "includes": "the carrier card",
         "source": "eBay asking prices, collected by the maintainer (2026-11-06)",
-        "note": "$314.88 plus $2.98 delivery from China (\"Nvidia V100 SXM2 Dual GPU 300Gb/s 16G/32G NVLink PCIe x8/x8 adapter card\") to $349.88 new from a US seller; the maintainer considers them marked up over AliExpress and Taobao. The review's yen listings (¥52,634 and ¥42,942 tax included) and its \"$700 – $800 (for 64GB setup)\" total do not reconcile with these."
+        "note": "$314.88 plus $2.98 delivery from China (\"Nvidia V100 SXM2 Dual GPU 300Gb/s 16G/32G NVLink PCIe x8/x8 adapter card\") to $349.88 new from a US seller; the maintainer considers them marked up over AliExpress and Taobao. The review's yen listings (¥52,634 and ¥42,942 tax included) and its \"$700 – $800 (for 64GB setup)\" total do not reconcile with these. eBay sellers also offer the card pre-populated with two V100 16GB for $680 (the maintainer, 2026-11-07); at $190 a module that leaves about $300 for the card, below the bare card's listings."
       },
       "fits": [
+        {
+          "unit": "v100_sxm2_16",
+          "status": "reported",
+          "peer": "nvlink",
+          "source": "eBay listings seen by the maintainer: \"16G/32G\" in the card's titles (2026-11-06), and the card sold pre-populated with two 16 GB modules (2026-11-07)"
+        },
         {
           "unit": "v100_sxm2",
           "status": "reported",
@@ -5866,6 +5942,12 @@
       },
       "fits": [
         {
+          "unit": "v100_sxm2_16",
+          "status": "reported",
+          "peer": "nvlink",
+          "source": "https://blog.rexyuan.com/2025/09/30/v100/ -- 1CATai's two-GPU system on this board, \"from 3699 RMB(~520 USD) with two V100 16G\""
+        },
+        {
           "unit": "v100_sxm2",
           "status": "reported",
           "peer": "nvlink",
@@ -5919,6 +6001,12 @@
         "note": "The kit list names no heatsinks or blocks. The author zip-tied four 80 mm Arctic P8 fans on and says temperatures \"never have gone above 55c\", though his own benchmark table records peaks of 58-83 °C."
       },
       "fits": [
+        {
+          "unit": "v100_sxm2_16",
+          "status": "reported",
+          "peer": "nvlink",
+          "source": "https://angrysysadmins.tech/2026/03/grassyloki/cheapish-ai-homelab-on-a-budget-v100s-custom-boards-and-nvlink/ -- \"For these boards, there are 2 options you can use. Nvidia TESLA V100 32GB or Nvidia TESLA V100 16GB\"; the author ran the 32 GB part"
+        },
         {
           "unit": "v100_sxm2",
           "status": "verified",
@@ -6035,11 +6123,17 @@
       },
       "fits": [
         {
+          "unit": "v100_sxm2_16",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://forums.servethehome.com/index.php?threads/sxm2-over-pcie.38066/ -- gsrcrxsi's four-V100 build on the board: AOM-SXMV \"about $200\", \"SXM2 16GB V100 ~$175/ea\", \"4x V100 setup for ~1250\" (2024-03-07); NVLink \"still working fine\" (2024-06-12)"
+        },
+        {
           "unit": "v100_sxm2",
           "status": "reported",
           "peer": "nvlink",
           "source": "https://forums.servethehome.com/index.php?threads/sxm2-over-pcie.38066/ -- \"will work with any and only Volta SXM2 cards\" (CyklonDX, 2024-03-07)",
-          "note": "Several owners run 16 GB V100s on it; none in the thread confirms the 32 GB module, which differs only in capacity, so the catalog's 32 GB unit is marked reported."
+          "note": "Owners run 16 GB V100s on it (see that fit); none in the thread confirms the 32 GB module, which differs only in capacity, so it is marked reported."
         },
         {
           "unit": "pg199_card",
@@ -15180,6 +15274,25 @@
       "sources": [
         "https://miyagadget.page/en/blog/2026/09/17/tesla-v100-dual-sxm2-nvlink-review-en/ -- the review's benchmark quotes"
       ]
+    },
+    {
+      "id": "c_v100x2_16_dual_pcie_carrier",
+      "label": "2× V100 SXM2 16GB on a dual-SXM2 PCIe x16 carrier",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm2_16",
+            "count": 2
+          }
+        ],
+        "carrier": "dual_sxm2_pcie_card"
+      },
+      "models": [
+        "qwen38_27b",
+        "qwen3_coder_30b_a3b"
+      ],
+      "status": "preregistered",
+      "note": "The cheap end of the dual carrier. eBay sellers offer the card pre-populated with two 16 GB modules for $680 (the maintainer, 2026-11-07), below this page's sum of two $190 modules and the bare card. 32 GB in total is one 32 GB card's worth, less a little for each GPU's own context and workspace, so it should not hold Qwen3.8-27B NVFP4 with DFlash2 (a single 32 GB V100 cannot, per 1Cat-vLLM #1087), and nothing near Qwen3.8-Flash-Next; the fit shown here leaves any drafter out. What it buys over one 32 GB card is twice the memory bandwidth and SMs, if tensor parallel scales. From the bandwidth ceilings alone, TP2 falls behind one card only above about 60-70 µs per all-reduce for the dense 27B (128 per token), but above about 12-13 µs for the 3B-active Qwen3-Coder (96 per token); that arithmetic is this page's, and no V100 all-reduce latency is recorded. Whether these listings carry the -N variant (160 W, about 830 GB/s) is not stated."
     },
     {
       "id": "c_v100x2_dual_external_board",
