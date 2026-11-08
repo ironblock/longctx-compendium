@@ -217,6 +217,23 @@
 </table></div>
 </section>
 
+<!-- ===================================================================== 5 -->
+<section id="frontier">
+<h2>5 · Open-weight frontier <span class="tail">the best open model at each size · what the rigs above can hold</span></h2>
+<p class="intro">Every open-weight model scored on one quality index, by total parameters, which set the memory its weights need. A model is on the <b>frontier</b> when no model of its size or smaller scores higher; the staircase joins them. Each takes its best score among the variants the index ran (effort levels, reasoning modes). The dashed lines mark how many parameters each rig's memory holds at the weight format chosen in section 2, weights only: the cache and runtime overhead come on top, and active parameters, not total, set decode speed.</p>
+<div class="chartbox">
+  <div class="cap"><span id="frontierCap"></span></div>
+  <div class="ch ch-scatter"><canvas id="frontierChart" aria-label="Open-weight models by total parameters against the quality index, with the frontier and rig memory lines" role="img"></canvas></div>
+</div>
+<div class="tscroll"><table id="frontierTable">
+  <thead><tr>
+    <th class="lbl">Model</th><th>Parameters</th><th class="lbl">As released</th><th>Index</th><th>Weights</th><th class="lbl">Smallest rig that holds them</th><th class="lbl">Frontier</th>
+  </tr></thead>
+  <tbody></tbody>
+</table></div>
+<p class="src" id="frontierNote"></p>
+</section>
+
 <!-- ===================================================================== method -->
 <section id="method">
 <h2>Method &amp; sources</h2>

@@ -18,7 +18,7 @@ import {
   bpwOf,
   fmtGiB,
 } from './ceiling.js';
-import { renderScatter, renderDepth, LAYOUT_COLOR, vendorColor } from './charts.js';
+import { renderScatter, renderDepth, renderFrontier, LAYOUT_COLOR, vendorColor } from './charts.js';
 import { rangeSlider, slider } from './sliders.js';
 import {
   unitMatch,
@@ -27,6 +27,8 @@ import {
   renderObservations,
   renderCandidates,
   renderCarriers,
+  renderFrontierTable,
+  rigCapacityLines,
   fmtDepth,
   esc,
 } from './tables.js';
@@ -475,6 +477,10 @@ try {
     if (all || scope === 'obs') renderObs();
     if (all || scope === 'model' || scope === 'calc') renderCandidates(model, state);
     if (all) renderCarriers(model);
+    if ((all || scope === 'model') && model.FRONTIER.length) {
+      renderFrontier(model.FRONTIER, rigCapacityLines(model, bpwOf(state.weights).bpw), model.QI);
+      renderFrontierTable(model, state);
+    }
     writeState(state);
   }
 

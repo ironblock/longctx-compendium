@@ -527,4 +527,63 @@ export function renderCarriers(model) {
   }).join('');
 }
 
+/**
+ * Capacity lines for the frontier chart: one per distinct rig memory size, at
+ * the parameter count whose weights fill it at the selected bits per weight.
+ * Weights only: the cache, activations and runtime overhead come on top.
+ */
+export function rigCapacityLines(model, bpw) {
+  const bySize = new Map();
+  for (const c of model.CANDIDATES) {
+    const gb = c.rigTotals.memoryGB;
+    if (!gb) continue;
+    bySize.set(gb, [...(bySize.get(gb) ?? []), c]);
+  }
+  return [...bySize.entries()].map(([gb, rigs]) => ({
+    gb,
+    rigs,
+    x: (gb * 8) / bpw,
+    label: `${gb} GB${rigs.length > 1 ? ` · ${rigs.length} rigs` : ''}`,
+  }));
+}
+
+const fmtParams = n => (n == null ? '—' : n >= 1e12 ? `${(n / 1e12).toFixed(2).replace(/\.?0+$/, '')}T` : `${Math.round(n / 1e9)}B`);
+
+export function renderFrontierTable(model, state) {
+  const tb = el('frontierTable')?.querySelector('tbody');
+  if (!tb) return;
+  const { bpw } = bpwOf(state.weights);
+  const rigs = model.CANDIDATES.filter(c => c.rigTotals.memoryGB).sort((a, b) => a.rigTotals.memoryGB - b.rigTotals.memoryGB);
+  const qi = model.QI;
+  tb.innerHTML = [...model.FRONTIER]
+    .sort((a, b) => b.best.value - a.best.value)
+    .map(p => {
+      const gb = (p.total * bpw) / 8 / 1e9;
+      const fits = rigs.find(c => c.rigTotals.memoryGB >= gb);
+      const status = p.onFrontier
+        ? '<span class="t-ok">on the frontier</span>'
+        : p.neverOn
+          ? `<span class="dash">never on it</span><span class="sub">beaten by ${esc(p.beatenBy?.label ?? '?')}</span>`
+          : `left ${esc(p.leftOn ?? '?')}<span class="sub">beaten by ${esc(p.beatenBy?.label ?? '?')}</span>`;
+      return (
+        '<tr>' +
+        `<td class="lbl wrap" style="min-width:170px">${p.repo ? `<a href="${esc(p.repo.split(' ')[0])}" rel="noopener noreferrer">${esc(p.label)}</a>` : esc(p.label)}<span class="sub">${esc(p.creator)} · ${esc(p.released)}</span></td>` +
+        `<td class="num">${fmtParams(p.total)}<span class="sub">${p.active && p.active !== p.total ? `${fmtParams(p.active)} active` : p.active ? 'dense' : 'active not stated'}</span></td>` +
+        `<td class="lbl wrap" style="min-width:140px;font-size:11.5px">${esc(p.weights?.precision ?? 'not recorded')}${p.weights?.sizeGB ? `<span class="sub">${p.weights.sizeGB.toLocaleString()} GB download</span>` : ''}</td>` +
+        `<td class="num">${p.best.value}<span class="sub" title="${esc(p.best.variant)}">${esc(p.best.variant.length > 28 ? `${p.best.variant.slice(0, 27)}…` : p.best.variant)}</span></td>` +
+        `<td class="num">${Math.round(gb).toLocaleString()} GB<span class="sub">weights at ${bpw} bpw</span></td>` +
+        `<td class="lbl wrap" style="min-width:150px;font-size:11.5px">${fits ? `${esc(fits.label)}<span class="sub">${fits.rigTotals.memoryGB} GB, weights only</span>` : '<span class="t-bad">no rig here</span><span class="sub">offload or more cards</span>'}</td>` +
+        `<td class="lbl wrap" style="font-size:11.5px">${status}</td>` +
+        '</tr>'
+      );
+    })
+    .join('');
+  const cap = el('frontierCap');
+  if (cap && qi) {
+    cap.innerHTML = `${model.FRONTIER.filter(p => p.onFrontier).length} of ${model.FRONTIER.length} open models on the frontier · scores: <a href="${esc(qi.url)}" rel="noopener noreferrer">${esc(qi.label)}</a> v${qi.version}, as of ${esc(qi.asOf)} · dashed lines: rig memory filled by weights at ${bpw} bpw`;
+  }
+  const note = el('frontierNote');
+  if (note && qi) note.innerHTML = `<b>${esc(qi.attribution)}</b>${qi.note ? ` ${esc(qi.note)}` : ''}`;
+}
+
 export { KV_BYTES_PER_ELEMENT };

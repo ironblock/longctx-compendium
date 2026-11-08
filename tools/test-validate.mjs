@@ -236,6 +236,24 @@ const CASES = [
   ['a carrier id colliding with a unit id', 'duplicate id', d => {
     carrier(d, 'aom_sxmv').id = 'v100_sxm2';
   }],
+  ['an open model scored on another index', 'but the frontier is drawn on', d => {
+    d.openModels[0].scores[0].index = 'lmarena';
+  }],
+  ['an open model scored on a newer index version than declared', 'newer than the declared version', d => {
+    d.openModels[0].scores[0].version = d.meta.qualityIndex.version + 1;
+  }],
+  ['the same variant scored twice', 'repeats', d => {
+    d.openModels[0].scores.push({ ...d.openModels[0].scores[0] });
+  }],
+  ['more active parameters than total', 'more active parameters', d => {
+    d.openModels[0].params.active = d.openModels[0].params.total * 2;
+  }],
+  ['open models with no quality index declared', 'need meta.qualityIndex', d => {
+    delete d.meta.qualityIndex;
+  }],
+  ['an open model sized without a source', 'missing required property "source"', d => {
+    delete d.openModels[0].params.source;
+  }],
   ['a rig source that is not a link', 'does not match', d => {
     candidate(d, 'c_mi100x4').sources = ['somewhere on a forum'];
   }],

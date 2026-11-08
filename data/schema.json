@@ -47,6 +47,12 @@
       "items": {
         "$ref": "#/definitions/candidate"
       }
+    },
+    "openModels": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/openModel"
+      }
     }
   },
   "definitions": {
@@ -67,6 +73,48 @@
         "electricityUsdPerKwh": {
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "qualityIndex": {
+          "description": "The one quality measure the open-weight frontier is drawn with. Scores from other versions of it are kept but never compared with the current one.",
+          "type": "object",
+          "required": [
+            "id",
+            "label",
+            "url",
+            "version",
+            "asOf",
+            "attribution"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
+            "label": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string",
+              "pattern": "^https://\\S+( -- .+)?$"
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "asOf": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}(-[0-9]{2})?$"
+            },
+            "attribution": {
+              "type": "string",
+              "description": "The byline the source requires wherever its data is shown."
+            },
+            "note": {
+              "type": "string",
+              "description": "Known weaknesses of the measure, with evidence."
+            }
+          }
         }
       }
     },
@@ -1246,6 +1294,133 @@
           "items": {
             "type": "string",
             "pattern": "^https://\\S+( -- .+)?$"
+          }
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "openModel": {
+      "description": "An open-weight model tracked for the size frontier: its size from its own repository, and its scores on the quality index. The page derives which models are on the frontier.",
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "creator",
+        "repo",
+        "released",
+        "params",
+        "scores"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "label": {
+          "type": "string"
+        },
+        "creator": {
+          "type": "string"
+        },
+        "repo": {
+          "type": "string",
+          "pattern": "^https://\\S+( -- .+)?$"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "released": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}(-[0-9]{2})?$"
+        },
+        "model": {
+          "type": "string",
+          "description": "Id of the model's shape in MODELS (assets/models.js), when it has one."
+        },
+        "params": {
+          "type": "object",
+          "required": [
+            "total",
+            "source"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "total": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "active": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Parameters used per token; equal to total for a dense model, absent when the card does not say."
+            },
+            "source": {
+              "type": "string",
+              "description": "Where the counts come from, with the card's own words."
+            }
+          }
+        },
+        "weights": {
+          "type": "object",
+          "required": [
+            "precision"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "precision": {
+              "type": "string",
+              "description": "As released: BF16, FP8, MXFP4 experts with BF16 elsewhere ..."
+            },
+            "sizeGB": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "The repository's size as Hugging Face shows it."
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "scores": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "index",
+              "version",
+              "value",
+              "asOf",
+              "variant"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "value": {
+                "type": "number"
+              },
+              "asOf": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}(-[0-9]{2})?$"
+              },
+              "variant": {
+                "type": "string",
+                "description": "The source's name for the setting scored (an effort level, a reasoning mode)."
+              },
+              "slug": {
+                "type": "string"
+              }
+            }
           }
         },
         "note": {

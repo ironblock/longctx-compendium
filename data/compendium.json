@@ -5,7 +5,16 @@
       "m": "measured, primary source",
       "m~": "measured, secondary or anecdotal source"
     },
-    "electricityUsdPerKwh": 0.17
+    "electricityUsdPerKwh": 0.17,
+    "qualityIndex": {
+      "id": "aa_intelligence",
+      "label": "Artificial Analysis Intelligence Index",
+      "url": "https://artificialanalysis.ai/leaderboards/models",
+      "version": 5,
+      "asOf": "2026-11-08",
+      "attribution": "Quality scores: Artificial Analysis (artificialanalysis.ai), Intelligence Index v5, read from its free API on 2026-11-08.",
+      "note": "Artificial Analysis's own composite of its evaluations, rebuilt twice in autumn 2026: v4.2 in early September added AA-Briefcase and GDP.pdf, and v5 on 2026-10-27 moved 60% of the index to private or held-out tests (press coverage). Scores from different versions are not comparable, so only v5 is drawn, and most models released before mid-2026 have no v5 score yet. The maintainer flags Terminal-Bench Science, one of the evaluations Artificial Analysis runs, for a gap between the US closed labs and everyone else that similarly built benchmarks do not show. Artificial Analysis's own figures (2026-11-08) bear the pattern out: Gemini 4 Carbon, GPT-6 Astra and Claude Opus 5.5 score 59-65 on it, matching their Terminal-Bench 4.0 scores (ratios 0.99-1.07), while Kimi K3.1 Pro scores 34.3 against 67.2 and the other open models 3-13 against 26-42 (ratios 0.13-0.38). How much it weighs in the index is not checked here, and the press coverage found does not allege bias toward any lab. Only open models are compared on this page, so a penalty they all share moves the frontier little; the ratios differ between them (0.51 for Kimi, 0.13 for MiniMax), so it can reorder them."
+    }
   },
   "architectures": [
     {
@@ -15638,6 +15647,85 @@
       "note": "An untested combination, recorded because SXM2 modules are expected to fit SXM2 carriers generally (the maintainer, 2026-11-06); see the carrier's fit list. The PG199 has no NVLink, so the board's main feature goes unused and the four cards meet over PCIe. Against four V100s on the same board it trades NVLink for 1.6x the memory bandwidth per card, BF16, and sm_80 kernels. The power risk is the board's, not the card's: it was built around 300 W V100s and its supply is not sourced.",
       "sources": [
         "https://forums.servethehome.com/index.php?threads/automotive-a100-sxm2-for-fsd-nvidia-drive-a100.43196/ -- PG199 owners: carriers it runs on, power at each clock, failure reports and fixes"
+      ]
+    }
+  ],
+  "openModels": [
+    {
+      "id": "kimi_k31_pro",
+      "label": "Kimi K3.1 Pro",
+      "creator": "Moonshot AI",
+      "repo": "https://huggingface.co/moonshotai/Kimi-K3.1-Pro",
+      "revision": "d9e99b0792a5e93b78ea9bea62a68167e36ddd9e",
+      "released": "2026-10-23",
+      "params": {
+        "total": 2800000000000.0,
+        "active": 104000000000.0,
+        "source": "https://huggingface.co/moonshotai/Kimi-K3.1-Pro -- Model Summary: \"Total Parameters\" 2.8T, \"Activated Parameters\" 104B (the introduction calls it \"our most capable 3T-class model to date\")"
+      },
+      "weights": {
+        "precision": "MXFP4 routed experts, BF16 elsewhere",
+        "sizeGB": 1560,
+        "note": "config.json: compressed-tensors \"mxfp4-pack-quantized\", 4-bit float weights in groups of 32; attention, shared experts, the dense layer and lm_head are left out of quantization. The repository shows 1.56 TB in 96 shards."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 46.5,
+          "asOf": "2026-11-08",
+          "variant": "Kimi K3.1 Pro",
+          "slug": "kimi-k3-1-pro"
+        }
+      ],
+      "note": "93 layers (1 dense, 92 MoE); 896 routed experts with 16 active plus 2 shared, the routed experts working in a 3,584-wide latent space; 69 KDA linear-attention and 24 gated DSA layers; 1,048,576-token context; no MTP layers (config.json). Released date is Artificial Analysis's."
+    },
+    {
+      "id": "qwen38_27b",
+      "label": "Qwen3.8 27B",
+      "creator": "Alibaba (Qwen)",
+      "repo": "https://huggingface.co/Qwen/Qwen3.8-27B",
+      "revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+      "released": "2026-08-14",
+      "model": "qwen38_27b",
+      "params": {
+        "total": 26895998464,
+        "active": 26895998464,
+        "source": "https://huggingface.co/Qwen/Qwen3.8-27B -- README: \"Number of Parameters: 27B\"; 26,895,998,464 in the shape recorded in MODELS. Dense."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 20.1,
+          "asOf": "2026-11-08",
+          "variant": "Qwen3.8 27B (Xhigh)",
+          "slug": "qwen3-8-27b"
+        },
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 17.5,
+          "asOf": "2026-11-08",
+          "variant": "Qwen3.8 27B (Medium)",
+          "slug": "qwen3-8-27b-medium"
+        },
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 15.7,
+          "asOf": "2026-11-08",
+          "variant": "Qwen3.8 27B (Low)",
+          "slug": "qwen3-8-27b-low"
+        },
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 10,
+          "asOf": "2026-11-08",
+          "variant": "Qwen3.8 27B (Non-reasoning)",
+          "slug": "qwen3-8-27b-non-reasoning"
+        }
       ]
     }
   ]

@@ -121,7 +121,7 @@ check(doc, schema, '');
 // turn a number into folklore.
 
 const seenIds = new Map();
-for (const rec of [...(doc.architectures ?? []), ...(doc.units ?? []), ...(doc.carriers ?? []), ...(doc.lines ?? []), ...(doc.candidates ?? [])]) {
+for (const rec of [...(doc.architectures ?? []), ...(doc.units ?? []), ...(doc.carriers ?? []), ...(doc.lines ?? []), ...(doc.candidates ?? []), ...(doc.openModels ?? [])]) {
   if (seenIds.has(rec.id)) fail(`id "${rec.id}"`, 'duplicate id');
   seenIds.set(rec.id, rec);
 }
@@ -329,6 +329,28 @@ for (const c of doc.candidates ?? []) {
   c.models.forEach(m => modelKnown(m, at));
 }
 
+// --- The open-weight frontier
+// One quality measure, versioned: a score from another measure or a later
+// version than the one declared would be compared with numbers it cannot be.
+const qi = doc.meta?.qualityIndex;
+if ((doc.openModels ?? []).length && !qi) fail('meta', 'openModels need meta.qualityIndex to say what their scores measure');
+for (const m of doc.openModels ?? []) {
+  const at = `open model "${m.id}"`;
+  if (m.model) modelKnown(m.model, at);
+  if (m.params.active != null && m.params.active > m.params.total) {
+    fail(at, `has more active parameters (${m.params.active}) than total (${m.params.total})`);
+  }
+  const seen = new Set();
+  (m.scores ?? []).forEach((sc, i) => {
+    const st = `${at} scores[${i}]`;
+    if (qi && sc.index !== qi.id) fail(st, `is on "${sc.index}", but the frontier is drawn on "${qi.id}"`);
+    if (qi && sc.version > qi.version) fail(st, `is on version ${sc.version}, newer than the declared version ${qi.version}`);
+    const key = `${sc.index}|${sc.version}|${sc.variant}`;
+    if (seen.has(key)) fail(st, `repeats "${sc.variant}" on ${sc.index} version ${sc.version}`);
+    seen.add(key);
+  });
+}
+
 // --- Report ----------------------------------------------------------------
 process.on('uncaughtException', err => {
   console.error(`✗ ${rel} — the validator itself crashed, which is a bug in tools/validate.mjs:`);
@@ -346,5 +368,5 @@ const points = (doc.lines ?? []).reduce((n, l) => n + (l.results?.length ?? 0), 
 for (const w of warnings) console.warn(`  ! ${w}`);
 console.log(
   `✓ ${rel} — ${(doc.architectures ?? []).length} chip generations, ${(doc.units ?? []).length} catalog units, ` +
-    `${(doc.carriers ?? []).length} carriers, ${(doc.lines ?? []).length} serving lines with ${points} readings, ${(doc.candidates ?? []).length} candidates`
+    `${(doc.carriers ?? []).length} carriers, ${(doc.lines ?? []).length} serving lines with ${points} readings, ${(doc.candidates ?? []).length} candidates, ${(doc.openModels ?? []).length} open models`
 );

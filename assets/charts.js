@@ -351,3 +351,135 @@ export function renderDepth(series, selectedId) {
     ],
   });
 }
+
+/**
+ * Vertical dashed lines at the parameter counts each rig's memory holds, with
+ * their labels stacked at the top so neighbouring rigs do not overprint.
+ */
+const capacityLines = {
+  id: 'capacityLines',
+  afterDatasetsDraw(chart, _args, opts) {
+    const lines = opts?.lines ?? [];
+    if (!lines.length) return;
+    const { ctx, chartArea: a, scales } = chart;
+    ctx.save();
+    ctx.font = '10px "Space Mono", ui-monospace, monospace';
+    ctx.textBaseline = 'top';
+    const used = [];
+    for (const l of [...lines].sort((p, q) => p.x - q.x)) {
+      const x = scales.x.getPixelForValue(l.x);
+      if (!(x >= a.left && x <= a.right)) continue;
+      ctx.strokeStyle = css('--mute-mark');
+      ctx.setLineDash([3, 4]);
+      ctx.beginPath();
+      ctx.moveTo(x, a.top);
+      ctx.lineTo(x, a.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      const w = ctx.measureText(l.label).width + 4;
+      const left = x + w + 2 > a.right ? x - w - 2 : x + 3;
+      let row = 0;
+      while (used.some(u => u.row === row && left < u.r && left + w > u.l)) row++;
+      used.push({ row, l: left, r: left + w });
+      ctx.fillStyle = css('--muted');
+      ctx.fillText(l.label, left + 2, a.top + 2 + row * 13);
+    }
+    ctx.restore();
+  },
+};
+
+/**
+ * Open-weight models by total parameters against the quality index, the
+ * frontier drawn as a staircase through the models nothing smaller beats.
+ */
+export function renderFrontier(points, lines, qi) {
+  const pt = p => ({
+    x: p.total / 1e9,
+    y: p.best.value,
+    label: p.label,
+    short: p.label,
+    creator: p.creator,
+    active: p.active,
+    released: p.released,
+    variant: p.best.variant,
+    on: p.onFrontier,
+  });
+  const on = points.filter(p => p.onFrontier).map(pt);
+  const off = points.filter(p => !p.onFrontier).map(pt);
+  const fmtB = v => (v >= 1000 ? `${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}T` : `${v >= 10 ? Math.round(v) : v}B`);
+  mount('frontierChart', {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          type: 'line',
+          label: 'Frontier',
+          data: on.map(p => ({ x: p.x, y: p.y })),
+          stepped: 'before',
+          borderColor: fade(css('--s1'), 0.6),
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+        },
+        {
+          label: 'Beaten by a model no larger',
+          data: off,
+          backgroundColor: fade(css('--mute-mark'), 0.5),
+          borderColor: css('--panel'),
+          borderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointHitRadius: 12,
+        },
+        {
+          label: 'On the frontier',
+          data: on,
+          labelPoints: true,
+          backgroundColor: css('--s1'),
+          borderColor: css('--panel'),
+          borderWidth: 2,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          pointHitRadius: 12,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      layout: { padding: { right: 8, top: 6 } },
+      plugins: {
+        legend: { display: false },
+        capacityLines: { lines },
+        tooltip: {
+          ...tooltipBase(),
+          filter: it => it.dataset.type !== 'line',
+          callbacks: {
+            title: items => items[0]?.raw?.label ?? '',
+            label: it => [
+              `${it.raw.creator} · released ${it.raw.released}`,
+              `${fmtB(it.raw.x)} total${it.raw.active ? ` · ${fmtB(it.raw.active / 1e9)} active` : ''}`,
+              `${qi?.label ?? 'index'} v${qi?.version}: ${it.raw.y} (${it.raw.variant})`,
+              it.raw.on ? 'on the frontier' : 'a model no larger scores higher',
+            ],
+          },
+        },
+      },
+      scales: {
+        x: {
+          type: 'logarithmic',
+          ...axisBase(),
+          title: { ...axisBase().title, text: 'total parameters (log) → memory needed' },
+          ticks: { ...axisBase().ticks, callback: v => ([1, 3, 10, 30, 100, 300, 1000, 3000, 10000].includes(v) ? fmtB(v) : '') },
+        },
+        y: {
+          ...axisBase(),
+          beginAtZero: true,
+          title: { ...axisBase().title, text: `${qi?.label ?? 'quality index'} v${qi?.version ?? '?'}` },
+        },
+      },
+    },
+    plugins: [pointLabels, capacityLines],
+  });
+}

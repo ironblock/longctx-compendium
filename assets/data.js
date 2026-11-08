@@ -46,6 +46,32 @@ export const PCIE = {
  */
 export const carrierHostGBs = k => (k?.hostLink ? ((PCIE[k.hostLink.gen].gts / 8) * k.hostLink.lanes * 2) / k.hostLink.gpusPerUplink : null);
 
+/**
+ * The open-weight frontier on the current version of the quality index. Each
+ * model takes its best score among its variants (effort levels, reasoning
+ * modes) on that version; it is on the frontier when no model of its size or
+ * smaller scores higher. Release dates say when it joined and when it left:
+ * a model beaten by something released earlier was never on it.
+ */
+export function frontierOf(openModels, qi) {
+  const pts = (openModels ?? [])
+    .map(m => {
+      const cur = (m.scores ?? []).filter(s => s.index === qi?.id && s.version === qi?.version);
+      const best = cur.reduce((b, s) => (b == null || s.value > b.value ? s : b), null);
+      return { ...m, best, total: m.params.total, active: m.params.active ?? null };
+    })
+    .filter(p => p.best);
+  for (const p of pts) {
+    const better = pts.filter(q => q !== p && q.total <= p.total && q.best.value > p.best.value);
+    p.onFrontier = better.length === 0;
+    p.neverOn = better.some(q => q.released <= p.released);
+    const later = better.filter(q => q.released > p.released).sort((a, b) => (a.released < b.released ? -1 : 1));
+    p.leftOn = !p.onFrontier && !p.neverOn ? later[0]?.released ?? null : null;
+    p.beatenBy = better.sort((a, b) => a.total - b.total)[0] ?? null;
+  }
+  return pts.sort((a, b) => a.total - b.total);
+}
+
 /** The form-factor filter's groups: every SXM generation is one. */
 export const formKind = name => (name == null ? null : name.startsWith('SXM') ? 'SXM' : name);
 
@@ -143,6 +169,8 @@ export function normalize(doc) {
   }));
 
   const CANDIDATES = (doc.candidates ?? []).map(c => ({ ...c, link: linkOf(c.rig), rigTotals: rigTotals(c.rig) }));
+  const QI = doc.meta?.qualityIndex ?? null;
+  const FRONTIER = frontierOf(doc.openModels, QI);
 
   return {
     UNITS,
@@ -153,6 +181,8 @@ export function normalize(doc) {
     CANDIDATES,
     CARRIERS,
     carrierById,
+    QI,
+    FRONTIER,
     KWH: doc.meta?.electricityUsdPerKwh,
     raw: doc,
   };

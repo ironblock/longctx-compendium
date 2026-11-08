@@ -550,6 +550,18 @@ check('one row per candidate rig, each with its notes beneath', (await count('#c
   check('rigs render no NaN/undefined/null', !BROKEN.test(t), brokenAt(t));
 }
 
+// --- 5. Open-weight frontier ------------------------------------------------
+check('one frontier row per scored open model', (await count('#frontierTable tbody tr')) === model.FRONTIER.length && model.FRONTIER.length > 0);
+{
+  const t = await text('#frontierTable tbody');
+  const cap = await text('#frontierCap');
+  const note = await text('#frontierNote');
+  check('every scored open model is either on the frontier or says what beats it', (t.match(/on the frontier|beaten by/g) ?? []).length >= model.FRONTIER.length);
+  check('the frontier names its index, version and source, with the attribution', /Intelligence Index/.test(cap) && /v\d/.test(cap) && (await count('#frontierCap a[href^="https://artificialanalysis.ai"]')) === 1 && /Artificial Analysis/.test(note));
+  check('a model too big for every rig says so', /no rig here/.test(t));
+  check('the frontier renders no NaN/undefined/null', !BROKEN.test(t + cap), brokenAt(t + cap));
+}
+
 // --- 4b. Carriers ----------------------------------------------------------
 check('one row per carrier, each with its notes beneath', (await count('#carrierTable tbody tr.cand-main')) === model.CARRIERS.length && (await count('#carrierTable tbody tr.cand-notes')) === model.CARRIERS.length && model.CARRIERS.length > 0);
 {

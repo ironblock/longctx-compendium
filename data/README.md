@@ -15,7 +15,7 @@ node tools/check-ceilings.mjs  # no reading above its own ceiling
 node tools/coverage.mjs        # what the catalog is still missing
 ```
 
-## The five collections
+## The six collections
 
 | collection | what it is | changes when |
 |---|---|---|
@@ -24,6 +24,7 @@ node tools/coverage.mjs        # what the catalog is still missing
 | `carriers` | a board modules mount on: its wiring, host link, price, and what fits in it | a board is found, priced or tested with a module |
 | `lines` | the ledger: every reading, inside the serving line that produced it | someone measures something |
 | `candidates` | rigs under consideration that have no measured line yet | a rig is proposed or measured |
+| `openModels` | open-weight models scored on one quality index, for the size frontier | a model is released or rescored |
 
 There is deliberately nothing between hardware and readings. The old page kept
 "platforms" with prefill curves drawn through one or two measured points and
@@ -373,6 +374,27 @@ Peer bandwidth does not set single-stream decode under a layer split, which
 follows one card's memory bandwidth. It decides how close tensor parallel gets
 to its ceiling, and matters for prefill, concurrent streams, and anything
 streamed from host RAM.
+
+## The open-weight frontier
+
+`openModels` are open-weight models with their size and their scores on one
+quality index, which `meta.qualityIndex` names: its `id`, `label`, `url`,
+`version`, `asOf` date, the `attribution` the source requires wherever its data
+is shown, and a `note` on its known weaknesses. Each model records:
+
+- `params.total` and `params.active` from the model's own repository, with a
+  `source` quoting the card; sizes never come from the index;
+- `weights`: the precision it was released in, and the repository size;
+- `scores`: one per variant the index ran (an effort level, a reasoning mode),
+  each with the index `id`, its `version`, the `value`, the `asOf` date and
+  the source's own `variant` name.
+
+The page takes each model's best variant on the declared version and marks it
+on the frontier when no model of its size or smaller scores higher; release
+dates say when it joined and when it was beaten. Scores from another version
+are kept but never drawn against the current one, since an index rebase moves
+every score. The validator rejects a score on another index, one on a version
+newer than declared, a repeated variant, and more active parameters than total.
 
 ## What the checks catch
 
