@@ -1524,6 +1524,70 @@
       "note": "Covers Ponte Vecchio: Data Center GPU Max 1100, Max 1550. INT4 is 'unknown'. Intel's DPAS ISA defines s4/u4/s2/u2 precisions and the OpenCL subgroup-MMA extension has int4 entry points, but Intel's Xe-HPC documentation gives XMX rates only for int8 and FP16/BF16 (TF32 is documented via the SYCL/driver sources). I found no Intel source confirming or denying a native INT4 XMX path on Ponte Vecchio. FP8 and FP4 are not native per oneDNN. In Intel's driver, TF32 MMA is enabled for PVC-XT B0-C0 steppings (Max 1100/1550 device IDs) but not for the 'PVC_XT_C0_VG' config (device 0x0BD4, not a Max 1100/1550 ID)."
     },
     {
+      "id": "gaudi2",
+      "vendor": "Intel",
+      "label": "Gaudi 2",
+      "matrixUnits": "2 MMEs (matrix multiplication engines) beside 24 TPC vector cores",
+      "formats": {
+        "tf32": "native",
+        "bf16": "native",
+        "fp16": "native",
+        "fp8": "native",
+        "fp6": "unknown",
+        "fp4": "unknown",
+        "int8": "unknown",
+        "int4": "unknown"
+      },
+      "sources": [
+        {
+          "url": "https://habana.ai/wp-content/uploads/2023/10/HL-225H_Datasheet_10_23.pdf",
+          "quote": "Intel Gaudi2 accelerators leverage Intel's fully programmable TPC and GEMM Engine, supporting the most advanced data types for AI: FP8, BF16, FP16, TF32 and FP32.",
+          "locator": "HL-225H datasheet (10/23), \"Compute Technology\" panel",
+          "supports": [
+            "fp8",
+            "bf16",
+            "fp16",
+            "tf32"
+          ]
+        }
+      ],
+      "note": "FP6, FP4, INT8 and INT4 are unknown rather than absent: the Gaudi 2 datasheet lists the types the TPC and GEMM engine support without saying the list is complete for the matrix engine. Gaudi 3's paper gives its MME the same list and nothing else, which suggests the same here. FP8 runs at twice the BF16 matrix rate (865 against 432 TFLOPS). Not a GPU: matrix engines (MMEs) plus programmable vector cores (TPCs), driven by Intel's Gaudi software (formerly SynapseAI), PyTorch and a vLLM plugin; no CUDA, and no llama.cpp backend is known here. The current support matrix (1.24.2) covers Gaudi 2 and Gaudi 3 with PyTorch 2.13 and vLLM plugin 0.30.0, which tracks upstream vLLM and lists Qwen3.5/3.6 MoE work but no Qwen3.8. First-generation Gaudi is gone from it; 1.18.0 is the latest matrix checked that lists it. A secondhand report (LetsDataScience, 2025-12-15, citing Phoronix, with \"limited official confirmation\") says development of the open-source user-space driver stopped."
+    },
+    {
+      "id": "gaudi3",
+      "vendor": "Intel",
+      "label": "Gaudi 3",
+      "matrixUnits": "8 MMEs beside 64 TPC vector cores",
+      "formats": {
+        "tf32": "native",
+        "bf16": "native",
+        "fp16": "native",
+        "fp8": "native",
+        "fp6": "absent",
+        "fp4": "absent",
+        "int8": "absent",
+        "int4": "absent"
+      },
+      "sources": [
+        {
+          "url": "https://cdrdv2-public.intel.com/817486/gaudi-3-ai-accelerator-white-paper.pdf",
+          "quote": "The Intel Gaudi 3 AI accelerator MME supports all the key AI compute datatypes: FP8 (both E4M3 and E5M2), BF16, FP16, TF32 and FP32. All datatypes are accumulated into an FP32 accumulator.",
+          "locator": "Gaudi 3 technical paper, section 5, \"MME Data Types\": the MME's full input list. INT8 appears only among the TPC vector core's integer types (\"UINT8 and INT8\"), so the matrix engine takes no INT8, INT4, FP6 or FP4.",
+          "supports": [
+            "fp8",
+            "bf16",
+            "fp16",
+            "tf32",
+            "fp6:absent",
+            "fp4:absent",
+            "int8:absent",
+            "int4:absent"
+          ]
+        }
+      ],
+      "note": "FP8 runs at the BF16 matrix rate (1,678 TFLOPS each), unlike Gaudi 2. 4-bit weights go through software: Intel says its stack \"supports int4 weight-only quantization schemes, such as AWQ and GPTQ\", and the vLLM plugin added \"MxFP4 weight loading and dequantization\" (0.19.0); whether weights stay 4-bit in memory is not recorded. Not a GPU: matrix engines (MMEs) plus programmable vector cores (TPCs), driven by Intel's Gaudi software (formerly SynapseAI), PyTorch and a vLLM plugin; no CUDA, and no llama.cpp backend is known here. The current support matrix (1.24.2) covers Gaudi 2 and Gaudi 3 with PyTorch 2.13 and vLLM plugin 0.30.0, which tracks upstream vLLM and lists Qwen3.5/3.6 MoE work but no Qwen3.8. First-generation Gaudi is gone from it; 1.18.0 is the latest matrix checked that lists it. A secondhand report (LetsDataScience, 2025-12-15, citing Phoronix, with \"limited official confirmation\") says development of the open-source user-space driver stopped."
+    },
+    {
       "id": "apple_m4",
       "vendor": "Apple",
       "label": "Apple M4 (GPU)",
@@ -4567,6 +4631,95 @@
       }
     },
     {
+      "id": "gaudi2_hl225h",
+      "label": "Intel Gaudi 2 (HL-225H) 96GB",
+      "vendor": "Intel",
+      "arch": "gaudi2",
+      "memoryGB": 96,
+      "memoryBandwidthGBs": 2460,
+      "tdpW": 600,
+      "compute": {
+        "unit": "Tops",
+        "source": "https://cdrdv2-public.intel.com/817486/gaudi-3-ai-accelerator-white-paper.pdf",
+        "values": {
+          "bf16": 432,
+          "fp8": 865
+        },
+        "note": "Matrix-engine rates from Table 1 of Intel's Gaudi 3 technical paper, which lists Gaudi 2 beside Gaudi 3: \"BF16 MME TFLOPS 432\", \"FP8 MME TFLOPS 865\"; the vector cores add 11 TFLOPS BF16. The paper does not mention sparsity. It gives no FP16 or TF32 matrix rate for Gaudi 2, so none is recorded."
+      },
+      "formFactor": {
+        "name": "OAM",
+        "cooling": "passive",
+        "source": "https://habana.ai/wp-content/uploads/2023/10/HL-225H_Datasheet_10_23.pdf -- \"The HL-225H complies with the OCP OAM v1.1 (Open Compute Platform-Open Accelerator Module) specification\"; \"TDP 600W\"",
+        "note": "On an OAM-to-PCIe adapter it needs a 48-54 V auxiliary supply; see the adapter carrier."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://habana.ai/wp-content/uploads/2023/10/HL-225H_Datasheet_10_23.pdf -- \"HOST INTERFACE PCIe Gen 4.0 x 16\""
+      },
+      "peerLink": {
+        "maxCards": 8,
+        "fabric": "Integrated RoCE v2 Ethernet, 24 x 100 GbE per module",
+        "source": "https://habana.ai/wp-content/uploads/2023/10/HL-225H_Datasheet_10_23.pdf -- \"native integration of 24x100 GbE RoCE v2 RDMA ports to enable inter-Gaudi communication via direct routing or via standard Ethernet switching\"",
+        "note": "Ethernet, not an NVLink-style bus: the ports run between modules on Intel's eight-module baseboard (HLBA-225, \"Intel Baseboard for 8x Gaudi 2\", per a reseller listing) or out to switches, 600 GB/s bidirectional per module (Intel's Gaudi 3 paper, Table 1). How the 24 ports split between module-to-module and scale-out on that baseboard is not recorded here. On a single-card OAM-to-PCIe adapter they are not connected."
+      },
+      "sources": [
+        "https://habana.ai/wp-content/uploads/2023/10/HL-225H_Datasheet_10_23.pdf",
+        "https://cdrdv2-public.intel.com/817486/gaudi-3-ai-accelerator-white-paper.pdf",
+        "https://docs.habana.ai/en/latest/Support_Matrix/Support_Matrix.html",
+        "https://github.com/klzsysy/gaudi2-single-card-driver",
+        "https://smicro.sk/intel-baseboard-for-8x-gaudi-2-hbm2-gpu-hlba-225-4"
+      ],
+      "note": "Bandwidth is 2.46 TB/s in the Gaudi 3 paper's table and \"2.4TB/s\" in the datasheet text; 48 MB of on-die SRAM. Used asking prices were seen only in search snippets of eBay listings (about $1,700-2,700 in 2026), so it is unpriced here. The one documented single-card bring-up outside Intel's servers ran on an OAM-to-PCIe adapter with three driver patches; see that carrier. Not a GPU: matrix engines (MMEs) plus programmable vector cores (TPCs), driven by Intel's Gaudi software (formerly SynapseAI), PyTorch and a vLLM plugin; no CUDA, and no llama.cpp backend is known here. The current support matrix (1.24.2) covers Gaudi 2 and Gaudi 3 with PyTorch 2.13 and vLLM plugin 0.30.0, which tracks upstream vLLM and lists Qwen3.5/3.6 MoE work but no Qwen3.8. First-generation Gaudi is gone from it; 1.18.0 is the latest matrix checked that lists it. A secondhand report (LetsDataScience, 2025-12-15, citing Phoronix, with \"limited official confirmation\") says development of the open-source user-space driver stopped."
+    },
+    {
+      "id": "gaudi3_hl338",
+      "label": "Intel Gaudi 3 (HL-338) PCIe 128GB",
+      "vendor": "Intel",
+      "arch": "gaudi3",
+      "memoryGB": 128,
+      "memoryBandwidthGBs": 3700,
+      "tdpW": 600,
+      "compute": {
+        "unit": "Tops",
+        "source": "https://cdrdv2-public.intel.com/817486/gaudi-3-ai-accelerator-white-paper.pdf",
+        "values": {
+          "fp8": 1678,
+          "bf16": 1678,
+          "fp16": 459,
+          "tf32": 459,
+          "fp32": 229
+        },
+        "note": "Matrix-engine rates from Table 5 of Intel's Gaudi 3 technical paper: FP8 1678, BF16 1678, \"FP16 (signed)\" 459, TF32 459, FP32 229 TFLOPS. They are the chip's figures; the paper does not say whether the 600 W PCIe card sustains them, as the 900 W OAM is rated to."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "slots": 2,
+        "cooling": "passive",
+        "source": "https://cdrdv2-public.intel.com/817486/gaudi-3-ai-accelerator-white-paper.pdf -- \"offered to system designers in accordance with PCIe CEM Spec. Revision 5.1 form and supports up to 600W TDP Power with passive cooling\"",
+        "note": "Dual-slot, full height and length per a reseller listing (SabrePC: \"2x Slot - FHFL - 600 W TDP\")."
+      },
+      "hostLink": {
+        "gen": 5,
+        "lanes": 16,
+        "source": "https://cdrdv2-public.intel.com/817486/gaudi-3-ai-accelerator-white-paper.pdf -- HL-338 key interfaces: \"Host Link x16 PCIe Gen5\""
+      },
+      "peerLink": {
+        "maxCards": 4,
+        "fabric": "Integrated RoCE v2 Ethernet through the HLTB-304 top board",
+        "topology": "All-to-all across four cards: six 200 GbE links between each pair, 18 per card",
+        "source": "https://cdrdv2-public.intel.com/817486/gaudi-3-ai-accelerator-white-paper.pdf -- \"The HLTB-304 board allows connectivity of 4 HL-338 cards, 6x 200 GbE links from each HL-338 card to each of the other 3 HL-338 cards, 18 links of 200 GbE total per card.\"",
+        "note": "Scale-out is \"Through Host-NIC only\". No HLTB-304 listing or price was found."
+      },
+      "sources": [
+        "https://cdrdv2-public.intel.com/817486/gaudi-3-ai-accelerator-white-paper.pdf",
+        "https://docs.habana.ai/en/latest/Support_Matrix/Support_Matrix.html",
+        "https://www.sabrepc.com/HL-338-Intel-S117208843"
+      ],
+      "note": "The PCIe version of Gaudi 3, and the only Gaudi with a direct card-to-card bridge in standard slots. Unpriced: the one reseller listing found is out of stock (\"contact sales\"), and 2024 launch coverage put Gaudi 3 near $16,000 a chip. Not a GPU: matrix engines (MMEs) plus programmable vector cores (TPCs), driven by Intel's Gaudi software (formerly SynapseAI), PyTorch and a vLLM plugin; no CUDA, and no llama.cpp backend is known here. The current support matrix (1.24.2) covers Gaudi 2 and Gaudi 3 with PyTorch 2.13 and vLLM plugin 0.30.0, which tracks upstream vLLM and lists Qwen3.5/3.6 MoE work but no Qwen3.8. First-generation Gaudi is gone from it; 1.18.0 is the latest matrix checked that lists it. A secondhand report (LetsDataScience, 2025-12-15, citing Phoronix, with \"limited official confirmation\") says development of the open-source user-space driver stopped."
+    },
+    {
       "id": "mi50_32",
       "label": "Instinct MI50 32GB",
       "vendor": "AMD",
@@ -6192,6 +6345,57 @@
         "https://www.alibaba.com/product-detail/4-GPU-V100-Motherboard-with-Cpu_1601675663766.html -- the listing; its page rendered empty here, so the details are from the maintainer's screenshot and description"
       ],
       "note": "The maintainer reads it as a copy of the AOM-SXMV with parts moved around. The listing photo shows four sockets, the central heatsink, two cable ports wired to a single PCIe x16 host card, two edge connectors like the AOM-SXMV's proprietary host slots, an ATX 24-pin input and several 8-pin inputs (this page's reading of the photo). The uplink's width and generation, and whether the edge connectors are a second uplink, are not known, so the host link is unrecorded. The URL calls it a \"4-GPU V100 Motherboard with Cpu\", which the screenshot's title does not repeat."
+    },
+    {
+      "id": "oam_pcie_adapter",
+      "label": "OAM-to-PCIe adapter (sold as an \"NVIDIA\" OAM adapter)",
+      "maker": "not stated; Chinese sellers on eBay",
+      "socket": "OAM",
+      "slots": 1,
+      "peer": {
+        "kind": "none",
+        "note": "The module's own peer links are not connected: on Gaudi 2 the Ethernet ports have \"无真实物理链路\" (no real physical link; klzsysy), and on AMD modules one owner's hypothesis is that \"BOTH xGMI links are missing\" (bitbashers, Level1Techs, 2026-09-02). Each module is on its own."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "gpusPerUplink": 1,
+        "attach": "A PCIe x16 slot, plus a 48 V or 54 V auxiliary supply (\"48V / 54V，550W 以上\", klzsysy) and the board's own 12 V inputs, brought up in order: \"nVidia card wants 48V → PEX6-12V + PCIe 12/5/3V OTHERWISE you get SEQ_FAIL\" (bitbashers, 2026-08-05).",
+        "source": "https://github.com/klzsysy/gaudi2-single-card-driver -- a Gaudi 2 on a Supermicro H13SSL-N: \"Gen4 x16, negotiated at 16 GT/s x16\"",
+        "note": "The same Gaudi 2 ran at Gen3 x8 in a CPU-attached x16 slot of a GIGABYTE MU70-SU0 board, which the author puts down to the motherboard's wiring (an inference). An early \"Width x0\" was loose mounting screws."
+      },
+      "power": {
+        "input": "48-54 V auxiliary plus 12 V (PCIe 6- and 8-pin headers)",
+        "note": "Boards vary: \"Most of the boards being sold seem to be missing PEX8 12V sockets, and the FTDI USB chip, and the temp sensors\" (bitbashers, 2026-08-15), and a version with a 12-to-48 V step-up is said to exist (hearsay). One owner's eBay 48 V supply sold as 1,000 W shut down above 250 W; a seller recommended a Mean Well RSP-1000-48."
+      },
+      "pricing": {
+        "usd": 668,
+        "asOf": "2026-11",
+        "includes": "the board as pictured, with two fans and a shroud; free shipping and import fees",
+        "source": "eBay listing \"OAM to PCIe Adapter Board For NVIDIA A100 H100 H800 AMD MI GPU Server\" (seller dancerqian), the maintainer's screenshot (2026-11-08)",
+        "note": "The listing names NVIDIA and AMD modules, not Gaudi; the photo is labelled \"#A100/MI OAM转\". Whether it is the same board the Gaudi 2 bring-up used is not established."
+      },
+      "fits": [
+        {
+          "unit": "gaudi2_hl225h",
+          "status": "verified",
+          "peer": "pcie",
+          "source": "https://github.com/klzsysy/gaudi2-single-card-driver -- a Gaudi 2 HL-225 on an \"nvidia oam转接卡\" under Ubuntu, Gaudi software 1.24.1 and 1.24.2 (2026-10 to 2026-11)",
+          "note": "Single card only, and only after three driver patches (server type, a \"bad SerDes type 65535\" check, and a firmware link mask) plus iommu=pt to stop page-table kernel panics under 1.24.1. Tested with matrix multiplies and image generation; no LLM serving result."
+        },
+        {
+          "unit": "max_1550",
+          "status": "reported",
+          "peer": "pcie",
+          "source": "https://forum.level1techs.com/t/someone-needs-to-figure-out-how-to-adapt-mi250-gpus-to-pcie/250596 -- Charlatanshost (2026-08-13) relays a seller saying the Max 1550 \"worked best with the Nvidia adapter\"",
+          "note": "A seller's claim, second-hand."
+        }
+      ],
+      "sources": [
+        "https://github.com/klzsysy/gaudi2-single-card-driver -- the Gaudi 2 bring-up: power, link, patches, panics",
+        "https://forum.level1techs.com/t/someone-needs-to-figure-out-how-to-adapt-mi250-gpus-to-pcie/250596 -- Level1Techs, 382 posts (2026-05 to 2026-11): owners debugging AMD MI250, MI250X and MI210 modules on these adapters"
+      ],
+      "note": "A one-module OAM carrier with a PCIe x16 edge, sold under NVIDIA, AMD and A100 names. AMD modules are unproven on it and the evidence is confounded: through 2026-11-03 nobody on Level1Techs ran compute on an MI250, MI250X or MI210 through one. The modules enumerate, then the AMD driver fails at \"GPU posting\". Most attempts used HPE/Cray MI250X modules, whose firmware public drivers reject (the maintainer); no successful flash to other firmware was reported. A Supermicro-OEM MI250 failed at the same step on this adapter and on a custom board (TsuKitsune, 2026-07), so HPE firmware may not be the only obstacle. AMD's MI250 units are not in this catalog."
     }
   ],
   "lines": [
