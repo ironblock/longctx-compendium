@@ -63,11 +63,15 @@ export function frontierOf(openModels, qi) {
     .filter(p => p.best);
   for (const p of pts) {
     const better = pts.filter(q => q !== p && q.total <= p.total && q.best.value > p.best.value);
-    p.onFrontier = better.length === 0;
-    p.neverOn = better.some(q => q.released <= p.released);
+    const bySize = (a, b) => a.total - b.total;
+    const earlier = better.filter(q => q.released <= p.released).sort(bySize);
     const later = better.filter(q => q.released > p.released).sort((a, b) => (a.released < b.released ? -1 : 1));
+    p.onFrontier = better.length === 0;
+    p.neverOn = earlier.length > 0;
+    // Never on it: the smallest model already out that beats it. Left it: the first model to.
+    p.knockedOffBy = p.neverOn ? earlier[0] : later[0] ?? null;
     p.leftOn = !p.onFrontier && !p.neverOn ? later[0]?.released ?? null : null;
-    p.beatenBy = better.sort((a, b) => a.total - b.total)[0] ?? null;
+    p.beatenBy = better.sort(bySize)[0] ?? null;
   }
   return pts.sort((a, b) => a.total - b.total);
 }

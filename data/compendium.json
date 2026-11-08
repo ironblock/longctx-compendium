@@ -15727,6 +15727,874 @@
           "slug": "qwen3-8-27b-non-reasoning"
         }
       ]
+    },
+    {
+      "id": "deepseek_v41_flash_1017",
+      "label": "DeepSeek V4.1 Flash 1017",
+      "creator": "DeepSeek",
+      "repo": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "revision": "1bae0e1088993b9b82de08f59de5be5a34e42170",
+      "released": "2026-10-17",
+      "params": {
+        "total": 748000000000.0,
+        "active": 16000000000.0,
+        "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash -- the 1017 card states no counts (\"a minor update to DeepSeek-V4.1-Flash\"); its parent's card: \"a multimodal Mixture-of-Experts (MoE) model with 552B backbone parameters\", \"activate only 8B parameters per token during prefill and 16B during decode\", and \"Engram conditional memory (196B parameters, sparsely accessed via token-based lookup)\". The total is backbone plus Engram, summed here."
+      },
+      "weights": {
+        "precision": "FP8 with FP4 routed experts",
+        "sizeGB": 510,
+        "note": "config.json: fp8 E4M3 in 32x32 blocks with UE8M0 scales, \"expert_dtype\": \"fp4\"."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 32.6,
+          "asOf": "2026-11-08",
+          "variant": "DeepSeek V4.1 Flash 1017 (Max)",
+          "slug": "deepseek-v4-1-flash-1017"
+        },
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 28.6,
+          "asOf": "2026-11-08",
+          "variant": "DeepSeek V4.1 Flash 1017 (High)",
+          "slug": "deepseek-v4-1-flash-1017-high"
+        },
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 18.5,
+          "asOf": "2026-11-08",
+          "variant": "DeepSeek V4.1 Flash 1017 (Non-reasoning)",
+          "slug": "deepseek-v4-1-flash-1017-non-reasoning"
+        }
+      ],
+      "note": "A 20-layer causal encoder and 20-layer decoder, 384 routed experts with 6 active plus 1 shared. The 196B Engram memory is read by lookup, so like Qwen3.8-Flash-Next's n-gram table it can live in host memory; GPU memory then needs the 552B backbone."
+    },
+    {
+      "id": "deepseek_v4_pro_0813",
+      "label": "DeepSeek V4 Pro 0813",
+      "creator": "DeepSeek",
+      "repo": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro-0813",
+      "revision": "72e1d3230f6c080a530b0a1d46f8eb4602340597",
+      "released": "2026-08-13",
+      "params": {
+        "total": 1600000000000.0,
+        "active": 49000000000.0,
+        "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro -- the 0813 card states no counts but \"is built on the DeepSeek-V4-Pro (Preview) model structure\"; the V4-Pro card: \"DeepSeek-V4-Pro with 1.6T parameters (49B activated)\"."
+      },
+      "weights": {
+        "precision": "FP8 with FP4 routed experts",
+        "sizeGB": 893,
+        "note": "config.json: fp8 E4M3 in 128x128 blocks with UE8M0 scales, \"expert_dtype\": \"fp4\"; a DSpark speculative-decoding module is attached."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 23.1,
+          "asOf": "2026-11-08",
+          "variant": "DeepSeek V4 Pro 0813 (Max)",
+          "slug": "deepseek-v4-pro"
+        },
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 12.6,
+          "asOf": "2026-11-08",
+          "variant": "DeepSeek V4 Pro 0813 (Non-reasoning)",
+          "slug": "deepseek-v4-pro-non-reasoning"
+        }
+      ]
+    },
+    {
+      "id": "glm_53",
+      "label": "GLM-5.3",
+      "creator": "Z AI",
+      "repo": "https://huggingface.co/zai-org/GLM-5.3",
+      "revision": "ba32f8c19c8738e2c57c71798c601d477a7bf844",
+      "released": "2026-08-18",
+      "params": {
+        "total": 753330000000.0,
+        "source": "https://huggingface.co/zai-org/GLM-5.2 -- neither card states a count; GLM-5.3 \"uses the same base model as GLM-5.2\", and Hugging Face counts 753,329,940,480 parameters in GLM-5.2's BF16 weights (unpacked, so the count is not distorted by quantization). Hugging Face's figure, not the card's."
+      },
+      "weights": {
+        "precision": "FP8 (BF16 in a separate repository)",
+        "sizeGB": 756,
+        "note": "config.json: fp8 E4M3 in 128x128 blocks; zai-org/GLM-5.3-BF16 is 1.51 TB."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 31.7,
+          "asOf": "2026-11-08",
+          "variant": "GLM-5.3 (Max)",
+          "slug": "glm-5-3"
+        },
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 23.1,
+          "asOf": "2026-11-08",
+          "variant": "GLM-5.3 (Low)",
+          "slug": "glm-5-3-low"
+        }
+      ],
+      "note": "Active parameters not stated."
+    },
+    {
+      "id": "glm_53_flash",
+      "label": "GLM-5.3-Flash",
+      "creator": "Z AI",
+      "repo": "https://huggingface.co/zai-org/GLM-5.3-Flash",
+      "revision": "46a050bec13002ad29ee795c16e61cf4fa3c4a9c",
+      "released": "2026-08-26",
+      "params": {
+        "total": 320000000000.0,
+        "active": 18000000000.0,
+        "source": "https://huggingface.co/zai-org/GLM-5.3-Flash -- \"With 320B total parameters and just 18B active parameters\""
+      },
+      "weights": {
+        "precision": "FP8 (BF16 in a separate repository)",
+        "sizeGB": 328,
+        "note": "config.json: fp8 E4M3 in 128x128 blocks."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 27.8,
+          "asOf": "2026-11-08",
+          "variant": "GLM-5.3-Flash",
+          "slug": "glm-5-3-flash"
+        }
+      ]
+    },
+    {
+      "id": "mimo_v26_pro",
+      "label": "MiMo-V2.6-Pro",
+      "creator": "Xiaomi",
+      "repo": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Pro-RL",
+      "revision": "a066ba0057192126bd5d255f37138265fc1a435e",
+      "released": "2026-09-21",
+      "params": {
+        "total": 1020000000000.0,
+        "active": 42000000000.0,
+        "source": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Pro-RL -- \"Sparse MoE (Mixture of Experts), 1.02T total / 42B activated parameters\""
+      },
+      "weights": {
+        "precision": "FP8, stored as MXFP4",
+        "sizeGB": 573,
+        "note": "config.json: fp8 E4M3 in 128x128 blocks with \"store_dtype\": \"mxfp4\", block 32. Artificial Analysis links this -RL repository; a later -MOPD upgrade has the same size and quantization."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 29.9,
+          "asOf": "2026-11-08",
+          "variant": "MiMo-V2.6-Pro",
+          "slug": "mimo-v2-6-pro"
+        }
+      ]
+    },
+    {
+      "id": "mimo_v26_flash",
+      "label": "MiMo-V2.6-Flash",
+      "creator": "Xiaomi",
+      "repo": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL",
+      "revision": "f657ba2f7d24c9adc5730675baaa2d34de878a49",
+      "released": "2026-09-21",
+      "params": {
+        "total": 309000000000.0,
+        "active": 15000000000.0,
+        "source": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL -- \"Sparse MoE (Mixture of Experts), 309B total / 15B activated parameters\""
+      },
+      "weights": {
+        "precision": "FP8, stored as MXFP4",
+        "sizeGB": 178,
+        "note": "config.json: fp8 E4M3 in 128x128 blocks with \"store_dtype\": \"mxfp4\", block 32."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 26.7,
+          "asOf": "2026-11-08",
+          "variant": "MiMo-V2.6-Flash",
+          "slug": "mimo-v2-6-flash"
+        }
+      ]
+    },
+    {
+      "id": "ling_31_flash_1019",
+      "label": "Ling 3.1 Flash 1019",
+      "creator": "InclusionAI",
+      "repo": "https://huggingface.co/inclusionAI/Ling-3.1-flash-1019",
+      "revision": "2109a6863fb14361eecc346ef98b3db88b8cdaee",
+      "released": "2026-10-22",
+      "params": {
+        "total": 560000000000.0,
+        "active": 25000000000.0,
+        "source": "https://huggingface.co/inclusionAI/Ling-3.1-flash-1019 -- \"with 560B total parameters, 25B active parameters per token, and a 1M-token context window\""
+      },
+      "weights": {
+        "precision": "FP8",
+        "sizeGB": 574,
+        "note": "config.json: fp8 E4M3 in 128x128 blocks. Its max_position_embeddings is 262,144, against the card's 1M context."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 29.6,
+          "asOf": "2026-11-08",
+          "variant": "Ling 3.1 Flash 1019",
+          "slug": "ling-3-1-flash-1019"
+        }
+      ]
+    },
+    {
+      "id": "minimax_m31_flash",
+      "label": "MiniMax-M3.1-Flash",
+      "creator": "MiniMax",
+      "repo": "https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash",
+      "revision": "ce7f4df87d2e05262f5775f373dac4772f134041",
+      "released": "2026-10-19",
+      "params": {
+        "total": 428000000000.0,
+        "active": 23000000000.0,
+        "source": "https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash -- \"Parameters: Approximately 428B total; 23B activated per token\""
+      },
+      "weights": {
+        "precision": "MXFP8, with NVFP4 routed experts",
+        "sizeGB": 252,
+        "note": "config.json: mxfp8 in 1x32 blocks, \"moe_quant_algo\": \"NVFP4\" (group 16); the card says the experts and attention were quantized during training."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 29.1,
+          "asOf": "2026-11-08",
+          "variant": "MiniMax-M3.1-Flash",
+          "slug": "minimax-m3-1-flash"
+        }
+      ],
+      "note": "MiniMax Community License: commercial use needs attribution, and written authorization above US$20M yearly revenue."
+    },
+    {
+      "id": "minimax_m3",
+      "label": "MiniMax-M3",
+      "creator": "MiniMax",
+      "repo": "https://huggingface.co/MiniMaxAI/MiniMax-M3",
+      "revision": "d95e30cb912fe3021bb9c2ba66a8ce60b6c937a9",
+      "released": "2026-06-01",
+      "params": {
+        "total": 428000000000.0,
+        "active": 23000000000.0,
+        "source": "https://huggingface.co/MiniMaxAI/MiniMax-M3 -- \"It has ~428B parameters and ~23B activated parameters.\""
+      },
+      "weights": {
+        "precision": "BF16 (MXFP8 in a separate repository)",
+        "sizeGB": 854
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 18.9,
+          "asOf": "2026-11-08",
+          "variant": "MiniMax-M3",
+          "slug": "minimax-m3"
+        }
+      ]
+    },
+    {
+      "id": "step_5_preview",
+      "label": "Step 5 Preview",
+      "creator": "StepFun",
+      "repo": "https://huggingface.co/stepfun-ai/Step-5-Preview",
+      "revision": "364b3b03fed2477aa0953fe855a2c4c8c48ee3cc",
+      "released": "2026-09-18",
+      "params": {
+        "total": 600000000000.0,
+        "active": 27000000000.0,
+        "source": "https://huggingface.co/stepfun-ai/Step-5-Preview -- \"a sparse Mixture-of-Experts (MoE) model with 600B total parameters and 27B active parameters\""
+      },
+      "weights": {
+        "precision": "FP8 (BF16 and NVFP4 in separate repositories)",
+        "sizeGB": 650,
+        "note": "config.json: fp8 E4M3 in 128x128 blocks."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 28.5,
+          "asOf": "2026-11-08",
+          "variant": "Step 5 Preview",
+          "slug": "step-5"
+        }
+      ]
+    },
+    {
+      "id": "mistral_large_4",
+      "label": "Mistral Large 4",
+      "creator": "Mistral",
+      "repo": "https://huggingface.co/mistralai/Mistral-Large-4-1T-A52B",
+      "revision": "af26e7869af601441d5cdf75a1272469ddc3d059",
+      "released": "2026-10-29",
+      "params": {
+        "total": 1000000000000.0,
+        "active": 52000000000.0,
+        "source": "https://huggingface.co/mistralai/Mistral-Large-4-1T-A52B -- \"a 1 trillion-parameter natively multimodal Mixture-of-Experts model with 49 billion active parameters per token (52 billion including embeddings and output layers)\"; key features: \"~1T total / ~52B active parameters\""
+      },
+      "weights": {
+        "precision": "FP8 (NVFP4 in a separate repository)",
+        "sizeGB": 1060,
+        "note": "config.json: fp8 in 128x128 blocks; the card does not state the main weights' precision."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 26.1,
+          "asOf": "2026-11-08",
+          "variant": "Mistral Large 4 (High)",
+          "slug": "mistral-large-4"
+        },
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 23.1,
+          "asOf": "2026-11-08",
+          "variant": "Mistral Large 4 (Medium)",
+          "slug": "mistral-large-4-medium"
+        }
+      ],
+      "note": "Mistral Ecosystem Open-Weight License (modified MIT); a model-as-a-service business needs a separate licence."
+    },
+    {
+      "id": "muse_spark_open",
+      "label": "Muse Spark Open",
+      "creator": "Meta",
+      "repo": "https://huggingface.co/meta-models/Muse-Spark-Open-816B-A42B",
+      "revision": "0fb02478b02565b2ce7fc57e6051c91172774ac9",
+      "released": "2026-10-15",
+      "params": {
+        "total": 816000000000.0,
+        "active": 42000000000.0,
+        "source": "https://huggingface.co/meta-models/Muse-Spark-Open-816B-A42B -- \"Muse Spark Open is an 816B total/42B active parameter open weights model with a context window of 1M tokens.\""
+      },
+      "weights": {
+        "precision": "BF16 (NVFP4 in a separate repository)",
+        "note": "The repository is gated (manual approval), so its config.json was not read."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 24.9,
+          "asOf": "2026-11-08",
+          "variant": "Muse Spark Open (Xhigh)",
+          "slug": "muse-spark-open"
+        }
+      ],
+      "note": "Muse Model License; access needs manual approval."
+    },
+    {
+      "id": "muse_glimmer",
+      "label": "Muse Glimmer",
+      "creator": "Meta",
+      "repo": "https://huggingface.co/meta-models/Muse-Glimmer-30B",
+      "revision": "cec94fcfd6512f2cfe708138c32533b346ea4f69",
+      "released": "2026-08-10",
+      "params": {
+        "total": 29600000000.0,
+        "active": 29600000000.0,
+        "source": "https://huggingface.co/meta-models/Muse-Glimmer-30B -- \"Number of Parameters | 29.6B (including vision encoder)\"; \"Dense Causal Transformer with Perception Encoder\""
+      },
+      "weights": {
+        "precision": "BF16",
+        "sizeGB": 59.6
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 6.3,
+          "asOf": "2026-11-08",
+          "variant": "Muse Glimmer (High)",
+          "slug": "muse-glimmer"
+        }
+      ]
+    },
+    {
+      "id": "nanbeige_43_33b",
+      "label": "Nanbeige4.3-33B",
+      "creator": "Nanbeige",
+      "repo": "https://huggingface.co/Nanbeige/Nanbeige4.3-33B",
+      "revision": "df919e1e2cf077a22204c78b6c826bf3db18bc08",
+      "released": "2026-10-25",
+      "params": {
+        "total": 33000000000.0,
+        "active": 33000000000.0,
+        "source": "https://huggingface.co/Nanbeige/Nanbeige4.3-33B -- the card states no count (\"around the 30B-parameter scale\"); Hugging Face counts 33B, and config.json is a dense LlamaForCausalLM. Hugging Face's figure, not the card's."
+      },
+      "weights": {
+        "precision": "BF16",
+        "sizeGB": 66.3
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 20.4,
+          "asOf": "2026-11-08",
+          "variant": "Nanbeige4.3-33B",
+          "slug": "nanbeige4-3-33b"
+        }
+      ]
+    },
+    {
+      "id": "k2_horizon_375b",
+      "label": "K2 Horizon 375B A23B",
+      "creator": "Institute of Foundation Models",
+      "repo": "https://huggingface.co/IFM/K2-Horizon-375B-A23B",
+      "revision": "bb3bfb4b532488c05e84a090301f8259c68b319c",
+      "released": "2026-09-03",
+      "params": {
+        "total": 375000000000.0,
+        "active": 23000000000.0,
+        "source": "https://huggingface.co/IFM/K2-Horizon-375B-A23B -- \"a sparse Mixture-of-Experts model that stores 375B parameters and runs 23B per token, with a 512K context window\""
+      },
+      "weights": {
+        "precision": "BF16",
+        "sizeGB": 758
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 17.8,
+          "asOf": "2026-11-08",
+          "variant": "K2 Horizon 375B A23B",
+          "slug": "k2-horizon-375b-a23b"
+        }
+      ]
+    },
+    {
+      "id": "reflection_beam_1",
+      "label": "Beam 1.0",
+      "creator": "Reflection",
+      "repo": "https://huggingface.co/reflection/Beam-1.0-501B-A23B",
+      "revision": "12950ae640b48cbbe9b5bb7735bf197507d6383f",
+      "released": "2026-10-16",
+      "params": {
+        "total": 501300000000.0,
+        "active": 23400000000.0,
+        "source": "https://huggingface.co/reflection/Beam-1.0-501B-A23B -- \"| Total Parameters | 501.3B |\", \"| Active Parameters | 23.4B |\""
+      },
+      "weights": {
+        "precision": "BF16 (FP8 and NVFP4 in separate repositories)",
+        "sizeGB": 1000
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 17.7,
+          "asOf": "2026-11-08",
+          "variant": "Beam 1.0",
+          "slug": "reflection-beam"
+        }
+      ]
+    },
+    {
+      "id": "nemotron_35_super_vl",
+      "label": "Nemotron 3.5 Super VL",
+      "creator": "NVIDIA",
+      "repo": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+      "revision": "fb0ee0bc6b3f70342afd8d84cb80dbadbaa8a1fe",
+      "released": "2026-10-15",
+      "params": {
+        "total": 120000000000.0,
+        "active": 12000000000.0,
+        "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16 -- \"It has 120B total parameters and 12B active parameters and supports context lengths up to 1M tokens.\""
+      },
+      "weights": {
+        "precision": "BF16 (NVFP4 in a separate repository)",
+        "sizeGB": 249
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 13.6,
+          "asOf": "2026-11-08",
+          "variant": "Nemotron 3.5 Super VL",
+          "slug": "nemotron-3-5-super-vl"
+        }
+      ]
+    },
+    {
+      "id": "nemotron_3_ultra",
+      "label": "Nemotron 3 Ultra 550B A55B",
+      "creator": "NVIDIA",
+      "repo": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16",
+      "revision": "77df655d5e9f8362164ed14dd8b48f8bce657498",
+      "released": "2026-06-04",
+      "params": {
+        "total": 550000000000.0,
+        "active": 55000000000.0,
+        "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16 -- \"The model has 55B active parameters and 550B parameters in total.\""
+      },
+      "weights": {
+        "precision": "BF16 (NVFP4 in a separate repository)",
+        "sizeGB": 1120
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 11.8,
+          "asOf": "2026-11-08",
+          "variant": "Nemotron 3 Ultra 550B A55B (Reasoning)",
+          "slug": "nvidia-nemotron-3-ultra-550b-a55b"
+        }
+      ]
+    },
+    {
+      "id": "inkling",
+      "label": "Inkling",
+      "creator": "Thinking Machines",
+      "repo": "https://huggingface.co/thinkingmachines/Inkling",
+      "revision": "828496eeae4c243ff1a22f7f28ff83694f2f7bc9",
+      "released": "2026-07-15",
+      "params": {
+        "total": 975000000000.0,
+        "active": 41000000000.0,
+        "source": "https://huggingface.co/thinkingmachines/Inkling -- \"Parameters\" / \"975B total, 41B active\""
+      },
+      "weights": {
+        "precision": "BF16 (NVFP4 in a separate repository)",
+        "sizeGB": 1900
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 12.5,
+          "asOf": "2026-11-08",
+          "variant": "Inkling (Xhigh)",
+          "slug": "inkling"
+        }
+      ]
+    },
+    {
+      "id": "inkling_small",
+      "label": "Inkling Small",
+      "creator": "Thinking Machines",
+      "repo": "https://huggingface.co/thinkingmachines/Inkling-Small",
+      "revision": "8cc5877b44d343f88b92086aa1fb72897950f06a",
+      "released": "2026-07-30",
+      "params": {
+        "total": 276000000000.0,
+        "active": 12000000000.0,
+        "source": "https://huggingface.co/thinkingmachines/Inkling-Small -- \"Parameters\" / \"276B total, 12B active\""
+      },
+      "weights": {
+        "precision": "BF16 (NVFP4 in a separate repository)",
+        "sizeGB": 532
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 12.9,
+          "asOf": "2026-11-08",
+          "variant": "Inkling Small",
+          "slug": "inkling-small"
+        }
+      ]
+    },
+    {
+      "id": "k_exaone_2",
+      "label": "K-EXAONE 2.0",
+      "creator": "LG AI Research",
+      "repo": "https://huggingface.co/LGAI-EXAONE/K-EXAONE-2.0-750B-A37B",
+      "revision": "fec0c8dd25fdd20ffd09869d5af5277966d5523d",
+      "released": "2026-08-12",
+      "params": {
+        "total": 750000000000.0,
+        "active": 37000000000.0,
+        "source": "https://huggingface.co/LGAI-EXAONE/K-EXAONE-2.0-750B-A37B -- \"Number of Parameters | 750B\", \"Active Parameters | 37B\""
+      },
+      "weights": {
+        "precision": "BF16 (FP8 and NVFP4 in separate repositories)",
+        "sizeGB": 1500
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 7.6,
+          "asOf": "2026-11-08",
+          "variant": "K-EXAONE 2.0",
+          "slug": "k-exaone-2-0-0803"
+        }
+      ]
+    },
+    {
+      "id": "command_a_plus",
+      "label": "Command A+",
+      "creator": "Cohere",
+      "repo": "https://huggingface.co/CohereLabs/command-a-plus-05-2026-bf16",
+      "revision": "5fb6fde5fd12ff89356aae552e11883bc49f069b",
+      "released": "2026-05-20",
+      "params": {
+        "total": 218000000000.0,
+        "active": 25000000000.0,
+        "source": "https://huggingface.co/CohereLabs/command-a-plus-05-2026-bf16 -- \"Model Size: 25B active parameters, 218B total parameters\""
+      },
+      "weights": {
+        "precision": "BF16 (FP8 and W4A4 NVFP4 in separate repositories)",
+        "sizeGB": 438,
+        "note": "Cohere recommends the W4A4 NVFP4 repository (132 GB) \"for most uses\"."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 6.2,
+          "asOf": "2026-11-08",
+          "variant": "Command A+",
+          "slug": "command-a-plus"
+        }
+      ]
+    },
+    {
+      "id": "north_mini_code",
+      "label": "North Mini Code",
+      "creator": "Cohere",
+      "repo": "https://huggingface.co/CohereLabs/North-Mini-Code-1.0",
+      "revision": "d11e61a842617a22dc328552fa5bb86231ee4f37",
+      "released": "2026-06-09",
+      "params": {
+        "total": 30000000000.0,
+        "active": 3000000000.0,
+        "source": "https://huggingface.co/CohereLabs/North-Mini-Code-1.0 -- \"Model Size: 30B total; 3B active\""
+      },
+      "weights": {
+        "precision": "BF16 (FP8 and W4A16 in separate repositories)",
+        "sizeGB": 61
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 3.4,
+          "asOf": "2026-11-08",
+          "variant": "North Mini Code",
+          "slug": "north-mini-code"
+        }
+      ]
+    },
+    {
+      "id": "nemotron_35_lightning",
+      "label": "Nemotron 3.5 Lightning",
+      "creator": "NVIDIA",
+      "repo": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16",
+      "revision": "a9904d24bcc1d289a1950fa9d2b978c47cf903b9",
+      "released": "2026-08-11",
+      "params": {
+        "total": 30000000000.0,
+        "active": 3000000000.0,
+        "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16 -- \"| Total Parameters | 30B (3B active) |\""
+      },
+      "weights": {
+        "precision": "BF16 (NVFP4 in a separate repository)",
+        "sizeGB": 65.8
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 5.5,
+          "asOf": "2026-11-08",
+          "variant": "Nemotron 3.5 Lightning",
+          "slug": "nemotron-3-5-lightning"
+        }
+      ]
+    },
+    {
+      "id": "nemotron_3_nano_4b",
+      "label": "Nemotron 3 Nano 4B",
+      "creator": "NVIDIA",
+      "repo": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16",
+      "revision": "dfaf35de3e30f1867dd8dbc38a7fc9fb52d3914f",
+      "released": "2026-03-16",
+      "params": {
+        "total": 3970000000.0,
+        "active": 3970000000.0,
+        "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16 -- \"Number of model parameters 3.97 x 10^9\"; a Mamba-2 and MLP hybrid with \"just four Attention layers\", not an MoE"
+      },
+      "weights": {
+        "precision": "BF16 (FP8 in a separate repository)",
+        "sizeGB": 7.96
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 1.8,
+          "asOf": "2026-11-08",
+          "variant": "NVIDIA Nemotron 3 Nano 4B",
+          "slug": "nvidia-nemotron-3-nano-4b"
+        }
+      ]
+    },
+    {
+      "id": "granite_42_8b",
+      "label": "Granite 4.2 8B",
+      "creator": "IBM",
+      "repo": "https://huggingface.co/ibm-granite/granite-4.2-8b",
+      "revision": "a7042144125ce5ae64f89610e8289647fc000b9a",
+      "released": "2026-08-25",
+      "params": {
+        "total": 8000000000.0,
+        "active": 8000000000.0,
+        "source": "https://huggingface.co/ibm-granite/granite-4.2-8b -- \"| Parameters | 8B |\", \"Decoder-only Dense Transformer (Reasoning)\""
+      },
+      "weights": {
+        "precision": "BF16",
+        "sizeGB": 17.6
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 5.1,
+          "asOf": "2026-11-08",
+          "variant": "Granite 4.2 8B",
+          "slug": "granite-4-2-8b"
+        }
+      ]
+    },
+    {
+      "id": "granite_42_3b",
+      "label": "Granite 4.2 3B",
+      "creator": "IBM",
+      "repo": "https://huggingface.co/ibm-granite/granite-4.2-3b",
+      "revision": "4e9c275e232f10211ec88644d106a1f6a1b60e06",
+      "released": "2026-08-25",
+      "params": {
+        "total": 3000000000.0,
+        "active": 3000000000.0,
+        "source": "https://huggingface.co/ibm-granite/granite-4.2-3b -- \"| Parameters | 3B |\", \"Decoder-only Dense Transformer\""
+      },
+      "weights": {
+        "precision": "BF16",
+        "sizeGB": 7.33
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 4.7,
+          "asOf": "2026-11-08",
+          "variant": "Granite 4.2 3B",
+          "slug": "granite-4-2-3b"
+        }
+      ]
+    },
+    {
+      "id": "mistral_medium_35",
+      "label": "Mistral Medium 3.5",
+      "creator": "Mistral",
+      "repo": "https://huggingface.co/mistralai/Mistral-Medium-3.5-128B",
+      "revision": "22b2b868a15677cfa6061277ed2f653d1349a9ab",
+      "released": "2026-04-29",
+      "params": {
+        "total": 128000000000.0,
+        "active": 128000000000.0,
+        "source": "https://huggingface.co/mistralai/Mistral-Medium-3.5-128B -- \"Dense 128B parameters\""
+      },
+      "weights": {
+        "precision": "FP8, per tensor",
+        "sizeGB": 267,
+        "note": "The repository holds two copies of the weights (Mistral and Hugging Face formats), so the weights are about half its size."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 4.6,
+          "asOf": "2026-11-08",
+          "variant": "Mistral Medium 3.5",
+          "slug": "mistral-medium-3-5"
+        }
+      ],
+      "note": "Modified MIT licence that bars companies above $20 million monthly revenue."
+    },
+    {
+      "id": "mistral_small_4",
+      "label": "Mistral Small 4",
+      "creator": "Mistral",
+      "repo": "https://huggingface.co/mistralai/Mistral-Small-4-119B-2603",
+      "revision": "a11f36bebf709121056b1dbcc943d1c6afbe494d",
+      "released": "2026-03-16",
+      "params": {
+        "total": 119000000000.0,
+        "active": 6500000000.0,
+        "source": "https://huggingface.co/mistralai/Mistral-Small-4-119B-2603 -- \"119B parameters, with 6.5B activated per token\" (the title says \"A6B\")"
+      },
+      "weights": {
+        "precision": "FP8, per tensor (NVFP4 in a separate repository)",
+        "sizeGB": 242,
+        "note": "Two copies of the weights, as for Medium 3.5."
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 4.3,
+          "asOf": "2026-11-08",
+          "variant": "Mistral Small 4 (Reasoning)",
+          "slug": "mistral-small-4"
+        }
+      ]
+    },
+    {
+      "id": "gemma_4_31b",
+      "label": "Gemma 4 31B",
+      "creator": "Google",
+      "repo": "https://huggingface.co/google/gemma-4-31B-it",
+      "revision": "842da3794eaa0b77d5f08bae87a17459d91ff475",
+      "released": "2026-04-02",
+      "params": {
+        "total": 30700000000.0,
+        "active": 30700000000.0,
+        "source": "https://huggingface.co/google/gemma-4-31B-it -- Dense Models table: \"Total Parameters\" 30.7B for the 31B Dense column, with a ~550M vision encoder"
+      },
+      "weights": {
+        "precision": "BF16",
+        "sizeGB": 62.6
+      },
+      "scores": [
+        {
+          "index": "aa_intelligence",
+          "version": 5,
+          "value": 4.4,
+          "asOf": "2026-11-08",
+          "variant": "Gemma 4 31B (Reasoning)",
+          "slug": "gemma-4-31b"
+        }
+      ]
     }
   ]
 }

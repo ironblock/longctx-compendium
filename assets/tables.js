@@ -560,20 +560,21 @@ export function renderFrontierTable(model, state) {
     .map(p => {
       const gb = (p.total * bpw) / 8 / 1e9;
       const fits = rigs.find(c => c.rigTotals.memoryGB >= gb);
+      const now = p.beatenBy && p.beatenBy !== p.knockedOffBy ? `; now also ${esc(p.beatenBy.label)}` : '';
       const status = p.onFrontier
         ? '<span class="t-ok">on the frontier</span>'
         : p.neverOn
-          ? `<span class="dash">never on it</span><span class="sub">beaten by ${esc(p.beatenBy?.label ?? '?')}</span>`
-          : `left ${esc(p.leftOn ?? '?')}<span class="sub">beaten by ${esc(p.beatenBy?.label ?? '?')}</span>`;
+          ? `<span class="fit-untested">never on it</span><span class="sub">beaten by ${esc(p.knockedOffBy?.label ?? '?')}${now}</span>`
+          : `left ${esc(p.leftOn ?? '?')}<span class="sub">beaten by ${esc(p.knockedOffBy?.label ?? '?')}${now}</span>`;
       return (
         '<tr>' +
-        `<td class="lbl wrap" style="min-width:170px">${p.repo ? `<a href="${esc(p.repo.split(' ')[0])}" rel="noopener noreferrer">${esc(p.label)}</a>` : esc(p.label)}<span class="sub">${esc(p.creator)} · ${esc(p.released)}</span></td>` +
+        `<td class="lbl wrap" style="min-width:150px">${p.repo ? `<a href="${esc(p.repo.split(' ')[0])}" rel="noopener noreferrer">${esc(p.label)}</a>` : esc(p.label)}<span class="sub">${esc(p.creator)} · ${esc(p.released)}</span></td>` +
         `<td class="num">${fmtParams(p.total)}<span class="sub">${p.active && p.active !== p.total ? `${fmtParams(p.active)} active` : p.active ? 'dense' : 'active not stated'}</span></td>` +
-        `<td class="lbl wrap" style="min-width:140px;font-size:11.5px">${esc(p.weights?.precision ?? 'not recorded')}${p.weights?.sizeGB ? `<span class="sub">${p.weights.sizeGB.toLocaleString()} GB download</span>` : ''}</td>` +
-        `<td class="num">${p.best.value}<span class="sub" title="${esc(p.best.variant)}">${esc(p.best.variant.length > 28 ? `${p.best.variant.slice(0, 27)}…` : p.best.variant)}</span></td>` +
+        `<td class="lbl wrap" style="min-width:120px;max-width:170px;font-size:11.5px">${esc(p.weights?.precision ?? 'not recorded')}${p.weights?.sizeGB ? `<span class="sub">${p.weights.sizeGB.toLocaleString()} GB download</span>` : ''}</td>` +
+        `<td class="num">${p.best.value}<span class="sub" title="${esc(p.best.variant)}">${esc(p.best.variant.length > 22 ? `${p.best.variant.slice(0, 21)}…` : p.best.variant)}</span></td>` +
         `<td class="num">${Math.round(gb).toLocaleString()} GB<span class="sub">weights at ${bpw} bpw</span></td>` +
-        `<td class="lbl wrap" style="min-width:150px;font-size:11.5px">${fits ? `${esc(fits.label)}<span class="sub">${fits.rigTotals.memoryGB} GB, weights only</span>` : '<span class="t-bad">no rig here</span><span class="sub">offload or more cards</span>'}</td>` +
-        `<td class="lbl wrap" style="font-size:11.5px">${status}</td>` +
+        `<td class="lbl wrap" style="min-width:130px;max-width:190px;font-size:11.5px">${fits ? `${esc(fits.label)}<span class="sub">${fits.rigTotals.memoryGB} GB, weights only</span>` : '<span class="t-bad">no rig here</span><span class="sub">offload or more cards</span>'}</td>` +
+        `<td class="lbl wrap" style="min-width:150px;max-width:200px;font-size:11.5px">${status}</td>` +
         '</tr>'
       );
     })
