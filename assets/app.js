@@ -18,7 +18,7 @@ import {
   bpwOf,
   fmtGiB,
 } from './ceiling.js';
-import { renderScatter, renderDepth, renderFrontier, LAYOUT_COLOR, vendorColor } from './charts.js';
+import { renderScatter, renderDepth, renderFrontier, resizeCharts, LAYOUT_COLOR, vendorColor } from './charts.js';
 import { rangeSlider, slider } from './sliders.js';
 import {
   unitMatch,
@@ -44,6 +44,10 @@ export const NO_MODEL = '__none';
 
 /** A section link (#ceilings) is an anchor, not a view; only key=value fragments carry state. */
 const isStateHash = h => h.includes('=');
+/** The page's tabs, in order; the first is the default view. */
+const TABS = ['hardware', 'ceilings', 'observations', 'rigs', 'frontier', 'method'];
+/** Tabs whose numbers follow the shared weights, cache and depth settings. */
+const SETTINGS_TABS = new Set(['ceilings', 'rigs', 'frontier']);
 /** The chart precision a view gets when the address does not name one. */
 const inferredPrec = fmt => [...fmt].find(f => SCATTER_PRECS.includes(f)) ?? 'fp16';
 
@@ -79,6 +83,7 @@ const DEFAULTS = {
   obsMetric: 'all',
   obsProv: 'all',
   obsSpec: 'all',
+  tab: 'hardware',
 };
 
 // --- state <-> address --------------------------------------------------------
@@ -130,6 +135,7 @@ function readState() {
     obsMetric: str('omet', ['all', 'decode', 'prefill']),
     obsProv: str('oprov', ['all', 'witnessed', 'reported']),
     obsSpec: str('ospec', ['all', 'on', 'off']),
+    tab: str('tab', TABS),
   };
 }
 // The keys DEFAULTS uses under their address names.
@@ -168,6 +174,7 @@ function writeState(s) {
   put('omet', s.obsMetric, 'all');
   put('oprov', s.obsProv, 'all');
   put('ospec', s.obsSpec, 'all');
+  put('tab', s.tab, DEFAULTS.tab);
   const hash = q.toString();
   // A default view leaves a section anchor alone.
   if (!hash && location.hash && !isStateHash(location.hash.slice(1))) return;
@@ -403,7 +410,7 @@ try {
       state.split = v;
       update('calc');
     });
-    chips('scopeChips', [{ v: 'filtered', label: 'Matching section 1' }, { v: 'all', label: 'All units' }], v => state.scope === v, v => {
+    chips('scopeChips', [{ v: 'filtered', label: 'Matching the hardware filters' }, { v: 'all', label: 'All units' }], v => state.scope === v, v => {
       state.scope = v;
       update('calc');
     });
@@ -423,6 +430,11 @@ try {
   function renderCeilTable(hwMatches) {
     const units = state.scope === 'all' ? model.UNITS : model.UNITS.filter(u => hwMatches.has(u.id));
     renderCeilingTable(model, state, units);
+    const shown = units.filter(u => u.memoryBandwidthGBs).length;
+    el('ceilScope').innerHTML =
+      state.scope === 'all'
+        ? `Showing all ${shown} devices with a bandwidth figure.`
+        : `Showing the ${shown} devices that match the <a href="#hardware" data-tab="hardware">Hardware tab's filters</a>${hwMatches.size === model.UNITS.length ? ' (none set)' : ''}.`;
   }
 
   // ---- 3. Observations
@@ -570,16 +582,96 @@ try {
     state.hwSort = state.hwSort.key === key ? { key, dir: state.hwSort.dir === 'desc' ? 'asc' : 'desc' } : { key, dir: key === 'label' ? 'asc' : 'desc' };
     update('hw');
   });
+  // ---- tabs
+  /** The tab holding an element, for anchors written before the page had tabs (#rigs, #carrier-...). */
+  const tabOf = id => {
+    const target = id && document.getElementById(id);
+    return target?.closest('[role="tabpanel"]')?.id ?? null;
+  };
+  function showTab(id, { focus = false } = {}) {
+    if (!TABS.includes(id)) id = DEFAULTS.tab;
+    state.tab = id;
+    for (const t of TABS) {
+      const panel = el(t);
+      const btn = el(`tab-${t}`);
+      const on = t === id;
+      panel.hidden = !on;
+      btn.setAttribute('aria-selected', String(on));
+      btn.tabIndex = on ? 0 : -1;
+      if (on && focus) btn.focus();
+    }
+    el('sharedSettings').hidden = !SETTINGS_TABS.has(id);
+    keepTabInBar();
+    // A chart drawn while its tab was hidden sized itself to nothing.
+    requestAnimationFrame(resizeCharts);
+    writeState(state);
+  }
+  const tablist = document.querySelector('[role="tablist"]');
+  /** On a narrow screen the tab bar scrolls sideways: keep the open tab in view in it. */
+  function keepTabInBar() {
+    const btn = el(`tab-${state.tab}`);
+    const b = btn.getBoundingClientRect();
+    const bar = tablist.getBoundingClientRect();
+    if (b.left < bar.left) tablist.scrollLeft -= bar.left - b.left + 8;
+    else if (b.right > bar.right) tablist.scrollLeft += b.right - bar.right + 8;
+  }
+  // Web fonts widen the buttons after the first layout.
+  document.fonts?.ready.then(keepTabInBar);
+  /** A new tab starts at its top: scrolled deep into one tab, a switch would land mid-way down the next. */
+  const toTabTop = () => {
+    // The bar itself is sticky, so measure from the marker just above it.
+    const top = el('tabTop').getBoundingClientRect().top + window.scrollY;
+    if (window.scrollY > top) window.scrollTo({ top });
+  };
+  tablist.addEventListener('click', e => {
+    const t = e.target.closest('[role="tab"]')?.dataset.tab;
+    if (!t) return;
+    showTab(t);
+    toTabTop();
+  });
+  tablist.addEventListener('keydown', e => {
+    const i = TABS.indexOf(state.tab);
+    const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: TABS.length - 1 }[e.key];
+    if (next == null) return;
+    e.preventDefault();
+    showTab(TABS[(next + TABS.length) % TABS.length], { focus: true });
+  });
+  // Links into another tab ("the Hardware tab's filters") switch tabs instead of jumping.
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[data-tab]');
+    if (!a) return;
+    e.preventDefault();
+    showTab(a.dataset.tab);
+    el(a.dataset.tab).scrollIntoView({ block: 'start' });
+  });
+  /** Open the tab an anchor lives in and bring the anchor into view. */
+  function openAnchor(id) {
+    const t = tabOf(id);
+    if (!t) return false;
+    showTab(t);
+    requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }));
+    return true;
+  }
+
   window.addEventListener('hashchange', () => {
-    // A section link changes the fragment to an anchor: keep the view, and put
-    // it back in the address so a copied link still carries it.
-    if (!isStateHash(location.hash.slice(1))) return writeState(state);
+    // An anchor link (#rigs, #carrier-aom_sxmv) opens its tab, then the view
+    // goes back in the address so a copied link still carries it.
+    if (!isStateHash(location.hash.slice(1))) {
+      openAnchor(decodeURIComponent(location.hash.slice(1)));
+      return writeState(state);
+    }
     Object.assign(state, readState());
     if (state.cards !== 'auto') lastCards = Number(state.cards);
     update();
+    showTab(state.tab);
   });
 
   update();
+  {
+    const raw = location.hash.slice(1);
+    if (raw && !isStateHash(raw) && openAnchor(decodeURIComponent(raw))) writeState(state);
+    else showTab(state.tab);
+  }
 } catch (err) {
   fail(err);
 }

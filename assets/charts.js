@@ -16,6 +16,11 @@ if (typeof Chart !== 'undefined') {
  * Create a chart once, then update it in place: rebuilding a chart on every
  * slider movement costs a canvas, a layout pass and an animation frame each.
  */
+/** Resize every chart whose canvas is showing: one drawn inside a hidden tab measured nothing. */
+export function resizeCharts() {
+  for (const c of Object.values(charts)) if (c.canvas?.offsetParent) c.resize();
+}
+
 function mount(id, config) {
   const c = charts[id];
   if (c && c.config.type === config.type) {

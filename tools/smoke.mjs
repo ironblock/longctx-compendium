@@ -96,6 +96,11 @@ const brokenAt = t => t.match(new RegExp(`.{0,30}(${BROKEN.source}).{0,30}`))?.[
 
 const text = async (sel, p = page) => (await p.locator(sel).first().textContent())?.trim() ?? '';
 const count = async (sel, p = page) => await p.locator(sel).count();
+/** Open one of the page's tabs, as a reader would. */
+const openTab = async (id, p = page) => {
+  await p.click(`[role="tab"][data-tab="${id}"]`);
+  await p.waitForTimeout(60);
+};
 const canvasPainted = async (id, p = page) =>
   await p.evaluate(sel => {
     const c = document.querySelector(sel);
@@ -240,17 +245,64 @@ await settle();
   const lo = Number(await page.locator('#bwRange input.lo').inputValue());
   check('the slider handle moved to match the typed bound', lo > 60 && lo < 140, `position ${lo}`);
 }
-// A section link is an anchor, not a view: it must not reset anything.
+// Switching tabs is a view change, not a reset: filters and settings carry over.
 {
   const p2 = await browser.newPage();
   await p2.goto(`${base}/index.html#fmt=fp8&bw=1000&model=gemma4_31b&d=65536`, { waitUntil: 'networkidle' });
   const before = await text('#hwSummary', p2);
-  await p2.click('nav.toc a[href="#ceilings"]');
-  await p2.waitForTimeout(150);
-  check('a section link keeps the filters', (await text('#hwSummary', p2)) === before, `${before} -> ${await text('#hwSummary', p2)}`);
-  check('a section link keeps the calculator settings', (await p2.locator('#modelSelect').inputValue()) === 'gemma4_31b' && (await text('#depthSlider output', p2)) === '64K');
-  check('and the view stays in the address', /fmt=fp8/.test(await p2.evaluate(() => location.hash)), await p2.evaluate(() => location.hash));
+  await openTab('ceilings', p2);
+  check('a tab switch keeps the filters', (await text('#hwSummary', p2)) === before, `${before} -> ${await text('#hwSummary', p2)}`);
+  check('a tab switch keeps the calculator settings', (await p2.locator('#modelSelect').inputValue()) === 'gemma4_31b' && (await text('#depthSlider output', p2)) === '64K');
+  const h = await p2.evaluate(() => location.hash);
+  check('and the view, tab included, stays in the address', /fmt=fp8/.test(h) && /tab=ceilings/.test(h), h);
+  check('the ceilings tab says which hardware filters scope it', /match the Hardware tab's filters/.test(await text('#ceilScope', p2)));
+  await p2.click('#ceilScope a[data-tab="hardware"]');
+  await p2.waitForTimeout(60);
+  check('and links back to them', await p2.locator('#hardware').isVisible() && !(await p2.locator('#ceilings').isVisible()));
   await p2.close();
+}
+// One tab at a time, the shared settings only where they apply, and every old anchor still lands.
+{
+  const tabs = await page.$$eval('[role="tab"]', b => b.map(x => x.dataset.tab));
+  check('six tabs, one panel showing', tabs.length === 6 && (await page.locator('[role="tabpanel"]:visible').count()) === 1, tabs.join(','));
+  const p2 = await browser.newPage();
+  await p2.goto(`${base}/index.html`, { waitUntil: 'networkidle' });
+  const shows = {};
+  for (const t of tabs) {
+    await openTab(t, p2);
+    shows[t] = await p2.locator('#sharedSettings').isVisible();
+  }
+  check('the shared settings show on Ceilings, Rigs and the frontier only', JSON.stringify(shows) === JSON.stringify({ hardware: false, ceilings: true, observations: false, rigs: true, frontier: true, method: false }), JSON.stringify(shows));
+  await p2.focus('[role="tab"][data-tab="method"]');
+  await p2.keyboard.press('ArrowRight');
+  check('arrow keys move between tabs and wrap', await p2.locator('#hardware').isVisible());
+  await p2.goto(`${base}/index.html#tab=rigs&w=q8_0`, { waitUntil: 'networkidle' });
+  check('a link with a tab opens it', await p2.locator('#rigs').isVisible() && !(await p2.locator('#hardware').isVisible()));
+  for (const [anchor, tab] of [['#frontier', 'frontier'], ['#carriers', 'rigs'], ['#carrier-aom_sxmv', 'rigs'], ['#method', 'method']]) {
+    const p3 = await browser.newPage();
+    await p3.goto(`${base}/index.html${anchor}`, { waitUntil: 'networkidle' });
+    check(`an old anchor (${anchor}) opens its tab`, await p3.locator(`#${tab}`).isVisible());
+    await p3.close();
+  }
+  await p2.close();
+  // On a phone the tab bar scrolls sideways; the open tab stays in it, and a
+  // switch from deep in one tab starts the next at its top.
+  const phone = await browser.newPage({ viewport: { width: 390, height: 800 } });
+  await phone.goto(`${base}/index.html#tab=frontier`, { waitUntil: 'networkidle' });
+  await phone.waitForTimeout(300);
+  const inBar = await phone.evaluate(() => {
+    const b = document.getElementById('tab-frontier').getBoundingClientRect();
+    const bar = document.querySelector('[role="tablist"]').getBoundingClientRect();
+    return b.left >= bar.left - 1 && b.right <= bar.right + 1;
+  });
+  check('on a phone the open tab is scrolled into the tab bar', inBar);
+  await phone.evaluate(() => window.scrollTo(0, 3000));
+  await phone.click('[role="tab"][data-tab="method"]');
+  await phone.waitForTimeout(150);
+  const top = await phone.evaluate(() => document.querySelector('#method h2').getBoundingClientRect().top);
+  check('a tab switch from deep in a tab lands at the new tab\'s top', top >= 0 && top < 400, `heading at ${Math.round(top)}px`);
+  check('no sideways scroll on a phone', (await phone.evaluate(() => document.documentElement.scrollWidth)) <= 390);
+  await phone.close();
 }
 // Hand-written addresses with odd values degrade, never blank the page.
 for (const [hash, what, test] of [
@@ -400,6 +452,7 @@ check('clearing filters empties the slider boxes', (await page.locator('#bwRange
 }
 
 // --- 2. Ceilings -----------------------------------------------------------
+await openTab('ceilings');
 const withParams = Object.keys(MODELS).filter(id => MODELS[id].params?.active);
 check('every model with a parameter count is selectable', (await count('#modelSelect option')) === withParams.length, `got ${await count('#modelSelect option')} of ${withParams.length}`);
 check('model card rendered', /parameters/.test(await text('#modelCard')));
@@ -475,11 +528,12 @@ async function decodeAt(modelId, tokens) {
   check('four A16 GPUs cost one board, five cost two', four.includes(usd(a16.street)) && /GPUs on 1 board/.test(four) && five.includes(usd(2 * a16.street)) && /GPUs on 2 boards/.test(five), `${four} | ${five}`);
   await setCards('auto');
   await page.selectOption('#modelSelect', 'qwen38_27b');
-  await page.click('#scopeChips button:has-text("Matching section 1")');
+  await page.click('#scopeChips button:has-text("Matching the hardware filters")');
   await settle();
 }
 
 // --- 3. Observations -------------------------------------------------------
+await openTab('observations');
 check('one group per serving line', (await count('#obsTable tr.line-head')) === model.LINES.length, `got ${await count('#obsTable tr.line-head')} of ${model.LINES.length}`);
 check('one row per reading', (await count('#obsTable tr.pt')) === totalPoints, `got ${await count('#obsTable tr.pt')} of ${totalPoints}`);
 {
@@ -532,6 +586,7 @@ check('one row per reading', (await count('#obsTable tr.pt')) === totalPoints, `
 }
 
 // --- 4. Rigs ---------------------------------------------------------------
+await openTab('rigs');
 check('one row per candidate rig, each with its notes beneath', (await count('#candTable tbody tr.cand-main')) === model.CANDIDATES.length && (await count('#candTable tbody tr.cand-notes')) === model.CANDIDATES.length);
 {
   const t = await text('#candTable tbody');
@@ -551,6 +606,8 @@ check('one row per candidate rig, each with its notes beneath', (await count('#c
 }
 
 // --- 5. Open-weight frontier ------------------------------------------------
+await openTab('frontier');
+check('frontier chart painted once its tab opens', await canvasPainted('frontierChart'));
 check('one frontier row per scored open model', (await count('#frontierTable tbody tr')) === model.FRONTIER.length && model.FRONTIER.length > 0);
 {
   const t = await text('#frontierTable tbody');
@@ -563,6 +620,7 @@ check('one frontier row per scored open model', (await count('#frontierTable tbo
 }
 
 // --- 4b. Carriers ----------------------------------------------------------
+await openTab('rigs');
 check('one row per carrier, each with its notes beneath', (await count('#carrierTable tbody tr.cand-main')) === model.CARRIERS.length && (await count('#carrierTable tbody tr.cand-notes')) === model.CARRIERS.length && model.CARRIERS.length > 0);
 {
   const t = await text('#carrierTable tbody');
