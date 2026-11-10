@@ -116,28 +116,29 @@ export function normalize(doc) {
     const k = rig.carrier ? carrierById[rig.carrier] : null;
     if (!k) return rig.interconnect ?? null;
     const fits = rig.units.map(c => ({ unit: c.unit, ...(k.fits.find(f => f.unit === c.unit) ?? { status: 'untested', peer: 'pcie' }) }));
-    const nvlink = k.peer?.kind === 'nvlink' && fits.every(f => f.peer === 'nvlink');
+    // The board's own peer fabric is in use only if every module on it wires it too.
+    const fabric = ['nvlink', 'ethernet'].includes(k.peer?.kind) && fits.every(f => f.peer === k.peer.kind) ? k.peer.kind : null;
     const n = rig.units.reduce((t, c) => t + c.count, 0);
     const g = k.hostLink?.gpusPerUplink;
     let pciePath = null;
-    if (!nvlink && n > 1) {
+    if (!fabric && n > 1) {
       if (k.switch == null) pciePath = 'PCIe peer path not recorded';
       else if (!k.switch.present) pciePath = 'PCIe peers meet through the host';
       else if (g && g < n) pciePath = `PCIe peers meet inside a switch in groups of ${g}, through the host between groups`;
       else pciePath = 'PCIe peers meet inside a switch';
     }
     return {
-      kind: nvlink ? 'nvlink' : 'pcie',
+      kind: fabric ?? 'pcie',
       bridge: k.label,
       carrier: k,
       fits,
-      linksPerGpu: nvlink ? k.peer.linksPerGpu : undefined,
-      peakP2pGBsPerGpu: nvlink ? k.peer.peakP2pGBsPerGpu : undefined,
+      linksPerGpu: fabric ? k.peer.linksPerGpu : undefined,
+      peakP2pGBsPerGpu: fabric ? k.peer.peakP2pGBsPerGpu : undefined,
       hostLinkGBs: carrierHostGBs(k),
       costUsd: k.pricing ? k.pricing.usd + (k.parts?.usd ?? 0) : undefined,
       costHighUsd: k.pricing ? (k.pricing.highUsd ?? k.pricing.usd) + (k.parts?.highUsd ?? k.parts?.usd ?? 0) : undefined,
       pciePath,
-      source: nvlink ? k.peer?.source : undefined,
+      source: fabric ? k.peer?.source : undefined,
       note: rig.interconnect?.note,
       p2p: rig.interconnect?.p2p,
     };
@@ -150,8 +151,11 @@ export function normalize(doc) {
   const rigTotals = rig => {
     const parts = rig.units.map(c => ({ u: unitById[c.unit], n: c.count }));
     const sum = get => (parts.some(p => get(p.u) == null) ? null : parts.reduce((t, p) => t + get(p.u) * p.n, 0));
+    // Modules a system's price already includes are not bought again.
+    const bundled = rig.carrier ? (carrierById[rig.carrier]?.pricing?.modules ?? []) : [];
+    const toBuy = parts.map(p => ({ ...p, n: Math.max(0, p.n - bundled.filter(m => m.unit === p.u?.id).reduce((t, m) => t + m.count, 0)) }));
     // A board of several GPUs (the A16) is bought whole: four of its GPUs cost one board.
-    const cards = parts.some(p => p.u?.street == null) ? null : parts.reduce((t, p) => t + p.u.street * Math.ceil(p.n / p.u.gpus), 0);
+    const cards = toBuy.some(p => p.n > 0 && p.u?.street == null) ? null : toBuy.reduce((t, p) => t + (p.n ? p.u.street * Math.ceil(p.n / p.u.gpus) : 0), 0);
     const link = linkOf(rig);
     return {
       memoryGB: sum(u => u?.memoryGB),
@@ -159,6 +163,7 @@ export function normalize(doc) {
       costUsd: cards == null ? null : cards + (link?.costUsd ?? 0),
       costHighUsd: cards == null ? null : cards + (link?.costHighUsd ?? link?.costUsd ?? 0),
       linkPriced: link ? link.costUsd != null : null,
+      bundled: bundled.length > 0,
     };
   };
 

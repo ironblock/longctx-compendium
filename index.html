@@ -216,10 +216,18 @@
   <tbody></tbody>
 </table></div>
 <h3 id="carriers">Carriers</h3>
-<p class="intro">The boards SXM modules mount on, and which catalog units fit each. <b>Fit</b>: verified means an owner ran it and said so; reported, a vendor, seller or second-hand claim; untested, nobody has said either way; fails, reported not to work. Host link is per GPU, both directions at line rate, shared among the GPUs on one uplink. Over PCIe, peers on one switch stay off the host; without a switch every all-reduce crosses it.</p>
+<p class="intro">The boards SXM and OAM modules mount on, and which catalog units fit each. <b>Fit</b>: verified means an owner ran it and said so; reported, a vendor, seller or second-hand claim; untested, nobody has said either way; fails, reported not to work. Host link is per GPU, both directions at line rate, shared among the GPUs on one uplink. Over PCIe, peers on one switch stay off the host; without a switch every all-reduce crosses it.</p>
 <div class="tscroll"><table id="carrierTable">
   <thead><tr>
     <th class="lbl">Carrier</th><th class="lbl">Peer link</th><th class="lbl">Host link per GPU · switch</th><th>Price</th><th class="lbl">Fits</th>
+  </tr></thead>
+  <tbody></tbody>
+</table></div>
+<h3 id="systems">Systems</h3>
+<p class="intro">Whole machines built around a GPU or accelerator board: the host, chassis and power come with them, and a used one is usually sold with its modules installed. Recorded for completeness, so they need not be rediscovered; several draw more than a household circuit gives, or need 200–240 V. Columns are as for carriers; <b>fit</b> verified also covers a module the maker sold the system with. <b>Host memory</b> matters beyond the OS: it is where weights and caches go when they spill off the GPUs, and the host link per GPU is how fast they come back.</p>
+<div class="tscroll"><table id="systemTable">
+  <thead><tr>
+    <th class="lbl">System</th><th class="lbl">Host</th><th class="lbl">Peer link</th><th class="lbl">Host link per GPU · switch</th><th>Max power</th><th>Price</th><th class="lbl">Fits</th>
   </tr></thead>
   <tbody></tbody>
 </table></div>

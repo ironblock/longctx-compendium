@@ -236,6 +236,33 @@ const CASES = [
   ['a carrier id colliding with a unit id', 'duplicate id', d => {
     carrier(d, 'aom_sxmv').id = 'v100_sxm2';
   }],
+  ['a system with no host', 'describes no host', d => {
+    delete carrier(d, 'dgx1_v100').host;
+  }],
+  ['a bare board describing a host', 'is not a system', d => {
+    carrier(d, 'aom_sxmv').host = { cpu: 'x', chassis: 'x', source: 'x' };
+  }],
+  ['host memory above its own maximum', 'takes at most', d => {
+    carrier(d, 'dgx_station_v100').host.memoryMaxGB = 128;
+  }],
+  ['a maximum power with no source', 'maximum power but no source', d => {
+    delete carrier(d, 'dgx1_v100').power.source;
+  }],
+  ['Ethernet peers claimed on an NVLink board', 'over Ethernet on a carrier that wires none', d => {
+    fitOf(d, 'dgx1_v100', 'v100_sxm2').peer = 'ethernet';
+  }],
+  ['a fabric peer for a module with no peer link', 'has no peer link', d => {
+    delete unit(d, 'gaudi_hl205').peerLink;
+  }],
+  ['a bundled module the system does not take', 'not in the fit list', d => {
+    carrier(d, 'smc_820gh_tnr2').pricing.modules[0].unit = 'gaudi3_hl338';
+  }],
+  ['more bundled modules than slots', 'prices in 9 modules', d => {
+    carrier(d, 'smc_820gh_tnr2').pricing.modules[0].count = 9;
+  }],
+  ['a system with an unknown kind', 'must be one of', d => {
+    carrier(d, 'dgx2').kind = 'server';
+  }],
   ['an open model scored on another index', 'but the frontier is drawn on', d => {
     d.openModels[0].scores[0].index = 'lmarena';
   }],
@@ -283,6 +310,12 @@ const ACCEPTED = [
   }],
   ['a unit with no price', null, d => {
     delete unit(d, 'rtx_5090').pricing;
+  }],
+  ['a system priced without its modules', null, d => {
+    delete carrier(d, 'smc_820gh_tnr2').pricing.modules;
+  }],
+  ['a system with no CPU of its own and no host memory', null, d => {
+    delete carrier(d, 'hls1').host.memoryGB;
   }],
   ['a device carrying only a name', 'names no chip generation', d => {
     d.units.push({ id: 'blank_card', label: 'Unknown Accelerator' });

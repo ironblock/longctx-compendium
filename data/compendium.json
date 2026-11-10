@@ -1533,6 +1533,31 @@
       "note": "Covers Ponte Vecchio: Data Center GPU Max 1100, Max 1550. INT4 is 'unknown'. Intel's DPAS ISA defines s4/u4/s2/u2 precisions and the OpenCL subgroup-MMA extension has int4 entry points, but Intel's Xe-HPC documentation gives XMX rates only for int8 and FP16/BF16 (TF32 is documented via the SYCL/driver sources). I found no Intel source confirming or denying a native INT4 XMX path on Ponte Vecchio. FP8 and FP4 are not native per oneDNN. In Intel's driver, TF32 MMA is enabled for PVC-XT B0-C0 steppings (Max 1100/1550 device IDs) but not for the 'PVC_XT_C0_VG' config (device 0x0BD4, not a Max 1100/1550 ID)."
     },
     {
+      "id": "gaudi1",
+      "vendor": "Intel",
+      "label": "Gaudi (first generation)",
+      "matrixUnits": "A GEMM engine beside TPC 2.0 vector cores",
+      "formats": {
+        "tf32": "unknown",
+        "bf16": "unknown",
+        "fp16": "unknown",
+        "fp8": "unknown",
+        "fp6": "unknown",
+        "fp4": "unknown",
+        "int8": "unknown",
+        "int4": "unknown"
+      },
+      "sources": [
+        {
+          "url": "https://habana.ai/wp-content/uploads/2019/06/Habana-Gaudi-Training-Platform-whitepaper.pdf",
+          "quote": "The TPC core natively supports the following data types: FP32, BF16, INT32, INT16, INT8, UINT32, UINT16 and UINT8.",
+          "locator": "Habana Gaudi Training Platform whitepaper, Ver 1.0, June 2019, section 2",
+          "supports": []
+        }
+      ],
+      "note": "Everything is unknown rather than native: the whitepaper's type list is for the TPC vector cores, and it says only \"GEMM operation acceleration\" for the matrix engine, without its types. Out of Intel's software after 1.18; see the gaudi2 generation."
+    },
+    {
       "id": "gaudi2",
       "vendor": "Intel",
       "label": "Gaudi 2",
@@ -2919,6 +2944,85 @@
         "lanes": 16,
         "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"V100 also supports 16 lanes of PCIe 3.0. In DGX-1, these are used for connecting between the CPUs and GPUs and high-speed IB network interface cards.\""
       }
+    },
+    {
+      "id": "v100_dgxs_32",
+      "label": "Tesla V100-DGXS-32GB (DGX Station only)",
+      "vendor": "NVIDIA",
+      "arch": "volta",
+      "memoryGB": 32,
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/dgx-station/dgx-station-data-science-supercomputer-datasheet-v4.pdf",
+        "values": {
+          "fp16": 120
+        },
+        "unofficial": [
+          "fp16"
+        ],
+        "note": "NVIDIA's DGX Station datasheet gives \"TFLOPS (GPU FP16) 480\" for the four GPUs (the June 2017 sheet, when they were 16 GB parts); 120 per GPU is this page's division, and assumes the later 32 GB cards run the same clocks. It sits between the SXM2 module's 125 and the PCIe card's 112."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "cooling": "liquid",
+        "source": "https://forums.developer.nvidia.com/t/server/108344 -- \"the DGX Station is unique in that it has 4x V100 GPUs in the PCIe formfactor, with NVLink via a bridge across the top of the cards ... and with display output\" (ScottEllis, NVIDIA forum moderator, 2019-12-02)",
+        "note": "\"The GPUs used in the DGX-station are a special V100 GPU variant that is only available in a DGX-station\" (Robert_Crovella, NVIDIA, same thread). Not an SXM2 module, so it fits none of the SXM2 carriers here, and the Station takes no other GPUs: it \"does not support the installation of additional PCIe devices such as GPU cards\" (DGX Station User Guide)."
+      },
+      "peerLink": {
+        "maxCards": 4,
+        "fabric": "NVLink over a four-way bridge across the tops of the cards (DGX Station only)",
+        "source": "https://forums.developer.nvidia.com/t/server/108344 -- \"DGX Station doesn't have SXM2 GPUs (they are PCIe Tesla V100, with a 4x NVLink bridge)\" (ScottEllis, 2019-12-02)",
+        "note": "How many links join each pair is not recorded here."
+      },
+      "sources": [
+        "https://docs.nvidia.com/dgx/archives/dgx-station-user-guide/index.html",
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/dgx-station/dgx-station-data-science-supercomputer-datasheet-v4.pdf",
+        "https://forums.developer.nvidia.com/t/server/108344"
+      ],
+      "note": "The DGX Station's own V100. \"GPU - current units 4 NVIDIA Tesla V100-DGXS-32GB with 32 GB per GPU (128 GB total)\"; \"GPU - earlier units 4 NVIDIA Tesla V100-DGXS-16GB with 16 GB per GPU\" (DGX Station User Guide); the 16 GB version is not carried. Not sold separately. NVIDIA publishes no per-card bandwidth for it. Third-party spec aggregators list 32 GB of HBM2 at 876 MHz on a 4096-bit bus, about 897 GB/s, the same as the SXM2 module, but none of them is first-party, so no bandwidth is recorded and the page shows no decode ceiling for it. Software as for every Volta part: see the volta generation."
+    },
+    {
+      "id": "v100_sxm3_32",
+      "label": "Tesla V100 SXM3 32GB (DGX-2)",
+      "vendor": "NVIDIA",
+      "arch": "volta",
+      "memoryGB": 32,
+      "compute": {
+        "unit": "Tops",
+        "source": "https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9241-all-you-need-to-know-about-programming-nvidia-dgx-2.pdf",
+        "values": {
+          "fp64": 7.8,
+          "fp32": 15.6,
+          "fp16": 125
+        },
+        "unofficial": [
+          "fp64",
+          "fp32",
+          "fp16"
+        ],
+        "note": "NVIDIA's GTC 2019 DGX-2 talk gives the system \"FP64: 125 TFLOPS\", \"FP32: 250 TFLOPS\", \"Tensor: 2000 TFLOPS\" for 16 GPUs; the per-GPU figures are this page's division, and match the SXM2 module's datasheet rates."
+      },
+      "formFactor": {
+        "name": "SXM3",
+        "cooling": "passive",
+        "source": "https://docs-old.e-infra.cz/compute/supercomputing/dgx2/introduction/ -- \"16 NVIDIA V100-SXM3 GPUs\" (CESNET, which ran a DGX-2)",
+        "note": "Wikipedia's SXM table lists the 32 GB V100 under SXM3 at 350 W; this page does not record a TDP for it from a first-party source."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"V100 also supports 16 lanes of PCIe 3.0. In DGX-1, these are used for connecting between the CPUs and GPUs and high-speed IB network interface cards.\""
+      },
+      "peerLink": {
+        "maxCards": 16,
+        "fabric": "NVLink 2 through NVSwitch, on the DGX-2's two eight-GPU baseboards",
+        "source": "https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9241-all-you-need-to-know-about-programming-nvidia-dgx-2.pdf -- \"16 Tesla V100 32 GB GPUs\", \"12 NVSwitch Network\", \"Full-Bandwidth Fat-Tree Topology\", \"8 GPUs with 6 NVSwitch Chips\""
+      },
+      "sources": [
+        "https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9241-all-you-need-to-know-about-programming-nvidia-dgx-2.pdf",
+        "https://docs-old.e-infra.cz/compute/supercomputing/dgx2/introduction/"
+      ],
+      "note": "The DGX-2's module; boards of eight turn up secondhand, but no report of one running outside its system is recorded here. NVIDIA publishes no per-card bandwidth for it. Third-party spec aggregators list 32 GB of HBM2 at 876 MHz on a 4096-bit bus, about 897 GB/s, the same as the SXM2 module, but none of them is first-party, so no bandwidth is recorded and the page shows no decode ceiling for it. Software as for every Volta part: see the volta generation."
     },
     {
       "id": "v100_pcie_32",
@@ -4650,7 +4754,7 @@
           "usd": 2500,
           "asOf": "2026-11",
           "source": "eBay asking prices, the maintainer's screenshot (2026-11-08)",
-          "note": "Pre-owned modules: $2,500 (HL-225) and $2,700 (HL-225H), each or best offer, plus $149 delivery and import fees, from Israel. Eight on a baseboard cost less per module: a Supermicro 820GH-TNR2 Gaudi 2 baseboard tray with eight modules at $11,995 (about $1,500 a module), and the whole 820GH-TNR2 8U server, refurbished with six power supplies and a one-year warranty, at $16,499.99 (about $2,060 a module), both in the US."
+          "note": "Pre-owned modules: $2,500 (HL-225) and $2,700 (HL-225H), each or best offer, plus $149 delivery and import fees, from Israel. Eight on a baseboard cost less per module: $11,995 for a Supermicro baseboard tray of eight (about $1,500 a module) and $16,499.99 for the whole server (about $2,060 a module), both in the US; see the Supermicro SYS-820GH-TNR2 system."
         }
       },
       "memoryBandwidthGBs": 2460,
@@ -4735,6 +4839,37 @@
         "https://www.sabrepc.com/HL-338-Intel-S117208843"
       ],
       "note": "The PCIe version of Gaudi 3, and the only Gaudi with a direct card-to-card bridge in standard slots. Unpriced: the one reseller listing found is out of stock (\"contact sales\"), and 2024 launch coverage put Gaudi 3 near $16,000 a chip. Not a GPU: matrix engines (MMEs) plus programmable vector cores (TPCs), driven by Intel's Gaudi software (formerly SynapseAI), PyTorch and a vLLM plugin; no CUDA, and no llama.cpp backend is known here. The current support matrix (1.24.2) covers Gaudi 2 and Gaudi 3 with PyTorch 2.13 and vLLM plugin 0.30.0, which tracks upstream vLLM and lists Qwen3.5/3.6 MoE work but no Qwen3.8. First-generation Gaudi is gone from it; 1.18.0 is the latest matrix checked that lists it. A secondhand report (LetsDataScience, 2025-12-15, citing Phoronix, with \"limited official confirmation\") says development of the open-source user-space driver stopped."
+    },
+    {
+      "id": "gaudi_hl205",
+      "label": "Habana Gaudi (HL-205) 32GB",
+      "vendor": "Intel",
+      "arch": "gaudi1",
+      "memoryGB": 32,
+      "released": "2019-06",
+      "memoryBandwidthGBs": 1000,
+      "tdpW": 300,
+      "formFactor": {
+        "name": "OAM",
+        "source": "https://old.hotchips.org/hc31/HC31_1.14_HabanaLabs.Eitan_Medina.v9.pdf -- \"HL-205: OCP Accelerator Module 0.9 spec compliant\", \"Max Power Consumption 300W\" (Habana, Hot Chips 2019)"
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "source": "https://old.hotchips.org/hc31/HC31_1.14_HabanaLabs.Eitan_Medina.v9.pdf -- HL-205 \"Host Interface PCIe Gen 4.0 X 16\""
+      },
+      "peerLink": {
+        "maxCards": 8,
+        "fabric": "Integrated RoCE v2 Ethernet, 10 x 100 GbE (or 20 x 50 GbE) per module",
+        "source": "https://habana.ai/wp-content/uploads/2019/06/Habana-Gaudi-Training-Platform-whitepaper.pdf -- \"20 pairs of 56Gbps Tx/Rx PAM4 serializers/de-serializers (SerDes) that can be configured as 10 ports of 100Gb Ethernet, 20 ports of 50Gb/25Gb Ethernet, or any combination in between\"",
+        "note": "Habana's HLS-1 wires seven of the ten ports all-to-all between its eight modules; see that system."
+      },
+      "sources": [
+        "https://habana.ai/wp-content/uploads/2019/06/Habana-Gaudi-Training-Platform-whitepaper.pdf",
+        "https://old.hotchips.org/hc31/HC31_1.14_HabanaLabs.Eitan_Medina.v9.pdf",
+        "https://docs.habana.ai/en/latest/Support_Matrix/Support_Matrix.html"
+      ],
+      "note": "First-generation Gaudi. \"The chip package integrates four HBM devices, providing 32 GB of capacity and 1 TB/sec bandwidth\" (Habana's June 2019 whitepaper, the release date used here). Neither the whitepaper nor the Hot Chips slides give a matrix rate, so none is recorded. Out of Intel's software: the current support matrix covers Gaudi 2 and Gaudi 3 only, and 1.18.0 is the latest matrix checked that lists first-generation Gaudi (see the gaudi2 generation), so a working one today runs a frozen stack."
     },
     {
       "id": "mi50_32",
@@ -6413,6 +6548,571 @@
         "https://forum.level1techs.com/t/someone-needs-to-figure-out-how-to-adapt-mi250-gpus-to-pcie/250596 -- Level1Techs, 382 posts (2026-05 to 2026-11): owners debugging AMD MI250, MI250X and MI210 modules on these adapters"
       ],
       "note": "A one-module OAM carrier with a PCIe x16 edge, sold under NVIDIA, AMD and A100 names. AMD modules are unproven on it and the evidence is confounded: through 2026-11-03 nobody on Level1Techs ran compute on an MI250, MI250X or MI210 through one. The modules enumerate, then the AMD driver fails at \"GPU posting\". Most attempts used HPE/Cray MI250X modules, whose firmware public drivers reject (the maintainer); no successful flash to other firmware was reported. A Supermicro-OEM MI250 failed at the same step on this adapter and on a custom board (TsuKitsune, 2026-07), so HPE firmware may not be the only obstacle. AMD's MI250 units are not in this catalog."
+    },
+    {
+      "id": "dgx1_v100",
+      "label": "NVIDIA DGX-1 (V100)",
+      "maker": "NVIDIA",
+      "kind": "system",
+      "socket": "SXM2",
+      "slots": 8,
+      "peer": {
+        "kind": "nvlink",
+        "wiring": "hybrid cube-mesh: each GPU's six links go to four of the other seven, some edges doubled; the other three are two hops away",
+        "topology": "Two fully connected quads, joined corner to corner",
+        "linksPerGpu": 6,
+        "peakP2pGBsPerGpu": 300,
+        "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- \"Each Tesla V100 has 6 NVLink connections, each capable of 50 GB/s of bidirectional bandwidth, for an aggregate of up to 300 GB/s bidirectional bandwidth\"; \"a cube with GPUs at its corners and with all twelve edges connected through NVLink (some edges have two NVLink connections), and with two of the six faces having their diagonals connected as well\"",
+        "note": "Not all-to-all, so an eight-way all-reduce relays through neighbours; NCCL runs it as rings, the whitepaper's \"three interwoven rings of single NVLink connections\". The useful split for tensor parallel: \"this 8-GPU cube-mesh topology is easily subdivided into fully connected halves, or into NVLink-connected GPU pairs\", so TP4 inside one half is fully connected."
+      },
+      "switch": {
+        "present": true,
+        "chip": "four PCIe switches (model not stated), two GPUs and one InfiniBand card on each",
+        "note": "This page's reading of the whitepaper's Figure 4, which draws two PCIe switches under each CPU, each joined to two GPUs and one NIC; the text says only that the V100's 16 PCIe 3.0 lanes are \"used for connecting between the CPUs and GPUs and high-speed IB network interface cards\"."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "gpusPerUplink": 2,
+        "source": "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf -- Figure 4, \"The corners of the mesh-connected faces of the cube are connected to the PCIe tree network, which also connects to the CPUs and NICs\"",
+        "note": "Two GPUs per switch is read from Figure 4; that each switch has one x16 to its CPU is this page's assumption, as the whitepaper does not give the uplink width."
+      },
+      "host": {
+        "cpu": "2× Intel Xeon E5-2698 v4 (20 cores, 2.2 GHz)",
+        "memoryGB": 512,
+        "chassis": "3U rack, 866 mm deep, 134 lb (61 kg)",
+        "source": "https://docs.nvidia.com/dgx/archives/dgx1-user-guide/introduction-to-dgx1.html -- components: \"Intel® Xeon® E5-2698 v4, 20-core, 2.2GHz, 135W\", \"32 GB DDR4 LRDIMM (512 GB total)\", \"3U Rackmount\", \"Gross Weight 134 lbs (61 kg)\"",
+        "note": "Four 1.92 TB SATA SSDs in RAID 0 for data and a 480 GB OS drive; four single-port EDR InfiniBand / 100 GbE cards (ConnectX-4 or -5) and dual 10GBASE-T. The whitepaper sizes host memory at \"four times the GPU memory capacity\" of the 16 GB build."
+      },
+      "power": {
+        "input": "200–240 V AC only; four 1,600 W supplies, 3+1 redundant",
+        "maxW": 3500,
+        "source": "https://docs.nvidia.com/dgx/archives/dgx1-user-guide/introduction-to-dgx1.html -- \"200-240 V (ac)\", \"3500 W max.\", \"1600 W @ 200-240 V, 8 A, 50-60 Hz\"; \"four load-balancing power supplies, with 3+1 redundancy\"",
+        "note": "Heat output 12,000 BTU/hr and 340 CFM of airflow at 35 °C (user guide)."
+      },
+      "cooling": {
+        "included": true,
+        "note": "Air-cooled."
+      },
+      "fits": [
+        {
+          "unit": "v100_sxm2_16",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://docs.nvidia.com/dgx/archives/dgx1-user-guide/introduction-to-dgx1.html -- \"(Volta) Tesla V100 ... 16 GB memory per GPU\""
+        },
+        {
+          "unit": "v100_sxm2",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://docs.nvidia.com/dgx/archives/dgx1-user-guide/introduction-to-dgx1.html -- \"(Volta 32 GB) Tesla V100 ... 32 GB memory per GPU\"; the March 2018 datasheet gives \"GPU Memory 256 GB total system\""
+        },
+        {
+          "unit": "pg199_card",
+          "status": "untested",
+          "peer": "pcie",
+          "note": "No report of a PG199 in this system. Without NVLink its peers would meet over PCIe; whether the system's firmware and power accept a 400 W-class module meant for a car is unknown."
+        }
+      ],
+      "sources": [
+        "https://images.nvidia.com/content/pdf/dgx1-v100-system-architecture-whitepaper.pdf",
+        "https://docs.nvidia.com/dgx/archives/dgx1-user-guide/introduction-to-dgx1.html",
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/dgx-1/dgx-1-print-datasheet-update-702634-a4-hr.pdf"
+      ],
+      "note": "NVIDIA's eight-GPU V100 server, the reference for the hybrid cube-mesh. The first DGX-1s shipped with Tesla P100 (Pascal) modules, not carried here; the user guide lists both. NVIDIA keeps the guide only as \"Archived Documentation - Reference Only\". Unpriced here until a listing is recorded."
+    },
+    {
+      "id": "dgx_station_v100",
+      "label": "NVIDIA DGX Station (V100)",
+      "maker": "NVIDIA",
+      "kind": "system",
+      "socket": "PCIe",
+      "slots": 4,
+      "peer": {
+        "kind": "nvlink",
+        "wiring": "a four-way NVLink bridge across the tops of the four cards",
+        "source": "https://forums.developer.nvidia.com/t/server/108344 -- \"4x V100 GPUs in the PCIe formfactor, with NVLink via a bridge across the top of the cards\" (ScottEllis, NVIDIA forum moderator, 2019-12-02)",
+        "note": "Which pairs the bridge joins, and with how many links, is not recorded here, so no link count or GB/s is given. The user guide warns that moving the Station can shift \"the NVLINK bridge, which connects the GPUs\"."
+      },
+      "host": {
+        "cpu": "1× Intel Xeon E5-2698 v4 (20 cores, 2.2 GHz)",
+        "memoryGB": 256,
+        "memoryMaxGB": 512,
+        "chassis": "Deskside tower on casters, 518 × 256 × 639 mm, 88 lb (40 kg), \"< 35 dB\"",
+        "source": "https://docs.nvidia.com/dgx/archives/dgx-station-user-guide/index.html -- \"8 32 GB 256 GB ECC Registered RDIMM DDR4 SDRAM. Note: You can replace all eight factory-installed 32-GB DIMMs with 64-GB DIMMs to give a total capacity of 512 GB\"; datasheet: \"Acoustics < 35 dB\", \"System Weight 88 lbs / 40 kg\"",
+        "note": "Three 1.92 TB SSDs in RAID 0 for data and a 1.92 TB OS drive; dual 10 Gb LAN; three DisplayPort outputs. It is \"designed as an integrated system and does not support the installation of additional PCIe devices such as GPU cards\" (user guide). How the four GPUs attach to the host is not recorded."
+      },
+      "power": {
+        "input": "115–240 V AC, 12–8 A",
+        "maxW": 1500,
+        "source": "https://docs.nvidia.com/dgx/archives/dgx-station-user-guide/index.html -- Power Specifications: \"115 - 240 VAC, 12-8A, (50 - 60 Hz)\"; datasheet: \"Maximum Power Requirements 1,500 W\"",
+        "note": "The only system here that runs from an ordinary North American outlet; at 1,500 W and 120 V it needs most of a 15 A circuit (this page's arithmetic)."
+      },
+      "cooling": {
+        "included": true,
+        "note": "Water-cooled GPUs in a closed loop; the user guide asks owners to check the coolant level every 12 months and top it up from a filler bottle."
+      },
+      "fits": [
+        {
+          "unit": "v100_dgxs_32",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://docs.nvidia.com/dgx/archives/dgx-station-user-guide/index.html -- \"GPU - current units 4 NVIDIA Tesla V100-DGXS-32GB with 32 GB per GPU (128 GB total) of GPU memory\""
+        }
+      ],
+      "sources": [
+        "https://docs.nvidia.com/dgx/archives/dgx-station-user-guide/index.html",
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/dgx-station/dgx-station-data-science-supercomputer-datasheet-v4.pdf",
+        "https://forums.developer.nvidia.com/t/server/108344"
+      ],
+      "note": "NVIDIA's office workstation: four V100s on an NVLink bridge, water-cooled and quiet. Its GPUs are a Station-only PCIe variant, so it cannot take SXM2 modules or any other GPU. Earlier units carry 16 GB GPUs (64 GB total). Unpriced here until a listing is recorded."
+    },
+    {
+      "id": "dgx2",
+      "label": "NVIDIA DGX-2",
+      "maker": "NVIDIA",
+      "kind": "system",
+      "socket": "SXM3",
+      "slots": 16,
+      "peer": {
+        "kind": "nvlink",
+        "wiring": "all-to-all through 12 NVSwitch chips, six on each eight-GPU baseboard",
+        "topology": "Every GPU reaches every other at full rate",
+        "linksPerGpu": 6,
+        "peakP2pGBsPerGpu": 300,
+        "source": "https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9241-all-you-need-to-know-about-programming-nvidia-dgx-2.pdf -- \"12 NVSwitch Network\", \"Full-Bandwidth Fat-Tree Topology\", \"2.4 TBps Bisection Bandwidth\", \"8 GPUs with 6 NVSwitch Chips\"; https://docs-old.e-infra.cz/compute/supercomputing/dgx2/introduction/ -- \"NVSwitch, enabling 300 GB/s chip-to-chip communication\"",
+        "note": "Unlike the DGX-1's cube-mesh, no all-reduce relays through a neighbour: any TP group of any size is fully connected. Six links per GPU is the V100's own count."
+      },
+      "switch": {
+        "present": true,
+        "chip": "PCIe switches (model not stated), four GPUs per host bus",
+        "note": "\"GPUs 0-3 share one PCIe bus. Same for 4-7, 8-11, 12-15\" (GTC 2019). The talk's diagram puts a 100G NIC beside each switch."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "gpusPerUplink": 4,
+        "source": "https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9241-all-you-need-to-know-about-programming-nvidia-dgx-2.pdf -- \"1.5 TB of host memory accessible via four PCIe channels\"; \"GPUs 0-3 share one PCIe bus\"; \"GPUs can read/write host memory at 50 GB/s\"",
+        "note": "NVIDIA measured \"User data moving at 49+ GB/s\" with one kernel per GPU reading host memory on all 16: about 12 GB/s per bus, one way. That is the rate at which anything spilled to the 1.5 TB of host memory comes back, against 300 GB/s between GPUs."
+      },
+      "host": {
+        "cpu": "2× Intel Xeon Platinum 8168 (24 cores)",
+        "memoryGB": 1536,
+        "chassis": "10U rack, 350 lb",
+        "source": "https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9241-all-you-need-to-know-about-programming-nvidia-dgx-2.pdf -- \"Dual 24-core Xeon CPUs\", \"2 Intel Xeon 8168 CPUs\", \"1.5 TB DDR4 DRAM\", \"10U/19-Inch Rack Mount\"; https://docs-old.e-infra.cz/compute/supercomputing/dgx2/introduction/ -- \"350 lbs\"",
+        "note": "30 TB of NVMe storage."
+      },
+      "power": {
+        "maxW": 10000,
+        "source": "https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9241-all-you-need-to-know-about-programming-nvidia-dgx-2.pdf -- \"10 kW Peak TDP\"",
+        "note": "Input voltage and supply count are not recorded here."
+      },
+      "fits": [
+        {
+          "unit": "v100_sxm3_32",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9241-all-you-need-to-know-about-programming-nvidia-dgx-2.pdf -- \"16 Tesla V100 32 GB GPUs\"; https://docs-old.e-infra.cz/compute/supercomputing/dgx2/introduction/ -- \"16 NVIDIA V100-SXM3 GPUs\""
+        }
+      ],
+      "sources": [
+        "https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9241-all-you-need-to-know-about-programming-nvidia-dgx-2.pdf",
+        "https://docs-old.e-infra.cz/compute/supercomputing/dgx2/introduction/"
+      ],
+      "note": "Sixteen V100s in one NVSwitch domain: 512 GB of HBM2 with no relayed hops. At 10 kW it is a datacentre machine, recorded for completeness. Unpriced here until a listing is recorded."
+    },
+    {
+      "id": "smc_1029gq_tvrt",
+      "label": "Supermicro SYS-1029GQ-TVRT",
+      "maker": "Supermicro",
+      "kind": "system",
+      "socket": "SXM2",
+      "slots": 4,
+      "peer": {
+        "kind": "nvlink",
+        "wiring": "on the AOM-SXMV-P board (see that carrier)",
+        "peakP2pGBsPerGpu": 300,
+        "source": "https://www.supermicro.com/en/products/system/1U/1029/SYS-1029GQ-TVRT.cfm -- \"4 NVIDIA® Tesla® V100 SXM2 GPUs\", \"Up to 300GB/s GPU-to-GPU NVIDIA® NVLINK™\"",
+        "note": "Supermicro's rating for the system; it does not give the link count or topology. Owners of the bare board describe the NVLinks as \"just passive traces on the carrier\" (bayleyw, ServeTheHome)."
+      },
+      "switch": {
+        "present": true,
+        "chip": "two PLX PCIe switches, one per pair (per owners of the board)",
+        "note": "Supermicro: \"PCI-E Gen 3 x16 Switch CPU-GPU Interconnect\"."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "gpusPerUplink": 2,
+        "source": "https://forums.servethehome.com/index.php?threads/sxm2-over-pcie.38066/ -- \"each pair of GPUs are connected by x16 to a PLX which connects a single x16 to the CPUs\" (bayleyw, 2022, on the AOM-SXMV board)"
+      },
+      "host": {
+        "cpu": "2× Intel Xeon Scalable, 1st or 2nd generation (Skylake or Cascade Lake)",
+        "memoryMaxGB": 3072,
+        "chassis": "1U rack",
+        "source": "https://www.supermicro.com/en/products/system/1U/1029/SYS-1029GQ-TVRT.cfm -- \"1U Dual Processor (Intel) System with 4 NVIDIA V100 GPUs\"; \"12 DIMM slots Up to 3TB 3DS ECC DDR4-2933MHz\"",
+        "note": "Four PCIe 3.0 x16 slots for NICs. Sold as a barebone, so host memory depends on the listing."
+      },
+      "power": {
+        "input": "Two 2,000 W redundant supplies",
+        "note": "Supermicro gives the supply rating, \"2000W Redundant Power Supplies with PMBus\", not a maximum system draw."
+      },
+      "cooling": {
+        "included": true,
+        "note": "Chassis fans, as a 1U server: loud."
+      },
+      "fits": [
+        {
+          "unit": "v100_sxm2",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://www.supermicro.com/en/products/system/1U/1029/SYS-1029GQ-TVRT.cfm -- \"4 NVIDIA® Tesla® V100 SXM2 GPUs\"",
+          "note": "The page does not name a capacity."
+        },
+        {
+          "unit": "v100_sxm2_16",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://www.supermicro.com/en/products/system/1U/1029/SYS-1029GQ-TVRT.cfm -- \"4 NVIDIA® Tesla® V100 SXM2 GPUs\"",
+          "note": "The page does not name a capacity."
+        },
+        {
+          "unit": "pg199_card",
+          "status": "untested",
+          "peer": "pcie",
+          "note": "Owners run PG199s on the bare AOM-SXMV board (see that carrier), but none is reported inside this chassis, whose supplies and fans are sized for 300 W V100s."
+        }
+      ],
+      "sources": [
+        "https://www.supermicro.com/en/products/system/1U/1029/SYS-1029GQ-TVRT.cfm",
+        "https://forums.servethehome.com/index.php?threads/sxm2-over-pcie.38066/"
+      ],
+      "note": "The server the AOM-SXMV board comes from: its parts list has \"AOM-SXMV-P\", \"AOM housing Volta SXM 2.0 modules in conjunction with X11DGQ DP MB\". Supermicro recommends two or four GPUs (\"Use with 3 GPUs not recommended\"). Unpriced here until a listing is recorded."
+    },
+    {
+      "id": "smc_4029gp_tvrt",
+      "label": "Supermicro SYS-4029GP-TVRT",
+      "maker": "Supermicro",
+      "kind": "system",
+      "socket": "SXM2",
+      "slots": 8,
+      "peer": {
+        "kind": "nvlink",
+        "wiring": "an eight-GPU NVLink board; Supermicro does not state the topology",
+        "peakP2pGBsPerGpu": 300,
+        "source": "https://www.supermicro.com/en/products/system/4U/4029/SYS-4029GP-TVRT.cfm -- \"Support 8 NVIDIA V100 with 300GB/s NVLINK\"; parts list: \"V100 SXM2 GPU Board\"",
+        "note": "Whether it wires the DGX-1's hybrid cube-mesh is not recorded here."
+      },
+      "switch": {
+        "present": true,
+        "chip": "PCIe Gen 3 switches (model and count not stated)",
+        "note": "Supermicro: \"PCI-E Gen 3 x16 Switch CPU-GPU Interconnect\"."
+      },
+      "host": {
+        "cpu": "2× Intel Xeon Scalable, 1st or 2nd generation (Skylake or Cascade Lake)",
+        "memoryMaxGB": 6144,
+        "chassis": "4U rack: a 2U GPU tray above a 2U CPU node",
+        "source": "https://www.supermicro.com/en/products/system/4U/4029/SYS-4029GP-TVRT.cfm -- \"4U Dual Processor (Intel) System with 8 NVIDIA V100 GPUs\"; \"24 DIMM slots Up to 6TB 3DS ECC DDR4-2933MHz\"; \"2U Pascal node on top, and 2U CPU node on bottom\"",
+        "note": "How many GPUs share each uplink is not stated, so no host link per GPU is given. Six PCIe 3.0 x16 low-profile slots plus four in the GPU tray for GPUDirect RDMA."
+      },
+      "power": {
+        "input": "2,200 W redundant (2+2) Titanium supplies",
+        "note": "Supermicro gives the supply rating, \"2200W Redundant Titanium Level Power Supplies with PMBus\", not a maximum system draw."
+      },
+      "cooling": {
+        "included": true,
+        "note": "Chassis fans."
+      },
+      "fits": [
+        {
+          "unit": "v100_sxm2",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://www.supermicro.com/en/products/system/4U/4029/SYS-4029GP-TVRT.cfm -- \"Support 8 NVIDIA V100 with 300GB/s NVLINK\"",
+          "note": "The page does not name a capacity."
+        },
+        {
+          "unit": "v100_sxm2_16",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://www.supermicro.com/en/products/system/4U/4029/SYS-4029GP-TVRT.cfm -- \"Support 8 NVIDIA V100 with 300GB/s NVLINK\"",
+          "note": "The page does not name a capacity."
+        },
+        {
+          "unit": "pg199_card",
+          "status": "untested",
+          "peer": "pcie",
+          "note": "No report of a PG199 in this system. Without NVLink its peers would meet over PCIe; whether the system's firmware and power accept a 400 W-class module meant for a car is unknown."
+        }
+      ],
+      "sources": [
+        "https://www.supermicro.com/en/products/system/4U/4029/SYS-4029GP-TVRT.cfm"
+      ],
+      "note": "An eight-V100 server outside NVIDIA's DGX line, with up to 6 TB of host memory. Unpriced here until a listing is recorded."
+    },
+    {
+      "id": "dell_c4140_k",
+      "label": "Dell PowerEdge C4140, configuration K",
+      "maker": "Dell",
+      "kind": "system",
+      "socket": "SXM2",
+      "slots": 4,
+      "peer": {
+        "kind": "nvlink",
+        "wiring": "Dell's four-GPU NVLink board; the technical guide does not state the topology",
+        "source": "https://i.dell.com/sites/csdocuments/Product_Docs/en/poweredge-c4140-technical-guide.pdf -- \"SXM2 form factor w/NVLINK interconnect\"; \"Configuration K – 2 CPUs with 4 GPUs NVLINK2\"; \"Configuration M – 2 CPUs with 4 GPUs direct NVLINK2\" (Rev. A08, August 2022)"
+      },
+      "switch": {
+        "present": true,
+        "chip": "96-lane PCIe Gen 3 switch",
+        "note": "\"Configurations B, G, and K use PCIe switch. Configurations C and M do not.\" (technical guide)"
+      },
+      "host": {
+        "cpu": "2× Intel Xeon Scalable (Skylake or Cascade Lake), up to 150 W each",
+        "memoryMaxGB": 1536,
+        "chassis": "1U rack, 35 in deep",
+        "source": "https://i.dell.com/sites/csdocuments/Product_Docs/en/poweredge-c4140-technical-guide.pdf -- \"2x Intel Purley socket P (Support for up to 2x 150 W processor)\"; \"Up to 24 total DIMMS with max capacity of 1.5 TB\"; \"Height: 1U; Depth: 35 inches\"",
+        "note": "Two low-profile PCIe 3.0 x16 slots. How each GPU reaches its CPU is not stated, so no host link per GPU is given; each CPU has \"Up to 48 PCIe lanes\"."
+      },
+      "power": {
+        "input": "One or two 2,000 W or 2,400 W supplies, 100–240 V AC",
+        "note": "The guide rates both supplies \"100-240Vac/11.5A\"; it gives no maximum system draw."
+      },
+      "cooling": {
+        "included": true,
+        "note": "Eight chassis fans, as a 1U server: loud."
+      },
+      "fits": [
+        {
+          "unit": "v100_sxm2_16",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://i.dell.com/sites/csdocuments/Product_Docs/en/poweredge-c4140-technical-guide.pdf -- \"NVIDIA® Tesla® P40, V100 16GB PCIe and NVLink GPUs, V100 32GB PCIe and NVLink GPUs\""
+        },
+        {
+          "unit": "v100_sxm2",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://i.dell.com/sites/csdocuments/Product_Docs/en/poweredge-c4140-technical-guide.pdf -- \"NVIDIA® Tesla® P40, V100 16GB PCIe and NVLink GPUs, V100 32GB PCIe and NVLink GPUs\""
+        }
+      ],
+      "sources": [
+        "https://i.dell.com/sites/csdocuments/Product_Docs/en/poweredge-c4140-technical-guide.pdf",
+        "https://forums.servethehome.com/index.php?threads/sxm2-over-pcie.38066/"
+      ],
+      "note": "Dell's 1U four-GPU server; configurations K and M both carry four SXM2 V100s on NVLink and differ in the PCIe switch. Dell's SXM2 board does not work outside the chassis: owners call it \"Dell locked\" (bayleyw, ServeTheHome, 2024-07), and one failed to power it from an x86 host over SFF-8654 (joetler, 2023-06); see the V100 entry. Unpriced here until a listing is recorded."
+    },
+    {
+      "id": "dell_c4140_m",
+      "label": "Dell PowerEdge C4140, configuration M",
+      "maker": "Dell",
+      "kind": "system",
+      "socket": "SXM2",
+      "slots": 4,
+      "peer": {
+        "kind": "nvlink",
+        "wiring": "Dell's four-GPU NVLink board; the technical guide does not state the topology",
+        "source": "https://i.dell.com/sites/csdocuments/Product_Docs/en/poweredge-c4140-technical-guide.pdf -- \"SXM2 form factor w/NVLINK interconnect\"; \"Configuration K – 2 CPUs with 4 GPUs NVLINK2\"; \"Configuration M – 2 CPUs with 4 GPUs direct NVLINK2\" (Rev. A08, August 2022)"
+      },
+      "switch": {
+        "present": false,
+        "note": "\"Configurations B, G, and K use PCIe switch. Configurations C and M do not.\" (technical guide). Without a switch, PCIe traffic between GPUs on different CPUs crosses the inter-socket link."
+      },
+      "host": {
+        "cpu": "2× Intel Xeon Scalable (Skylake or Cascade Lake), up to 150 W each",
+        "memoryMaxGB": 1536,
+        "chassis": "1U rack, 35 in deep",
+        "source": "https://i.dell.com/sites/csdocuments/Product_Docs/en/poweredge-c4140-technical-guide.pdf -- \"2x Intel Purley socket P (Support for up to 2x 150 W processor)\"; \"Up to 24 total DIMMS with max capacity of 1.5 TB\"; \"Height: 1U; Depth: 35 inches\"",
+        "note": "Two low-profile PCIe 3.0 x16 slots. How each GPU reaches its CPU is not stated, so no host link per GPU is given; each CPU has \"Up to 48 PCIe lanes\"."
+      },
+      "power": {
+        "input": "One or two 2,000 W or 2,400 W supplies, 100–240 V AC",
+        "note": "The guide rates both supplies \"100-240Vac/11.5A\"; it gives no maximum system draw."
+      },
+      "cooling": {
+        "included": true,
+        "note": "Eight chassis fans, as a 1U server: loud."
+      },
+      "fits": [
+        {
+          "unit": "v100_sxm2_16",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://i.dell.com/sites/csdocuments/Product_Docs/en/poweredge-c4140-technical-guide.pdf -- \"NVIDIA® Tesla® P40, V100 16GB PCIe and NVLink GPUs, V100 32GB PCIe and NVLink GPUs\""
+        },
+        {
+          "unit": "v100_sxm2",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://i.dell.com/sites/csdocuments/Product_Docs/en/poweredge-c4140-technical-guide.pdf -- \"NVIDIA® Tesla® P40, V100 16GB PCIe and NVLink GPUs, V100 32GB PCIe and NVLink GPUs\""
+        }
+      ],
+      "sources": [
+        "https://i.dell.com/sites/csdocuments/Product_Docs/en/poweredge-c4140-technical-guide.pdf",
+        "https://forums.servethehome.com/index.php?threads/sxm2-over-pcie.38066/"
+      ],
+      "note": "Dell's 1U four-GPU server; configurations K and M both carry four SXM2 V100s on NVLink and differ in the PCIe switch. Dell's SXM2 board does not work outside the chassis: owners call it \"Dell locked\" (bayleyw, ServeTheHome, 2024-07), and one failed to power it from an x86 host over SFF-8654 (joetler, 2023-06); see the V100 entry. Unpriced here until a listing is recorded."
+    },
+    {
+      "id": "ibm_ac922_gtg",
+      "label": "IBM Power System AC922 (8335-GTG)",
+      "maker": "IBM",
+      "kind": "system",
+      "socket": "SXM2",
+      "slots": 4,
+      "peer": {
+        "kind": "nvlink",
+        "wiring": "two pairs, each pair's GPUs joined to each other and to their POWER9 by three-brick NVLink 2.0; the pairs meet through the CPUs' X Bus",
+        "linksPerGpu": 3,
+        "peakP2pGBsPerGpu": 150,
+        "source": "https://www.redbooks.ibm.com/redpapers/pdfs/redp5472.pdf -- p.14: \"four GPUs, where the six NVLINK Bricks are divided into groups of three, which enables 150 GBps buses between GPUs\"; Figure 2-16, \"2 GPU per CPU\": 3 Bricks, 150 GBps GPU to GPU and GPU to CPU",
+        "note": "Peer figures are for the GPU-to-GPU link inside a pair; the other three bricks go to the CPU. Between pairs, traffic crosses the \"X Bus 64 GBps\" between the POWER9s, about what PCIe 4.0 x16 gives."
+      },
+      "host": {
+        "cpu": "2× IBM POWER9 (ppc64le), up to 40 cores in this model",
+        "memoryMaxGB": 1024,
+        "chassis": "2U rack",
+        "source": "https://www.redbooks.ibm.com/redpapers/pdfs/redp5472.pdf -- \"Two POWER9 processors with up to 40 cores (8335-GTG)\"; \"a maximum capacity of 16 memory dual inline memory modules (DIMMs) which enables up to 1024 GB of memory\"; \"19-inch rack-mount (2U) chassis\"",
+        "note": "The GPUs reach host memory over NVLink rather than PCIe: three bricks, 150 GBps per GPU in this four-GPU model, against 32 GB/s for a PCIe 3.0 x16 (both directions). NVLink here \"connects Tesla V100 GPUs with IBM POWER9 CPUs, enabling direct system memory access\" (p.28). That makes it the one machine here where weights spilled to host memory come back much faster than PCIe. It is stranded by software: per the maintainer (2026-11-08) it is stuck at CUDA 12.8 and an older PyTorch on ppc64le, so running one today is a patch project that someone has to keep up."
+      },
+      "power": {
+        "input": "200–240 V AC only; two supplies, both required",
+        "maxW": 2300,
+        "source": "https://www.redbooks.ibm.com/redpapers/pdfs/redp5472.pdf -- \"Operating voltage 200 - 240 V AC\", \"Power consumption 2300 watts maximum\"; \"Two power supplies (both are required)\""
+      },
+      "cooling": {
+        "included": true,
+        "note": "Air-cooled in this model; the six-GPU 8335-GTW is water-cooled."
+      },
+      "fits": [
+        {
+          "unit": "v100_sxm2_16",
+          "status": "verified",
+          "peer": "nvlink",
+          "source": "https://www.redbooks.ibm.com/redpapers/pdfs/redp5472.pdf -- Table 2-11: \"EC4J One air-cooled NVIDIA Tesla V100 GPU 16 GB ... (model 8335-GTG only)\""
+        },
+        {
+          "unit": "v100_sxm2",
+          "status": "untested",
+          "peer": "nvlink",
+          "note": "The first edition of IBM's Redpaper (March 2018) lists only the 16 GB V100. Whether IBM later offered the 32 GB module, or whether one works, is not recorded here."
+        }
+      ],
+      "sources": [
+        "https://www.redbooks.ibm.com/redpapers/pdfs/redp5472.pdf"
+      ],
+      "note": "Recorded so it need not be rediscovered: the only machine here with NVLink between GPU and CPU. The six-GPU 8335-GTW splits each GPU's bricks two ways (100 GBps buses) and needs facility water. Unpriced here until a listing is recorded."
+    },
+    {
+      "id": "hls1",
+      "label": "Habana HLS-1",
+      "maker": "Habana Labs (now Intel)",
+      "kind": "system",
+      "socket": "OAM",
+      "slots": 8,
+      "peer": {
+        "kind": "ethernet",
+        "wiring": "all-to-all on the board: one 100 GbE RoCE link from each Gaudi to each of the other seven",
+        "linksPerGpu": 7,
+        "peakP2pGBsPerGpu": 175,
+        "source": "https://habana.ai/wp-content/uploads/2019/06/Habana-Gaudi-Training-Platform-whitepaper.pdf -- \"In HLS-1, the Gaudi chips are connected all-to-all on the PCB, using seven 100GbE ports of each Gaudi. The remaining three ports from each Gaudi are available to scale out\"",
+        "note": "175 GB/s is this page's arithmetic: seven 100 GbE links, both directions, line rate. A pair has one link, 12.5 GB/s each way, so it is all-to-all but thin next to NVLink."
+      },
+      "switch": {
+        "present": true,
+        "chip": "two PCIe switches (model not stated)",
+        "note": "\"eight HL-205 OCP Accelerator Module (OAM) Mezzanine cards and dual PCIe switches\" (Habana whitepaper)."
+      },
+      "hostLink": {
+        "gen": 4,
+        "lanes": 16,
+        "gpusPerUplink": 2,
+        "attach": "Four PCIe Gen 4 x16 cable ports to a separate host server.",
+        "source": "https://old.hotchips.org/hc31/HC31_1.14_HabanaLabs.Eitan_Medina.v9.pdf -- HLS-1 \"Host Interface 4 ports of x16 PCIe Gen 4.0\"",
+        "note": "Two modules per port is this page's division of eight modules over four ports."
+      },
+      "host": {
+        "cpu": "None inside: a separate host server connects over the four PCIe cables",
+        "chassis": "3U rack (19 in)",
+        "source": "https://habana.ai/wp-content/uploads/2019/06/Habana-Gaudi-Training-Platform-whitepaper.pdf -- \"Any host can manage the Gaudi system through the PCIe ports\"; https://old.hotchips.org/hc31/HC31_1.14_HabanaLabs.Eitan_Medina.v9.pdf -- \"System Dimensions 19'', 3U height\", \"Separate PCIe ports for external Host CPU traffic\"",
+        "note": "Host memory is whatever the separate host has. Scale-out is \"24 X 100Gbps RoCE v2 RDMA Ethernet ports (6 x QSFP-DD)\"."
+      },
+      "power": {
+        "maxW": 3000,
+        "source": "https://old.hotchips.org/hc31/HC31_1.14_HabanaLabs.Eitan_Medina.v9.pdf -- HLS-1 \"Max power Consumption 3 kW\"",
+        "note": "The box alone, without its host. Input voltage is not recorded here."
+      },
+      "fits": [
+        {
+          "unit": "gaudi_hl205",
+          "status": "verified",
+          "peer": "ethernet",
+          "source": "https://old.hotchips.org/hc31/HC31_1.14_HabanaLabs.Eitan_Medina.v9.pdf -- HLS-1 \"AI Processors 8X Gaudi (8x HL-205)\", \"Memory 256GB HBM2\""
+        }
+      ],
+      "sources": [
+        "https://habana.ai/wp-content/uploads/2019/06/Habana-Gaudi-Training-Platform-whitepaper.pdf",
+        "https://old.hotchips.org/hc31/HC31_1.14_HabanaLabs.Eitan_Medina.v9.pdf",
+        "https://docs.habana.ai/en/latest/Support_Matrix/Support_Matrix.html"
+      ],
+      "note": "Habana's first-generation Gaudi box. Out of Intel's software: the current support matrix covers Gaudi 2 and 3 only, and 1.18.0 is the latest matrix checked that lists first-generation Gaudi, so a working HLS-1 today runs a frozen stack. Both sources are Habana's 2019 launch material. Unpriced here until a listing is recorded."
+    },
+    {
+      "id": "smc_820gh_tnr2",
+      "label": "Supermicro SYS-820GH-TNR2 (Gaudi 2)",
+      "maker": "Supermicro",
+      "kind": "system",
+      "socket": "OAM",
+      "slots": 8,
+      "peer": {
+        "kind": "ethernet",
+        "wiring": "all-to-all, non-blocking: 21 of each module's 24 RoCE ports go to the other seven",
+        "linksPerGpu": 21,
+        "peakP2pGBsPerGpu": 525,
+        "source": "https://www.supermicro.com/en/products/system/datasheet/SYS-820GH-TNR2 -- \"GPU-GPU Interconnect: 21x 100GbE PAM4 SerDes Links\"; https://habana.ai/wp-content/uploads/2023/10/HLS-Gaudi2_Datasheet_10_23.pdf -- \"interconnected internally with non-blocking all-to-all connectivity dedicating 21x100GbE RoCE ports from every Intel Gaudi2 to the other 7 processors\" (Intel's own HLS-Gaudi2)",
+        "note": "525 GB/s is this page's arithmetic: 21 × 100 GbE, both directions, line rate; three links to each peer (21 ÷ 7), 75 GB/s per pair. Intel's Gaudi 3 paper rates Gaudi 2 at 600 GB/s bidirectional for all 24 ports."
+      },
+      "host": {
+        "cpu": "2× Intel Xeon 3rd Gen Scalable (Ice Lake), up to 40 cores and 270 W each",
+        "memoryMaxGB": 8192,
+        "chassis": "8U rack, 282 lb (128 kg) gross",
+        "source": "https://www.supermicro.com/en/products/system/datasheet/SYS-820GH-TNR2 -- \"Dual Intel® Xeon® 3rd Gen Scalable Processors (Ice Lake) TDP up to 270W\"; \"32x DIMM slots, up to 8TB\"; \"8U Rackmount\"; \"Gross Weight: 282 lbs (128 kg)\"",
+        "note": "Scale-out over \"6x 400GbE QSFP-DD\", the remaining three ports per module. Each module has \"CPU-GPU Interconnect: PCIe Gen4 x16\"; Intel's reference HLS-Gaudi2 puts them behind \"two Gen 4.0 PCIe switches\", and whether Supermicro does the same is not recorded, so no host link per GPU is given."
+      },
+      "power": {
+        "input": "Six 3,000 W redundant Titanium supplies (54 V + 12 V)",
+        "note": "Supermicro gives the supply rating, not a maximum draw; Intel rates its own eight-module HLS-Gaudi2 at \"MAX POWER USAGE 7.5KW\"."
+      },
+      "cooling": {
+        "included": true,
+        "note": "Twelve heavy-duty fans."
+      },
+      "pricing": {
+        "usd": 16499.99,
+        "asOf": "2026-11",
+        "includes": "the server, refurbished, with six supplies and a one-year warranty",
+        "source": "eBay asking price, the maintainer's screenshot (2026-11-08)",
+        "note": "About $2,060 a module. The same screenshot had a Supermicro Gaudi 2 baseboard tray with eight modules, without the server, at $11,995 (about $1,500 a module); single modules were $2,500-2,700. The listing does not say which module variant it carries.",
+        "modules": [
+          {
+            "unit": "gaudi2_hl225h",
+            "count": 8
+          }
+        ]
+      },
+      "fits": [
+        {
+          "unit": "gaudi2_hl225h",
+          "status": "verified",
+          "peer": "ethernet",
+          "source": "https://www.supermicro.com/en/products/system/datasheet/SYS-820GH-TNR2 -- \"8U AI training platform with 8 Gaudi®2 accelerators\"; \"Supported GPU: Intel OAM: Gaudi 2\""
+        }
+      ],
+      "sources": [
+        "https://www.supermicro.com/en/products/system/datasheet/SYS-820GH-TNR2",
+        "https://habana.ai/wp-content/uploads/2023/10/HLS-Gaudi2_Datasheet_10_23.pdf"
+      ],
+      "note": "Eight Gaudi 2 modules, 768 GB of HBM2E, for $16,499.99 as listed. Software is Intel's Gaudi stack and vLLM plugin, with no CUDA; see the Gaudi 2 entry."
     }
   ],
   "lines": [
@@ -15648,6 +16348,82 @@
       "sources": [
         "https://forums.servethehome.com/index.php?threads/automotive-a100-sxm2-for-fsd-nvidia-drive-a100.43196/ -- PG199 owners: carriers it runs on, power at each clock, failure reports and fixes"
       ]
+    },
+    {
+      "id": "c_v100x4_dgxstation",
+      "label": "4× V100-DGXS 32GB in an NVIDIA DGX Station",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_dgxs_32",
+            "count": 4
+          }
+        ],
+        "carrier": "dgx_station_v100"
+      },
+      "models": [
+        "qwen38_27b",
+        "qwen38_flash_next"
+      ],
+      "status": "preregistered",
+      "note": "The quiet one: water-cooled, under 35 dB, 1.5 kW from a 115-240 V outlet. The same 128 GB as four SXM2 V100s, but its GPUs are a Station-only variant with no first-party bandwidth figure, so no decode ceiling is shown. Unpriced until a listing is recorded."
+    },
+    {
+      "id": "c_v100x8_dgx1",
+      "label": "8× V100 SXM2 32GB in an NVIDIA DGX-1",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm2",
+            "count": 8
+          }
+        ],
+        "carrier": "dgx1_v100"
+      },
+      "models": [
+        "qwen38_27b",
+        "qwen38_flash_next"
+      ],
+      "status": "preregistered",
+      "note": "256 GB across eight GPUs on the hybrid cube-mesh. Tensor parallel across all eight relays some all-reduce traffic through neighbours; TP4 inside one fully connected half does not, and leaves the other half for a second model or replica. Needs 200-240 V and up to 3.5 kW. Unpriced until a listing is recorded."
+    },
+    {
+      "id": "c_v100x16_dgx2",
+      "label": "16× V100 SXM3 32GB in an NVIDIA DGX-2",
+      "rig": {
+        "units": [
+          {
+            "unit": "v100_sxm3_32",
+            "count": 16
+          }
+        ],
+        "carrier": "dgx2"
+      },
+      "models": [
+        "qwen38_27b",
+        "qwen38_flash_next"
+      ],
+      "status": "preregistered",
+      "note": "512 GB of HBM2 in one NVSwitch domain, and 1.5 TB of host memory behind four PCIe 3.0 x16 buses (NVIDIA measured 49+ GB/s reading it from all 16 GPUs). 10 kW: recorded for scale, not as a homelab option. No first-party bandwidth for its GPUs, so no decode ceiling is shown. Unpriced until a listing is recorded."
+    },
+    {
+      "id": "c_gaudi2x8_820gh",
+      "label": "8× Gaudi 2 in a Supermicro SYS-820GH-TNR2",
+      "rig": {
+        "units": [
+          {
+            "unit": "gaudi2_hl225h",
+            "count": 8
+          }
+        ],
+        "carrier": "smc_820gh_tnr2"
+      },
+      "models": [
+        "qwen38_27b",
+        "qwen38_flash_next"
+      ],
+      "status": "preregistered",
+      "note": "768 GB of HBM2E at 2.46 TB/s per module, at $16,499.99 as listed refurbished. It runs only Intel's software (vLLM through Intel's plugin, no CUDA, no llama.cpp backend known here), and Qwen3.8 is not in the plugin's model list as of 1.24.2. An 8U, 282 lb server on six 3 kW supplies."
     }
   ],
   "openModels": [

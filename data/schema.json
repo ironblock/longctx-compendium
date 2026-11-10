@@ -1044,7 +1044,7 @@
       }
     },
     "carrier": {
-      "description": "A board that GPU modules mount on (an SXM2 carrier, adapter or baseboard): what it wires between its slots and to the host, what it costs, and which catalog units are known to work in it. Rigs name a carrier instead of repeating these facts, so every rig on one board shares one record.",
+      "description": "A board that GPU modules mount on (an SXM2 carrier, adapter or baseboard), or a whole system built around one (kind \"system\": a DGX, an HGX server, a Gaudi server): what it wires between its slots and to the host, what it costs, and which catalog units are known to work in it. Rigs name a carrier instead of repeating these facts, so every rig on one board shares one record.",
       "type": "object",
       "required": [
         "id",
@@ -1066,6 +1066,13 @@
         "maker": {
           "type": "string"
         },
+        "kind": {
+          "enum": [
+            "board",
+            "system"
+          ],
+          "description": "board (the default when absent): a carrier the owner fits into a host. system: a complete machine with its own CPU, memory, chassis and power, described in host."
+        },
         "socket": {
           "type": "string",
           "description": "Module socket, matched against each unit's formFactor.name (SXM2, SXM4 ...)."
@@ -1084,7 +1091,7 @@
           "properties": {
             "kind": {
               "type": "string",
-              "description": "nvlink, or none when slots meet only over PCIe."
+              "description": "nvlink; ethernet when accelerators meet over their own integrated RoCE ports wired on the board (Gaudi); or none when slots meet only over PCIe."
             },
             "wiring": {
               "type": "string"
@@ -1110,7 +1117,7 @@
           }
         },
         "switch": {
-          "description": "Whether a PCIe switch sits on the board. With one, PCIe peer traffic between GPUs on the same switch stays off the host. Absent means not recorded.",
+          "description": "Whether a PCIe switch sits between the slots and the host. With one, PCIe peer traffic between GPUs on the same switch stays off the host. Absent means not recorded.",
           "type": "object",
           "required": [
             "present"
@@ -1174,6 +1181,14 @@
             },
             "note": {
               "type": "string"
+            },
+            "maxW": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "The maker's maximum draw for the whole system."
+            },
+            "source": {
+              "type": "string"
             }
           }
         },
@@ -1193,7 +1208,7 @@
           }
         },
         "pricing": {
-          "description": "The board's own price. Absent means unpriced, and a rig total that leaves it out says so.",
+          "description": "The board's or system's own price. Absent means unpriced, and a rig total that leaves it out says so.",
           "type": "object",
           "required": [
             "usd",
@@ -1223,6 +1238,28 @@
             },
             "note": {
               "type": "string"
+            },
+            "modules": {
+              "description": "Modules the price already includes, so a rig on this carrier does not pay for them again. Absent means none.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "unit",
+                  "count"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "type": "string"
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
             }
           }
         },
@@ -1249,7 +1286,7 @@
           }
         },
         "fits": {
-          "description": "Which catalog units work in the board, and how their peers meet on it. verified: an owner ran it and said so; reported: a vendor, seller or second-hand claim; untested: nobody has said either way; fails: reported not to work.",
+          "description": "Which catalog units work in the board, and how their peers meet on it. verified: an owner ran it and said so, or the maker sells or supports the system with it installed; reported: a seller or second-hand claim, or a maker's claim for a bare board; untested: nobody has said either way; fails: reported not to work.",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -1275,9 +1312,10 @@
               "peer": {
                 "enum": [
                   "nvlink",
+                  "ethernet",
                   "pcie"
                 ],
-                "description": "How this unit's peers meet on this board: nvlink only when both the board and the module wire it."
+                "description": "How this unit's peers meet on this board: nvlink or ethernet only when both the board and the module wire it."
               },
               "source": {
                 "type": "string"
@@ -1298,6 +1336,42 @@
         },
         "note": {
           "type": "string"
+        },
+        "host": {
+          "description": "A system's own host: required when kind is system, not allowed otherwise.",
+          "type": "object",
+          "required": [
+            "cpu",
+            "chassis",
+            "source"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "type": "string",
+              "description": "The host processors, or what stands in for them (an external host on cables)."
+            },
+            "memoryGB": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Host memory as the maker ships it."
+            },
+            "memoryMaxGB": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "The most host memory the maker says it takes."
+            },
+            "chassis": {
+              "type": "string",
+              "description": "Rack units or tower, and anything about size, weight or noise that decides where it can live."
+            },
+            "source": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
         }
       }
     },

@@ -202,9 +202,16 @@ for (const k of doc.carriers ?? []) {
   if (pr && (pr.peakP2pGBsPerGpu != null || pr.linksPerGpu != null) && !pr.source) {
     fail(at, 'peer link carries figures but no source -- say where they came from');
   }
-  if (pr && pr.kind !== 'nvlink' && (pr.peakP2pGBsPerGpu != null || pr.linksPerGpu != null)) {
+  if (pr && !['nvlink', 'ethernet'].includes(pr.kind) && (pr.peakP2pGBsPerGpu != null || pr.linksPerGpu != null)) {
     fail(at, `peer kind "${pr.kind}" cannot carry link counts or GB/s`);
   }
+  // A system carries its own host; a bare board leaves the host to the owner.
+  if (k.kind === 'system' && !k.host) fail(at, 'is a system but describes no host (cpu, chassis, source)');
+  if (k.kind !== 'system' && k.host) fail(at, 'describes a host but is not a system -- set kind to "system", or move the host facts to hostLink.attach');
+  if (k.host?.memoryGB != null && k.host?.memoryMaxGB != null && k.host.memoryMaxGB < k.host.memoryGB) {
+    fail(at, `ships with ${k.host.memoryGB} GB of host memory but takes at most ${k.host.memoryMaxGB}`);
+  }
+  if (k.power?.maxW != null && !k.power.source) fail(at, 'gives a maximum power but no source');
   if (k.hostLink && k.hostLink.gpusPerUplink > k.slots) {
     fail(at, `has ${k.slots} slot(s) but says ${k.hostLink.gpusPerUplink} GPUs share an uplink`);
   }
@@ -226,10 +233,20 @@ for (const k of doc.carriers ?? []) {
       fail(ft, `"${f.unit}" is ${u.formFactor?.name ?? 'of unrecorded form factor'}, but the carrier takes ${k.socket}`);
     }
     if (f.peer === 'nvlink' && pr?.kind !== 'nvlink') fail(ft, 'says its peers meet over NVLink on a carrier that wires none');
-    if (f.peer === 'nvlink' && !(u.peerLink?.maxCards > 0)) fail(ft, `says its peers meet over NVLink, but "${f.unit}" has no peer link`);
+    if (f.peer === 'ethernet' && pr?.kind !== 'ethernet') fail(ft, 'says its peers meet over Ethernet on a carrier that wires none');
+    if (f.peer !== 'pcie' && !(u.peerLink?.maxCards > 0)) fail(ft, `says its peers meet over ${f.peer}, but "${f.unit}" has no peer link`);
     if (f.status !== 'untested' && !f.source) fail(ft, `a ${f.status} fit needs a source`);
     if (f.status === 'untested' && !f.note) fail(ft, 'an untested fit needs a note saying what is and is not known');
   });
+  // Modules bundled into the price must be ones the board takes, and no more than it holds.
+  const bundled = k.pricing?.modules ?? [];
+  bundled.forEach((m, i) => {
+    const f = (k.fits ?? []).find(x => x.unit === m.unit);
+    if (!f) fail(`${at} pricing.modules[${i}]`, `"${m.unit}" is priced in but not in the fit list`);
+    else if (f.status === 'fails') fail(`${at} pricing.modules[${i}]`, `"${m.unit}" is priced in but reported not to work`);
+  });
+  const nBundled = bundled.reduce((t, m) => t + m.count, 0);
+  if (nBundled > k.slots) fail(at, `prices in ${nBundled} modules but has ${k.slots} slot(s)`);
 }
 
 // --- Rigs
@@ -368,5 +385,5 @@ const points = (doc.lines ?? []).reduce((n, l) => n + (l.results?.length ?? 0), 
 for (const w of warnings) console.warn(`  ! ${w}`);
 console.log(
   `✓ ${rel} — ${(doc.architectures ?? []).length} chip generations, ${(doc.units ?? []).length} catalog units, ` +
-    `${(doc.carriers ?? []).length} carriers, ${(doc.lines ?? []).length} serving lines with ${points} readings, ${(doc.candidates ?? []).length} candidates, ${(doc.openModels ?? []).length} open models`
+    `${(doc.carriers ?? []).filter(k => k.kind !== 'system').length} carriers, ${(doc.carriers ?? []).filter(k => k.kind === 'system').length} systems, ${(doc.lines ?? []).length} serving lines with ${points} readings, ${(doc.candidates ?? []).length} candidates, ${(doc.openModels ?? []).length} open models`
 );

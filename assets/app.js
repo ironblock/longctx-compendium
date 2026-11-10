@@ -27,6 +27,7 @@ import {
   renderObservations,
   renderCandidates,
   renderCarriers,
+  renderSystems,
   renderFrontierTable,
   rigCapacityLines,
   fmtDepth,
@@ -488,7 +489,10 @@ try {
     if (all || scope === 'hw' || scope === 'model' || scope === 'calc') renderCeilTable(hwOk);
     if (all || scope === 'obs') renderObs();
     if (all || scope === 'model' || scope === 'calc') renderCandidates(model, state);
-    if (all) renderCarriers(model);
+    if (all) {
+      renderCarriers(model);
+      renderSystems(model);
+    }
     if ((all || scope === 'model') && model.FRONTIER.length) {
       renderFrontier(model.FRONTIER, rigCapacityLines(model, bpwOf(state.weights).bpw), model.QI);
       renderFrontierTable(model, state);

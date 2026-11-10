@@ -21,7 +21,7 @@ node tools/coverage.mjs        # what the catalog is still missing
 |---|---|---|
 | `architectures` | a chip generation and which matrix formats its silicon takes | a whitepaper was misread |
 | `units` | a purchasable card or machine — what a datasheet describes | a price moves, a spec is corrected |
-| `carriers` | a board modules mount on: its wiring, host link, price, and what fits in it | a board is found, priced or tested with a module |
+| `carriers` | a board modules mount on, or a whole system built around one: its wiring, host link, host, price, and what fits in it | a board or system is found, priced or tested with a module |
 | `lines` | the ledger: every reading, inside the serving line that produced it | someone measures something |
 | `candidates` | rigs under consideration that have no measured line yet | a rig is proposed or measured |
 | `openModels` | open-weight models scored on one quality index, for the size frontier | a model is released or rescored |
@@ -349,22 +349,35 @@ each one by host name under the rig, with the whole entry as hover text.
 carriers, baseboards), kept apart from rigs because any SXM2 module can in
 principle sit on any SXM2 board. A carrier records:
 
+- `kind`: `board` (the default) or `system`, a whole machine with its own
+  host (below);
 - `socket` and `slots`, checked against each fitted unit's `formFactor.name`;
-- `peer`: `kind` (`nvlink` or `none`), with `wiring`, `topology`,
-  `linksPerGpu` and `peakP2pGBsPerGpu` when a source states them;
+- `peer`: `kind` (`nvlink`; `ethernet` where accelerators meet over their own
+  RoCE ports wired on the board, as on Gaudi servers; or `none`), with
+  `wiring`, `topology`, `linksPerGpu` and `peakP2pGBsPerGpu` when a source
+  states them, or when the page works them out from stated link counts and
+  says so;
 - `switch`: whether a PCIe switch sits on the board (absent means not
   recorded). Over PCIe, peers on one switch stay off the host;
 - `hostLink`: `gen`, `lanes` and `gpusPerUplink`. The page derives each GPU's
   host link as line rate x lanes, both directions, divided among the GPUs on
   one uplink, with encoding overhead not subtracted;
-- `power`, `cooling`;
+- `power` (`input`, `note`, and for a system `maxW`, the maker's maximum
+  draw, which needs a `source`), `cooling`;
 - `pricing` (`usd`, `highUsd`, `asOf`, and `includes`, which says what the
   price buys) and `parts`, the parts it cannot run without that the price
   leaves out (host cables, say), summed into rig totals. Cooling that depends
-  on the module stays in notes;
+  on the module stays in notes. `pricing.modules` lists GPUs the price
+  already includes (a used server sold populated), so a rig on it does not
+  pay for them again;
+- `host`, for a system only and required there: `cpu`, `memoryGB` as shipped,
+  `memoryMaxGB`, `chassis` (rack units or tower, weight, noise) and a
+  `source`. Host memory is where weights spill when they leave the GPUs, and
+  the host link per GPU is how fast they come back;
 - `fits`: one entry per catalog unit, with a `status` and the `peer` path
   that unit gets on this board. `verified` means an owner ran it and said so,
-  `reported` a vendor, seller or second-hand claim, `untested` that nobody has
+  or the maker sells or supports the system with it installed; `reported` a
+  seller or second-hand claim, or a maker's claim for a bare board; `untested` that nobody has
   said either way, `fails` that it is reported not to work. Anything but
   untested needs a `source`; untested needs a `note`. A unit with no peer link
   of its own (the PG199) cannot be marked `nvlink`, and a rig cannot use a

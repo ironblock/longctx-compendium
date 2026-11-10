@@ -278,7 +278,7 @@ await settle();
   check('arrow keys move between tabs and wrap', await p2.locator('#hardware').isVisible());
   await p2.goto(`${base}/index.html#tab=rigs&w=q8_0`, { waitUntil: 'networkidle' });
   check('a link with a tab opens it', await p2.locator('#rigs').isVisible() && !(await p2.locator('#hardware').isVisible()));
-  for (const [anchor, tab] of [['#frontier', 'frontier'], ['#carriers', 'rigs'], ['#carrier-aom_sxmv', 'rigs'], ['#method', 'method']]) {
+  for (const [anchor, tab] of [['#frontier', 'frontier'], ['#carriers', 'rigs'], ['#carrier-aom_sxmv', 'rigs'], ['#systems', 'rigs'], ['#carrier-dgx2', 'rigs'], ['#method', 'method']]) {
     const p3 = await browser.newPage();
     await p3.goto(`${base}/index.html${anchor}`, { waitUntil: 'networkidle' });
     check(`an old anchor (${anchor}) opens its tab`, await p3.locator(`#${tab}`).isVisible());
@@ -621,13 +621,29 @@ check('one frontier row per scored open model', (await count('#frontierTable tbo
 
 // --- 4b. Carriers ----------------------------------------------------------
 await openTab('rigs');
-check('one row per carrier, each with its notes beneath', (await count('#carrierTable tbody tr.cand-main')) === model.CARRIERS.length && (await count('#carrierTable tbody tr.cand-notes')) === model.CARRIERS.length && model.CARRIERS.length > 0);
+const BOARDS = model.CARRIERS.filter(k => k.kind !== 'system');
+const SYSTEMS = model.CARRIERS.filter(k => k.kind === 'system');
+check('one row per carrier, each with its notes beneath', (await count('#carrierTable tbody tr.cand-main')) === BOARDS.length && (await count('#carrierTable tbody tr.cand-notes')) === BOARDS.length && BOARDS.length > 0);
 {
   const t = await text('#carrierTable tbody');
   check('carrier host links are per GPU, shared per uplink', /16 GB\/s\s*Gen 3 x16, shared by 2/.test(t) && /32 GB\/s\s*Gen 3 x16/.test(t));
-  check('every carrier lists what fits in it', (t.match(/verified|reported|untested|fails/g) ?? []).length >= model.CARRIERS.reduce((n, k) => n + k.fits.length, 0));
+  check('every carrier lists what fits in it', (t.match(/verified|reported|untested|fails/g) ?? []).length >= BOARDS.reduce((n, k) => n + k.fits.length, 0));
   check('a carrier price says what it includes', /\$1,300\s*the board alone/.test(t) && /\+ \$40–\$115 parts/.test(t));
   check('carriers render no NaN/undefined/null', !BROKEN.test(t), brokenAt(t));
+}
+check('systems get their own table, one row each with notes', (await count('#systemTable tbody tr.cand-main')) === SYSTEMS.length && (await count('#systemTable tbody tr.cand-notes')) === SYSTEMS.length && SYSTEMS.length > 0);
+{
+  const t = await text('#systemTable tbody');
+  check('a system shows its host CPU and memory', /E5-2698 v4/.test(t) && /512 GB host memory/.test(t) && /up to 8,192 GB host memory/.test(t));
+  check('a system shows its maximum power, or says it is not recorded', /3,500 W/.test(t) && /10,000 W/.test(t) && /not recorded/.test(t));
+  check('a system priced with its modules says so', /\$16,500/.test(t) && /GPUs included: 8× Intel Gaudi 2/.test(t));
+  check('Gaudi peers meet over Ethernet, all-to-all', /Ethernet \(RoCE\)/.test(t) && /525 GB\/s per GPU/.test(t));
+  check('the DGX-2 host link is shared by four GPUs', /8 GB\/s\s*Gen 3 x16, shared by 4/.test(t));
+  check('systems render no NaN/undefined/null', !BROKEN.test(t), brokenAt(t));
+  check('a system rig links to its system', (await count('#candTable tbody a[href="#carrier-dgx1_v100"]')) === 1);
+  const c = await text('#candTable tbody');
+  check('a system rig does not pay for its bundled GPUs again', /\$16,500\s*system, GPUs included/.test(c), 'expected the $16,499.99 server, not plus 8 x $2,500');
+  check('a system rig shows the host it comes with', /Built in: 2× Intel Xeon E5-2698 v4/.test(c));
 }
 
 check('still no console or page errors after every interaction', consoleErrors.length === 0, consoleErrors.join(' | '));

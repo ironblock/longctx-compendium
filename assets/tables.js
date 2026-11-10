@@ -424,6 +424,7 @@ const FIT_CLASS = { verified: 't-ok', reported: '', untested: 'fit-untested', fa
 const unitLabel = (model, id) => model.unitById[id]?.label ?? id;
 const gbs = v => (Number.isInteger(v) ? v.toLocaleString() : sig(v));
 const usdRange = (lo, hi) => usd(lo) + (hi != null && hi > lo ? `–${usd(hi)}` : '');
+const FABRIC = { nvlink: 'NVLink', ethernet: 'Ethernet (RoCE)', pcie: 'PCIe' };
 
 export function renderCandidates(model, state) {
   const tb = el('candTable').querySelector('tbody');
@@ -435,9 +436,11 @@ export function renderCandidates(model, state) {
     const k = ic?.carrier;
     const t = c.rigTotals;
     const price = t.costUsd == null ? DASH : usdRange(t.costUsd, t.costHighUsd);
-    const what = k ? `cards + carrier${k.parts ? ' + parts' : ''}` : 'cards + bridge/board';
-    const priceSub = t.costUsd == null ? 'unpriced' : t.linkPriced === false ? `cards only · ${k ? 'carrier' : 'bridge/board'} unpriced` : t.linkPriced ? what : 'cards, street';
-    const priceTip = k?.pricing ? `Carrier: ${k.pricing.includes} (${k.pricing.asOf}).${k.parts ? ` Parts: ${k.parts.note}` : ''}` : '';
+    const sys = k?.kind === 'system';
+    const kName = sys ? 'system' : 'carrier';
+    const what = t.bundled ? `${kName}, GPUs included` : k ? `cards + ${kName}${k.parts ? ' + parts' : ''}` : 'cards + bridge/board';
+    const priceSub = t.costUsd == null ? 'unpriced' : t.linkPriced === false ? `cards only · ${k ? kName : 'bridge/board'} unpriced` : t.linkPriced ? what : 'cards, street';
+    const priceTip = k?.pricing ? `${sys ? 'System' : 'Carrier'}: ${k.pricing.includes} (${k.pricing.asOf}).${k.parts ? ` Parts: ${k.parts.note}` : ''}` : '';
     const ceil = c.models
       .map(id => {
         const m = modelById(id);
@@ -452,13 +455,15 @@ export function renderCandidates(model, state) {
       })
       .join('<br>');
     const fitSubs = (ic?.fits ?? [])
-      .map(f => `<span class="sub ${FIT_CLASS[f.status] ?? ''}" title="${esc(f.note ?? '')}">${esc(unitLabel(model, f.unit))}: ${esc(f.status)} on this carrier</span>`)
+      .map(f => `<span class="sub ${FIT_CLASS[f.status] ?? ''}" title="${esc(f.note ?? '')}">${esc(unitLabel(model, f.unit))}: ${esc(f.status)} ${sys ? 'in this system' : 'on this carrier'}</span>`)
       .join('');
     const peerCell =
       ic?.kind === 'pcie' && ic.pciePath
         ? `<span class="num">PCIe</span><span class="sub">${esc(ic.pciePath)}</span>`
-        : `${ic?.peakP2pGBsPerGpu != null ? `<span class="num">${ic.peakP2pGBsPerGpu} GB/s</span>` : '<span class="dash" title="The vendor states no GB/s figure">not stated</span>'}<span class="sub">peak P2P per GPU${ic?.linksPerGpu ? ` · ${ic.linksPerGpu} links` : ''}</span>`;
-    const host = c.rig.host?.note ?? k?.hostLink?.attach ?? (k ? 'What the host must supply is not recorded for this carrier.' : null);
+        : `${ic?.peakP2pGBsPerGpu != null ? `<span class="num">${gbs(ic.peakP2pGBsPerGpu)} GB/s</span>` : '<span class="dash" title="The vendor states no GB/s figure">not stated</span>'}<span class="sub">peak P2P per GPU${ic?.linksPerGpu ? ` · ${ic.linksPerGpu} links` : ''}</span>`;
+    const kh = k?.host;
+    const sysHost = kh && `Built in: ${kh.cpu}${kh.memoryGB ? `, ${n0(kh.memoryGB)} GB host memory` : kh.memoryMaxGB ? `, up to ${n0(kh.memoryMaxGB)} GB host memory` : ''}.`;
+    const host = c.rig.host?.note ?? sysHost ?? k?.hostLink?.attach ?? (k ? 'What the host must supply is not recorded for this carrier.' : null);
     const fitNotes = (ic?.fits ?? []).filter(f => f.note).map(f => `${esc(unitLabel(model, f.unit))} here (${esc(f.status)}): ${esc(f.note)}`).join(' ');
     return (
       '<tr class="cand-main">' +
@@ -466,65 +471,84 @@ export function renderCandidates(model, state) {
       `<td class="num">${t.memoryGB ?? '—'} GB</td>` +
       `<td class="num">${u?.memoryBandwidthGBs ?? '—'}<span class="sub">GB/s per card</span></td>` +
       `<td class="num" title="${esc(priceTip)}">${price}<span class="sub">${priceSub}</span></td>` +
-      `<td class="lbl wrap" style="min-width:150px;font-size:11.5px">${esc(ic?.kind ?? 'not recorded')}<span class="sub" title="${esc((k ? k.peer?.note : ic?.note) ?? '')}">${esc(ic?.bridge ?? '')}</span>${fitSubs}</td>` +
+      `<td class="lbl wrap" style="min-width:150px;font-size:11.5px">${esc(FABRIC[ic?.kind] ?? ic?.kind ?? 'not recorded')}<span class="sub" title="${esc((k ? k.peer?.note : ic?.note) ?? '')}">${esc(ic?.bridge ?? '')}</span>${fitSubs}</td>` +
       `<td class="lbl wrap" style="min-width:140px;max-width:200px">${peerCell}<span class="sub">${ic?.hostLinkGBs ? `host link ${gbs(ic.hostLinkGBs)} GB/s` : 'host link unverified'}</span></td>` +
       `<td class="lbl wrap" style="font-size:11.5px;color:var(--muted)">${ceil}<span class="sub">at ${fmtDepth(state.depth)} deep, ${esc(WEIGHT_FORMATS[state.weights].label)}, KV ${esc(state.kv)}</span></td>` +
       '</tr>' +
       `<tr class="cand-notes"><td colspan="7">${esc(c.note ?? '')}` +
       `${host ? `<br><b style="color:var(--text)">Host:</b> ${esc(host)}` : ''}` +
-      `${k ? `<br><b style="color:var(--text)">Carrier:</b> <a href="#carrier-${esc(k.id)}">${esc(k.label)}</a>, shared with every rig on it.${fitNotes ? ` ${fitNotes}` : ''}` : ''}` +
+      `${k ? `<br><b style="color:var(--text)">${sys ? 'System' : 'Carrier'}:</b> <a href="#carrier-${esc(k.id)}">${esc(k.label)}</a>, shared with every rig on it.${fitNotes ? ` ${fitNotes}` : ''}` : ''}` +
       `${ic?.note ? `<br><b style="color:var(--text)">Interconnect:</b> ${esc(ic.note)}` : ''}` +
       `${sourceLinks([ic?.source, ...(c.sources ?? []), ...(k?.sources ?? [])])}</td></tr>`
     );
   }).join('');
 }
 
+/** One carrier or system: the shared cells, then a notes row. A system adds its host and power. */
+function carrierRows(model, k) {
+  const sys = k.kind === 'system';
+  const yes = b => (b ? 'yes' : 'no');
+  const pr = k.peer;
+  const peer = !pr
+    ? '<span class="dash">not recorded</span>'
+    : pr.kind === 'none'
+      ? 'none<span class="sub">peers meet over PCIe</span>'
+      : `${esc(FABRIC[pr.kind] ?? pr.kind)}${pr.wiring ? `<span class="sub">${esc(pr.wiring)}</span>` : ''}<span class="sub">${pr.peakP2pGBsPerGpu != null ? `${gbs(pr.peakP2pGBsPerGpu)} GB/s per GPU` : 'GB/s not stated'}${pr.linksPerGpu ? ` · ${pr.linksPerGpu} links` : ''}</span>`;
+  const hl = k.hostLink;
+  const sw = k.switch == null ? 'switch not recorded' : k.switch.present ? esc(k.switch.chip ?? 'switch, model not stated') : 'no switch';
+  const hostLink = hl
+    ? `<span class="num">${gbs(carrierHostGBs(k))} GB/s</span><span class="sub">Gen ${hl.gen} x${hl.lanes}${hl.gpusPerUplink > 1 ? `, shared by ${hl.gpusPerUplink}` : ''}</span>`
+    : '<span class="dash">not recorded</span>';
+  const bundled = (k.pricing?.modules ?? []).map(m => `${m.count}× ${esc(unitLabel(model, m.unit))}`).join(', ');
+  const price = k.pricing
+    ? `${usdRange(k.pricing.usd, k.pricing.highUsd)}<span class="sub prose">${esc(k.pricing.includes)} · ${esc(k.pricing.asOf)}</span>${bundled ? `<span class="sub prose">GPUs included: ${bundled}</span>` : ''}${k.parts ? `<span class="sub">+ ${usdRange(k.parts.usd, k.parts.highUsd)} parts</span>` : ''}`
+    : `${DASH}<span class="sub">unpriced</span>`;
+  const fits = k.fits
+    .map(f => `<span class="${FIT_CLASS[f.status] ?? ''}" title="${esc(f.note ?? '')}">${esc(unitLabel(model, f.unit))}</span>: ${esc(f.status)} · ${esc(FABRIC[f.peer] ?? f.peer)}`)
+    .join('<br>');
+  const h = k.host;
+  const hostCell = h
+    ? `${esc(h.cpu)}<span class="sub">${h.memoryGB ? `${n0(h.memoryGB)} GB host memory${h.memoryMaxGB && h.memoryMaxGB > h.memoryGB ? `, up to ${n0(h.memoryMaxGB)}` : ''}` : h.memoryMaxGB ? `up to ${n0(h.memoryMaxGB)} GB host memory` : 'host memory not recorded'}</span><span class="sub">${esc(h.chassis)}</span>`
+    : '';
+  const input = k.power?.input ? `<span class="sub prose">${esc(k.power.input)}</span>` : '';
+  const power = k.power?.maxW ? `<span class="num">${n0(k.power.maxW)} W</span>${input}` : `${DASH}<span class="sub">maximum not recorded</span>${input}`;
+  const notes = [
+    k.note && esc(k.note),
+    h?.note && `<b style="color:var(--text)">Host:</b> ${esc(h.note)}`,
+    pr?.note && `<b style="color:var(--text)">Peer link:</b> ${esc(pr.note)}`,
+    k.switch?.note && `<b style="color:var(--text)">Switch:</b> ${esc(k.switch.note)}`,
+    hl && `<b style="color:var(--text)">${sys ? 'Host link' : 'Host'}:</b> ${esc([hl.attach, hl.note].filter(Boolean).join(' '))}`,
+    (sys ? k.power?.note : k.power) && `<b style="color:var(--text)">Power:</b> ${esc([sys ? null : k.power.input, k.power.note].filter(Boolean).join('. '))}`,
+    k.cooling && `<b style="color:var(--text)">Cooling included:</b> ${yes(k.cooling.included)}${k.cooling.note ? `. ${esc(k.cooling.note)}` : ''}`,
+    k.pricing?.note && `<b style="color:var(--text)">Price:</b> ${esc(k.pricing.note)}`,
+    k.parts && `<b style="color:var(--text)">Parts:</b> ${esc(k.parts.note)}`,
+    ...k.fits.filter(f => f.note).map(f => `<b style="color:var(--text)">${esc(unitLabel(model, f.unit))} (${esc(f.status)}):</b> ${esc(f.note)}`),
+  ].filter(Boolean);
+  const cols = sys ? 7 : 5;
+  return (
+    `<tr class="cand-main" id="carrier-${esc(k.id)}">` +
+    `<td class="lbl wrap" style="min-width:180px">${esc(k.label)}<span class="sub">${esc([k.maker, `${k.socket} × ${k.slots}`].filter(Boolean).join(' · '))}</span></td>` +
+    (sys ? `<td class="lbl wrap" style="font-size:11.5px;min-width:170px">${hostCell}</td>` : '') +
+    `<td class="lbl wrap" style="font-size:11.5px;min-width:130px">${peer}</td>` +
+    `<td class="lbl wrap" style="font-size:11.5px;min-width:150px">${hostLink}<span class="sub">${sw}</span></td>` +
+    (sys ? `<td class="num wrap" style="min-width:110px;max-width:170px">${power}</td>` : '') +
+    `<td class="num wrap" style="min-width:${sys ? 100 : 150}px;max-width:230px">${price}</td>` +
+    `<td class="lbl wrap" style="font-size:11.5px;min-width:${sys ? 180 : 210}px">${fits}</td>` +
+    '</tr>' +
+    `<tr class="cand-notes"><td colspan="${cols}">${notes.join('<br>')}${sourceLinks([h?.source, k.power?.source, pr?.source, hl?.source, ...k.fits.map(f => f.source), ...(k.sources ?? [])])}</td></tr>`
+  );
+}
+
 /** The carrier catalog: one row per board, with what fits in it and how. */
 export function renderCarriers(model) {
   const tb = el('carrierTable')?.querySelector('tbody');
-  if (!tb) return;
-  const yes = b => (b ? 'yes' : 'no');
-  tb.innerHTML = model.CARRIERS.map(k => {
-    const pr = k.peer;
-    const peer = !pr
-      ? '<span class="dash">not recorded</span>'
-      : pr.kind === 'none'
-        ? 'none<span class="sub">peers meet over PCIe</span>'
-        : `${esc(pr.kind)}${pr.wiring ? `<span class="sub">${esc(pr.wiring)}</span>` : ''}<span class="sub">${pr.peakP2pGBsPerGpu != null ? `${pr.peakP2pGBsPerGpu} GB/s per GPU` : 'GB/s not stated'}${pr.linksPerGpu ? ` · ${pr.linksPerGpu} links` : ''}</span>`;
-    const hl = k.hostLink;
-    const sw = k.switch == null ? 'switch not recorded' : k.switch.present ? esc(k.switch.chip ?? 'switch, model not stated') : 'no switch';
-    const host = hl
-      ? `<span class="num">${gbs(carrierHostGBs(k))} GB/s</span><span class="sub">Gen ${hl.gen} x${hl.lanes}${hl.gpusPerUplink > 1 ? `, shared by ${hl.gpusPerUplink}` : ''}</span>`
-      : '<span class="dash">not recorded</span>';
-    const price = k.pricing
-      ? `${usdRange(k.pricing.usd, k.pricing.highUsd)}<span class="sub prose">${esc(k.pricing.includes)} · ${esc(k.pricing.asOf)}</span>${k.parts ? `<span class="sub">+ ${usdRange(k.parts.usd, k.parts.highUsd)} parts</span>` : ''}`
-      : `${DASH}<span class="sub">unpriced</span>`;
-    const fits = k.fits
-      .map(f => `<span class="${FIT_CLASS[f.status] ?? ''}" title="${esc(f.note ?? '')}">${esc(unitLabel(model, f.unit))}</span>: ${esc(f.status)} · ${esc(f.peer === 'nvlink' ? 'NVLink' : 'PCIe')}`)
-      .join('<br>');
-    const notes = [
-      k.note && esc(k.note),
-      pr?.note && `<b style="color:var(--text)">Peer link:</b> ${esc(pr.note)}`,
-      k.switch?.note && `<b style="color:var(--text)">Switch:</b> ${esc(k.switch.note)}`,
-      hl && `<b style="color:var(--text)">Host:</b> ${esc([hl.attach, hl.note].filter(Boolean).join(' '))}`,
-      k.power && `<b style="color:var(--text)">Power:</b> ${esc([k.power.input, k.power.note].filter(Boolean).join('. '))}`,
-      k.cooling && `<b style="color:var(--text)">Cooling included:</b> ${yes(k.cooling.included)}${k.cooling.note ? `. ${esc(k.cooling.note)}` : ''}`,
-      k.pricing?.note && `<b style="color:var(--text)">Price:</b> ${esc(k.pricing.note)}`,
-      k.parts && `<b style="color:var(--text)">Parts:</b> ${esc(k.parts.note)}`,
-      ...k.fits.filter(f => f.note).map(f => `<b style="color:var(--text)">${esc(unitLabel(model, f.unit))} (${esc(f.status)}):</b> ${esc(f.note)}`),
-    ].filter(Boolean);
-    const body = notes.join('<br>');
-    return (
-      `<tr class="cand-main" id="carrier-${esc(k.id)}">` +
-      `<td class="lbl wrap" style="min-width:180px">${esc(k.label)}<span class="sub">${esc([k.maker, `${k.socket} × ${k.slots}`].filter(Boolean).join(' · '))}</span></td>` +
-      `<td class="lbl wrap" style="font-size:11.5px;min-width:130px">${peer}</td>` +
-      `<td class="lbl wrap" style="font-size:11.5px;min-width:150px">${host}<span class="sub">${sw}</span></td>` +
-      `<td class="num wrap" style="min-width:150px;max-width:230px">${price}</td>` +
-      `<td class="lbl wrap" style="font-size:11.5px;min-width:210px">${fits}</td>` +
-      '</tr>' +
-      `<tr class="cand-notes"><td colspan="5">${body}${sourceLinks([pr?.source, hl?.source, ...k.fits.map(f => f.source), ...(k.sources ?? [])])}</td></tr>`
-    );
-  }).join('');
+  if (tb) tb.innerHTML = model.CARRIERS.filter(k => k.kind !== 'system').map(k => carrierRows(model, k)).join('');
+}
+
+/** Whole systems: a board with its own host, chassis and power. */
+export function renderSystems(model) {
+  const tb = el('systemTable')?.querySelector('tbody');
+  if (tb) tb.innerHTML = model.CARRIERS.filter(k => k.kind === 'system').map(k => carrierRows(model, k)).join('');
 }
 
 /**
