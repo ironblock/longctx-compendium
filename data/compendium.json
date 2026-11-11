@@ -16437,7 +16437,9 @@
       "params": {
         "total": 2800000000000.0,
         "active": 104000000000.0,
-        "source": "https://huggingface.co/moonshotai/Kimi-K3.1-Pro -- Model Summary: \"Total Parameters\" 2.8T, \"Activated Parameters\" 104B (the introduction calls it \"our most capable 3T-class model to date\")"
+        "source": "https://huggingface.co/moonshotai/Kimi-K3.1-Pro -- Model Summary: \"Total Parameters\" 2.8T, \"Activated Parameters\" 104B (the introduction calls it \"our most capable 3T-class model to date\")",
+        "mtp": 0,
+        "split": "safetensors headers of moonshotai/Kimi-K3.1-Pro at d9e99b0792a5: no MTP tensors, and config.json sets num_nextn_predict_layers to 0"
       },
       "weights": {
         "precision": "MXFP4 routed experts, BF16 elsewhere",
@@ -16467,7 +16469,10 @@
       "params": {
         "total": 26895998464,
         "active": 26895998464,
-        "source": "https://huggingface.co/Qwen/Qwen3.8-27B -- README: \"Number of Parameters: 27B\"; 26,895,998,464 in the shape recorded in MODELS. Dense."
+        "source": "https://huggingface.co/Qwen/Qwen3.8-27B -- README: \"Number of Parameters: 27B\"; 26,895,998,464 in the shape recorded in MODELS. Dense.",
+        "mtp": 424699392,
+        "mtpInTotal": false,
+        "split": "safetensors headers of Qwen/Qwen3.8-27B at 1d4bf0f2ff60: mtp.* tensors, 0.42B in BF16; the total is the backbone alone"
       },
       "scores": [
         {
@@ -16514,7 +16519,10 @@
       "params": {
         "total": 748000000000.0,
         "active": 16000000000.0,
-        "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash -- the 1017 card states no counts (\"a minor update to DeepSeek-V4.1-Flash\"); its parent's card: \"a multimodal Mixture-of-Experts (MoE) model with 552B backbone parameters\", \"activate only 8B parameters per token during prefill and 16B during decode\", and \"Engram conditional memory (196B parameters, sparsely accessed via token-based lookup)\". The total is backbone plus Engram, summed here."
+        "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash -- the 1017 card states no counts (\"a minor update to DeepSeek-V4.1-Flash\"); its parent's card: \"a multimodal Mixture-of-Experts (MoE) model with 552B backbone parameters\", \"activate only 8B parameters per token during prefill and 16B during decode\", and \"Engram conditional memory (196B parameters, sparsely accessed via token-based lookup)\". The total is backbone plus Engram, summed here.",
+        "lookup": 196613849600,
+        "lookupBits": 8.25,
+        "split": "safetensors headers of deepseek-ai/DeepSeek-V4.1-Flash-1017 at 1bae0e108899: layers.*.engram.embed.weight, 196,613,849,600 values in FP8 E4M3 with one E8M0 scale per 32 (8.25 bits each, about 203 GB), matching the card's \"Engram conditional memory (196B parameters\". The checkpoint also carries three MTP layers (config num_nextn_predict_layers 3), mostly FP4 experts in an I8 container; their parameter count depends on the packing, which is not settled here, so no MTP size is recorded"
       },
       "weights": {
         "precision": "FP8 with FP4 routed experts",
@@ -16594,7 +16602,10 @@
       "released": "2026-08-18",
       "params": {
         "total": 753330000000.0,
-        "source": "https://huggingface.co/zai-org/GLM-5.2 -- neither card states a count; GLM-5.3 \"uses the same base model as GLM-5.2\", and Hugging Face counts 753,329,940,480 parameters in GLM-5.2's BF16 weights (unpacked, so the count is not distorted by quantization). Hugging Face's figure, not the card's."
+        "source": "https://huggingface.co/zai-org/GLM-5.2 -- neither card states a count; GLM-5.3 \"uses the same base model as GLM-5.2\", and Hugging Face counts 753,329,940,480 parameters in GLM-5.2's BF16 weights (unpacked, so the count is not distorted by quantization). Hugging Face's figure, not the card's.",
+        "mtp": 9953523360,
+        "mtpInTotal": true,
+        "split": "safetensors headers of zai-org/GLM-5.3 at ba32f8c19c87: the layer past the last decoder layer, 9.95B in FP8 and BF16; the 753.33B total is the checkpoint's own, so it includes it"
       },
       "weights": {
         "precision": "FP8 (BF16 in a separate repository)",
@@ -16631,7 +16642,9 @@
       "params": {
         "total": 320000000000.0,
         "active": 18000000000.0,
-        "source": "https://huggingface.co/zai-org/GLM-5.3-Flash -- \"With 320B total parameters and just 18B active parameters\""
+        "source": "https://huggingface.co/zai-org/GLM-5.3-Flash -- \"With 320B total parameters and just 18B active parameters\"",
+        "mtp": 7433042464,
+        "split": "safetensors headers of zai-org/GLM-5.3-Flash at 46a050bec130: 1 MTP layer, 7.43B; whether the published 320B includes them is not settled by the checkpoint's 321.3B"
       },
       "weights": {
         "precision": "FP8 (BF16 in a separate repository)",
@@ -16659,7 +16672,9 @@
       "params": {
         "total": 1020000000000.0,
         "active": 42000000000.0,
-        "source": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Pro-RL -- \"Sparse MoE (Mixture of Experts), 1.02T total / 42B activated parameters\""
+        "source": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Pro-RL -- \"Sparse MoE (Mixture of Experts), 1.02T total / 42B activated parameters\"",
+        "mtp": 1934801664,
+        "split": "safetensors headers of XiaomiMiMo/MiMo-V2.6-Pro-RL at a066ba005719: its MTP tensors, 1.93B; whether the published 1020B includes them is not settled by the checkpoint's 1024.2B"
       },
       "weights": {
         "precision": "FP8, stored as MXFP4",
@@ -16687,7 +16702,9 @@
       "params": {
         "total": 309000000000.0,
         "active": 15000000000.0,
-        "source": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL -- \"Sparse MoE (Mixture of Experts), 309B total / 15B activated parameters\""
+        "source": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL -- \"Sparse MoE (Mixture of Experts), 309B total / 15B activated parameters\"",
+        "mtp": 987868224,
+        "split": "safetensors headers of XiaomiMiMo/MiMo-V2.6-Flash-RL at f657ba2f7d24: 3 MTP layers, 0.99B; whether the published 309B includes them is not settled by the checkpoint's 310.8B"
       },
       "weights": {
         "precision": "FP8, stored as MXFP4",
@@ -16715,7 +16732,9 @@
       "params": {
         "total": 560000000000.0,
         "active": 25000000000.0,
-        "source": "https://huggingface.co/inclusionAI/Ling-3.1-flash-1019 -- \"with 560B total parameters, 25B active parameters per token, and a 1M-token context window\""
+        "source": "https://huggingface.co/inclusionAI/Ling-3.1-flash-1019 -- \"with 560B total parameters, 25B active parameters per token, and a 1M-token context window\"",
+        "mtp": 8174694016,
+        "split": "safetensors headers of inclusionAI/Ling-3.1-flash-1019 at 2109a6863fb1: 1 MTP layer, 8.17B; whether the published 560B includes them is not settled by the checkpoint's 572.1B"
       },
       "weights": {
         "precision": "FP8",
@@ -16743,7 +16762,9 @@
       "params": {
         "total": 428000000000.0,
         "active": 23000000000.0,
-        "source": "https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash -- \"Parameters: Approximately 428B total; 23B activated per token\""
+        "source": "https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash -- \"Parameters: Approximately 428B total; 23B activated per token\"",
+        "mtp": 0,
+        "split": "safetensors headers of MiniMaxAI/MiniMax-M3.1-Flash at ce7f4df87d2e: no MTP tensors"
       },
       "weights": {
         "precision": "MXFP8, with NVFP4 routed experts",
@@ -16772,7 +16793,9 @@
       "params": {
         "total": 428000000000.0,
         "active": 23000000000.0,
-        "source": "https://huggingface.co/MiniMaxAI/MiniMax-M3 -- \"It has ~428B parameters and ~23B activated parameters.\""
+        "source": "https://huggingface.co/MiniMaxAI/MiniMax-M3 -- \"It has ~428B parameters and ~23B activated parameters.\"",
+        "mtp": 0,
+        "split": "safetensors headers of MiniMaxAI/MiniMax-M3 at d95e30cb912f: no MTP tensors, though config.json declares num_nextn_predict_layers 1"
       },
       "weights": {
         "precision": "BF16 (MXFP8 in a separate repository)",
@@ -16799,7 +16822,9 @@
       "params": {
         "total": 600000000000.0,
         "active": 27000000000.0,
-        "source": "https://huggingface.co/stepfun-ai/Step-5-Preview -- \"a sparse Mixture-of-Experts (MoE) model with 600B total parameters and 27B active parameters\""
+        "source": "https://huggingface.co/stepfun-ai/Step-5-Preview -- \"a sparse Mixture-of-Experts (MoE) model with 600B total parameters and 27B active parameters\"",
+        "mtp": 2515858560,
+        "split": "safetensors headers of stepfun-ai/Step-5-Preview at 364b3b03fed2: 3 MTP layers, 2.52B; whether the published 600B includes them is not settled by the checkpoint's 604.3B"
       },
       "weights": {
         "precision": "FP8 (BF16 and NVFP4 in separate repositories)",
@@ -16827,7 +16852,9 @@
       "params": {
         "total": 1000000000000.0,
         "active": 52000000000.0,
-        "source": "https://huggingface.co/mistralai/Mistral-Large-4-1T-A52B -- \"a 1 trillion-parameter natively multimodal Mixture-of-Experts model with 49 billion active parameters per token (52 billion including embeddings and output layers)\"; key features: \"~1T total / ~52B active parameters\""
+        "source": "https://huggingface.co/mistralai/Mistral-Large-4-1T-A52B -- \"a 1 trillion-parameter natively multimodal Mixture-of-Experts model with 49 billion active parameters per token (52 billion including embeddings and output layers)\"; key features: \"~1T total / ~52B active parameters\"",
+        "mtp": 2099969024,
+        "split": "safetensors header of mistralai/Mistral-Large-4-1T-A52B at af26e7869af6, consolidated-00054-of-00054: the mtp_dspark module (3 layers, params.json \"mtp\": {\"n_layers\": 3}), 2.10B in BF16; whether the published 1T includes it is not settled"
       },
       "weights": {
         "precision": "FP8 (NVFP4 in a separate repository)",
@@ -16892,7 +16919,9 @@
       "params": {
         "total": 29600000000.0,
         "active": 29600000000.0,
-        "source": "https://huggingface.co/meta-models/Muse-Glimmer-30B -- \"Number of Parameters | 29.6B (including vision encoder)\"; \"Dense Causal Transformer with Perception Encoder\""
+        "source": "https://huggingface.co/meta-models/Muse-Glimmer-30B -- \"Number of Parameters | 29.6B (including vision encoder)\"; \"Dense Causal Transformer with Perception Encoder\"",
+        "mtp": 0,
+        "split": "safetensors headers of meta-models/Muse-Glimmer-30B at cec94fcfd651: no MTP tensors"
       },
       "weights": {
         "precision": "BF16",
@@ -16919,7 +16948,9 @@
       "params": {
         "total": 33000000000.0,
         "active": 33000000000.0,
-        "source": "https://huggingface.co/Nanbeige/Nanbeige4.3-33B -- the card states no count (\"around the 30B-parameter scale\"); Hugging Face counts 33B, and config.json is a dense LlamaForCausalLM. Hugging Face's figure, not the card's."
+        "source": "https://huggingface.co/Nanbeige/Nanbeige4.3-33B -- the card states no count (\"around the 30B-parameter scale\"); Hugging Face counts 33B, and config.json is a dense LlamaForCausalLM. Hugging Face's figure, not the card's.",
+        "mtp": 0,
+        "split": "safetensors headers of Nanbeige/Nanbeige4.3-33B at df919e1e2cf0: no MTP tensors"
       },
       "weights": {
         "precision": "BF16",
@@ -16946,7 +16977,9 @@
       "params": {
         "total": 375000000000.0,
         "active": 23000000000.0,
-        "source": "https://huggingface.co/IFM/K2-Horizon-375B-A23B -- \"a sparse Mixture-of-Experts model that stores 375B parameters and runs 23B per token, with a 512K context window\""
+        "source": "https://huggingface.co/IFM/K2-Horizon-375B-A23B -- \"a sparse Mixture-of-Experts model that stores 375B parameters and runs 23B per token, with a 512K context window\"",
+        "mtp": 0,
+        "split": "safetensors headers of IFM/K2-Horizon-375B-A23B at bb3bfb4b5324: no MTP tensors"
       },
       "weights": {
         "precision": "BF16",
@@ -16973,7 +17006,9 @@
       "params": {
         "total": 501300000000.0,
         "active": 23400000000.0,
-        "source": "https://huggingface.co/reflection/Beam-1.0-501B-A23B -- \"| Total Parameters | 501.3B |\", \"| Active Parameters | 23.4B |\""
+        "source": "https://huggingface.co/reflection/Beam-1.0-501B-A23B -- \"| Total Parameters | 501.3B |\", \"| Active Parameters | 23.4B |\"",
+        "mtp": 0,
+        "split": "safetensors headers of reflection/Beam-1.0-501B-A23B at 12950ae640b4: no MTP tensors"
       },
       "weights": {
         "precision": "BF16 (FP8 and NVFP4 in separate repositories)",
@@ -17000,7 +17035,9 @@
       "params": {
         "total": 120000000000.0,
         "active": 12000000000.0,
-        "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16 -- \"It has 120B total parameters and 12B active parameters and supports context lengths up to 1M tokens.\""
+        "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16 -- \"It has 120B total parameters and 12B active parameters and supports context lengths up to 1M tokens.\"",
+        "mtp": 2942325248,
+        "split": "safetensors headers of nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16 at fb0ee0bc6b3f: its MTP tensors, 2.94B; whether the published 120B includes them is not settled by the checkpoint's 124.5B"
       },
       "weights": {
         "precision": "BF16 (NVFP4 in a separate repository)",
@@ -17027,7 +17064,10 @@
       "params": {
         "total": 550000000000.0,
         "active": 55000000000.0,
-        "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16 -- \"The model has 55B active parameters and 550B parameters in total.\""
+        "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16 -- \"The model has 55B active parameters and 550B parameters in total.\"",
+        "mtp": 11215610368,
+        "mtpInTotal": false,
+        "split": "safetensors headers of nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16 at 77df655d5e9f: the MTP layer, 11.22B in BF16; the checkpoint holds 560.5B, and 560.5B less the layer is the card's 550B, so the total leaves it out"
       },
       "weights": {
         "precision": "BF16 (NVFP4 in a separate repository)",
@@ -17054,7 +17094,9 @@
       "params": {
         "total": 975000000000.0,
         "active": 41000000000.0,
-        "source": "https://huggingface.co/thinkingmachines/Inkling -- \"Parameters\" / \"975B total, 41B active\""
+        "source": "https://huggingface.co/thinkingmachines/Inkling -- \"Parameters\" / \"975B total, 41B active\"",
+        "mtp": 5260445704,
+        "split": "safetensors headers of thinkingmachines/Inkling at 828496eeae4c: its MTP tensors, 5.26B; whether the published 975B includes them is not settled by the checkpoint's 952.4B"
       },
       "weights": {
         "precision": "BF16 (NVFP4 in a separate repository)",
@@ -17081,7 +17123,9 @@
       "params": {
         "total": 276000000000.0,
         "active": 12000000000.0,
-        "source": "https://huggingface.co/thinkingmachines/Inkling-Small -- \"Parameters\" / \"276B total, 12B active\""
+        "source": "https://huggingface.co/thinkingmachines/Inkling-Small -- \"Parameters\" / \"276B total, 12B active\"",
+        "mtp": 2231912456,
+        "split": "safetensors headers of thinkingmachines/Inkling-Small at 8cc5877b44d3: its MTP tensors, 2.23B; whether the published 276B includes them is not settled by the checkpoint's 266.0B"
       },
       "weights": {
         "precision": "BF16 (NVFP4 in a separate repository)",
@@ -17108,7 +17152,9 @@
       "params": {
         "total": 750000000000.0,
         "active": 37000000000.0,
-        "source": "https://huggingface.co/LGAI-EXAONE/K-EXAONE-2.0-750B-A37B -- \"Number of Parameters | 750B\", \"Active Parameters | 37B\""
+        "source": "https://huggingface.co/LGAI-EXAONE/K-EXAONE-2.0-750B-A37B -- \"Number of Parameters | 750B\", \"Active Parameters | 37B\"",
+        "mtp": 528513280,
+        "split": "safetensors headers of LGAI-EXAONE/K-EXAONE-2.0-750B-A37B at fec0c8dd25fd: 1 MTP layer, 0.53B; whether the published 750B includes them is not settled by the checkpoint's 749.4B"
       },
       "weights": {
         "precision": "BF16 (FP8 and NVFP4 in separate repositories)",
@@ -17135,7 +17181,9 @@
       "params": {
         "total": 218000000000.0,
         "active": 25000000000.0,
-        "source": "https://huggingface.co/CohereLabs/command-a-plus-05-2026-bf16 -- \"Model Size: 25B active parameters, 218B total parameters\""
+        "source": "https://huggingface.co/CohereLabs/command-a-plus-05-2026-bf16 -- \"Model Size: 25B active parameters, 218B total parameters\"",
+        "mtp": 0,
+        "split": "safetensors headers of CohereLabs/command-a-plus-05-2026-bf16 at 5fb6fde5fd12: no MTP tensors"
       },
       "weights": {
         "precision": "BF16 (FP8 and W4A4 NVFP4 in separate repositories)",
@@ -17163,7 +17211,9 @@
       "params": {
         "total": 30000000000.0,
         "active": 3000000000.0,
-        "source": "https://huggingface.co/CohereLabs/North-Mini-Code-1.0 -- \"Model Size: 30B total; 3B active\""
+        "source": "https://huggingface.co/CohereLabs/North-Mini-Code-1.0 -- \"Model Size: 30B total; 3B active\"",
+        "mtp": 0,
+        "split": "safetensors headers of CohereLabs/North-Mini-Code-1.0 at d11e61a84261: no MTP tensors"
       },
       "weights": {
         "precision": "BF16 (FP8 and W4A16 in separate repositories)",
@@ -17190,7 +17240,9 @@
       "params": {
         "total": 30000000000.0,
         "active": 3000000000.0,
-        "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16 -- \"| Total Parameters | 30B (3B active) |\""
+        "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16 -- \"| Total Parameters | 30B (3B active) |\"",
+        "mtp": 1335325952,
+        "split": "safetensors headers of nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16 at a9904d24bcc1: 1 MTP layer, 1.34B; whether the published 30B includes them is not settled by the checkpoint's 31.6B"
       },
       "weights": {
         "precision": "BF16 (NVFP4 in a separate repository)",
@@ -17217,7 +17269,9 @@
       "params": {
         "total": 3970000000.0,
         "active": 3970000000.0,
-        "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16 -- \"Number of model parameters 3.97 x 10^9\"; a Mamba-2 and MLP hybrid with \"just four Attention layers\", not an MoE"
+        "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16 -- \"Number of model parameters 3.97 x 10^9\"; a Mamba-2 and MLP hybrid with \"just four Attention layers\", not an MoE",
+        "mtp": 0,
+        "split": "safetensors headers of nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16 at dfaf35de3e30: no MTP tensors"
       },
       "weights": {
         "precision": "BF16 (FP8 in a separate repository)",
@@ -17244,7 +17298,9 @@
       "params": {
         "total": 8000000000.0,
         "active": 8000000000.0,
-        "source": "https://huggingface.co/ibm-granite/granite-4.2-8b -- \"| Parameters | 8B |\", \"Decoder-only Dense Transformer (Reasoning)\""
+        "source": "https://huggingface.co/ibm-granite/granite-4.2-8b -- \"| Parameters | 8B |\", \"Decoder-only Dense Transformer (Reasoning)\"",
+        "mtp": 0,
+        "split": "safetensors headers of ibm-granite/granite-4.2-8b at a7042144125c: no MTP tensors"
       },
       "weights": {
         "precision": "BF16",
@@ -17271,7 +17327,9 @@
       "params": {
         "total": 3000000000.0,
         "active": 3000000000.0,
-        "source": "https://huggingface.co/ibm-granite/granite-4.2-3b -- \"| Parameters | 3B |\", \"Decoder-only Dense Transformer\""
+        "source": "https://huggingface.co/ibm-granite/granite-4.2-3b -- \"| Parameters | 3B |\", \"Decoder-only Dense Transformer\"",
+        "mtp": 0,
+        "split": "safetensors headers of ibm-granite/granite-4.2-3b at 4e9c275e232f: no MTP tensors"
       },
       "weights": {
         "precision": "BF16",
@@ -17298,7 +17356,9 @@
       "params": {
         "total": 128000000000.0,
         "active": 128000000000.0,
-        "source": "https://huggingface.co/mistralai/Mistral-Medium-3.5-128B -- \"Dense 128B parameters\""
+        "source": "https://huggingface.co/mistralai/Mistral-Medium-3.5-128B -- \"Dense 128B parameters\"",
+        "mtp": 0,
+        "split": "safetensors headers of mistralai/Mistral-Medium-3.5-128B at 22b2b868a156: no MTP tensors"
       },
       "weights": {
         "precision": "FP8, per tensor",
@@ -17327,7 +17387,9 @@
       "params": {
         "total": 119000000000.0,
         "active": 6500000000.0,
-        "source": "https://huggingface.co/mistralai/Mistral-Small-4-119B-2603 -- \"119B parameters, with 6.5B activated per token\" (the title says \"A6B\")"
+        "source": "https://huggingface.co/mistralai/Mistral-Small-4-119B-2603 -- \"119B parameters, with 6.5B activated per token\" (the title says \"A6B\")",
+        "mtp": 0,
+        "split": "safetensors headers of mistralai/Mistral-Small-4-119B-2603 at a11f36bebf70: no MTP tensors"
       },
       "weights": {
         "precision": "FP8, per tensor (NVFP4 in a separate repository)",
@@ -17355,7 +17417,9 @@
       "params": {
         "total": 30700000000.0,
         "active": 30700000000.0,
-        "source": "https://huggingface.co/google/gemma-4-31B-it -- Dense Models table: \"Total Parameters\" 30.7B for the 31B Dense column, with a ~550M vision encoder"
+        "source": "https://huggingface.co/google/gemma-4-31B-it -- Dense Models table: \"Total Parameters\" 30.7B for the 31B Dense column, with a ~550M vision encoder",
+        "mtp": 0,
+        "split": "safetensors headers of google/gemma-4-31B-it at 842da3794eaa: no MTP tensors"
       },
       "weights": {
         "precision": "BF16",

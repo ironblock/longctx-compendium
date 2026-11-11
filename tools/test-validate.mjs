@@ -264,19 +264,19 @@ const CASES = [
     carrier(d, 'dgx2').kind = 'server';
   }],
   ['a frontier model split without a source', 'without saying where the split came from', d => {
-    const m = d.openModels.find(x => x.id === 'kimi_k31_pro');
+    const m = d.openModels.find(x => x.id === 'deepseek_v4_pro_0813');
     m.params.mtp = 1e10;
   }],
   ['a lookup precision with no lookup table', 'precision but no lookup table', d => {
-    const m = d.openModels.find(x => x.id === 'kimi_k31_pro');
+    const m = d.openModels.find(x => x.id === 'deepseek_v4_pro_0813');
     Object.assign(m.params, { lookupBits: 8, split: 'x' });
   }],
   ['an MTP inclusion flag with no MTP size', 'not how big it is', d => {
-    const m = d.openModels.find(x => x.id === 'kimi_k31_pro');
+    const m = d.openModels.find(x => x.id === 'deepseek_v4_pro_0813');
     Object.assign(m.params, { mtpInTotal: true, split: 'x' });
   }],
   ['lookup tables that leave nothing for the GPUs', 'leaves nothing of its total', d => {
-    const m = d.openModels.find(x => x.id === 'kimi_k31_pro');
+    const m = d.openModels.find(x => x.id === 'deepseek_v4_pro_0813');
     Object.assign(m.params, { lookup: m.params.total, lookupBits: 8, split: 'x' });
   }],
   ['an open model scored on another index', 'but the frontier is drawn on', d => {

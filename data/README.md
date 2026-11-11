@@ -404,8 +404,8 @@ is shown, and a `note` on its known weaknesses. Each model records:
   whether the published total includes it. `split` says where they were
   counted, usually the safetensors headers at the pinned revision. The page
   puts total less lookup tables (and less an included MTP head) on the GPUs,
-  adds the MTP head back when the shared setting counts draft weights, and
-  reports lookup tables as host RAM;
+  adds the MTP head back when the shared setting counts draft weights and it
+  is known whether the total holds it, and reports lookup tables as host RAM;
 - `weights`: the precision it was released in, and the repository size;
 - `scores`: one per variant the index ran (an effort level, a reasoning mode),
   each with the index `id`, its `version`, the `value`, the `asOf` date and

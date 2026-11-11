@@ -642,6 +642,8 @@ check('one frontier row per scored open model', (await count('#frontierTable tbo
   check('every scored open model is either on the frontier or says what beats it', (t.match(/on the frontier|beaten by/g) ?? []).length >= model.FRONTIER.length);
   check('the frontier names its index, version and source, with the attribution', /Intelligence Index/.test(cap) && /v\d/.test(cap) && (await count('#frontierCap a[href^="https://artificialanalysis.ai"]')) === 1 && /Artificial Analysis/.test(note));
   check('a model too big for every rig says so', /no rig here/.test(t));
+  check('lookup tables leave GPU memory for host RAM on the frontier', /on the GPUs, weights at/.test(t) && /\+ 203 GB host RAM for 197B of lookup tables/.test(t), 'expected DeepSeek V4.1 Flash\'s Engram in FP8');
+  check('a system with host memory is checked against the tables', /host RAM holds the tables \(1,536 GB\)/.test(t));
   check('the frontier renders no NaN/undefined/null', !BROKEN.test(t + cap), brokenAt(t + cap));
 }
 
