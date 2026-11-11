@@ -352,6 +352,16 @@ for (const [id, m] of Object.entries(MODELS)) {
   const p = m.params ?? {};
   if ((p.mtp != null || p.lookup != null) && !p.split) fail(at, 'counts an MTP head or lookup table without saying where (params.split)');
   if (p.lookup && !p.lookupBits) fail(at, 'has a lookup table but no lookupBits, so its host-RAM size is unknown');
+  const r = m.lookupReads;
+  if (r) {
+    if (!p.lookup) fail(at, 'records how its lookup tables are read (lookupReads) but has no lookup table');
+    if (!r.source || !r.quote) fail(at, 'lookupReads needs a source and the quoted config fields');
+    if (!Array.isArray(r.tables) || !r.tables.length) fail(at, 'lookupReads lists no tables');
+    for (const t of r.tables ?? []) {
+      if (!(t.rows > 0)) fail(at, `lookupReads table at layer ${t.layer} reads no rows`);
+      if (!Number.isInteger(t.layer) || t.layer < 1 || t.layer > m.layers) fail(at, `lookupReads layer ${t.layer} is not one of its ${m.layers} layers (1-based)`);
+    }
+  }
 }
 for (const [id, d] of Object.entries(DRAFTERS)) {
   const at = `drafter "${id}"`;

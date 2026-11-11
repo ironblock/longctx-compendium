@@ -114,8 +114,94 @@ export function draftFor(modelId, spec) {
   return { kind: 'drafter', label: d.label, params: d.params.total, shape: d };
 }
 
-/** Bytes of a model's lookup tables (n-gram / Engram), which live in host RAM. */
-export const lookupBytes = m => (m?.params?.lookup ? (m.params.lookup * (m.params.lookupBits ?? 16)) / 8 : 0);
+/** Bytes of a model's lookup tables (n-gram / Engram) as shipped, or at `bits` when that is fewer. */
+export const lookupBytes = (m, bits = null) => {
+  if (!m?.params?.lookup) return 0;
+  const shipped = m.params.lookupBits ?? 16;
+  return (m.params.lookup * (bits != null && bits < shipped ? bits : shipped)) / 8;
+};
+
+// --- Lookup tables ------------------------------------------------------------
+//
+// An n-gram or Engram table is read a few rows per token, at addresses that
+// depend on the token ids alone, so a token's rows can be requested the moment
+// it is sampled and only have to arrive by the layer that reads them. From
+// host RAM that costs nothing a ceiling can see: kilobytes per token, fetched
+// while the first layers run. From an SSD the rows are small random reads; the
+// time they take beyond that window is added to every token.
+
+export const TABLE_PLACES = [
+  { id: 'ram', label: 'Host RAM', title: 'Rows are prefetched from host memory while the first layers run: no cost to decode or prefill. The host must hold the tables' },
+  { id: 'ssd', label: 'SSD', title: 'Rows are read from the drive chosen below; read time beyond the layers before the table is added to each token, and the drive caps prefill' },
+  { id: 'gpu', label: 'GPU memory', title: 'The tables count toward GPU memory, as SGLang places DeepSeek V4.1 Engram by default' },
+];
+
+/** Table precision: as shipped, or the quantized copies that exist (FP8; IQ4_NL at 4.5 bits). */
+export const TABLE_BITS = [
+  { id: 'shipped', label: 'As shipped', bits: null, title: 'The precision the checkpoint ships the tables in' },
+  { id: '8', label: '8-bit', bits: 8, title: 'As in FP8 copies (RadixArk NVFP4 checkpoints carry an FP8 n-gram table)' },
+  { id: '4.5', label: '4.5-bit', bits: 4.5, title: 'As in IQ4_NL copies (the 28.8 GB Flash-Next table Strata reads)' },
+];
+
+/** Host memory sizes to check the tables against, GB (read as GiB, as DIMMs are). null: not chosen. */
+export const HOST_RAM_CHOICES = [null, 32, 64, 128, 256, 512, 1024, 1536];
+
+/** Host memory the OS and the engine process keep for themselves. A round assumption, not a measurement. */
+export const HOST_RESERVE_BYTES = 8 * 2 ** 30;
+
+/** A drive's queue-depth-1 read time in seconds, from a stated latency or its QD1 IOPS. */
+export const driveLatency = d => (d?.randomRead?.latencyUs != null ? d.randomRead.latencyUs / 1e6 : d?.randomRead?.qd1Iops ? 1 / d.randomRead.qd1Iops : null);
+
+/**
+ * Seconds to read `rows` small random rows from a drive, each one read: all
+ * requested together (one latency, then the drive's peak rate), or one after
+ * another (a latency each, as page faults on one thread would be).
+ */
+export function driveReadSeconds(rows, d, pattern = 'together') {
+  const lat = driveLatency(d);
+  const iops = d?.randomRead?.peakIops;
+  if (lat == null || (pattern === 'together' && !iops)) return null;
+  return pattern === 'together' ? lat + rows / iops : rows * lat;
+}
+
+/** Lookup rows a token reads, over all of a model's tables; null when not recorded. */
+export const lookupRowsPerToken = m => (m?.lookupReads ? m.lookupReads.tables.reduce((n, t) => n + t.rows, 0) : null);
+
+/**
+ * Seconds a decode step stalls on rows read from a drive. Every table's rows
+ * are requested when the step starts; each table's rows must land by the time
+ * the layers before it have run (step time spread evenly over the layers).
+ */
+export function lookupStallSeconds(m, d, stepSeconds, { streams = 1, pattern = 'together' } = {}) {
+  if (!m?.lookupReads || !m.layers) return null;
+  let rows = 0;
+  let stall = 0;
+  for (const t of m.lookupReads.tables) {
+    rows += t.rows * streams;
+    const read = driveReadSeconds(rows, d, pattern);
+    if (read == null) return null;
+    stall = Math.max(stall, read - (stepSeconds * (t.layer - 1)) / m.layers);
+  }
+  return stall;
+}
+
+/**
+ * Where a model's lookup tables sit and what that costs, under the settings:
+ * { bytes, place, gpu (bytes added to GPU memory), host {need, have, holds}, drive }.
+ * null when the model has no tables.
+ */
+export function tablePlan(m, { place = 'ram', bits = null, hostGB = null, drive = null } = {}) {
+  const bytes = lookupBytes(m, bits);
+  if (!bytes) return null;
+  const shipped = m.params.lookupBits ?? 16;
+  const plan = { bytes, bits: bits != null && bits < shipped ? bits : shipped, shipped, place, gpu: place === 'gpu' ? bytes : 0, rows: lookupRowsPerToken(m) };
+  if (place === 'ram') {
+    const have = hostGB != null ? hostGB * 2 ** 30 - HOST_RESERVE_BYTES : null;
+    plan.host = { need: bytes, have, holds: have == null ? null : bytes <= have };
+  }
+  if (place === 'ssd') plan.drive = drive;
+  return plan;
+}
 
 /**
  * Per-card working memory an engine needs beyond weights and cache (runtime
@@ -270,12 +356,29 @@ export function decodeBandwidthGBs(unit, cards, mode) {
  * A layer split runs one card at a time for a single sequence, so it gets one
  * card's bandwidth however many cards hold the model.
  */
-export function decodeCeiling(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK, kvV, streams = 1, basis = 'per-stream' }) {
+export function decodeCeiling(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK, kvV, streams = 1, basis = 'per-stream', table = null }) {
   const bytes = decodeBytesPerStep(m, { bpw, depth, kvK, kvV, streams });
   const bw = decodeBandwidthGBs(unit, cards, mode);
   if (!bytes || !bw) return null;
-  const stepsPerSec = (bw * 1e9) / bytes.total;
-  return { tps: basis === 'aggregate' ? stepsPerSec * streams : stepsPerSec, bytes, bandwidthGBs: bw };
+  const step = bytes.total / (bw * 1e9);
+  const per = s => (basis === 'aggregate' ? streams / s : 1 / s);
+  // Tables on an SSD: rows requested together set the ceiling; one at a time is shown beside it.
+  let ssd = null;
+  if (table?.place === 'ssd') {
+    const together = lookupStallSeconds(m, table.drive, step, { streams, pattern: 'together' });
+    const serial = lookupStallSeconds(m, table.drive, step, { streams, pattern: 'serial' });
+    ssd = together == null
+      ? { unknown: !m.lookupReads ? 'rows per token not recorded' : 'no read figures for this drive' }
+      : {
+          stall: Math.max(0, together),
+          window: m.lookupReads ? (step * (m.lookupReads.tables[0].layer - 1)) / m.layers : null,
+          serialStall: serial == null ? null : Math.max(0, serial),
+          serialTps: serial == null ? null : per(step + Math.max(0, serial)),
+          freeTps: per(step),
+        };
+  }
+  const tps = per(step + (ssd?.stall ?? 0));
+  return { tps, bytes, bandwidthGBs: bw, ssd };
 }
 
 // --- Prefill ----------------------------------------------------------------
@@ -368,7 +471,22 @@ export function computePrecision(unit, formatKey) {
  * once (tensor parallel directly, a layer split by pipelining batches), so the
  * bound is every card's throughput -- generous, as an upper bound should be.
  */
-export function prefillCeiling(m, unit, { cards = 1, formatKey, depth, cold = false }) {
+export function prefillCeiling(m, unit, { cards = 1, formatKey, depth, cold = false, table = null }) {
+  const p = computePrefill(m, unit, { cards, formatKey, depth, cold });
+  if (table?.place !== 'ssd' || p.tps == null) return p;
+  // A prompt's rows are all known up front, so reads overlap compute fully;
+  // the drive still has to deliver every row, which caps the rate.
+  const rows = lookupRowsPerToken(m);
+  const d = table.drive;
+  const lat = driveLatency(d);
+  const iops = d?.randomRead?.peakIops;
+  if (!rows || lat == null || !iops) return { ...p, ssd: { unknown: !rows ? 'rows per token not recorded' : 'no read figures for this drive' } };
+  const cap = iops / rows;
+  const serialCap = 1 / (rows * lat);
+  return { ...p, tps: Math.min(p.tps, cap), ssd: { cap, serialCap, computeTps: p.tps, bound: cap < p.tps } };
+}
+
+function computePrefill(m, unit, { cards, formatKey, depth, cold }) {
   const flops = prefillFlopsPerToken(m, depth, { cold });
   let prec = computePrecision(unit, formatKey);
   let key = prec.precision;
@@ -410,7 +528,7 @@ export function vectorBound(unit) {
  * mean by "32 GB" of VRAM. Under tensor parallel a model with fewer KV heads
  * than cards has to replicate them, so the cache grows by that factor.
  */
-export function fit(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK = 'f16', kvV = kvK, streams = 1, draft = null }) {
+export function fit(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK = 'f16', kvV = kvK, streams = 1, draft = null, table = null }) {
   if (!m?.params?.total || bpw == null || !unit?.memoryGB) return null;
   const weights = (m.params.total * bpw) / 8;
   // Draft weights at the same bits per weight; a drafter's own cache per stream.
@@ -431,11 +549,13 @@ export function fit(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK = 'f1
   const slideKv = (m.layerTypes.sliding_attention ?? 0) * slide * Math.min(depth, m.slidingWindow ?? depth);
   const kv = fullKv * copies('full') + slideKv * copies('sliding');
   const replicate = Math.max(copies('full'), (m.layerTypes.sliding_attention ? copies('sliding') : 1));
-  const need = weights + draftWeights + streams * (kv + recurrentStateBytes(m) + draftKv);
+  // Lookup tables count here only when placed in GPU memory; otherwise they are
+  // reported beside the GPU figure (`table`), for host RAM or the SSD.
+  const plan = table ?? tablePlan(m);
+  const tableGpu = plan?.gpu ?? 0;
+  const need = weights + draftWeights + tableGpu + streams * (kv + recurrentStateBytes(m) + draftKv);
   const have = cards * (unit.memoryGB * GiB - RESERVE_BYTES_PER_CARD);
-  // Lookup tables are read a few rows per token, so they sit in host RAM and
-  // are reported beside the GPU figure, not inside it.
-  return { need, have, fits: need <= have, weights, kv: kv * streams, replicate, draft: draftWeights + streams * draftKv, host: lookupBytes(m) };
+  return { need, have, fits: need <= have, weights, kv: kv * streams, replicate, draft: draftWeights + streams * draftKv, table: plan, host: plan && !plan.gpu ? plan.bytes : 0 };
 }
 
 export const CARD_STEPS = [1, 2, 4, 8];

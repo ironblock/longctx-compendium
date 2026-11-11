@@ -197,6 +197,9 @@ export function normalize(doc) {
     carrierById,
     QI,
     FRONTIER,
+    // Reference drives for lookup tables read from an SSD.
+    DRIVES: doc.drives ?? [],
+    driveById: Object.fromEntries((doc.drives ?? []).map(d => [d.id, d])),
     KWH: doc.meta?.electricityUsdPerKwh,
     raw: doc,
   };

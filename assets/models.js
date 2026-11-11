@@ -19,6 +19,13 @@
 //                    n-gram / Engram-style tables read by lookup, a few rows per
 //                    token: a capacity cost, placed in host RAM, not bandwidth
 //   params.split     where mtp and lookup were counted
+//   lookupReads      how a token reads its lookup tables: `tables` lists, per
+//                    table, the layer that reads it (1-based, as configs number
+//                    them) and the rows it gathers per token; `rowValues` is a
+//                    row's width. The row addresses depend on the token ids
+//                    alone, so a token's rows can be requested as soon as the
+//                    token is sampled, and the layers before the reading layer
+//                    are the time a read has to land unnoticed
 //   params.inputEmbedding, params.tiedEmbeddings
 //                    vocab x hidden from the same config. A decode step reads one
 //                    row of an untied input embedding, so ceilings take it out of
@@ -87,6 +94,13 @@ export const MODELS = {
       lookup: 51200245792,
       lookupBits: 16,
       split: "safetensors headers of Qwen/Qwen3.8-Flash-Next at de4b8e4d43b9: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
+    },
+    lookupReads: {
+      tables: [{ layer: 2, rows: 16 }],
+      rowValues: 160,
+      source: "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/resolve/de4b8e4d43b9/config.json",
+      quote: "\"heads_per_ngram\": 8, \"ngram_size\": 3, \"ple_embed_dim\": 2560, \"ple_layer_ids\": [2]",
+      note: "Rows per token are (ngram_size - 1) x heads_per_ngram = 16, each 2560 / 16 = 160 values of one shared table; the checkpoint's shards are [2500012, 160] with 16 head offsets, which agrees. Qwen's README: \"the embedding table can be offloaded to host memory and overlapped with model computation through asynchronous prefetching\"; its tech report: \"We place it at Layer 2, allowing host-memory prefetching to overlap with the computation of the first layer.\""
     },
     layers: 48,
     layerTypes: {

@@ -548,9 +548,27 @@ async function decodeAt(modelId, tokens) {
   await settle();
   const fn = await text('#ceilTable tbody');
   check('a model with no drafter says so', /no drafter recorded/.test(fn));
-  check('an n-gram table is reported as host RAM, not GPU memory', /\+ 95 GiB lookup table as shipped, for host RAM or SSD/.test(fn), 'expected 51.2B BF16 parameters');
+  check('an n-gram table goes to host RAM by default, not GPU memory', /\+ 95 GiB lookup table as shipped in host RAM: needs a host with 103 GiB/.test(fn), 'expected 51.2B BF16 parameters plus 8 GiB');
+  check('the shared settings offer table placement, precision and host RAM', (await count('#tableChips button')) === 3 && (await count('#tableBitsChips button')) === 3 && (await count('#ramChips button')) === 8);
+  await page.click('#ramChips button:has-text("128 GB")');
+  await settle();
+  check('a chosen host is checked against the table', /fits in a 128 GB host/.test(await text('#ceilTable tbody')) && /ram=128/.test(page.url()));
+  await page.click('#ramChips button:has-text("64 GB")');
+  await settle();
+  check('a host too small for the table says so', /more than a 64 GB host; SSD then/.test(await text('#ceilTable tbody')));
+  await page.click('#tableBitsChips button:has-text("4.5-bit")');
+  await settle();
+  check('a smaller table copy is sized at its bits', /\+ 27 GiB lookup table at 4\.5 bits in host RAM: fits in a 64 GB host/.test(await text('#ceilTable tbody')) && /tbits=4\.5/.test(page.url()));
+  await page.click('#tableChips button:has-text("GPU memory")');
+  await settle();
+  check('tables placed in GPU memory join the fit', /incl\. 27 GiB lookup table at 4\.5 bits in GPU memory/.test(await text('#ceilTable tbody')) && /tbl=gpu/.test(page.url()));
+  await page.click('#tableChips button:has-text("Host RAM")');
+  await page.click('#tableBitsChips button:has-text("As shipped")');
+  await page.click('#ramChips button:has-text("Not chosen")');
+  await settle();
+  check('the table settings return to their defaults', (await text('#ceilTable tbody')) === fn && !/tbl=|tbits=|ram=/.test(page.url()));
   await openTab('rigs');
-  check('rigs show the host RAM a lookup table needs', /lookup table as shipped, for host RAM or SSD; host memory not recorded/.test(await text('#candTable tbody')));
+  check('rigs say what host a lookup table needs', /lookup table as shipped in host RAM: needs a host with/.test(await text('#candTable tbody')));
   await openTab('ceilings');
   await page.click('#specChips button:has-text("None")');
   await page.selectOption('#modelSelect', 'qwen38_27b');
@@ -642,8 +660,8 @@ check('one frontier row per scored open model', (await count('#frontierTable tbo
   check('every scored open model is either on the frontier or says what beats it', (t.match(/on the frontier|beaten by/g) ?? []).length >= model.FRONTIER.length);
   check('the frontier names its index, version and source, with the attribution', /Intelligence Index/.test(cap) && /v\d/.test(cap) && (await count('#frontierCap a[href^="https://artificialanalysis.ai"]')) === 1 && /Artificial Analysis/.test(note));
   check('a model too big for every rig says so', /no rig here/.test(t));
-  check('lookup tables leave GPU memory for host RAM on the frontier', /on the GPUs, weights at/.test(t) && /\+ 203 GB of lookup tables \(197B\) as shipped, for host RAM or SSD/.test(t), 'expected DeepSeek V4.1 Flash\'s Engram in FP8');
-  check('a system with host memory is checked against the tables', /host RAM holds the tables \(1,536 GB\)/.test(t));
+  check('lookup tables leave GPU memory for host RAM on the frontier', /on the GPUs, weights at/.test(t) && /\+ 203 GB of lookup tables \(197B\) as shipped, in host RAM/.test(t), 'expected DeepSeek V4.1 Flash\'s Engram in FP8');
+  check('a system with host memory is checked against the tables', /its 1,536 GB host holds the tables/.test(t));
   check('the frontier renders no NaN/undefined/null', !BROKEN.test(t + cap), brokenAt(t + cap));
 }
 

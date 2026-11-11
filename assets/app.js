@@ -9,6 +9,9 @@ import {
   WEIGHT_CHOICES,
   KV_CHOICES,
   SPEC_CHOICES,
+  TABLE_PLACES,
+  TABLE_BITS,
+  HOST_RAM_CHOICES,
   CARD_STEPS,
   attentionLayout,
   LAYOUT_LABEL,
@@ -74,6 +77,12 @@ const DEFAULTS = {
   weights: 'q4_k_m',
   kv: 'f16',
   spec: 'off',
+  // Lookup tables: where they sit, at what precision, the host RAM to check them
+  // against (null: not chosen) and the drive read when they sit on an SSD (null: the first listed).
+  tables: 'ram',
+  tbits: 'shipped',
+  ram: null,
+  ssd: null,
   depth: 131072,
   cards: 'auto',
   // Context depth runs from 1K to 256K tokens, on a log scale, in 1K steps.
@@ -130,6 +139,11 @@ function readState() {
     weights: str('w', WEIGHT_CHOICES),
     kv: str('kv', KV_CHOICES.map(k => k.id)),
     spec: str('spec', SPEC_CHOICES.map(k => k.id)),
+    tables: str('tbl', TABLE_PLACES.map(k => k.id)),
+    tbits: str('tbits', TABLE_BITS.map(k => k.id)),
+    ram: HOST_RAM_CHOICES.includes(num('ram')) ? num('ram') : null,
+    // Checked against the drives once the data has loaded.
+    ssd: q.get('ssd') || null,
     depth: Math.min(DEFAULTS.depthMax, Math.max(DEFAULTS.depthMin, Math.round(d / 1024) * 1024)),
     cards: str('n', ['auto', '1', '2', '3', '4', '5', '6', '7', '8']),
     split: str('split', ['tensor', 'layer']),
@@ -143,7 +157,7 @@ function readState() {
   };
 }
 // The keys DEFAULTS uses under their address names.
-Object.assign(DEFAULTS, { link: null, linkmax: null, host: null, hostmax: null, ffoff: DEFAULTS.formsOff, bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all', ospec: 'all' });
+Object.assign(DEFAULTS, { tbl: DEFAULTS.tables, ram: null, link: null, linkmax: null, host: null, hostmax: null, ffoff: DEFAULTS.formsOff, bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all', ospec: 'all' });
 
 function writeState(s) {
   const q = new URLSearchParams();
@@ -170,6 +184,10 @@ function writeState(s) {
   put('w', s.weights, DEFAULTS.weights);
   put('kv', s.kv, DEFAULTS.kv);
   put('spec', s.spec, DEFAULTS.spec);
+  put('tbl', s.tables, DEFAULTS.tables);
+  put('tbits', s.tbits, DEFAULTS.tbits);
+  put('ram', s.ram, null);
+  put('ssd', s.ssd, null);
   put('d', s.depth, DEFAULTS.depth);
   put('n', s.cards, DEFAULTS.cards);
   put('split', s.split, DEFAULTS.split);
@@ -233,6 +251,11 @@ function niceBound(v, up) {
 try {
   const model = await load();
   const state = readState();
+  // An address naming a drive this data does not list falls back to the first one.
+  const checkDrive = () => {
+    if (state.ssd && !model.driveById[state.ssd]) state.ssd = null;
+  };
+  checkDrive();
 
   const vendors = [...new Set(model.UNITS.map(u => u.vendor ?? 'Other'))];
   const FORM_ORDER = ['PCIe', 'SXM', 'OAM', 'MPX', 'integrated', 'other', 'not recorded'];
@@ -357,7 +380,7 @@ try {
       (m.params.mtp != null || m.params.lookup
         ? `<div title="${esc(m.params.split ?? '')}">${[
             m.params.mtp ? `plus a ${(m.params.mtp / 1e9).toFixed(2)}B MTP head, counted only with draft weights on` : m.params.mtp === 0 ? 'no MTP head' : '',
-            m.params.lookup ? `a ${(m.params.lookup / 1e9).toFixed(1)}B lookup table (${m.params.lookupBits}-bit as shipped), kept in host RAM or read from SSD` : '',
+            m.params.lookup ? `a ${(m.params.lookup / 1e9).toFixed(1)}B lookup table (${m.params.lookupBits}-bit as shipped)${m.lookupReads ? `, ${m.lookupReads.tables.map(t => `${t.rows} rows a token at layer ${t.layer}`).join(' and ')}` : ''}: placed by the Lookup tables setting` : '',
           ].filter(Boolean).join(' · ')}</div>`
         : '') +
       `<div style="margin-top:4px">${m.layers} layers: ${esc(layers)}</div>` +
@@ -418,6 +441,25 @@ try {
       state.spec = v;
       update('model');
     });
+    chips('tableChips', TABLE_PLACES.map(k => ({ v: k.id, label: k.label, title: k.title })), v => state.tables === v, v => {
+      state.tables = v;
+      update('model');
+    });
+    chips('tableBitsChips', TABLE_BITS.map(k => ({ v: k.id, label: k.label, title: k.title })), v => state.tbits === v, v => {
+      state.tbits = v;
+      update('model');
+    });
+    chips('ramChips', HOST_RAM_CHOICES.map(g => ({ v: g, label: g == null ? 'Not chosen' : g >= 1024 ? `${g / 1024} TB` : `${g} GB`, title: g == null ? 'Say what a host needs rather than whether one holds it. Systems use their own memory' : `Check the tables against a host with ${g} GB of RAM, less 8 GiB for the OS and engine. Systems use their own memory` })), v => state.ram === v, v => {
+      state.ram = v;
+      update('model');
+    });
+    if (model.DRIVES.length) {
+      const first = model.DRIVES[0].id;
+      chips('ssdChips', model.DRIVES.map(d => ({ v: d.id, label: d.short ?? d.label, title: `${d.label}: ${d.interface}` })), v => (state.ssd ?? first) === v, v => {
+        state.ssd = v === first ? null : v;
+        update('model');
+      });
+    }
     sliders.depth.set(state.depth);
     el('cardsAuto').checked = state.cards === 'auto';
     sliders.cards.set(state.cards === 'auto' ? lastCards : Number(state.cards), state.cards === 'auto');
@@ -679,6 +721,7 @@ try {
       return writeState(state);
     }
     Object.assign(state, readState());
+    checkDrive();
     if (state.cards !== 'auto') lastCards = Number(state.cards);
     update();
     showTab(state.tab);

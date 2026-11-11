@@ -111,7 +111,7 @@ const q32KvPerPos = 64 * 8 * 128 * 2 * 2;
 
 // Draft weights and lookup tables. An MTP head adds its weights at the main
 // bits per weight; a drafter adds its weights and its own (windowed) cache; a
-// lookup table never counts against GPU memory, only host RAM.
+// lookup table stays out of GPU memory unless placed there.
 {
   const m = MODELS.qwen38_27b;
   const args = { cards: 1, mode: 'single', bpw: 4.83, depth: 131072 };
@@ -130,6 +130,50 @@ const q32KvPerPos = 64 * 8 * 128 * 2 * 2;
   const ff = C.fit(f, { memoryGB: 96 }, { ...args, depth: 4096 });
   near('Flash-Next: n-gram table goes to host RAM, in BF16', ff.host, (51200245792 * 16) / 8);
   near('Flash-Next: and stays out of GPU memory', ff.weights, (125e9 * 4.83) / 8);
+}
+
+// Lookup-table placement. Host RAM costs decode and prefill nothing; GPU
+// memory adds the table to the fit; an SSD adds the read time that outlasts the
+// layers before the table, and caps prefill at IOPS / rows per token. The drive
+// here is made up so the arithmetic is by hand: 50 us at QD1, 1M IOPS peak.
+{
+  const f = MODELS.qwen38_flash_next;
+  const unit = { memoryBandwidthGBs: 1000, memoryGB: 96, compute: { values: { fp16: 400 } }, formats: { fp16: 'native' } };
+  const drive = { randomRead: { qd1Iops: 20000, peakIops: 1e6 } };
+  const args = { cards: 1, mode: 'single', bpw: 4.83, depth: 4096 };
+  const free = C.decodeCeiling(f, unit, args);
+  const T = 1 / free.tps;
+  near('a drive at 20,000 QD1 IOPS takes 50 us a read', C.driveLatency(drive), 50e-6);
+  near('16 rows together: one latency, then 16 at the peak rate', C.driveReadSeconds(16, drive, 'together'), 50e-6 + 16 / 1e6);
+  near('16 rows one at a time: a latency each', C.driveReadSeconds(16, drive, 'serial'), 16 * 50e-6);
+  same('Flash-Next reads 16 rows a token', C.lookupRowsPerToken(f), 16);
+
+  const ram = C.tablePlan(f, { place: 'ram' });
+  same('host RAM: decode is not penalized', C.decodeCeiling(f, unit, { ...args, table: ram }).tps, free.tps);
+  same('host RAM: prefill is not penalized', C.prefillCeiling(f, unit, { formatKey: 'fp16', depth: 4096, table: ram }).tps, C.prefillCeiling(f, unit, { formatKey: 'fp16', depth: 4096 }).tps);
+  same('host RAM: GPU memory is not charged', C.fit(f, unit, { ...args, table: ram }).need, C.fit(f, unit, args).need);
+  same('a 128 GB host holds the BF16 table (95.4 GiB + 8 GiB)', C.tablePlan(f, { place: 'ram', hostGB: 128 }).host.holds, true);
+  same('a 64 GB host does not', C.tablePlan(f, { place: 'ram', hostGB: 64 }).host.holds, false);
+  same('no host chosen: no verdict', C.tablePlan(f, { place: 'ram' }).host.holds, null);
+
+  const gpu = C.tablePlan(f, { place: 'gpu', bits: 8 });
+  near('GPU memory at 8 bits: the fit grows by 51.2 GB', C.fit(f, unit, { ...args, table: gpu }).need - C.fit(f, unit, args).need, 51200245792);
+  near('4.5-bit copy: 28.8 GB', C.lookupBytes(f, 4.5), (51200245792 * 4.5) / 8);
+  near('bits above what ships are ignored', C.lookupBytes(f, 32), (51200245792 * 16) / 8);
+
+  const ssd = C.tablePlan(f, { place: 'ssd', drive });
+  const d = C.decodeCeiling(f, unit, { ...args, table: ssd });
+  const window = T / 48;
+  near('SSD: the window is the one layer before layer 2', d.ssd.window, window);
+  near('SSD: decode pays what outlasts the window, rows together', d.tps, 1 / (T + Math.max(0, 66e-6 - window)));
+  near('SSD: and one at a time', d.ssd.serialTps, 1 / (T + Math.max(0, 800e-6 - window)));
+  const p = C.prefillCeiling(f, unit, { formatKey: 'fp16', depth: 4096, table: ssd });
+  near('SSD: prefill cap is IOPS / 16', p.ssd.cap, 1e6 / 16);
+  near('SSD: one at a time, 1 / (16 x 50 us)', p.ssd.serialCap, 1 / (16 * 50e-6));
+  near('SSD: prefill is the lower of compute and the cap', p.tps, Math.min(p.ssd.computeTps, 1e6 / 16));
+  const bare = { ...f, lookupReads: undefined };
+  same('no read pattern recorded: the cost is not guessed', C.decodeCeiling(bare, unit, { ...args, table: C.tablePlan(bare, { place: 'ssd', drive }) }).ssd.unknown, 'rows per token not recorded');
+  same('and the ceiling is left as it is', C.decodeCeiling(bare, unit, { ...args, table: C.tablePlan(bare, { place: 'ssd', drive }) }).tps, free.tps);
 }
 
 // Qwen3.8-Flash-Next's sparse full-attention layers store every position but

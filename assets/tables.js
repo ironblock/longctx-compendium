@@ -13,15 +13,53 @@ import {
   bpwOf,
   KV_BYTES_PER_ELEMENT,
   draftFor,
+  tablePlan,
+  driveReadSeconds,
+  TABLE_BITS,
+  HOST_RESERVE_BYTES,
 } from './ceiling.js';
 
-/** The draft and host-RAM parts of a fit, as sub-lines under its GPU figure. */
-function fitExtras(f, draft) {
+/** The lookup-table settings, with the drive resolved; `hostGB` is the host's memory when it is known. */
+export const tableSettings = (model, s, hostGB = s.ram ?? null) => ({
+  place: s.tables ?? 'ram',
+  bits: TABLE_BITS.find(b => b.id === s.tbits)?.bits ?? null,
+  hostGB,
+  drive: model.driveById?.[s.ssd] ?? model.DRIVES?.[0] ?? null,
+});
+
+const us = sec => (sec >= 1e-3 ? `${(sec * 1e3).toFixed(sec >= 1e-2 ? 0 : 1)} ms` : `${Math.round(sec * 1e6)} µs`);
+
+/** "lookup table as shipped" / "lookup table at 8 bits". */
+const tableWord = plan => `lookup table${plan.bits < plan.shipped ? ` at ${plan.bits} bits` : ' as shipped'}`;
+
+/** Where the tables sit and whether the host holds them, as one sub-line (HTML). */
+export function tableLine(plan, ts, { hostWord = 'a host' } = {}) {
+  if (!plan) return '';
+  const what = `${fmtGiB(plan.bytes)} ${tableWord(plan)}`;
+  if (plan.place === 'gpu') return `incl. ${what} in GPU memory`;
+  if (plan.place === 'ssd') return `+ ${what} on the SSD${ts.drive ? ` (${esc(ts.drive.label)})` : ', no drive recorded'}`;
+  const h = plan.host;
+  if (h?.holds == null) return `+ ${what} in host RAM: needs ${hostWord} with ${fmtGiB(plan.bytes + HOST_RESERVE_BYTES)}`;
+  return `<span class="${h.holds ? 't-ok' : 'fit-untested'}">+ ${what} in host RAM: ${h.holds ? 'fits in' : 'more than'} ${hostWord === 'a host' ? `a ${ts.hostGB} GB host` : `${hostWord}'s ${ts.hostGB.toLocaleString()} GB`}${h.holds ? '' : '; SSD then'}</span>`;
+}
+
+/** The draft and lookup-table parts of a fit, as sub-lines under its GPU figure. */
+function fitExtras(f, draft, ts) {
   const out = [];
   if (draft?.params && f.draft) out.push(`incl. ${fmtGiB(f.draft)} ${esc(draft.kind === 'mtp' ? 'MTP head' : 'drafter')}`);
   else if (draft?.missing) out.push(esc(draft.missing));
-  if (f.host) out.push(`+ ${fmtGiB(f.host)} lookup table as shipped, for host RAM or SSD`);
+  if (f.table) out.push(tableLine(f.table, ts));
   return out;
+}
+
+/** What reading the tables from the SSD does to a decode ceiling, as sub-lines. */
+function ssdDecodeSubs(ssd) {
+  if (!ssd) return [];
+  if (ssd.unknown) return [`SSD cost not modelled: ${esc(ssd.unknown)}`];
+  const pct = t => Math.round((100 * (ssd.freeTps - t)) / ssd.freeTps);
+  const head = ssd.stall > 0 ? `SSD reads stall ${us(ssd.stall)} a token (−${pct(1 / (1 / ssd.freeTps + ssd.stall)) || '<1'}%)` : `SSD reads land within ${ssd.window != null ? us(ssd.window) : 'the window'}`;
+  const one = ssd.serialStall == null ? '' : ssd.serialStall > 0 ? `one at a time: ${sig(ssd.serialTps)} (−${pct(ssd.serialTps) || '<1'}%)` : 'one at a time: no stall either';
+  return [head, one].filter(Boolean);
 }
 
 const el = id => document.getElementById(id);
@@ -195,17 +233,26 @@ export function renderHardwareTable(model, state, matches) {
 export function ceilingRow(m, u, s) {
   const { bpw } = bpwOf(s.weights);
   const draft = draftFor(s.model, s.spec);
-  const kv = { kvK: s.kv, kvV: s.kv, draft: draft?.params ? draft : null };
+  const table = tablePlan(m, s.ts ?? {});
+  const kv = { kvK: s.kv, kvV: s.kv, draft: draft?.params ? draft : null, table };
   const auto = s.cards === 'auto';
   const n = auto ? cardsToFit(m, u, { mode: s.split, bpw, depth: s.depth, ...kv }) : Number(s.cards);
   if (n == null) return { u, n: null };
   const mode = n === 1 ? 'single' : s.split;
   const f = fit(m, u, { cards: n, mode, bpw, depth: s.depth, ...kv });
   const d = decodeCeiling(m, u, { cards: n, mode, bpw, depth: s.depth, ...kv });
-  const p = prefillCeiling(m, u, { cards: n, formatKey: s.weights, depth: s.depth });
+  const p = prefillCeiling(m, u, { cards: n, formatKey: s.weights, depth: s.depth, table });
   // GPUs on a multi-GPU board are bought a board at a time.
   const cost = u.street != null ? u.street * Math.ceil(n / u.gpus) : null;
-  return { u, n, mode, fit: f, draft, decode: d?.tps ?? null, prefill: p, cost, perK: d?.tps && cost ? d.tps / (cost / 1000) : null };
+  return { u, n, mode, fit: f, draft, ts: s.ts, decode: d?.tps ?? null, ssd: d?.ssd ?? null, prefill: p, cost, perK: d?.tps && cost ? d.tps / (cost / 1000) : null };
+}
+
+/** What the SSD does to a prefill ceiling, as a sub-line. */
+function ssdPrefillSub(ssd) {
+  if (!ssd) return '';
+  if (ssd.unknown) return `<span class="sub">SSD cost not modelled: ${esc(ssd.unknown)}</span>`;
+  const one = `one at a time ${n0(ssd.serialCap)}`;
+  return `<span class="sub">${ssd.bound ? `capped by SSD reads (compute ${n0(ssd.computeTps)}); ${one}` : `SSD reads allow ${n0(ssd.cap)}; ${one}`}</span>`;
 }
 
 const barCell = (v, max, extra = '') =>
@@ -220,7 +267,8 @@ export function renderCeilingTable(model, state, units) {
     tb.innerHTML = `<tr><td class="lbl" colspan="7">No parameter count recorded for this model.</td></tr>`;
     return;
   }
-  const rows = units.filter(u => u.memoryBandwidthGBs).map(u => ceilingRow(m, u, state));
+  const ts = tableSettings(model, state);
+  const rows = units.filter(u => u.memoryBandwidthGBs).map(u => ceilingRow(m, u, { ...state, ts }));
   const fitting = rows.filter(r => r.n != null && r.fit?.fits);
   const tight = rows.filter(r => r.n != null && !r.fit?.fits);
   const none = rows.filter(r => r.n == null);
@@ -235,12 +283,12 @@ export function renderCeilingTable(model, state, units) {
     }
     const f = r.fit;
     const mem = f
-      ? `<td class="lbl"><span class="${f.fits ? 't-ok' : 't-bad'}">${f.fits ? 'fits' : 'does not fit'}</span><span class="sub">needs ${fmtGiB(f.need)} of ${fmtGiB(f.have)}${f.replicate > 1 ? ` · KV ×${f.replicate} replicated` : ''}</span>${fitExtras(f, r.draft).map(x => `<span class="sub">${x}</span>`).join('')}</td>`
+      ? `<td class="lbl"><span class="${f.fits ? 't-ok' : 't-bad'}">${f.fits ? 'fits' : 'does not fit'}</span><span class="sub">needs ${fmtGiB(f.need)} of ${fmtGiB(f.have)}${f.replicate > 1 ? ` · KV ×${f.replicate} replicated` : ''}</span>${fitExtras(f, r.draft, r.ts).map(x => `<span class="sub">${x}</span>`).join('')}</td>`
       : `<td class="lbl">${DASH}</td>`;
     const prec = r.prefill.precision;
     const pre = r.prefill.tps == null
       ? `<td class="lbl">${DASH}<span class="sub">no rated ${prec.precision.toUpperCase()} figure</span></td>`
-      : `<td class="lbl"><span class="num">${n0(r.prefill.tps)}</span><span class="sub" title="${esc(prec.note)}">${prec.precision.toUpperCase()}${prec.vector ? ' vector' : ''}${prec.grounded ? '' : ' · assumed'}${prec.unofficial ? ' · unofficial' : ''}</span></td>`;
+      : `<td class="lbl"><span class="num">${n0(r.prefill.tps)}</span><span class="sub" title="${esc(prec.note)}">${prec.precision.toUpperCase()}${prec.vector ? ' vector' : ''}${prec.grounded ? '' : ' · assumed'}${prec.unofficial ? ' · unofficial' : ''}</span>${ssdPrefillSub(r.prefill.ssd)}</td>`;
     const modeWord = r.n === 1 ? '' : r.mode === 'tensor' ? (splitsEvenly(m, r.n) ? 'tensor parallel' : `tensor parallel · ${m.heads} heads don't split ${r.n} ways`) : 'layer split';
     const boards = Math.ceil(r.n / u.gpus);
     const boardWord = u.gpus > 1 ? `GPU${r.n > 1 ? 's' : ''} on ${boards} board${boards > 1 ? 's' : ''}` : '';
@@ -249,7 +297,7 @@ export function renderCeilingTable(model, state, units) {
       `<td class="lbl">${esc(u.label)}<span class="sub">${esc(u.archLabel ?? '')}</span></td>` +
       `<td class="num">${r.n}<span class="sub">${[boardWord, modeWord].filter(Boolean).join(' · ')}</span></td>` +
       mem +
-      barCell(r.decode, max) +
+      barCell(r.decode, max, ssdDecodeSubs(r.ssd).map(x => `<span class="sub">${x}</span>`).join('')) +
       pre +
       `<td class="num">${usd(r.cost) ?? DASH}</td>` +
       `<td class="num">${r.perK != null ? sig(r.perK) : DASH}</td>` +
@@ -457,22 +505,20 @@ export function renderCandidates(model, state) {
         const m = modelById(id);
         if (!m?.params?.active) return `${esc(m?.label ?? id)}: no parameter count recorded`;
         const draft = draftFor(id, state.spec);
-        const args = { bpw, depth: state.depth, kvK: state.kv, kvV: state.kv, draft: draft?.params ? draft : null };
+        // A system's own host memory, else the host chosen in the settings.
+        const sysGB = k?.host?.memoryGB ?? c.rig.host?.ramGB ?? null;
+        const ts = tableSettings(model, state, sysGB ?? state.ram ?? null);
+        const table = tablePlan(m, ts);
+        const args = { bpw, depth: state.depth, kvK: state.kv, kvV: state.kv, draft: draft?.params ? draft : null, table };
         const fl = fit(m, u, { ...args, cards: n, mode: 'tensor' });
         const fll = fit(m, u, { ...args, cards: n, mode: 'layer' });
         const dl = decodeCeiling(m, u, { ...args, cards: n, mode: 'layer' });
         const dt = decodeCeiling(m, u, { ...args, cards: n, mode: 'tensor' });
         const fits = `${fll?.fits ? '<span class="t-ok">fits</span>' : '<span class="t-bad">does not fit</span>'} layer-split${fl && fl.fits !== fll?.fits ? ` · ${fl.fits ? '<span class="t-ok">fits</span>' : '<span class="t-bad">does not fit</span>'} TP` : ''}`;
-        // Lookup tables go to host RAM: checked against the rig's when it is recorded.
-        const hostGB = k?.host?.memoryGB ?? c.rig.host?.ramGB ?? null;
-        const hostNeed = fll?.host ? fll.host / 2 ** 30 : 0;
-        const host = !hostNeed
-          ? ''
-          : hostGB == null
-            ? `<br><span class="sub">+ ${fmtGiB(fll.host)} lookup table as shipped, for host RAM or SSD; host memory not recorded</span>`
-            : `<br><span class="sub ${hostNeed <= hostGB ? 't-ok' : 'fit-untested'}">+ ${fmtGiB(fll.host)} lookup table as shipped: ${hostNeed <= hostGB ? 'fits in' : 'more than'} its ${hostGB} GB of host RAM${hostNeed <= hostGB ? '' : '; SSD then'}</span>`;
+        const host = table ? `<br><span class="sub">${tableLine(table, ts, { hostWord: sysGB != null ? (sys ? 'the system' : 'the host') : 'a host' })}</span>` : '';
         const dr = draft?.params ? `<br><span class="sub">incl. ${fmtGiB(fll?.draft)} ${draft.kind === 'mtp' ? 'MTP head' : 'drafter'}</span>` : draft?.missing ? `<br><span class="sub">${esc(draft.missing)}</span>` : '';
-        return `<b>${esc(m.label)}</b>: ${fits}${dr}${host}<br><span class="num">${dl ? sig(dl.tps) : '—'}</span> layer · <span class="num">${dt ? sig(dt.tps) : '—'}</span> TP decode`;
+        const ssd = dt?.ssd && !dt.ssd.unknown && (dt.ssd.stall > 0 || dl?.ssd?.stall > 0) ? `<br><span class="sub">SSD reads stall ${us(dl?.ssd?.stall ?? 0)} layer · ${us(dt.ssd.stall)} TP a token</span>` : dt?.ssd?.unknown ? `<br><span class="sub">SSD cost not modelled: ${esc(dt.ssd.unknown)}</span>` : '';
+        return `<b>${esc(m.label)}</b>: ${fits}${dr}${host}<br><span class="num">${dl ? sig(dl.tps) : '—'}</span> layer · <span class="num">${dt ? sig(dt.tps) : '—'}</span> TP decode${ssd}`;
       })
       .join('<br>');
     const fitSubs = (ic?.fits ?? [])
@@ -601,27 +647,37 @@ export function renderFrontierTable(model, state) {
   const rigs = model.CANDIDATES.filter(c => c.rigTotals.memoryGB).sort((a, b) => a.rigTotals.memoryGB - b.rigTotals.memoryGB);
   const qi = model.QI;
   const withMtp = state.spec === 'mtp';
+  const ts = tableSettings(model, state);
   tb.innerHTML = [...model.FRONTIER]
     .sort((a, b) => b.best.value - a.best.value)
     .map(p => {
       // GPU memory: weights less lookup tables, plus the MTP head when it is counted.
       // Added back only when it is known whether the published total already holds it.
       const draft = withMtp && p.mtp && p.params.mtpInTotal != null ? p.mtp : 0;
-      const gb = ((p.gpu + draft) * bpw) / 8 / 1e9;
-      const hostGB = p.lookup && p.lookupBits ? (p.lookup * p.lookupBits) / 8 / 1e9 : null;
+      // Lookup tables at the chosen precision (never above what ships), wherever the settings put them.
+      const tBits = p.lookupBits == null ? null : ts.bits != null && ts.bits < p.lookupBits ? ts.bits : p.lookupBits;
+      const tableGB = p.lookup && tBits != null ? (p.lookup * tBits) / 8 / 1e9 : null;
+      const onGpu = ts.place === 'gpu' && tableGB != null ? tableGB : 0;
+      const gb = ((p.gpu + draft) * bpw) / 8 / 1e9 + onGpu;
       const fits = rigs.find(c => c.rigTotals.memoryGB >= gb);
       const rigHost = fits && (fits.link?.carrier?.host?.memoryGB ?? fits.rig.host?.ramGB ?? null);
+      const hostGB = rigHost ?? state.ram ?? null;
+      const where = { gpu: 'in GPU memory', ram: 'in host RAM', ssd: 'on the SSD' }[ts.place];
+      const how = tBits != null && tBits < p.lookupBits ? `at ${tBits} bits` : 'as shipped';
       const lookupSub = !p.lookup
         ? ''
-        : hostGB != null
-          ? `<span class="sub">+ ${Math.round(hostGB).toLocaleString()} GB of lookup tables (${fmtParams(p.lookup)}) as shipped, for host RAM or SSD</span>`
-          : `<span class="sub">+ ${fmtParams(p.lookup)} of lookup tables for host RAM or SSD, precision not recorded</span>`;
+        : tableGB != null
+          ? `<span class="sub">${onGpu ? 'incl.' : '+'} ${Math.round(tableGB).toLocaleString()} GB of lookup tables (${fmtParams(p.lookup)}) ${how}, ${where}</span>`
+          : `<span class="sub">+ ${fmtParams(p.lookup)} of lookup tables, precision not recorded${ts.place === 'gpu' ? ', not counted here' : ''}</span>`;
       const mtpSub = !withMtp
         ? ''
         : `<span class="sub">${draft ? `incl. ${fmtParams(p.mtp)} MTP head` : p.mtp ? `${fmtParams(p.mtp)} MTP head; whether the total includes it is not known` : p.mtp === 0 ? 'no MTP head in the checkpoint' : 'MTP head not counted'}</span>`;
-      const hostCheck = fits && p.lookup && hostGB != null && rigHost != null
-        ? `<span class="sub ${hostGB <= rigHost ? 't-ok' : 'fit-untested'}">host RAM ${hostGB <= rigHost ? 'holds' : 'is smaller than'} the tables (${rigHost.toLocaleString()} GB)</span>`
-        : fits && p.lookup ? '<span class="sub">plus host RAM or SSD for the tables</span>' : '';
+      const need = tableGB != null ? tableGB + HOST_RESERVE_BYTES / 1e9 : null;
+      const hostCheck = !fits || !p.lookup || ts.place !== 'ram'
+        ? fits && p.lookup && ts.place === 'ssd' ? '<span class="sub">tables on the SSD</span>' : ''
+        : need != null && hostGB != null
+          ? `<span class="sub ${need <= (hostGB * 2 ** 30) / 1e9 ? 't-ok' : 'fit-untested'}">${rigHost != null ? 'its' : 'a'} ${hostGB.toLocaleString()} GB host ${need <= (hostGB * 2 ** 30) / 1e9 ? 'holds' : 'is smaller than'} the tables</span>`
+          : `<span class="sub">plus a host with ${need != null ? `${Math.ceil(need).toLocaleString()} GB` : 'room'} for the tables</span>`;
       const now = p.beatenBy && p.beatenBy !== p.knockedOffBy ? `; now also ${esc(p.beatenBy.label)}` : '';
       const status = p.onFrontier
         ? '<span class="t-ok">on the frontier</span>'

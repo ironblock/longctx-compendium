@@ -193,6 +193,13 @@ qwen3_32b: {
 - `params.total` excludes vision towers and MTP heads; `params.active` is what a
   decoded token reads. Without `params`, a model can be named in a line but has
   no ceiling.
+- `params.lookup` / `params.lookupBits` size an n-gram or Engram table, and
+  `lookupReads` says how a token reads it: per table, the layer that reads it
+  (1-based, as configs number them) and the rows it gathers, with the config
+  fields quoted. Flash-Next: `{ tables: [{ layer: 2, rows: 16 }], rowValues: 160 }`
+  from `ngram_size` 3, `heads_per_ngram` 8, `ple_embed_dim` 2560 and
+  `ple_layer_ids` [2]. Without it the page shows the table's size and placement
+  but no SSD cost.
 
 `tools/test-kv.mjs` checks every entry's layer arithmetic and holds the KV
 formula against what first-party lines actually allocated.
@@ -220,6 +227,14 @@ formula against what first-party lines actually allocated.
 - **Fit** = all weights + KV at depth + recurrent state against every card's
   memory less 1 GiB each. Under tensor parallel, KV heads fewer than the cards
   are replicated, and an MLA latent cache is copied whole to every card.
+- **Lookup tables** go where the shared setting puts them. In host RAM they
+  cost nothing (their rows are prefetched while the layers before the table
+  run) and the host must hold them plus 8 GiB. In GPU memory they join the fit.
+  On an SSD each row is one random read: requested together, a token's rows take
+  the drive's queue-depth-1 latency plus rows ÷ its peak IOPS; one at a time, a
+  latency each. Read time beyond the layers before the table (the step spread
+  evenly over the layers) is added to every token, and prefill cannot exceed
+  IOPS ÷ rows per token. Every row is taken to miss the OS cache.
 
 Every simplification leans generous — perfect scaling, no launch or
 synchronization cost, one weight width throughout — so a ceiling is an upper
@@ -399,13 +414,14 @@ is shown, and a `note` on its known weaknesses. Each model records:
   `source` quoting the card; sizes never come from the index;
 - where the checkpoint was checked, the parts of the total that do not belong
   in GPU memory: `lookup` (n-gram or Engram tables, read a few rows per token,
-  so placed in host RAM) with `lookupBits` as shipped, and `mtp`, the
+  placed by the shared setting) with `lookupBits` as shipped, and `mtp`, the
   multi-token-prediction head (0 when there is none), with `mtpInTotal` saying
   whether the published total includes it. `split` says where they were
   counted, usually the safetensors headers at the pinned revision. The page
   puts total less lookup tables (and less an included MTP head) on the GPUs,
   adds the MTP head back when the shared setting counts draft weights and it
-  is known whether the total holds it, and reports lookup tables as host RAM;
+  is known whether the total holds it, and places lookup tables where the
+  shared setting says (host RAM, the SSD, or added to the GPU figure);
 - `weights`: the precision it was released in, and the repository size;
 - `scores`: one per variant the index ran (an effort level, a reasoning mode),
   each with the index `id`, its `version`, the `value`, the `asOf` date and
