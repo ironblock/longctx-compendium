@@ -20,7 +20,7 @@ function fitExtras(f, draft) {
   const out = [];
   if (draft?.params && f.draft) out.push(`incl. ${fmtGiB(f.draft)} ${esc(draft.kind === 'mtp' ? 'MTP head' : 'drafter')}`);
   else if (draft?.missing) out.push(esc(draft.missing));
-  if (f.host) out.push(`+ ${fmtGiB(f.host)} host RAM for its lookup table`);
+  if (f.host) out.push(`+ ${fmtGiB(f.host)} lookup table as shipped, for host RAM or SSD`);
   return out;
 }
 
@@ -469,8 +469,8 @@ export function renderCandidates(model, state) {
         const host = !hostNeed
           ? ''
           : hostGB == null
-            ? `<br><span class="sub">+ ${fmtGiB(fll.host)} host RAM for its lookup table; host memory not recorded</span>`
-            : `<br><span class="sub ${hostNeed <= hostGB ? 't-ok' : 't-bad'}">+ ${fmtGiB(fll.host)} host RAM for its lookup table: ${hostNeed <= hostGB ? 'fits' : 'does not fit'} in ${hostGB} GB</span>`;
+            ? `<br><span class="sub">+ ${fmtGiB(fll.host)} lookup table as shipped, for host RAM or SSD; host memory not recorded</span>`
+            : `<br><span class="sub ${hostNeed <= hostGB ? 't-ok' : 'fit-untested'}">+ ${fmtGiB(fll.host)} lookup table as shipped: ${hostNeed <= hostGB ? 'fits in' : 'more than'} its ${hostGB} GB of host RAM${hostNeed <= hostGB ? '' : '; SSD then'}</span>`;
         const dr = draft?.params ? `<br><span class="sub">incl. ${fmtGiB(fll?.draft)} ${draft.kind === 'mtp' ? 'MTP head' : 'drafter'}</span>` : draft?.missing ? `<br><span class="sub">${esc(draft.missing)}</span>` : '';
         return `<b>${esc(m.label)}</b>: ${fits}${dr}${host}<br><span class="num">${dl ? sig(dl.tps) : '—'}</span> layer · <span class="num">${dt ? sig(dt.tps) : '—'}</span> TP decode`;
       })
@@ -614,14 +614,14 @@ export function renderFrontierTable(model, state) {
       const lookupSub = !p.lookup
         ? ''
         : hostGB != null
-          ? `<span class="sub">+ ${Math.round(hostGB).toLocaleString()} GB host RAM for ${fmtParams(p.lookup)} of lookup tables</span>`
-          : `<span class="sub">+ ${fmtParams(p.lookup)} of lookup tables for host RAM, precision not recorded</span>`;
+          ? `<span class="sub">+ ${Math.round(hostGB).toLocaleString()} GB of lookup tables (${fmtParams(p.lookup)}) as shipped, for host RAM or SSD</span>`
+          : `<span class="sub">+ ${fmtParams(p.lookup)} of lookup tables for host RAM or SSD, precision not recorded</span>`;
       const mtpSub = !withMtp
         ? ''
         : `<span class="sub">${draft ? `incl. ${fmtParams(p.mtp)} MTP head` : p.mtp ? `${fmtParams(p.mtp)} MTP head; whether the total includes it is not known` : p.mtp === 0 ? 'no MTP head in the checkpoint' : 'MTP head not counted'}</span>`;
       const hostCheck = fits && p.lookup && hostGB != null && rigHost != null
-        ? `<span class="sub ${hostGB <= rigHost ? 't-ok' : 't-bad'}">host RAM ${hostGB <= rigHost ? 'holds' : 'too small for'} the tables (${rigHost.toLocaleString()} GB)</span>`
-        : fits && p.lookup ? '<span class="sub">plus host RAM for the tables</span>' : '';
+        ? `<span class="sub ${hostGB <= rigHost ? 't-ok' : 'fit-untested'}">host RAM ${hostGB <= rigHost ? 'holds' : 'is smaller than'} the tables (${rigHost.toLocaleString()} GB)</span>`
+        : fits && p.lookup ? '<span class="sub">plus host RAM or SSD for the tables</span>' : '';
       const now = p.beatenBy && p.beatenBy !== p.knockedOffBy ? `; now also ${esc(p.beatenBy.label)}` : '';
       const status = p.onFrontier
         ? '<span class="t-ok">on the frontier</span>'
@@ -643,7 +643,7 @@ export function renderFrontierTable(model, state) {
     .join('');
   const cap = el('frontierCap');
   if (cap && qi) {
-    cap.innerHTML = `${model.FRONTIER.filter(p => p.onFrontier).length} of ${model.FRONTIER.length} open models on the frontier · scores: <a href="${esc(qi.url)}" rel="noopener noreferrer">${esc(qi.label)}</a> v${qi.version}, as of ${esc(qi.asOf)} · dashed lines: rig memory filled by weights at ${bpw} bpw · a whisker runs from a model's total back to what has to sit on the GPUs when its lookup tables go to host RAM${withMtp ? ' · MTP heads counted where the checkpoint was read and it is known whether the published total includes them; drafters are not counted here' : ''}`;
+    cap.innerHTML = `${model.FRONTIER.filter(p => p.onFrontier).length} of ${model.FRONTIER.length} open models on the frontier · scores: <a href="${esc(qi.url)}" rel="noopener noreferrer">${esc(qi.label)}</a> v${qi.version}, as of ${esc(qi.asOf)} · dashed lines: rig memory filled by weights at ${bpw} bpw · a whisker runs from a model's total back to what has to sit on the GPUs when its lookup tables stay off them${withMtp ? ' · MTP heads counted where the checkpoint was read and it is known whether the published total includes them; drafters are not counted here' : ''}`;
   }
   const note = el('frontierNote');
   if (note && qi) note.innerHTML = `<b>${esc(qi.attribution)}</b>${qi.note ? ` ${esc(qi.note)}` : ''}`;

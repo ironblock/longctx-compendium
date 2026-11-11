@@ -548,9 +548,9 @@ async function decodeAt(modelId, tokens) {
   await settle();
   const fn = await text('#ceilTable tbody');
   check('a model with no drafter says so', /no drafter recorded/.test(fn));
-  check('an n-gram table is reported as host RAM, not GPU memory', /\+ 95 GiB host RAM for its lookup table/.test(fn), 'expected 51.2B BF16 parameters');
+  check('an n-gram table is reported as host RAM, not GPU memory', /\+ 95 GiB lookup table as shipped, for host RAM or SSD/.test(fn), 'expected 51.2B BF16 parameters');
   await openTab('rigs');
-  check('rigs show the host RAM a lookup table needs', /host RAM for its lookup table; host memory not recorded/.test(await text('#candTable tbody')));
+  check('rigs show the host RAM a lookup table needs', /lookup table as shipped, for host RAM or SSD; host memory not recorded/.test(await text('#candTable tbody')));
   await openTab('ceilings');
   await page.click('#specChips button:has-text("None")');
   await page.selectOption('#modelSelect', 'qwen38_27b');
@@ -642,7 +642,7 @@ check('one frontier row per scored open model', (await count('#frontierTable tbo
   check('every scored open model is either on the frontier or says what beats it', (t.match(/on the frontier|beaten by/g) ?? []).length >= model.FRONTIER.length);
   check('the frontier names its index, version and source, with the attribution', /Intelligence Index/.test(cap) && /v\d/.test(cap) && (await count('#frontierCap a[href^="https://artificialanalysis.ai"]')) === 1 && /Artificial Analysis/.test(note));
   check('a model too big for every rig says so', /no rig here/.test(t));
-  check('lookup tables leave GPU memory for host RAM on the frontier', /on the GPUs, weights at/.test(t) && /\+ 203 GB host RAM for 197B of lookup tables/.test(t), 'expected DeepSeek V4.1 Flash\'s Engram in FP8');
+  check('lookup tables leave GPU memory for host RAM on the frontier', /on the GPUs, weights at/.test(t) && /\+ 203 GB of lookup tables \(197B\) as shipped, for host RAM or SSD/.test(t), 'expected DeepSeek V4.1 Flash\'s Engram in FP8');
   check('a system with host memory is checked against the tables', /host RAM holds the tables \(1,536 GB\)/.test(t));
   check('the frontier renders no NaN/undefined/null', !BROKEN.test(t + cap), brokenAt(t + cap));
 }

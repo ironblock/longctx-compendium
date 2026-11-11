@@ -496,7 +496,7 @@ export function renderFrontier(points, lines, qi) {
             label: it => [
               `${it.raw.creator} · released ${it.raw.released}`,
               `${fmtB(it.raw.x)} total${it.raw.active ? ` · ${fmtB(it.raw.active / 1e9)} active` : ''}`,
-              ...(it.raw.gpuX ? [`${fmtB(it.raw.gpuX)} on the GPUs; the rest is lookup tables for host RAM`] : []),
+              ...(it.raw.gpuX ? [`${fmtB(it.raw.gpuX)} on the GPUs; the rest is lookup tables, kept in host RAM or read from SSD`] : []),
               `${qi?.label ?? 'index'} v${qi?.version}: ${it.raw.y} (${it.raw.variant})`,
               it.raw.on ? 'on the frontier' : 'a model no larger scores higher',
             ],

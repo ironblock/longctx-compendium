@@ -357,7 +357,7 @@ try {
       (m.params.mtp != null || m.params.lookup
         ? `<div title="${esc(m.params.split ?? '')}">${[
             m.params.mtp ? `plus a ${(m.params.mtp / 1e9).toFixed(2)}B MTP head, counted only with draft weights on` : m.params.mtp === 0 ? 'no MTP head' : '',
-            m.params.lookup ? `a ${(m.params.lookup / 1e9).toFixed(1)}B lookup table for host RAM (${m.params.lookupBits}-bit)` : '',
+            m.params.lookup ? `a ${(m.params.lookup / 1e9).toFixed(1)}B lookup table (${m.params.lookupBits}-bit as shipped), kept in host RAM or read from SSD` : '',
           ].filter(Boolean).join(' · ')}</div>`
         : '') +
       `<div style="margin-top:4px">${m.layers} layers: ${esc(layers)}</div>` +
