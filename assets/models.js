@@ -8,9 +8,17 @@
 // config's own layer_types list (or its explicit pattern fields), so a model
 // that breaks the pattern cannot slip through as "every fourth layer".
 //
-//   params.total     every weight that has to be resident, excluding vision
-//                    towers and MTP heads, which a text decode does not run
+//   params.total     every weight the main decode pass keeps in GPU memory:
+//                    excluding vision towers, MTP heads and lookup tables, which
+//                    are counted apart (below)
 //   params.active    weights read per decoded token (all of them, for dense)
+//   params.mtp       the checkpoint's multi-token-prediction head, summed from
+//                    its safetensors headers (0: the checkpoint carries none).
+//                    Resident only when speculative decoding uses it
+//   params.lookup, params.lookupBits
+//                    n-gram / Engram-style tables read by lookup, a few rows per
+//                    token: a capacity cost, placed in host RAM, not bandwidth
+//   params.split     where mtp and lookup were counted
 //   params.inputEmbedding, params.tiedEmbeddings
 //                    vocab x hidden from the same config. A decode step reads one
 //                    row of an untied input embedding, so ceilings take it out of
@@ -41,7 +49,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/README.md",
       quote: "- Number of Parameters: 27B",
       inputEmbedding: 1271398400,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 424699392,
+      split: "safetensors headers of Qwen/Qwen3.8-27B at 1d4bf0f2ff60: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 64,
     layerTypes: {
@@ -59,7 +69,7 @@ export const MODELS = {
       valueHeadDim: 128
     },
     maxPositions: 262144,
-    note: "Dense in weights but hybrid in attention: 48 Gated DeltaNet layers to 16 full-attention ones. The count excludes the vision tower and the MTP head."
+    note: "Dense in weights but hybrid in attention: 48 Gated DeltaNet layers to 16 full-attention ones. The count excludes the vision tower and the 0.42B MTP head (params.mtp)."
   },
   qwen38_flash_next: {
     label: "Qwen3.8-Flash-Next",
@@ -72,7 +82,11 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/main/README.md",
       quote: "- Number of Parameters: 125B with 6B activated, plus 51B n-gram embedding and 4B MTP",
       inputEmbedding: 635699200,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 2607150848,
+      lookup: 51200245792,
+      lookupBits: 16,
+      split: "safetensors headers of Qwen/Qwen3.8-Flash-Next at de4b8e4d43b9: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 48,
     layerTypes: {
@@ -98,7 +112,7 @@ export const MODELS = {
       shared: 1
     },
     maxPositions: 262144,
-    note: "The 12 layers the config calls full attention are block-sparse (Qwen Sparse Attention): an indexer picks at most 2,048 positions per step, so decode reads that many while the cache still holds every position; the indexer's own compressed keys, which it scans across every position, are not counted. The count excludes a 51B n-gram embedding, which the program that measures this model keeps in host RAM (so host RAM is a capacity spec for it), and a 4B MTP head. Two KV heads: a 4-way tensor-parallel split must replicate them."
+    note: "The 12 layers the config calls full attention are block-sparse (Qwen Sparse Attention): an indexer picks at most 2,048 positions per step, so decode reads that many while the cache still holds every position; the indexer's own compressed keys, which it scans across every position, are not counted. The count excludes the n-gram embedding (51.2B in BF16, params.lookup), which the program that measures this model keeps in host RAM, and the MTP head. The card's \"4B MTP\" is more than the 2.61B of mtp.* tensors in the checkpoint, an MoE layer with all 512 experts; this page guesses the card also counts the input embedding and output head the head shares (2 x 0.64B), which would make 3.88B. Two KV heads: a 4-way tensor-parallel split must replicate them."
   },
   qwen36_27b: {
     label: "Qwen3.6-27B",
@@ -111,7 +125,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen3.6-27B/blob/main/README.md",
       quote: "- Number of Parameters: 27B",
       inputEmbedding: 1271398400,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 424699392,
+      split: "safetensors headers of Qwen/Qwen3.6-27B at 6a9e13bd6fc8: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 64,
     layerTypes: {
@@ -142,7 +158,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen3.5-27B/blob/main/README.md",
       quote: "- Number of Parameters: 27B",
       inputEmbedding: 1271398400,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 424699392,
+      split: "safetensors headers of Qwen/Qwen3.5-27B at fc05daec18b0: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 64,
     layerTypes: {
@@ -173,7 +191,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/blob/main/README.md",
       quote: "- Number of Parameters: 35B in total and 3B activated",
       inputEmbedding: 508559360,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 844640768,
+      split: "safetensors headers of Qwen/Qwen3.6-35B-A3B at 995ad96eacd9: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 40,
     layerTypes: {
@@ -209,7 +229,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen3.5-35B-A3B/blob/main/README.md",
       quote: "- Number of Parameters: 35B in total and 3B activated",
       inputEmbedding: 508559360,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 844640768,
+      split: "safetensors headers of Qwen/Qwen3.5-35B-A3B at 59d61f3ce65a: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 40,
     layerTypes: {
@@ -245,7 +267,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen3.5-9B/blob/main/README.md",
       quote: "- Number of Parameters: 9B",
       inputEmbedding: 1017118720,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 243290624,
+      split: "safetensors headers of Qwen/Qwen3.5-9B at c20223623576: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 32,
     layerTypes: {
@@ -276,7 +300,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct/blob/main/README.md",
       quote: "- Number of Parameters: 80B in total and 3B activated",
       inputEmbedding: 311164928,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 1650471424,
+      split: "safetensors headers of Qwen/Qwen3-Next-80B-A3B-Instruct at 9c7f2fbe8446: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 48,
     layerTypes: {
@@ -299,7 +325,7 @@ export const MODELS = {
       shared: 1
     },
     maxPositions: 262144,
-    note: "The count excludes the 1.65B MTP head the checkpoint also carries."
+    note: "The count excludes the 1.65B MTP head the checkpoint also carries (params.mtp)."
   },
   qwen3_coder_next_80b_a3b: {
     label: "Qwen3-Coder-Next",
@@ -312,7 +338,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen3-Coder-Next/blob/main/README.md",
       quote: "- Number of Parameters: 80B in total and 3B activated",
       inputEmbedding: 311164928,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 0,
+      split: "safetensors headers of Qwen/Qwen3-Coder-Next at a7fbcb5c0e12: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 48,
     layerTypes: {
@@ -348,7 +376,9 @@ export const MODELS = {
       source: "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16/blob/main/README.md",
       quote: "The model has 3.5B active parameters and 30B parameters in total.",
       inputEmbedding: 352321536,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 0,
+      split: "safetensors headers of nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 at bf77c3174f68: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 52,
     layerTypes: {
@@ -384,7 +414,9 @@ export const MODELS = {
       source: "https://huggingface.co/google/gemma-4-31B-it/blob/main/README.md",
       quote: "| **Total Parameters** | 2.3B effective <br> (5.1B with embeddings) | 4.5B effective <br> (8B with embeddings) | 11.95B | 30.7B |",
       inputEmbedding: 1409286144,
-      tiedEmbeddings: true
+      tiedEmbeddings: true,
+      mtp: 0,
+      split: "safetensors headers of google/gemma-4-31B-it at 842da3794eaa: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 60,
     layerTypes: {
@@ -422,7 +454,9 @@ export const MODELS = {
       source: "https://huggingface.co/openai/gpt-oss-120b/blob/main/README.md",
       quote: "(117B parameters with 5.1B active parameters)",
       inputEmbedding: 579133440,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 0,
+      split: "safetensors headers of openai/gpt-oss-120b at b5c939de8f75: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 36,
     layerTypes: {
@@ -452,7 +486,9 @@ export const MODELS = {
       source: "https://huggingface.co/zai-org/GLM-4.7-Flash/blob/main/README.md",
       quote: "GLM-4.7-Flash is a 30B-A3B MoE model.",
       inputEmbedding: 317194240,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 1278094656,
+      split: "safetensors headers of zai-org/GLM-4.7-Flash at 7dd20894a642: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 47,
     layerTypes: {
@@ -473,7 +509,7 @@ export const MODELS = {
       shared: 1
     },
     maxPositions: 202752,
-    note: "Multi-head latent attention: each position caches a 512-wide latent and a 64-wide rotary key, shared by every head. The active count is only the card's nominal \"A3B\"."
+    note: "Multi-head latent attention: each position caches a 512-wide latent and a 64-wide rotary key, shared by every head. The active count is only the card's nominal \"A3B\". Its MTP layer (layer 47, 1.28B) stores its own copies of the input embedding and output head, 0.63B of the 1.28B; an engine that shares them with the main model holds 0.64B."
   },
   qwen3_30b_a3b: {
     label: "Qwen3-30B-A3B",
@@ -486,7 +522,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen3-30B-A3B/blob/main/README.md",
       quote: "- Number of Parameters: 30.5B in total and 3.3B activated",
       inputEmbedding: 311164928,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 0,
+      split: "safetensors headers of Qwen/Qwen3-30B-A3B at ad44e777bcd1: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 48,
     layerTypes: {
@@ -513,7 +551,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct/blob/main/README.md",
       quote: "- Number of Parameters: 30.5B in total and 3.3B activated",
       inputEmbedding: 311164928,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 0,
+      split: "safetensors headers of Qwen/Qwen3-Coder-30B-A3B-Instruct at b2cff646eb4b: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 48,
     layerTypes: {
@@ -540,7 +580,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen3-32B/blob/main/README.md",
       quote: "- Number of Parameters: 32.8B",
       inputEmbedding: 777912320,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 0,
+      split: "safetensors headers of Qwen/Qwen3-32B at 9216db5781bf: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 64,
     layerTypes: {
@@ -562,7 +604,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen2.5-32B-Instruct/blob/main/README.md",
       quote: "- Number of Parameters: 32.5B",
       inputEmbedding: 778567680,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 0,
+      split: "safetensors headers of Qwen/Qwen2.5-32B-Instruct at 5ede1c97bbab: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 64,
     layerTypes: {
@@ -585,7 +629,9 @@ export const MODELS = {
       source: "https://huggingface.co/mistralai/Mistral-Small-24B-Instruct-2501/blob/main/README.md",
       quote: "Mistral Small 3 ( 2501 ) sets a new benchmark in the \"small\" Large Language Models category below 70B, boasting 24B parameters and achieving state-of-the-art capabilities comparable to larger models!",
       inputEmbedding: 671088640,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 0,
+      split: "safetensors headers of mistralai/Mistral-Small-24B-Instruct-2501 at 9527884be6e5: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 40,
     layerTypes: {
@@ -609,7 +655,9 @@ export const MODELS = {
       source: "https://huggingface.co/unsloth/Llama-3.3-70B-Instruct/blob/main/README.md",
       quote: "The Meta Llama 3.3 multilingual large language model (LLM) is a pretrained and instruction tuned generative model in 70B (text in/text out).",
       inputEmbedding: 1050673152,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 0,
+      split: "safetensors headers of unsloth/Llama-3.3-70B-Instruct at 99cd0d2c829e: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 80,
     layerTypes: {
@@ -633,7 +681,9 @@ export const MODELS = {
       source: "https://huggingface.co/NousResearch/Llama-2-7b-hf/blob/main/README.md",
       quote: "Llama 2 is a collection of pretrained and fine-tuned generative text models ranging in scale from 7 billion to 70 billion parameters. This is the repository for the 7B pretrained model, converted for the Hugging Face Transformers format.",
       inputEmbedding: 131072000,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 0,
+      split: "safetensors headers of NousResearch/Llama-2-7b-hf at 8efe6c9b9365: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 32,
     layerTypes: {
@@ -657,7 +707,9 @@ export const MODELS = {
       source: "https://huggingface.co/NousResearch/Meta-Llama-3.1-8B-Instruct/blob/main/README.md",
       quote: "The Meta Llama 3.1 collection of multilingual large language models (LLMs) is a collection of pretrained and instruction tuned generative models in 8B, 70B and 405B sizes (text in/text out).",
       inputEmbedding: 525336576,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 0,
+      split: "safetensors headers of NousResearch/Meta-Llama-3.1-8B-Instruct at d10aef7999a2: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 32,
     layerTypes: {
@@ -680,7 +732,9 @@ export const MODELS = {
       source: "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Llama-8B/blob/main/README.md",
       quote: "We open-source distilled 1.5B, 7B, 8B, 14B, 32B, and 70B checkpoints based on Qwen2.5 and Llama3 series to the community.",
       inputEmbedding: 525336576,
-      tiedEmbeddings: false
+      tiedEmbeddings: false,
+      mtp: 0,
+      split: "safetensors headers of deepseek-ai/DeepSeek-R1-Distill-Llama-8B at 6a6f4aa41979: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 32,
     layerTypes: {
@@ -702,7 +756,9 @@ export const MODELS = {
       source: "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/README.md",
       quote: "- Number of Parameters: 3.09B",
       inputEmbedding: 311164928,
-      tiedEmbeddings: true
+      tiedEmbeddings: true,
+      mtp: 0,
+      split: "safetensors headers of Qwen/Qwen2.5-3B-Instruct at aa8e72537993: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
     },
     layers: 36,
     layerTypes: {
@@ -714,3 +770,35 @@ export const MODELS = {
     maxPositions: 32768
   },
 };
+
+// Separate draft models for speculative decoding, keyed by id, each naming the
+// model it drafts for. Same shape fields as MODELS, so the cache arithmetic in
+// assets/ceiling.js applies; a drafter that shares its target's embedding and
+// output head stores neither, and its total says so.
+export const DRAFTERS = {
+  qwen38_27b_dflash2: {
+    label: "DFlash2 drafter for Qwen3.8-27B",
+    for: "qwen38_27b",
+    method: "dflash2",
+    repo: "z-lab/Qwen3.8-27B-DFlash2",
+    source: "https://huggingface.co/z-lab/Qwen3.8-27B-DFlash2/raw/main/config.json",
+    revision: "50307d4c4cde6860d4eee73e2547cd786fe8e8a4",
+    params: {
+      total: 1924404480,
+      active: 1924404480,
+      source: "safetensors header of z-lab/Qwen3.8-27B-DFlash2 at 50307d4c4cde: five decoder layers, a fusion projection over five target layers' hidden states and a candidate selector, with no embedding or output head of its own",
+      inputEmbedding: 0,
+      tiedEmbeddings: false
+    },
+    layers: 5,
+    layerTypes: {
+      sliding_attention: 5
+    },
+    heads: 32,
+    kvHeads: 8,
+    headDim: 128,
+    slidingWindow: 2048,
+    note: "A block-diffusion drafter: \"Speculation block size: 8 (7 draft tokens per verification step)\" (model card). Its five layers attend over a 2,048-position window, so its own cache stays near 40 MB at F16 however deep the context. Re-uploaded unchanged as incoai/Qwen3.8-27B-DFlash2; the ledger also runs igor255's EXL3 4.00 bpw quant and Z-Lab's Q4_K_M GGUF (1,143,006,816 bytes)."
+  },
+};
+

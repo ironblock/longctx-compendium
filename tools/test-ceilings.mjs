@@ -21,6 +21,11 @@ const near = (name, got, want, tol = 1e-9) => {
   if (!ok) failed++;
   console.log(`${ok ? '✓' : '✗'} ${name}${ok ? '' : ` -- got ${got}, want ${want}`}`);
 };
+const same = (name, got, want) => {
+  const ok = got === want;
+  if (!ok) failed++;
+  console.log(`${ok ? '✓' : '✗'} ${name}${ok ? '' : ` -- got ${got}, want ${want}`}`);
+};
 const unit = (bw, extra = {}) => ({ memoryBandwidthGBs: bw, memoryGB: 80, formats: { fp16: 'native', bf16: 'native' }, compute: { values: { fp16: 100, bf16: 100 } }, ...extra });
 
 // Llama 3.1 8B, FP16, empty context: every weight but the untied input
@@ -102,6 +107,29 @@ const q32KvPerPos = 64 * 8 * 128 * 2 * 2;
   const m = MODELS.qwen38_27b;
   near('Qwen3.8-27B: recurrent state', C.recurrentStateBytes(m), 48 * 48 * 128 * 128 * 4);
   near('Qwen3.8-27B: KV per token at q8_0', C.kvBytesPerToken(m, 'q8_0'), 16 * 4 * 256 * 2 * (34 / 32));
+}
+
+// Draft weights and lookup tables. An MTP head adds its weights at the main
+// bits per weight; a drafter adds its weights and its own (windowed) cache; a
+// lookup table never counts against GPU memory, only host RAM.
+{
+  const m = MODELS.qwen38_27b;
+  const args = { cards: 1, mode: 'single', bpw: 4.83, depth: 131072 };
+  const base = C.fit(m, { memoryGB: 32 }, args);
+  const mtp = C.draftFor('qwen38_27b', 'mtp');
+  const withMtp = C.fit(m, { memoryGB: 32 }, { ...args, draft: mtp });
+  near('Qwen3.8-27B: MTP head adds its weights', withMtp.need - base.need, (424699392 * 4.83) / 8);
+  const d = C.draftFor('qwen38_27b', 'drafter');
+  const withDrafter = C.fit(m, { memoryGB: 32 }, { ...args, draft: d });
+  // Five sliding layers, 8 KV heads of 128, keys and values, F16, a 2,048-position window.
+  near('Qwen3.8-27B: DFlash2 drafter adds weights and a windowed cache', withDrafter.need - base.need, (1924404480 * 4.83) / 8 + 5 * 8 * 128 * 2 * 2 * 2048);
+  same('no draft when speculation is off', C.draftFor('qwen38_27b', 'off'), null);
+  same('a model with no MTP head says so', C.draftFor('qwen3_coder_next_80b_a3b', 'mtp').missing, 'no MTP head in the checkpoint');
+  same('a model with no drafter says so', C.draftFor('qwen38_flash_next', 'drafter').missing, 'no drafter recorded');
+  const f = MODELS.qwen38_flash_next;
+  const ff = C.fit(f, { memoryGB: 96 }, { ...args, depth: 4096 });
+  near('Flash-Next: n-gram table goes to host RAM, in BF16', ff.host, (51200245792 * 16) / 8);
+  near('Flash-Next: and stays out of GPU memory', ff.weights, (125e9 * 4.83) / 8);
 }
 
 // Qwen3.8-Flash-Next's sparse full-attention layers store every position but

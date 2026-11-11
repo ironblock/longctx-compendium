@@ -532,6 +532,32 @@ async function decodeAt(modelId, tokens) {
   await settle();
 }
 
+// --- 2b. Draft weights and lookup tables -------------------------------------
+{
+  check('the shared settings offer draft weights: none, MTP head, drafter', (await count('#specChips button')) === 3);
+  const before = await text('#ceilTable tbody');
+  await page.click('#specChips button:has-text("MTP head")');
+  await settle();
+  const mtp = await text('#ceilTable tbody');
+  check('counting the MTP head shows it in each fit', /incl\. [\d.]+ GiB MTP head/.test(mtp) && !/MTP head/.test(before));
+  check('the draft setting is kept in the address', /spec=mtp/.test(page.url()));
+  await page.click('#specChips button:has-text("Drafter")');
+  await settle();
+  check('a recorded drafter is counted for its model', /incl\. [\d.]+ GiB drafter/.test(await text('#ceilTable tbody')));
+  await page.selectOption('#modelSelect', 'qwen38_flash_next');
+  await settle();
+  const fn = await text('#ceilTable tbody');
+  check('a model with no drafter says so', /no drafter recorded/.test(fn));
+  check('an n-gram table is reported as host RAM, not GPU memory', /\+ 95 GiB host RAM for its lookup table/.test(fn), 'expected 51.2B BF16 parameters');
+  await openTab('rigs');
+  check('rigs show the host RAM a lookup table needs', /host RAM for its lookup table; host memory not recorded/.test(await text('#candTable tbody')));
+  await openTab('ceilings');
+  await page.click('#specChips button:has-text("None")');
+  await page.selectOption('#modelSelect', 'qwen38_27b');
+  await settle();
+  check('turning draft weights off restores the plain fit', (await text('#ceilTable tbody')) === before);
+}
+
 // --- 3. Observations -------------------------------------------------------
 await openTab('observations');
 check('one group per serving line', (await count('#obsTable tr.line-head')) === model.LINES.length, `got ${await count('#obsTable tr.line-head')} of ${model.LINES.length}`);

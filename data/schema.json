@@ -1435,6 +1435,29 @@
             "source": {
               "type": "string",
               "description": "Where the counts come from, with the card's own words."
+            },
+            "lookup": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Parameters in lookup tables (n-gram embeddings, Engram memory) that the total includes. They are read a few rows per token, so the page places them in host RAM and leaves them out of GPU memory."
+            },
+            "lookupBits": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Bits per lookup-table parameter as the checkpoint ships them. Absent: precision not recorded, and the page gives no host-RAM figure."
+            },
+            "mtp": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Parameters in the checkpoint's MTP head; 0 when the checkpoint was checked and carries none. Resident only when speculative decoding uses it."
+            },
+            "mtpInTotal": {
+              "type": "boolean",
+              "description": "Whether the published total already includes the MTP head."
+            },
+            "split": {
+              "type": "string",
+              "description": "Where lookup and mtp were counted: the card's words, or the checkpoint's safetensors headers at a revision."
             }
           }
         },

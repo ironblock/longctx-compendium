@@ -11,7 +11,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MODELS } from '../assets/models.js';
+import { MODELS, DRAFTERS } from '../assets/models.js';
 import { WEIGHT_FORMATS } from '../assets/ceiling.js';
 import { FORMATS } from '../assets/data.js';
 
@@ -346,6 +346,20 @@ for (const c of doc.candidates ?? []) {
   c.models.forEach(m => modelKnown(m, at));
 }
 
+// --- Model shapes: the parts counted apart from the total
+for (const [id, m] of Object.entries(MODELS)) {
+  const at = `model "${id}"`;
+  const p = m.params ?? {};
+  if ((p.mtp != null || p.lookup != null) && !p.split) fail(at, 'counts an MTP head or lookup table without saying where (params.split)');
+  if (p.lookup && !p.lookupBits) fail(at, 'has a lookup table but no lookupBits, so its host-RAM size is unknown');
+}
+for (const [id, d] of Object.entries(DRAFTERS)) {
+  const at = `drafter "${id}"`;
+  if (!MODELS[d.for]) fail(at, `drafts for "${d.for}", which is not in MODELS`);
+  if (!d.params?.total || !d.params?.source) fail(at, 'needs a sourced parameter count');
+  if (d.revision == null) fail(at, 'pins no revision');
+}
+
 // --- The open-weight frontier
 // One quality measure, versioned: a score from another measure or a later
 // version than the one declared would be compared with numbers it cannot be.
@@ -357,6 +371,12 @@ for (const m of doc.openModels ?? []) {
   if (m.params.active != null && m.params.active > m.params.total) {
     fail(at, `has more active parameters (${m.params.active}) than total (${m.params.total})`);
   }
+  // The split of the total is a claim like any other; what goes to the GPUs must stay positive.
+  const p = m.params;
+  if ((p.lookup != null || p.mtp != null) && !p.split) fail(at, 'splits its total (lookup, mtp) without saying where the split came from');
+  if (p.lookupBits != null && !p.lookup) fail(at, 'gives a lookup-table precision but no lookup table');
+  if (p.mtpInTotal != null && p.mtp == null) fail(at, 'says whether the total includes the MTP head but not how big it is');
+  if ((p.lookup ?? 0) + (p.mtpInTotal ? (p.mtp ?? 0) : 0) >= p.total) fail(at, 'leaves nothing of its total for the GPUs once lookup tables and MTP are taken out');
   const seen = new Set();
   (m.scores ?? []).forEach((sc, i) => {
     const st = `${at} scores[${i}]`;

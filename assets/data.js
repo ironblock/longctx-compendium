@@ -58,7 +58,12 @@ export function frontierOf(openModels, qi) {
     .map(m => {
       const cur = (m.scores ?? []).filter(s => s.index === qi?.id && s.version === qi?.version);
       const best = cur.reduce((b, s) => (b == null || s.value > b.value ? s : b), null);
-      return { ...m, best, total: m.params.total, active: m.params.active ?? null };
+      // What has to sit in GPU memory: the published total less lookup tables
+      // (host RAM) and any MTP head the total includes (resident only with MTP on).
+      const lookup = m.params.lookup ?? 0;
+      const mtp = m.params.mtp ?? null;
+      const gpu = m.params.total - lookup - (m.params.mtpInTotal && mtp ? mtp : 0);
+      return { ...m, best, total: m.params.total, active: m.params.active ?? null, gpu, lookup, lookupBits: m.params.lookupBits ?? null, mtp };
     })
     .filter(p => p.best);
   for (const p of pts) {

@@ -22,7 +22,7 @@
 // overlap, perfect multi-card scaling, no kernel-launch or synchronization
 // cost, and only the bytes a step cannot avoid reading.
 
-import { MODELS } from './models.js';
+import { MODELS, DRAFTERS } from './models.js';
 import { PRECISION_MAP, ARCH_TO_DEQUANT_FAMILY } from './dequant-map.js';
 
 /** Bytes per cached element, for every KV cache type a line on this page uses. */
@@ -84,6 +84,38 @@ export const WEIGHT_FORMATS = {
 export const WEIGHT_CHOICES = ['q4_k_m', 'q8_0', 'mxfp4', 'nvfp4', 'fp8', 'bf16'];
 
 export const DEPTH_CHOICES = [4096, 32768, 131072, 262144];
+
+/**
+ * Speculative-decoding weights the fit check can count: none, the model's own
+ * MTP head, or a separate drafter recorded for it. Either sits in GPU memory
+ * at the weights' bits per weight; a drafter brings its own cache too.
+ */
+export const SPEC_CHOICES = [
+  { id: 'off', label: 'None', title: 'Count no draft weights' },
+  { id: 'mtp', label: 'MTP head', title: "Count the model's multi-token-prediction head, which has to be resident when speculative decoding uses it" },
+  { id: 'drafter', label: 'Drafter', title: 'Count a separate draft model recorded for this model (DFlash2 ...), with its own cache' },
+];
+
+/**
+ * The draft weights a model would hold under a speculative setting, or why it
+ * has none. { kind, label, params, shape? } or { missing }; null when off.
+ */
+export function draftFor(modelId, spec) {
+  if (!spec || spec === 'off') return null;
+  const m = MODELS[modelId];
+  if (!m) return { missing: 'model shape not recorded' };
+  if (spec === 'mtp') {
+    if (m.params.mtp == null) return { missing: 'MTP head not counted for this model' };
+    if (!m.params.mtp) return { missing: 'no MTP head in the checkpoint' };
+    return { kind: 'mtp', label: 'MTP head', params: m.params.mtp };
+  }
+  const d = Object.values(DRAFTERS).find(x => x.for === modelId);
+  if (!d) return { missing: 'no drafter recorded' };
+  return { kind: 'drafter', label: d.label, params: d.params.total, shape: d };
+}
+
+/** Bytes of a model's lookup tables (n-gram / Engram), which live in host RAM. */
+export const lookupBytes = m => (m?.params?.lookup ? (m.params.lookup * (m.params.lookupBits ?? 16)) / 8 : 0);
 
 /**
  * Per-card working memory an engine needs beyond weights and cache (runtime
@@ -378,9 +410,12 @@ export function vectorBound(unit) {
  * mean by "32 GB" of VRAM. Under tensor parallel a model with fewer KV heads
  * than cards has to replicate them, so the cache grows by that factor.
  */
-export function fit(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK = 'f16', kvV = kvK, streams = 1 }) {
+export function fit(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK = 'f16', kvV = kvK, streams = 1, draft = null }) {
   if (!m?.params?.total || bpw == null || !unit?.memoryGB) return null;
   const weights = (m.params.total * bpw) / 8;
+  // Draft weights at the same bits per weight; a drafter's own cache per stream.
+  const draftWeights = draft?.params ? (draft.params * bpw) / 8 : 0;
+  const draftKv = draft?.shape ? (kvBytesAt(draft.shape, depth, kvK, kvV) ?? 0) : 0;
   const full = kvBytesPerPosition(m, 'full', kvK, kvV);
   const slide = kvBytesPerPosition(m, 'sliding', kvK, kvV);
   if (full == null) return null;
@@ -396,9 +431,11 @@ export function fit(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK = 'f1
   const slideKv = (m.layerTypes.sliding_attention ?? 0) * slide * Math.min(depth, m.slidingWindow ?? depth);
   const kv = fullKv * copies('full') + slideKv * copies('sliding');
   const replicate = Math.max(copies('full'), (m.layerTypes.sliding_attention ? copies('sliding') : 1));
-  const need = weights + streams * (kv + recurrentStateBytes(m));
+  const need = weights + draftWeights + streams * (kv + recurrentStateBytes(m) + draftKv);
   const have = cards * (unit.memoryGB * GiB - RESERVE_BYTES_PER_CARD);
-  return { need, have, fits: need <= have, weights, kv: kv * streams, replicate };
+  // Lookup tables are read a few rows per token, so they sit in host RAM and
+  // are reported beside the GPU figure, not inside it.
+  return { need, have, fits: need <= have, weights, kv: kv * streams, replicate, draft: draftWeights + streams * draftKv, host: lookupBytes(m) };
 }
 
 export const CARD_STEPS = [1, 2, 4, 8];

@@ -263,6 +263,22 @@ const CASES = [
   ['a system with an unknown kind', 'must be one of', d => {
     carrier(d, 'dgx2').kind = 'server';
   }],
+  ['a frontier model split without a source', 'without saying where the split came from', d => {
+    const m = d.openModels.find(x => x.id === 'kimi_k31_pro');
+    m.params.mtp = 1e10;
+  }],
+  ['a lookup precision with no lookup table', 'precision but no lookup table', d => {
+    const m = d.openModels.find(x => x.id === 'kimi_k31_pro');
+    Object.assign(m.params, { lookupBits: 8, split: 'x' });
+  }],
+  ['an MTP inclusion flag with no MTP size', 'not how big it is', d => {
+    const m = d.openModels.find(x => x.id === 'kimi_k31_pro');
+    Object.assign(m.params, { mtpInTotal: true, split: 'x' });
+  }],
+  ['lookup tables that leave nothing for the GPUs', 'leaves nothing of its total', d => {
+    const m = d.openModels.find(x => x.id === 'kimi_k31_pro');
+    Object.assign(m.params, { lookup: m.params.total, lookupBits: 8, split: 'x' });
+  }],
   ['an open model scored on another index', 'but the frontier is drawn on', d => {
     d.openModels[0].scores[0].index = 'lmarena';
   }],
@@ -310,6 +326,10 @@ const ACCEPTED = [
   }],
   ['a unit with no price', null, d => {
     delete unit(d, 'rtx_5090').pricing;
+  }],
+  ['a frontier model with a sourced split', null, d => {
+    const m = d.openModels.find(x => x.id === 'kimi_k31_pro');
+    Object.assign(m.params, { mtp: 0, split: 'safetensors headers' });
   }],
   ['a system priced without its modules', null, d => {
     delete carrier(d, 'smc_820gh_tnr2').pricing.modules;

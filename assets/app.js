@@ -8,6 +8,7 @@ import {
   WEIGHT_FORMATS,
   WEIGHT_CHOICES,
   KV_CHOICES,
+  SPEC_CHOICES,
   CARD_STEPS,
   attentionLayout,
   LAYOUT_LABEL,
@@ -72,6 +73,7 @@ const DEFAULTS = {
   model: 'qwen38_27b',
   weights: 'q4_k_m',
   kv: 'f16',
+  spec: 'off',
   depth: 131072,
   cards: 'auto',
   // Context depth runs from 1K to 256K tokens, on a log scale, in 1K steps.
@@ -127,6 +129,7 @@ function readState() {
     model: str('model', Object.keys(MODELS)),
     weights: str('w', WEIGHT_CHOICES),
     kv: str('kv', KV_CHOICES.map(k => k.id)),
+    spec: str('spec', SPEC_CHOICES.map(k => k.id)),
     depth: Math.min(DEFAULTS.depthMax, Math.max(DEFAULTS.depthMin, Math.round(d / 1024) * 1024)),
     cards: str('n', ['auto', '1', '2', '3', '4', '5', '6', '7', '8']),
     split: str('split', ['tensor', 'layer']),
@@ -166,6 +169,7 @@ function writeState(s) {
   put('model', s.model, DEFAULTS.model);
   put('w', s.weights, DEFAULTS.weights);
   put('kv', s.kv, DEFAULTS.kv);
+  put('spec', s.spec, DEFAULTS.spec);
   put('d', s.depth, DEFAULTS.depth);
   put('n', s.cards, DEFAULTS.cards);
   put('split', s.split, DEFAULTS.split);
@@ -402,6 +406,10 @@ try {
     });
     chips('kvChips', KV_CHOICES.map(k => ({ v: k.id, label: k.label })), v => state.kv === v, v => {
       state.kv = v;
+      update('model');
+    });
+    chips('specChips', SPEC_CHOICES.map(k => ({ v: k.id, label: k.label, title: k.title })), v => state.spec === v, v => {
+      state.spec = v;
       update('model');
     });
     sliders.depth.set(state.depth);

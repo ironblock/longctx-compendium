@@ -12,7 +12,17 @@ import {
   fmtGiB,
   bpwOf,
   KV_BYTES_PER_ELEMENT,
+  draftFor,
 } from './ceiling.js';
+
+/** The draft and host-RAM parts of a fit, as sub-lines under its GPU figure. */
+function fitExtras(f, draft) {
+  const out = [];
+  if (draft?.params && f.draft) out.push(`incl. ${fmtGiB(f.draft)} ${esc(draft.kind === 'mtp' ? 'MTP head' : 'drafter')}`);
+  else if (draft?.missing) out.push(esc(draft.missing));
+  if (f.host) out.push(`+ ${fmtGiB(f.host)} host RAM for its lookup table`);
+  return out;
+}
 
 const el = id => document.getElementById(id);
 export const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -184,7 +194,8 @@ export function renderHardwareTable(model, state, matches) {
 /** Every ceiling figure for one unit at the calculator's settings. */
 export function ceilingRow(m, u, s) {
   const { bpw } = bpwOf(s.weights);
-  const kv = { kvK: s.kv, kvV: s.kv };
+  const draft = draftFor(s.model, s.spec);
+  const kv = { kvK: s.kv, kvV: s.kv, draft: draft?.params ? draft : null };
   const auto = s.cards === 'auto';
   const n = auto ? cardsToFit(m, u, { mode: s.split, bpw, depth: s.depth, ...kv }) : Number(s.cards);
   if (n == null) return { u, n: null };
@@ -194,7 +205,7 @@ export function ceilingRow(m, u, s) {
   const p = prefillCeiling(m, u, { cards: n, formatKey: s.weights, depth: s.depth });
   // GPUs on a multi-GPU board are bought a board at a time.
   const cost = u.street != null ? u.street * Math.ceil(n / u.gpus) : null;
-  return { u, n, mode, fit: f, decode: d?.tps ?? null, prefill: p, cost, perK: d?.tps && cost ? d.tps / (cost / 1000) : null };
+  return { u, n, mode, fit: f, draft, decode: d?.tps ?? null, prefill: p, cost, perK: d?.tps && cost ? d.tps / (cost / 1000) : null };
 }
 
 const barCell = (v, max, extra = '') =>
@@ -224,7 +235,7 @@ export function renderCeilingTable(model, state, units) {
     }
     const f = r.fit;
     const mem = f
-      ? `<td class="lbl"><span class="${f.fits ? 't-ok' : 't-bad'}">${f.fits ? 'fits' : 'does not fit'}</span><span class="sub">needs ${fmtGiB(f.need)} of ${fmtGiB(f.have)}${f.replicate > 1 ? ` · KV ×${f.replicate} replicated` : ''}</span></td>`
+      ? `<td class="lbl"><span class="${f.fits ? 't-ok' : 't-bad'}">${f.fits ? 'fits' : 'does not fit'}</span><span class="sub">needs ${fmtGiB(f.need)} of ${fmtGiB(f.have)}${f.replicate > 1 ? ` · KV ×${f.replicate} replicated` : ''}</span>${fitExtras(f, r.draft).map(x => `<span class="sub">${x}</span>`).join('')}</td>`
       : `<td class="lbl">${DASH}</td>`;
     const prec = r.prefill.precision;
     const pre = r.prefill.tps == null
@@ -445,13 +456,23 @@ export function renderCandidates(model, state) {
       .map(id => {
         const m = modelById(id);
         if (!m?.params?.active) return `${esc(m?.label ?? id)}: no parameter count recorded`;
-        const args = { bpw, depth: state.depth, kvK: state.kv, kvV: state.kv };
+        const draft = draftFor(id, state.spec);
+        const args = { bpw, depth: state.depth, kvK: state.kv, kvV: state.kv, draft: draft?.params ? draft : null };
         const fl = fit(m, u, { ...args, cards: n, mode: 'tensor' });
         const fll = fit(m, u, { ...args, cards: n, mode: 'layer' });
         const dl = decodeCeiling(m, u, { ...args, cards: n, mode: 'layer' });
         const dt = decodeCeiling(m, u, { ...args, cards: n, mode: 'tensor' });
         const fits = `${fll?.fits ? '<span class="t-ok">fits</span>' : '<span class="t-bad">does not fit</span>'} layer-split${fl && fl.fits !== fll?.fits ? ` · ${fl.fits ? '<span class="t-ok">fits</span>' : '<span class="t-bad">does not fit</span>'} TP` : ''}`;
-        return `<b>${esc(m.label)}</b>: ${fits}<br><span class="num">${dl ? sig(dl.tps) : '—'}</span> layer · <span class="num">${dt ? sig(dt.tps) : '—'}</span> TP decode`;
+        // Lookup tables go to host RAM: checked against the rig's when it is recorded.
+        const hostGB = k?.host?.memoryGB ?? c.rig.host?.ramGB ?? null;
+        const hostNeed = fll?.host ? fll.host / 2 ** 30 : 0;
+        const host = !hostNeed
+          ? ''
+          : hostGB == null
+            ? `<br><span class="sub">+ ${fmtGiB(fll.host)} host RAM for its lookup table; host memory not recorded</span>`
+            : `<br><span class="sub ${hostNeed <= hostGB ? 't-ok' : 't-bad'}">+ ${fmtGiB(fll.host)} host RAM for its lookup table: ${hostNeed <= hostGB ? 'fits' : 'does not fit'} in ${hostGB} GB</span>`;
+        const dr = draft?.params ? `<br><span class="sub">incl. ${fmtGiB(fll?.draft)} ${draft.kind === 'mtp' ? 'MTP head' : 'drafter'}</span>` : draft?.missing ? `<br><span class="sub">${esc(draft.missing)}</span>` : '';
+        return `<b>${esc(m.label)}</b>: ${fits}${dr}${host}<br><span class="num">${dl ? sig(dl.tps) : '—'}</span> layer · <span class="num">${dt ? sig(dt.tps) : '—'}</span> TP decode`;
       })
       .join('<br>');
     const fitSubs = (ic?.fits ?? [])
@@ -579,11 +600,25 @@ export function renderFrontierTable(model, state) {
   const { bpw } = bpwOf(state.weights);
   const rigs = model.CANDIDATES.filter(c => c.rigTotals.memoryGB).sort((a, b) => a.rigTotals.memoryGB - b.rigTotals.memoryGB);
   const qi = model.QI;
+  const withMtp = state.spec === 'mtp';
   tb.innerHTML = [...model.FRONTIER]
     .sort((a, b) => b.best.value - a.best.value)
     .map(p => {
-      const gb = (p.total * bpw) / 8 / 1e9;
+      // GPU memory: weights less lookup tables, plus the MTP head when it is counted.
+      const draft = withMtp && p.mtp ? p.mtp : 0;
+      const gb = ((p.gpu + draft) * bpw) / 8 / 1e9;
+      const hostGB = p.lookup && p.lookupBits ? (p.lookup * p.lookupBits) / 8 / 1e9 : null;
       const fits = rigs.find(c => c.rigTotals.memoryGB >= gb);
+      const rigHost = fits && (fits.link?.carrier?.host?.memoryGB ?? fits.rig.host?.ramGB ?? null);
+      const lookupSub = !p.lookup
+        ? ''
+        : hostGB != null
+          ? `<span class="sub">+ ${Math.round(hostGB).toLocaleString()} GB host RAM for ${fmtParams(p.lookup)} of lookup tables</span>`
+          : `<span class="sub">+ ${fmtParams(p.lookup)} of lookup tables for host RAM, precision not recorded</span>`;
+      const mtpSub = withMtp ? `<span class="sub">${p.mtp ? `incl. ${fmtParams(p.mtp)} MTP head` : p.mtp === 0 ? 'no MTP head in the checkpoint' : 'MTP head not counted'}</span>` : '';
+      const hostCheck = fits && p.lookup && hostGB != null && rigHost != null
+        ? `<span class="sub ${hostGB <= rigHost ? 't-ok' : 't-bad'}">host RAM ${hostGB <= rigHost ? 'holds' : 'too small for'} the tables (${rigHost.toLocaleString()} GB)</span>`
+        : fits && p.lookup ? '<span class="sub">plus host RAM for the tables</span>' : '';
       const now = p.beatenBy && p.beatenBy !== p.knockedOffBy ? `; now also ${esc(p.beatenBy.label)}` : '';
       const status = p.onFrontier
         ? '<span class="t-ok">on the frontier</span>'
@@ -596,8 +631,8 @@ export function renderFrontierTable(model, state) {
         `<td class="num">${fmtParams(p.total)}<span class="sub">${p.active && p.active !== p.total ? `${fmtParams(p.active)} active` : p.active ? 'dense' : 'active not stated'}</span></td>` +
         `<td class="lbl wrap" style="min-width:120px;max-width:170px;font-size:11.5px">${esc(p.weights?.precision ?? 'not recorded')}${p.weights?.sizeGB ? `<span class="sub">${p.weights.sizeGB.toLocaleString()} GB download</span>` : ''}</td>` +
         `<td class="num">${p.best.value}<span class="sub" title="${esc(p.best.variant)}">${esc(p.best.variant.length > 22 ? `${p.best.variant.slice(0, 21)}…` : p.best.variant)}</span></td>` +
-        `<td class="num">${Math.round(gb).toLocaleString()} GB<span class="sub">weights at ${bpw} bpw</span></td>` +
-        `<td class="lbl wrap" style="min-width:130px;max-width:190px;font-size:11.5px">${fits ? `${esc(fits.label)}<span class="sub">${fits.rigTotals.memoryGB} GB, weights only</span>` : '<span class="t-bad">no rig here</span><span class="sub">offload or more cards</span>'}</td>` +
+        `<td class="num">${Math.round(gb).toLocaleString()} GB<span class="sub">${p.lookup ? 'on the GPUs, ' : ''}weights at ${bpw} bpw</span>${mtpSub}${lookupSub}</td>` +
+        `<td class="lbl wrap" style="min-width:130px;max-width:190px;font-size:11.5px">${fits ? `${esc(fits.label)}<span class="sub">${fits.rigTotals.memoryGB} GB, weights only</span>${hostCheck}` : '<span class="t-bad">no rig here</span><span class="sub">offload or more cards</span>'}</td>` +
         `<td class="lbl wrap" style="min-width:150px;max-width:200px;font-size:11.5px">${status}</td>` +
         '</tr>'
       );
@@ -605,7 +640,7 @@ export function renderFrontierTable(model, state) {
     .join('');
   const cap = el('frontierCap');
   if (cap && qi) {
-    cap.innerHTML = `${model.FRONTIER.filter(p => p.onFrontier).length} of ${model.FRONTIER.length} open models on the frontier · scores: <a href="${esc(qi.url)}" rel="noopener noreferrer">${esc(qi.label)}</a> v${qi.version}, as of ${esc(qi.asOf)} · dashed lines: rig memory filled by weights at ${bpw} bpw`;
+    cap.innerHTML = `${model.FRONTIER.filter(p => p.onFrontier).length} of ${model.FRONTIER.length} open models on the frontier · scores: <a href="${esc(qi.url)}" rel="noopener noreferrer">${esc(qi.label)}</a> v${qi.version}, as of ${esc(qi.asOf)} · dashed lines: rig memory filled by weights at ${bpw} bpw · a whisker runs from a model's total back to what has to sit on the GPUs when its lookup tables go to host RAM${withMtp ? ' · MTP heads counted where a checkpoint was checked; drafters are not counted here' : ''}`;
   }
   const note = el('frontierNote');
   if (note && qi) note.innerHTML = `<b>${esc(qi.attribution)}</b>${qi.note ? ` ${esc(qi.note)}` : ''}`;

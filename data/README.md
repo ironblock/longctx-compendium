@@ -397,6 +397,15 @@ is shown, and a `note` on its known weaknesses. Each model records:
 
 - `params.total` and `params.active` from the model's own repository, with a
   `source` quoting the card; sizes never come from the index;
+- where the checkpoint was checked, the parts of the total that do not belong
+  in GPU memory: `lookup` (n-gram or Engram tables, read a few rows per token,
+  so placed in host RAM) with `lookupBits` as shipped, and `mtp`, the
+  multi-token-prediction head (0 when there is none), with `mtpInTotal` saying
+  whether the published total includes it. `split` says where they were
+  counted, usually the safetensors headers at the pinned revision. The page
+  puts total less lookup tables (and less an included MTP head) on the GPUs,
+  adds the MTP head back when the shared setting counts draft weights, and
+  reports lookup tables as host RAM;
 - `weights`: the precision it was released in, and the repository size;
 - `scores`: one per variant the index ran (an effort level, a reasoning mode),
   each with the index `id`, its `version`, the `value`, the `asOf` date and
@@ -407,7 +416,8 @@ on the frontier when no model of its size or smaller scores higher; release
 dates say when it joined and when it was beaten. Scores from another version
 are kept but never drawn against the current one, since an index rebase moves
 every score. The validator rejects a score on another index, one on a version
-newer than declared, a repeated variant, and more active parameters than total.
+newer than declared, a repeated variant, more active parameters than total,
+and a split of the total with no source or nothing left for the GPUs.
 
 ## What the checks catch
 

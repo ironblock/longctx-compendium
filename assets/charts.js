@@ -394,6 +394,36 @@ const capacityLines = {
 };
 
 /**
+ * A model whose total includes lookup tables (host RAM) gets a short solid
+ * whisker from its total back to what has to sit in GPU memory.
+ */
+const gpuWhiskers = {
+  id: 'gpuWhiskers',
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea: a, scales } = chart;
+    ctx.save();
+    ctx.strokeStyle = css('--muted');
+    ctx.lineWidth = 1.5;
+    for (const ds of chart.data.datasets) {
+      for (const p of ds.data) {
+        if (!p?.gpuX || p.gpuX >= p.x) continue;
+        const x0 = scales.x.getPixelForValue(p.gpuX);
+        const x1 = scales.x.getPixelForValue(p.x);
+        const y = scales.y.getPixelForValue(p.y);
+        if (!(y >= a.top && y <= a.bottom)) continue;
+        ctx.beginPath();
+        ctx.moveTo(Math.max(a.left, x0), y);
+        ctx.lineTo(x1, y);
+        ctx.moveTo(x0, y - 4);
+        ctx.lineTo(x0, y + 4);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  },
+};
+
+/**
  * Open-weight models by total parameters against the quality index, the
  * frontier drawn as a staircase through the models nothing smaller beats.
  */
@@ -408,6 +438,7 @@ export function renderFrontier(points, lines, qi) {
     released: p.released,
     variant: p.best.variant,
     on: p.onFrontier,
+    gpuX: p.lookup ? p.gpu / 1e9 : null,
   });
   const on = points.filter(p => p.onFrontier).map(pt);
   const off = points.filter(p => !p.onFrontier).map(pt);
@@ -465,6 +496,7 @@ export function renderFrontier(points, lines, qi) {
             label: it => [
               `${it.raw.creator} · released ${it.raw.released}`,
               `${fmtB(it.raw.x)} total${it.raw.active ? ` · ${fmtB(it.raw.active / 1e9)} active` : ''}`,
+              ...(it.raw.gpuX ? [`${fmtB(it.raw.gpuX)} on the GPUs; the rest is lookup tables for host RAM`] : []),
               `${qi?.label ?? 'index'} v${qi?.version}: ${it.raw.y} (${it.raw.variant})`,
               it.raw.on ? 'on the frontier' : 'a model no larger scores higher',
             ],
@@ -485,6 +517,6 @@ export function renderFrontier(points, lines, qi) {
         },
       },
     },
-    plugins: [pointLabels, capacityLines],
+    plugins: [pointLabels, capacityLines, gpuWhiskers],
   });
 }
