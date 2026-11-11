@@ -65,6 +65,7 @@
   <div class="fgroup">
     <div class="tglabel">SSD for the tables</div>
     <div class="chips" id="ssdChips"></div>
+    <div class="sub" id="ssdNote"></div>
   </div>
   <div class="fgroup slide">
     <div class="tglabel" id="depthLabel">Context depth, tokens</div>
@@ -287,6 +288,8 @@
       <li>A row that straddles two pages would cost two reads; that is not counted.</li>
       <li>Under tensor parallel, whether each card reads every row or only its share depends on the engine and is not modelled.</li>
       <li>The cost is computed only for a model that records its read pattern; for the others only the table's size and placement are shown.</li>
+      <li>Each drive's latency is a review's measured CrystalDiskMark 4K queue-depth-1 average on Windows, not the maker's figure: the makers state no queue-depth-1 figure for three of the five drives (Intel gives the 905P only "under 10 µs", at no stated queue depth), and the two figures they do state are faster than measured (the 870 EVO's 13,000 IOPS is 77 µs a read; measured, 120 µs). Peak IOPS is the maker's. A DRAM-less drive may read slower across a 100 GB table than across a review's test file; no figure for that was found.</li>
+      <li>Percentages are against the ceiling. A rig running below its ceiling has a longer window before the table's layer, so the same reads cost it less; the SSD-adjusted ceiling stays an upper bound.</li>
     </ul>
     Table precision follows its own setting where smaller copies exist (FP8, and IQ4_NL at 4.5 bits); quality at those precisions is not measured here.</li>
   <li><b>What the ceilings leave out on purpose:</b> kernel launch and synchronization cost, MoE routing, batching, interconnect time under tensor parallel, and any precision mix within a checkpoint (gpt-oss keeps attention in BF16, so its true ceiling is lower than one computed at MXFP4 throughout). Each omission makes the ceiling higher, never lower, so it stays an upper bound.</li>

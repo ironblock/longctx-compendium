@@ -279,6 +279,18 @@ const CASES = [
     const m = d.openModels.find(x => x.id === 'deepseek_v4_pro_0813');
     Object.assign(m.params, { lookup: m.params.total, lookupBits: 8, split: 'x' });
   }],
+  ['a drive with no measured QD1 latency', 'latencyUs', d => {
+    delete d.drives[0].randomRead.latencyUs;
+  }],
+  ['a measured latency with no quote', 'quote', d => {
+    delete d.drives[0].randomRead.measured.quote;
+  }],
+  ['a drive whose peak is slower than one read at a time', 'below what one read at a time gives', d => {
+    d.drives[0].randomRead.peakIops = 10000;
+  }],
+  ['two drives with one id', 'duplicate id', d => {
+    d.drives[1].id = d.drives[0].id;
+  }],
   ['an open model scored on another index', 'but the frontier is drawn on', d => {
     d.openModels[0].scores[0].index = 'lmarena';
   }],

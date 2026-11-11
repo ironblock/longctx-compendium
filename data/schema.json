@@ -35,6 +35,13 @@
         "$ref": "#/definitions/carrier"
       }
     },
+    "drives": {
+      "type": "array",
+      "description": "Reference drives for lookup tables read from an SSD. The first listed is the default.",
+      "items": {
+        "$ref": "#/definitions/drive"
+      }
+    },
     "lines": {
       "description": "The observation ledger: every measured number on the page, each inside the serving line that produced it. Nothing interpolated, extrapolated or modeled belongs here.",
       "type": "array",
@@ -1621,6 +1628,120 @@
               }
             }
           }
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "drive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "short",
+        "interface",
+        "randomRead",
+        "seqReadMBs",
+        "source",
+        "quote",
+        "asOf"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "label": {
+          "type": "string"
+        },
+        "short": {
+          "type": "string",
+          "description": "The label on the setting's chip."
+        },
+        "interface": {
+          "type": "string"
+        },
+        "capacityGB": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The capacity the figures are for; random-read rates differ by capacity."
+        },
+        "randomRead": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "latencyUs",
+            "measured",
+            "peakIops",
+            "peakAt"
+          ],
+          "properties": {
+            "latencyUs": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Average 4 KiB random-read latency at queue depth 1, one thread, as measured: the figure the page uses. Measured rather than the maker's, because most makers state none and those that do state faster ones."
+            },
+            "measured": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "url",
+                "quote",
+                "setup"
+              ],
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "pattern": "^https://"
+                },
+                "quote": {
+                  "type": "string"
+                },
+                "setup": {
+                  "type": "string",
+                  "description": "The tool, operating system and test PC."
+                }
+              }
+            },
+            "qd1Iops": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "The maker's queue-depth-1 random-read IOPS, where it states one. Shown for comparison, not used."
+            },
+            "makerLatencyUs": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "The maker's stated read latency (an upper bound such as \"<10 µs\"), where it gives one. Shown for comparison, not used."
+            },
+            "peakIops": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "The maker's peak random-read IOPS."
+            },
+            "peakAt": {
+              "type": "string",
+              "description": "Queue depth and threads the peak was stated at, or that they were not."
+            }
+          }
+        },
+        "seqReadMBs": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The maker's sequential read, MB/s."
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^https://",
+          "description": "The maker's datasheet or brochure; a third-party copy is named as such in the note."
+        },
+        "quote": {
+          "type": "string"
+        },
+        "asOf": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
         },
         "note": {
           "type": "string"

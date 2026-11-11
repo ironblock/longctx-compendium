@@ -15,13 +15,14 @@ node tools/check-ceilings.mjs  # no reading above its own ceiling
 node tools/coverage.mjs        # what the catalog is still missing
 ```
 
-## The six collections
+## The seven collections
 
 | collection | what it is | changes when |
 |---|---|---|
 | `architectures` | a chip generation and which matrix formats its silicon takes | a whitepaper was misread |
 | `units` | a purchasable card or machine — what a datasheet describes | a price moves, a spec is corrected |
 | `carriers` | a board modules mount on, or a whole system built around one: its wiring, host link, host, price, and what fits in it | a board or system is found, priced or tested with a module |
+| `drives` | reference SSDs, for lookup tables read from disk: measured queue-depth-1 latency, the maker's peak IOPS and sequential read | a drive is measured or added |
 | `lines` | the ledger: every reading, inside the serving line that produced it | someone measures something |
 | `candidates` | rigs under consideration that have no measured line yet | a rig is proposed or measured |
 | `openModels` | open-weight models scored on one quality index, for the size frontier | a model is released or rescored |
@@ -402,6 +403,25 @@ Peer bandwidth does not set single-stream decode under a layer split, which
 follows one card's memory bandwidth. It decides how close tensor parallel gets
 to its ceiling, and matters for prefill, concurrent streams, and anything
 streamed from host RAM.
+
+## Drives
+
+Each drive records what the SSD cost of a lookup table needs. `randomRead.latencyUs`
+is the measured average 4 KiB random-read latency at queue depth 1, one thread,
+with the review it came from (`measured`: `url`, `quote`, `setup`).
+`randomRead.peakIops` and `peakAt` are the maker's peak random-read rate and the
+queue depth and threads it was stated at; `seqReadMBs` is the maker's
+sequential read; `source` and `quote` are the maker's document.
+
+The latency is measured rather than the maker's because only two of the five
+makers' documents state a QD1 figure (Samsung's 990 PRO and 870 EVO), and both
+are faster than reviews measure: the 870 EVO's 13,000 IOPS is about 77 µs a
+read against 119.5 µs measured. Where a maker does state one, it goes in
+`qd1Iops` or `makerLatencyUs` for comparison. Four of the five latencies come
+from one site with one method (ssd-tester.com, CrystalDiskMark RND4K Q1T1 on
+Windows); the Optane 905P's comes from Legit Reviews, a different site and test
+PC. The first drive listed is the setting's default. The validator rejects a
+peak below what one read at a time would give.
 
 ## The open-weight frontier
 

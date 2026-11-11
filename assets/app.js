@@ -33,6 +33,7 @@ import {
   renderCarriers,
   renderSystems,
   renderFrontierTable,
+  driveFigures,
   rigCapacityLines,
   fmtDepth,
   esc,
@@ -455,10 +456,12 @@ try {
     });
     if (model.DRIVES.length) {
       const first = model.DRIVES[0].id;
-      chips('ssdChips', model.DRIVES.map(d => ({ v: d.id, label: d.short ?? d.label, title: `${d.label}: ${d.interface}` })), v => (state.ssd ?? first) === v, v => {
+      chips('ssdChips', model.DRIVES.map(d => ({ v: d.id, label: d.short ?? d.label, title: `${d.label}, ${d.interface}: ${driveFigures(d)} (measured QD1; peak from the maker), ${d.seqReadMBs.toLocaleString()} MB/s sequential` })), v => (state.ssd ?? first) === v, v => {
         state.ssd = v === first ? null : v;
         update('model');
       });
+      const d = model.driveById[state.ssd] ?? model.DRIVES[0];
+      el('ssdNote').innerHTML = `<a href="${esc(d.source)}" rel="noopener noreferrer">${esc(d.label)}</a>, ${esc(d.interface)}: <a href="${esc(d.randomRead.measured.url)}" rel="noopener noreferrer">${Math.round(d.randomRead.latencyUs)} µs</a> a 4K read at queue depth 1 (measured), ${driveFigures(d).split(', ')[1]} (maker)`;
     }
     sliders.depth.set(state.depth);
     el('cardsAuto').checked = state.cards === 'auto';

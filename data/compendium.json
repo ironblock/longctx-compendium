@@ -7115,6 +7115,121 @@
       "note": "Eight Gaudi 2 modules, 768 GB of HBM2E, for $16,499.99 as listed. Software is Intel's Gaudi stack and vLLM plugin, with no CUDA; see the Gaudi 2 entry."
     }
   ],
+  "drives": [
+    {
+      "id": "samsung_990pro_2tb",
+      "label": "Samsung 990 PRO 2TB",
+      "short": "990 PRO",
+      "interface": "PCIe 4.0 x4 NVMe",
+      "capacityGB": 2000,
+      "randomRead": {
+        "latencyUs": 47.85,
+        "measured": {
+          "url": "https://ssd-tester.com/samsung_990_pro_2tb.html",
+          "quote": "RND4K Q1T1 | 47.85 | 20.96 (average latency, read and write, µs); RND4K Q1T1 | 20,834.00 | 47,417.20 (IOPS)",
+          "setup": "ssd-tester.com runs CrystalDiskMark on Windows on one of two stated test PCs (Ryzen 9 3900X / X570, or Ryzen 9 7900 / X870 for PCIe 5.0 drives); the review page does not say which, nor the test file's size. Reviewed 24 June 2024."
+        },
+        "qd1Iops": 22000,
+        "peakIops": 1400000,
+        "peakAt": "QD32, 16 threads"
+      },
+      "seqReadMBs": 7450,
+      "source": "https://download.semiconductor.samsung.com/resources/data-sheet/Samsung_NVMe_SSD_990_PRO_Datasheet_Rev.1.0_10129514072296.pdf",
+      "quote": "QD 1 / Thread 1 / Ran. Read: 22K IOPS; QD 32 / Thread 16 / Ran. Read: 1400K IOPS (2TB); Sequential Read: 7,450 MB/s",
+      "asOf": "2026-11-11",
+      "note": "The datasheet's random rows give no block size; KitGuru calls them Samsung's 4K figures and measured 19,883 IOPS at QD1 against the official 22,000. Samsung's QD1 figure is about 45 µs a read."
+    },
+    {
+      "id": "samsung_9100pro_2tb",
+      "label": "Samsung 9100 PRO 2TB",
+      "short": "9100 PRO",
+      "interface": "PCIe 5.0 x4 NVMe",
+      "capacityGB": 2000,
+      "randomRead": {
+        "latencyUs": 51.03,
+        "measured": {
+          "url": "https://ssd-tester.com/samsung_9100_pro_2tb.html",
+          "quote": "RND4K Q1T1 | 51.03 | 17.23 (average latency, read and write, µs); RND4K Q1T1 | 19,563.00 | 57,781.30 (IOPS)",
+          "setup": "ssd-tester.com runs CrystalDiskMark on Windows on one of two stated test PCs (Ryzen 9 3900X / X570, or Ryzen 9 7900 / X870 for PCIe 5.0 drives); the review page does not say which, nor the test file's size. Reviewed 27 March 2025."
+        },
+        "peakIops": 1850000,
+        "peakAt": "QD256, 32 threads"
+      },
+      "seqReadMBs": 14700,
+      "source": "https://download.semiconductor.samsung.com/resources/data-sheet/Samsung_NVMe_SSD_9100_PRO_Datasheet_Rev.2.0.pdf",
+      "quote": "QD 256 / Thread 32 / Ran. Read: 1,850 KIOPS (2TB); Sequential Read: 14,700 MB/s (2TB)",
+      "asOf": "2026-11-11",
+      "note": "Samsung states no QD1 figure. At QD1 it is no faster than the 990 PRO: KitGuru measured 22,778 IOPS single-threaded. The US spec sheet filed under the 2TB model gives 2,200K IOPS at QD32, which are the 4TB figures; the datasheet's are used."
+    },
+    {
+      "id": "samsung_990evoplus_2tb",
+      "label": "Samsung 990 EVO Plus 2TB",
+      "short": "990 EVO Plus",
+      "interface": "PCIe 4.0 x4 / 5.0 x2 NVMe, DRAM-less (HMB)",
+      "capacityGB": 2000,
+      "randomRead": {
+        "latencyUs": 52.28,
+        "measured": {
+          "url": "https://ssd-tester.com/samsung_990_evo_plus_2tb.html",
+          "quote": "RND4K Q1T1 | 52.28 | 21.51 (average latency, read and write, µs); RND4K Q1T1 | 19,074.00 | 46,219.50 (IOPS)",
+          "setup": "ssd-tester.com runs CrystalDiskMark on Windows on one of two stated test PCs (Ryzen 9 3900X / X570, or Ryzen 9 7900 / X870 for PCIe 5.0 drives); the review page does not say which, nor the test file's size. Reviewed 28 April 2025."
+        },
+        "peakIops": 1000000,
+        "peakAt": "QD32, threads not stated"
+      },
+      "seqReadMBs": 7250,
+      "source": "https://download.semiconductor.samsung.com/resources/brochure/Samsung_990_EVO_Plus_Brochure.pdf",
+      "quote": "Random Read (IOPS, QD32): 1,000K (2TB); Sequential Read (MB/s): 7,250 (2TB)",
+      "asOf": "2026-11-11",
+      "note": "The cheap end: no DRAM of its own, using host memory for its mapping table. Samsung states no QD1 figure. Neither review says how large a span its random reads covered; a DRAM-less drive may be slower when reads are spread across a 100 GB table, and no figure for that was found."
+    },
+    {
+      "id": "samsung_870evo_2tb",
+      "label": "Samsung 870 EVO 2TB",
+      "short": "870 EVO (SATA)",
+      "interface": "SATA 6 Gb/s",
+      "capacityGB": 2000,
+      "randomRead": {
+        "latencyUs": 119.54,
+        "measured": {
+          "url": "https://ssd-tester.com/samsung_870_evo_2tb.html",
+          "quote": "RND4K Q1T1 | 119.54 | 42.85 (average latency, read and write, µs); RND4K Q1T1 | 8,355.70 | 23,278.60 (IOPS)",
+          "setup": "ssd-tester.com runs CrystalDiskMark on Windows on one of two stated test PCs (Ryzen 9 3900X / X570, or Ryzen 9 7900 / X870 for PCIe 5.0 drives); the review page does not say which, nor the test file's size. Reviewed 03 October 2023."
+        },
+        "qd1Iops": 13000,
+        "peakIops": 98000,
+        "peakAt": "QD32, threads not stated"
+      },
+      "seqReadMBs": 560,
+      "source": "https://download.semiconductor.samsung.com/resources/data-sheet/Samsung_SSD_870_EVO_Data_Sheet_Rev1.1_230509_10129500053000.pdf",
+      "quote": "4KB Ran. Read (QD1): 13,000 IOPS; 4KB Ran. Read (QD32): 98,000 IOPS; Sequential Read: 560 MB/s",
+      "asOf": "2026-11-11",
+      "note": "SATA: a tenth of an NVMe drive's random-read rate. Measured QD1 is about 36% below Samsung's 13,000 IOPS (about 77 µs a read)."
+    },
+    {
+      "id": "optane_905p_960",
+      "label": "Intel Optane SSD 905P 960GB",
+      "short": "Optane 905P",
+      "interface": "PCIe 3.0 x4 NVMe, 3D XPoint",
+      "capacityGB": 960,
+      "randomRead": {
+        "latencyUs": 21,
+        "measured": {
+          "url": "https://legitreviews.com/intel-optane-ssd-905p-960gb-drive-review_206944/8",
+          "quote": "When you test Random 4K read/write performance at QD1 the average access or response time ranges between 0.021ms to 0.023ms.",
+          "setup": "Legit Reviews, CrystalDiskMark 6.0.0 on Windows 10 Pro (1709), Core i5-8400 with C-states and Turbo off, ASUS ROG STRIX Z370-F, patched for Spectre and Meltdown. Reviewed 2 August 2018."
+        },
+        "makerLatencyUs": 10,
+        "peakIops": 575000,
+        "peakAt": "queue depth not stated"
+      },
+      "seqReadMBs": 2600,
+      "source": "https://computerdealsdirect.com/content/optane-ssd-905p-product-brief.pdf",
+      "quote": "IOPS: Random 4KB Random Read/Write Up to 575,000 / 550,000 IOPs; Read /Write Latency <10 µs /< 10 µs; Bandwidth: Sustained Sequential Read/Write Up to 2600 / 2200 MB/s",
+      "asOf": "2026-11-11",
+      "note": "The low-latency case: 3D XPoint, discontinued, sold used. Intel's product brief, from a reseller's copy, states under 10 µs latency with no queue depth. The QD1 latency used is Legit Reviews' measured low end, on a different site and test PC from the other drives; ssd-tester.com, which measured the others, measured the sibling 900P 280GB at 17.47 µs."
+    }
+  ],
   "lines": [
     {
       "id": "l_3090_27b_iq3s_mtp2",

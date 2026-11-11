@@ -29,15 +29,22 @@ export const tableSettings = (model, s, hostGB = s.ram ?? null) => ({
 
 const us = sec => (sec >= 1e-3 ? `${(sec * 1e3).toFixed(sec >= 1e-2 ? 0 : 1)} ms` : `${Math.round(sec * 1e6)} µs`);
 
-/** "lookup table as shipped" / "lookup table at 8 bits". */
-const tableWord = plan => `lookup table${plan.bits < plan.shipped ? ` at ${plan.bits} bits` : ' as shipped'}`;
+/** "48 µs a read at QD1, 1.4M IOPS peak". */
+export const driveFigures = d => {
+  const r = d.randomRead;
+  const peak = r.peakIops >= 1e6 ? `${(r.peakIops / 1e6).toFixed(r.peakIops % 1e6 ? 2 : 0).replace(/0$/, '')}M` : `${Math.round(r.peakIops / 1e3)}K`;
+  return `${Math.round(r.latencyUs)} µs a read at QD1, ${peak} IOPS peak`;
+};
+
+/** "lookup table" at the shipped precision, "lookup table at 8 bits" below it. */
+const tableWord = plan => `lookup table${plan.bits < plan.shipped ? ` at ${plan.bits} bits` : ''}`;
 
 /** Where the tables sit and whether the host holds them, as one sub-line (HTML). */
 export function tableLine(plan, ts, { hostWord = 'a host' } = {}) {
   if (!plan) return '';
   const what = `${fmtGiB(plan.bytes)} ${tableWord(plan)}`;
   if (plan.place === 'gpu') return `incl. ${what} in GPU memory`;
-  if (plan.place === 'ssd') return `+ ${what} on the SSD${ts.drive ? ` (${esc(ts.drive.label)})` : ', no drive recorded'}`;
+  if (plan.place === 'ssd') return `+ ${what} on ${ts.drive ? `the ${esc(ts.drive.short ?? ts.drive.label)}` : 'an SSD, no drive recorded'}`;
   const h = plan.host;
   if (h?.holds == null) return `+ ${what} in host RAM: needs ${hostWord} with ${fmtGiB(plan.bytes + HOST_RESERVE_BYTES)}`;
   return `<span class="${h.holds ? 't-ok' : 'fit-untested'}">+ ${what} in host RAM: ${h.holds ? 'fits in' : 'more than'} ${hostWord === 'a host' ? `a ${ts.hostGB} GB host` : `${hostWord}'s ${ts.hostGB.toLocaleString()} GB`}${h.holds ? '' : '; SSD then'}</span>`;
@@ -57,8 +64,8 @@ function ssdDecodeSubs(ssd) {
   if (!ssd) return [];
   if (ssd.unknown) return [`SSD cost not modelled: ${esc(ssd.unknown)}`];
   const pct = t => Math.round((100 * (ssd.freeTps - t)) / ssd.freeTps);
-  const head = ssd.stall > 0 ? `SSD reads stall ${us(ssd.stall)} a token (−${pct(1 / (1 / ssd.freeTps + ssd.stall)) || '<1'}%)` : `SSD reads land within ${ssd.window != null ? us(ssd.window) : 'the window'}`;
-  const one = ssd.serialStall == null ? '' : ssd.serialStall > 0 ? `one at a time: ${sig(ssd.serialTps)} (−${pct(ssd.serialTps) || '<1'}%)` : 'one at a time: no stall either';
+  const head = ssd.stall > 0 ? `SSD: ${us(ssd.stall)} stall, −${pct(1 / (1 / ssd.freeTps + ssd.stall)) || '<1'}%` : `SSD: reads land in time`;
+  const one = ssd.serialStall == null ? '' : ssd.serialStall > 0 ? `one at a time: ${sig(ssd.serialTps)}, −${pct(ssd.serialTps) || '<1'}%` : 'one at a time: no stall either';
   return [head, one].filter(Boolean);
 }
 
@@ -251,8 +258,7 @@ export function ceilingRow(m, u, s) {
 function ssdPrefillSub(ssd) {
   if (!ssd) return '';
   if (ssd.unknown) return `<span class="sub">SSD cost not modelled: ${esc(ssd.unknown)}</span>`;
-  const one = `one at a time ${n0(ssd.serialCap)}`;
-  return `<span class="sub">${ssd.bound ? `capped by SSD reads (compute ${n0(ssd.computeTps)}); ${one}` : `SSD reads allow ${n0(ssd.cap)}; ${one}`}</span>`;
+  return `<span class="sub">${ssd.bound ? `SSD-capped; compute ${n0(ssd.computeTps)}` : `SSD allows ${n0(ssd.cap)}`}</span><span class="sub">one at a time: ${n0(ssd.serialCap)}</span>`;
 }
 
 const barCell = (v, max, extra = '') =>
@@ -283,7 +289,7 @@ export function renderCeilingTable(model, state, units) {
     }
     const f = r.fit;
     const mem = f
-      ? `<td class="lbl"><span class="${f.fits ? 't-ok' : 't-bad'}">${f.fits ? 'fits' : 'does not fit'}</span><span class="sub">needs ${fmtGiB(f.need)} of ${fmtGiB(f.have)}${f.replicate > 1 ? ` · KV ×${f.replicate} replicated` : ''}</span>${fitExtras(f, r.draft, r.ts).map(x => `<span class="sub">${x}</span>`).join('')}</td>`
+      ? `<td class="lbl"><span class="${f.fits ? 't-ok' : 't-bad'}">${f.fits ? 'fits' : 'does not fit'}</span><span class="sub">needs ${fmtGiB(f.need)} of ${fmtGiB(f.have)}${f.replicate > 1 ? ` · KV ×${f.replicate} replicated` : ''}</span>${fitExtras(f, r.draft, r.ts).map(x => `<span class="sub tline">${x}</span>`).join('')}</td>`
       : `<td class="lbl">${DASH}</td>`;
     const prec = r.prefill.precision;
     const pre = r.prefill.tps == null
@@ -517,7 +523,7 @@ export function renderCandidates(model, state) {
         const fits = `${fll?.fits ? '<span class="t-ok">fits</span>' : '<span class="t-bad">does not fit</span>'} layer-split${fl && fl.fits !== fll?.fits ? ` · ${fl.fits ? '<span class="t-ok">fits</span>' : '<span class="t-bad">does not fit</span>'} TP` : ''}`;
         const host = table ? `<br><span class="sub">${tableLine(table, ts, { hostWord: sysGB != null ? (sys ? 'the system' : 'the host') : 'a host' })}</span>` : '';
         const dr = draft?.params ? `<br><span class="sub">incl. ${fmtGiB(fll?.draft)} ${draft.kind === 'mtp' ? 'MTP head' : 'drafter'}</span>` : draft?.missing ? `<br><span class="sub">${esc(draft.missing)}</span>` : '';
-        const ssd = dt?.ssd && !dt.ssd.unknown && (dt.ssd.stall > 0 || dl?.ssd?.stall > 0) ? `<br><span class="sub">SSD reads stall ${us(dl?.ssd?.stall ?? 0)} layer · ${us(dt.ssd.stall)} TP a token</span>` : dt?.ssd?.unknown ? `<br><span class="sub">SSD cost not modelled: ${esc(dt.ssd.unknown)}</span>` : '';
+        const ssd = dt?.ssd && !dt.ssd.unknown && (dt.ssd.stall > 0 || dl?.ssd?.stall > 0) ? `<br><span class="sub">SSD stall per token: ${us(dl?.ssd?.stall ?? 0)} layer-split, ${us(dt.ssd.stall)} TP</span>` : dt?.ssd?.unknown ? `<br><span class="sub">SSD cost not modelled: ${esc(dt.ssd.unknown)}</span>` : '';
         return `<b>${esc(m.label)}</b>: ${fits}${dr}${host}<br><span class="num">${dl ? sig(dl.tps) : '—'}</span> layer · <span class="num">${dt ? sig(dt.tps) : '—'}</span> TP decode${ssd}`;
       })
       .join('<br>');

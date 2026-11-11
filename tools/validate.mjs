@@ -121,7 +121,7 @@ check(doc, schema, '');
 // turn a number into folklore.
 
 const seenIds = new Map();
-for (const rec of [...(doc.architectures ?? []), ...(doc.units ?? []), ...(doc.carriers ?? []), ...(doc.lines ?? []), ...(doc.candidates ?? []), ...(doc.openModels ?? [])]) {
+for (const rec of [...(doc.architectures ?? []), ...(doc.units ?? []), ...(doc.carriers ?? []), ...(doc.drives ?? []), ...(doc.lines ?? []), ...(doc.candidates ?? []), ...(doc.openModels ?? [])]) {
   if (seenIds.has(rec.id)) fail(`id "${rec.id}"`, 'duplicate id');
   seenIds.set(rec.id, rec);
 }
@@ -346,6 +346,16 @@ for (const c of doc.candidates ?? []) {
   c.models.forEach(m => modelKnown(m, at));
 }
 
+// --- Drives: what the SSD cost of a lookup table is computed from
+for (const d of doc.drives ?? []) {
+  const at = `drive "${d.id}"`;
+  const r = d.randomRead ?? {};
+  // A drive cannot complete reads faster at its peak than one at a time.
+  if (r.latencyUs && r.peakIops && r.peakIops < 1e6 / r.latencyUs) fail(at, `peak IOPS ${r.peakIops} is below what one read at a time gives (${Math.round(1e6 / r.latencyUs)})`);
+  if (r.measured?.url && r.measured.url === d.source) warn(at, 'gives the same document for the maker figures and the measured latency');
+  if (r.makerLatencyUs && r.latencyUs < r.makerLatencyUs) warn(at, `measured latency ${r.latencyUs} µs is below the maker's ${r.makerLatencyUs} µs bound`);
+}
+
 // --- Model shapes: the parts counted apart from the total
 for (const [id, m] of Object.entries(MODELS)) {
   const at = `model "${id}"`;
@@ -415,5 +425,5 @@ const points = (doc.lines ?? []).reduce((n, l) => n + (l.results?.length ?? 0), 
 for (const w of warnings) console.warn(`  ! ${w}`);
 console.log(
   `✓ ${rel} — ${(doc.architectures ?? []).length} chip generations, ${(doc.units ?? []).length} catalog units, ` +
-    `${(doc.carriers ?? []).filter(k => k.kind !== 'system').length} carriers, ${(doc.carriers ?? []).filter(k => k.kind === 'system').length} systems, ${(doc.lines ?? []).length} serving lines with ${points} readings, ${(doc.candidates ?? []).length} candidates, ${(doc.openModels ?? []).length} open models`
+    `${(doc.carriers ?? []).filter(k => k.kind !== 'system').length} carriers, ${(doc.carriers ?? []).filter(k => k.kind === 'system').length} systems, ${(doc.drives ?? []).length} drives, ${(doc.lines ?? []).length} serving lines with ${points} readings, ${(doc.candidates ?? []).length} candidates, ${(doc.openModels ?? []).length} open models`
 );
