@@ -5956,6 +5956,52 @@
       }
     },
     {
+      "id": "tu102_pg150_210",
+      "label": "TU102 24GB server card (PG150 SKU 210, \"Tesla T40\")",
+      "short": "TU102 24GB (DCS)",
+      "vendor": "NVIDIA",
+      "arch": "turing",
+      "memoryGB": 24,
+      "memoryBandwidthGBs": 624,
+      "tdpW": 250,
+      "process": "TSMC 12nm FFN",
+      "compute": {
+        "unit": "Tops",
+        "source": "https://www.pny.com/nvidia-quadro-rtx-6000-passive",
+        "values": {
+          "fp32": 14.9,
+          "fp16": 119.4,
+          "int8": 238.9,
+          "int4": 477.8
+        },
+        "unofficial": [
+          "fp32",
+          "fp16",
+          "int8",
+          "int4"
+        ],
+        "note": "Not this card's own ratings, which were never published: the passive Quadro RTX 6000 server card's (PNY: \"Peak Single Precision FP32 Performance 14.9 TFLOPS\", \"Peak INT8 Performance 238.9 TOPS\", \"Deep Learning TFLOPS 119.4 Tensor TFLOPS\", FP16 or FP32 accumulate). That card is the same PG150 board and TU102-895 die at the same 1,620 MHz boost and 250 W; the SM count of this one was not read, so the figures assume the same 72 SMs. INT4 is twice INT8, as on every Turing tensor core."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "cooling": "passive",
+        "source": "Inventory of one NVIDIA DRIVE Constellation Simulator (nvidia-smi, lspci, lscpu, /proc/meminfo), supplied by the maintainer, 2026-11-13 -- PCI class \"3D controller\" (no display output), \"Gen3 x16 / Gen3 x16\", power limit \"default 250 W, max 250 W, min 150 W\"",
+        "note": "Slot width not recorded; the Quadro RTX 6000 server card on the same PG150 board is dual-slot and passive."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "Inventory of one NVIDIA DRIVE Constellation Simulator (nvidia-smi, lspci, lscpu, /proc/meminfo), supplied by the maintainer, 2026-11-13 -- \"PCIe link | Gen3 x16 max and current, all 8\""
+      },
+      "sources": [
+        "Inventory of one NVIDIA DRIVE Constellation Simulator (nvidia-smi, lspci, lscpu, /proc/meminfo), supplied by the maintainer, 2026-11-13 -- PCI ID 10de:1e38 rev a1; NVML name \"NVIDIA Graphics Device\"; board part number 692-2G150-0210-000, GPU part number 1E38-895-A1, InfoROM G150.0210.00.04; max clocks \"SM 1620 MHz, memory 6501 MHz\"; 23,040 MiB visible with ECC on; compute capability 7.5",
+        "https://pci-ids.ucw.cz/read/PC/10de/1e38 -- \"Device 10de:1e38 Name: TU102GL [Tesla T40 24GB]\" (the community PCI ID Repository; an earlier entry read \"Tesla T10 24GB\")",
+        "https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/NVIDIA-Quadro-RTX-6000-PCIe-Server-Card-PB-FINAL-1219.pdf -- Quadro RTX 6000 Server Card: \"Product SKU PG150 SKU 230 NVPN: 699-2G150-0230-xxx\", \"GPU SKU TU102-895-A1\", \"GPU clocks Base: 1275 MHz Boost: 1620 MHz\", \"Memory clocks Performance: 6501 MHz\", \"Memory bus width 384-bit\", \"Peak memory bandwidth Up to 624 GB/s\", \"Total board power 250 W\"",
+        "https://www.pny.com/nvidia-quadro-rtx-6000-passive -- Highlights: \"Peak Single Precision FP32 Performance 14.9 TFLOPS\", \"Peak INT8 Performance 238.9 TOPS\", \"Deep Learning TFLOPS 119.4 Tensor TFLOPS\", \"Memory Bandwidth 624 GB/Sec\""
+      ],
+      "note": "The DRIVE Constellation Simulator's GPU. NVIDIA never published it as a product: the driver names it \"NVIDIA Graphics Device\", and the PCI ID Repository's community entry calls 10de:1e38 a Tesla T40. Its board part number (692-2G150-0210) is the PG150 board of the passive Quadro RTX 6000 server card (699-2G150-0230), with the same TU102-895 die, 1,620 MHz boost, 6,501 MHz memory clock and 250 W, so the bandwidth is that card's 624 GB/s (6,501 MHz is 13 Gb/s a pin on a 384-bit bus, assuming the same bus). ECC is on by default and takes 1/16 of the memory: 23,040 MiB visible of 24 GiB. Whether the board has NVLink connectors was not recorded; none is in use in the DCS. No BF16, FP8 or FP4: BF16 checkpoints run as FP16. Unpriced: no listing found."
+    },
+    {
       "id": "rtx_2080_ti_22gb",
       "label": "RTX 2080 Ti 22GB (memory mod)",
       "vendor": "NVIDIA",
@@ -7182,6 +7228,63 @@
         "https://habana.ai/wp-content/uploads/2023/10/HLS-Gaudi2_Datasheet_10_23.pdf"
       ],
       "note": "Eight Gaudi 2 modules, 768 GB of HBM2E, for $16,499.99 as listed. Software is Intel's Gaudi stack and vLLM plugin, with no CUDA; see the Gaudi 2 entry."
+    },
+    {
+      "id": "nvidia_dcs",
+      "label": "NVIDIA DRIVE Constellation Simulator",
+      "maker": "NVIDIA",
+      "kind": "system",
+      "socket": "PCIe",
+      "slots": 8,
+      "peer": {
+        "kind": "none",
+        "note": "No NVLink. NVML reports peer-to-peer reads and writes as supported between all eight GPUs, but NCCL 2.27.5 by default goes peer-to-peer only inside a switch pair and through host shared memory for every other hop; NCCL_P2P_LEVEL=SYS made every ring hop peer-to-peer and still served. Pairwise bandwidth and latency were not measured."
+      },
+      "switch": {
+        "present": true,
+        "chip": "Broadcom PEX9781 97-lane Gen 3 switches (PCI ID 10b5:9797), four, two GPUs on each",
+        "note": "GPUs 0/1 and 2/3 hang off socket 0, 6/7 and 8/9 off socket 1 (nvidia-smi topo -m: PIX within a pair, NODE between pairs on one socket, SYS across sockets over UPI). Two of the switches also carry a dual-port 10 GbE card. The PEX9781 name is the PCI ID Repository's for device 9797."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "gpusPerUplink": 2,
+        "attach": "Each pair of GPUs shares one Gen 3 x16 uplink from its switch to its socket's root port.",
+        "source": "Inventory of one NVIDIA DRIVE Constellation Simulator (nvidia-smi, lspci, lscpu, /proc/meminfo), supplied by the maintainer, 2026-11-13 -- \"Each Turing pair shares one Gen3 x16 uplink to its own Skylake-E root port. Every hop on every Turing path trains at 8.0 GT/s x16.\"; https://pci-ids.ucw.cz/read/PC/10b5/9797 -- \"PEX9781 97-Lane, 25-Port PCIe Gen 3 (8.0 GT/s) ExpressFabric Switch\"",
+        "note": "About 16 GB/s each way for two GPUs together: what experts or tables copied from host memory share."
+      },
+      "host": {
+        "cpu": "2× Intel Xeon Gold 6148 (Skylake-SP, 20 cores, 2.4 GHz)",
+        "memoryGB": 384,
+        "memory": {
+          "type": "DDR4",
+          "channels": 6,
+          "mts": 2666,
+          "sockets": 2,
+          "source": "https://www.intel.com/content/www/us/en/products/sku/120489/intel-xeon-gold-6148-processor-27-5m-cache-2-40-ghz/specifications.html -- Xeon Gold 6148: \"Memory Types | DDR4-2666\", \"Maximum Memory Speed | 2666 MHz\", \"Max # of Memory Channels | 6\", \"Max Memory Size (dependent on memory type) | 768 GB\"",
+          "note": "The DIMM count and speed were not read: 2,666 MT/s on all six channels is the CPU's most, so this is an upper bound."
+        },
+        "chassis": "Rack mount (SMBIOS chassis type 23); height and weight not recorded",
+        "source": "Inventory of one NVIDIA DRIVE Constellation Simulator (nvidia-smi, lspci, lscpu, /proc/meminfo), supplied by the maintainer, 2026-11-13 -- \"2× Intel Xeon Gold 6148 (Skylake-SP), 20C/40T each\"; \"Total RAM 394,852,356 kB = 376.6 GiB\"; system product \"DRIVE Constellation Simulator, version v1.0\", board \"DCS\"",
+        "note": "376.6 GiB is visible to the OS; 384 GiB installed is inferred. Two NUMA nodes of about 188 GiB, distance 21 between them. Two Quadro P4000s (Pascal, 8 GB) drive displays from a separate, x8 PCIe chain and are not counted here. Large pinned allocations are limited by MemFree, not MemAvailable: with ~190-290 GiB of page cache holding model files, pinning failed once MemFree neared 1 GiB though MemAvailable read 186-209 GiB."
+      },
+      "cooling": {
+        "included": true,
+        "note": "Chassis fans; the GPUs are passive."
+      },
+      "fits": [
+        {
+          "unit": "tu102_pg150_210",
+          "status": "verified",
+          "peer": "pcie",
+          "source": "Inventory of one NVIDIA DRIVE Constellation Simulator (nvidia-smi, lspci, lscpu, /proc/meminfo), supplied by the maintainer, 2026-11-13 -- eight TU102GL 10de:1e38 at Gen3 x16 behind four PLX switches",
+          "note": "Fitted at the factory: eight, two per switch."
+        }
+      ],
+      "sources": [
+        "https://nvidianews.nvidia.com/news/nvidia-drive-constellation-now-available-virtual-proving-ground-for-validating-autonomous-vehicles -- \"SAN JOSE, Calif., March 18, 2019 ... NVIDIA today announced the NVIDIA DRIVE Constellation™ autonomous vehicle simulation platform is now available.\"; \"DRIVE Constellation is a data center solution comprised of two side-by-side servers. One server — DRIVE Constellation Simulator — uses NVIDIA GPUs running DRIVE Sim™ software to generate the sensor output from the virtual car driving in a virtual world.\""
+      ],
+      "note": "The simulator half of NVIDIA's DRIVE Constellation, announced at GTC 2018 and available from March 2019; the other half holds a DRIVE AGX Pegasus. NVIDIA published no hardware specification for either; everything here comes from one unit's inventory. Unpriced: no listing found."
     }
   ],
   "drives": [
@@ -15885,7 +15988,7 @@
       "quant": {
         "format": "NVFP4 experts, BF16 dense (RadixArk/Qwen3.8-Flash-Next-NVFP4)",
         "key": "nvfp4",
-        "note": "From the checkpoint's files: the routed experts take 67.99 GB (4.50 bits per weight over their 120.8B parameters), the other weights 16.01 GB of BF16 (including the MTP head), and the PLE table 51.20 GB of FP8, kept in host memory. By the config's shape about 3.6B of the ~6B weights read per token are BF16, so a decode step moves nearly three times the bytes the ceiling assumes at 4.5 bits: the ceiling is generous by about that factor."
+        "note": "From the checkpoint's files: the routed experts take 67.99 GB (4.50 bits per weight over their 120.8B parameters), the other weights 16.01 GB of BF16 (including the MTP head), and the PLE table 51.20 GB of FP8, kept in host memory. By the safetensors headers, 4.31B of the 6.67B weights a token reads (its input-embedding row aside) are BF16, so a decode step moves about 9.95 GB where the ceiling assumes 3.75 GB at 4.5 bits: the ceiling is generous by about 2.7 times."
       },
       "kvCache": {
         "k": "f16",
@@ -15986,7 +16089,7 @@
       "quant": {
         "format": "NVFP4 experts, BF16 dense (RadixArk/Qwen3.8-Flash-Next-NVFP4)",
         "key": "nvfp4",
-        "note": "From the checkpoint's files: the routed experts take 67.99 GB (4.50 bits per weight over their 120.8B parameters), the other weights 16.01 GB of BF16 (including the MTP head), and the PLE table 51.20 GB of FP8, kept in host memory. By the config's shape about 3.6B of the ~6B weights read per token are BF16, so a decode step moves nearly three times the bytes the ceiling assumes at 4.5 bits: the ceiling is generous by about that factor."
+        "note": "From the checkpoint's files: the routed experts take 67.99 GB (4.50 bits per weight over their 120.8B parameters), the other weights 16.01 GB of BF16 (including the MTP head), and the PLE table 51.20 GB of FP8, kept in host memory. By the safetensors headers, 4.31B of the 6.67B weights a token reads (its input-embedding row aside) are BF16, so a decode step moves about 9.95 GB where the ceiling assumes 3.75 GB at 4.5 bits: the ceiling is generous by about 2.7 times."
       },
       "kvCache": {
         "k": "f16",
@@ -16951,6 +17054,25 @@
       ],
       "status": "preregistered",
       "note": "768 GB of HBM2E at 2.46 TB/s per module, at $16,499.99 as listed refurbished. It runs only Intel's software (vLLM through Intel's plugin, no CUDA, no llama.cpp backend known here), and Qwen3.8 is not in the plugin's model list as of 1.24.2. An 8U, 282 lb server on six 3 kW supplies."
+    },
+    {
+      "id": "c_dcs_tu102x8",
+      "label": "8× TU102 24GB in an NVIDIA DRIVE Constellation Simulator",
+      "rig": {
+        "units": [
+          {
+            "unit": "tu102_pg150_210",
+            "count": 8
+          }
+        ],
+        "carrier": "nvidia_dcs"
+      },
+      "models": [
+        "qwen38_flash_next",
+        "qwen38_27b"
+      ],
+      "status": "preregistered",
+      "note": "Software, from runs on one unit (no throughput recorded yet): a 1Cat-vLLM build for sm_75 serves Qwen3.8-Flash-Next at TP8 with EP8, FP16 compute and cache, NVFP4 experts through weight-only Marlin kernels, to 262,144 tokens and, with a YaRN override, 524,288; MTP works once CUDA-graph capture sizes cover the verified tokens ([4, 8, 12, 16]); torch.compile does not. The n-gram table sits pinned in host memory, 5.96 GiB per rank. Stock vLLM v0.32 runs Turing but refuses Flash-Next, whose sparse attention needs BF16 (a static reading of the source, not a run). Weights took 10.5 GiB a GPU at TP8. Q4-class weights fit in four GPUs, so a socket's four (two switch pairs, no UPI hop) can hold one replica each."
     }
   ],
   "openModels": [
