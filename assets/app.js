@@ -10,6 +10,7 @@ import {
   KV_CHOICES,
   SPEC_CHOICES,
   TABLE_PLACES,
+  EXPERT_PLACES,
   TABLE_BITS,
   HOST_RAM_CHOICES,
   CARD_STEPS,
@@ -19,6 +20,7 @@ import {
   kvBytesAt,
   kvBytesPerToken,
   recurrentStateBytes,
+  routedReadParams,
   bpwOf,
   fmtGiB,
 } from './ceiling.js';
@@ -34,6 +36,7 @@ import {
   renderSystems,
   renderFrontierTable,
   driveFigures,
+  hostFigures,
   rigCapacityLines,
   fmtDepth,
   esc,
@@ -84,6 +87,10 @@ const DEFAULTS = {
   tbits: 'shipped',
   ram: null,
   ssd: null,
+  // Routed experts: GPU memory, or host RAM for the CPU; the host platform whose
+  // memory bandwidth the CPU reads at (null: the first listed).
+  experts: 'gpu',
+  plat: null,
   depth: 131072,
   cards: 'auto',
   // Context depth runs from 1K to 256K tokens, on a log scale, in 1K steps.
@@ -145,6 +152,9 @@ function readState() {
     ram: HOST_RAM_CHOICES.includes(num('ram')) ? num('ram') : null,
     // Checked against the drives once the data has loaded.
     ssd: q.get('ssd') || null,
+    experts: str('ex', EXPERT_PLACES.map(k => k.id)),
+    // Checked against the host platforms once the data has loaded.
+    plat: q.get('plat') || null,
     depth: Math.min(DEFAULTS.depthMax, Math.max(DEFAULTS.depthMin, Math.round(d / 1024) * 1024)),
     cards: str('n', ['auto', '1', '2', '3', '4', '5', '6', '7', '8']),
     split: str('split', ['tensor', 'layer']),
@@ -158,7 +168,7 @@ function readState() {
   };
 }
 // The keys DEFAULTS uses under their address names.
-Object.assign(DEFAULTS, { tbl: DEFAULTS.tables, ram: null, link: null, linkmax: null, host: null, hostmax: null, ffoff: DEFAULTS.formsOff, bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all', ospec: 'all' });
+Object.assign(DEFAULTS, { ex: DEFAULTS.experts, tbl: DEFAULTS.tables, ram: null, link: null, linkmax: null, host: null, hostmax: null, ffoff: DEFAULTS.formsOff, bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all', ospec: 'all' });
 
 function writeState(s) {
   const q = new URLSearchParams();
@@ -189,6 +199,8 @@ function writeState(s) {
   put('tbits', s.tbits, DEFAULTS.tbits);
   put('ram', s.ram, null);
   put('ssd', s.ssd, null);
+  put('ex', s.experts, DEFAULTS.experts);
+  put('plat', s.plat, null);
   put('d', s.depth, DEFAULTS.depth);
   put('n', s.cards, DEFAULTS.cards);
   put('split', s.split, DEFAULTS.split);
@@ -255,6 +267,7 @@ try {
   // An address naming a drive this data does not list falls back to the first one.
   const checkDrive = () => {
     if (state.ssd && !model.driveById[state.ssd]) state.ssd = null;
+    if (state.plat && !model.hostById[state.plat]) state.plat = null;
   };
   checkDrive();
 
@@ -375,9 +388,14 @@ try {
       })
       .join('');
     const moe = m.moe ? `MoE: ${m.moe.experts} experts, ${m.moe.expertsPerToken} routed per token${m.moe.shared ? ` + ${m.moe.shared} shared` : ''}` : 'dense: every weight read per token';
+    // What can move to host RAM, and what a token then reads there.
+    const routed = m.moe?.routed
+      ? `<div title="${esc(m.moe.split ?? '')}">routed experts: ${(m.moe.routed / 1e9).toFixed(1)}B over ${m.moe.layers} layers, ${(routedReadParams(m) / 1e9).toFixed(2)}B read a token: placed by the Routed experts setting</div>`
+      : m.moe ? '<div>routed-expert weights not recorded, so they stay in GPU memory</div>' : '';
     el('modelCard').innerHTML =
       `<div><div class="k">Shape</div><div class="big">${esc(m.label)}</div>` +
       `<div>${(m.params.total / 1e9).toFixed(1)}B parameters, ${(m.params.active / 1e9).toFixed(1)}B active · ${esc(moe)}</div>` +
+      routed +
       (m.params.mtp != null || m.params.lookup
         ? `<div title="${esc(m.params.split ?? '')}">${[
             m.params.mtp ? `plus a ${(m.params.mtp / 1e9).toFixed(2)}B MTP head, counted only with draft weights on` : m.params.mtp === 0 ? 'no MTP head' : '',
@@ -462,6 +480,19 @@ try {
       });
       const d = model.driveById[state.ssd] ?? model.DRIVES[0];
       el('ssdNote').innerHTML = `<a href="${esc(d.source)}" rel="noopener noreferrer">${esc(d.label)}</a>, ${esc(d.interface)}: <a href="${esc(d.randomRead.measured.url)}" rel="noopener noreferrer">${Math.round(d.randomRead.latencyUs)} µs</a> a 4K read at queue depth 1 (measured), ${driveFigures(d).split(', ')[1]} (maker)`;
+    }
+    chips('expertChips', EXPERT_PLACES.map(k => ({ v: k.id, label: k.label, title: k.title })), v => state.experts === v, v => {
+      state.experts = v;
+      update('model');
+    });
+    if (model.HOSTS.length) {
+      const first = model.HOSTS[0].id;
+      chips('platChips', model.HOSTS.map(h => ({ v: h.id, label: h.short ?? h.label, title: `${h.label}: ${hostFigures(h)}. Systems use their own CPUs` })), v => (state.plat ?? first) === v, v => {
+        state.plat = v === first ? null : v;
+        update('model');
+      });
+      const h = model.hostById[state.plat] ?? model.HOSTS[0];
+      el('platNote').innerHTML = `<a href="${esc(h.source)}" rel="noopener noreferrer">${esc(h.label)}</a>: ${esc(hostFigures(h))}${h.measured ? `; <a href="${esc(h.measured.url)}" rel="noopener noreferrer">${Math.round(h.measured.GBs)} GB/s measured</a>` : ''}`;
     }
     sliders.depth.set(state.depth);
     el('cardsAuto').checked = state.cards === 'auto';

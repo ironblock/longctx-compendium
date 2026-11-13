@@ -201,6 +201,16 @@ qwen3_32b: {
   from `ngram_size` 3, `heads_per_ngram` 8, `ple_embed_dim` 2560 and
   `ple_layer_ids` [2]. Without it the page shows the table's size and placement
   but no SSD cost.
+- `moe` gives `experts` per layer, `expertsPerToken` the router picks and
+  `shared` experts that always run. `moe.layers` (how many layers hold routed
+  experts) and `moe.routed` (their weights) are summed from the safetensors
+  headers at the pinned revision, with `moe.split` saying so: tensors under
+  `.experts.` in the decoder layers, shared experts, MTP layers and
+  quantization scales left out, packed MXFP4 blocks counted at two weights a
+  byte. They are what the Routed experts setting can move to host RAM. Without
+  them an MoE model's experts stay in GPU memory. The validator rejects a
+  routed count at or above the total, or one whose per-token share
+  (`routed × expertsPerToken / experts`) exceeds `params.active`.
 
 `tools/test-kv.mjs` checks every entry's layer arithmetic and holds the KV
 formula against what first-party lines actually allocated.
@@ -236,6 +246,19 @@ formula against what first-party lines actually allocated.
   latency each. Read time beyond the layers before the table (the step spread
   evenly over the layers) is added to every token, and prefill cannot exceed
   IOPS ÷ rows per token. Every row is taken to miss the OS cache.
+- **Routed experts** go where their setting puts them: GPU memory, every
+  layer's in host RAM for the CPU, or as many layers' worth as fit on the GPUs
+  after everything else (overflow). The CPU reads its share of a token's routed
+  experts (`routed × expertsPerToken / experts`, for its layers) at the host's
+  theoretical memory bandwidth. The GPU's own routed experts and the shared
+  experts can run alongside it, attention and the router cannot, so a token
+  takes the GPU's other work plus the larger of the two; taking turns, as
+  llama.cpp does by default, is shown beside it. Prefill is capped at batch ×
+  host link ÷ the expert bytes held on the host, for engines that copy the
+  experts to the GPU each batch, at 4,096-token batches (512 shown too). An
+  engine that computes them on the CPU is not bounded, since no CPU's matrix
+  throughput is recorded. The host must hold the experts, any lookup tables
+  in host RAM and 8 GiB.
 
 Every simplification leans generous — perfect scaling, no launch or
 synchronization cost, one weight width throughout — so a ceiling is an upper
@@ -442,6 +465,13 @@ is shown, and a `note` on its known weaknesses. Each model records:
   adds the MTP head back when the shared setting counts draft weights and it
   is known whether the total holds it, and places lookup tables where the
   shared setting says (host RAM, the SSD, or added to the GPU figure);
+- for an MoE model whose headers were read, `routed` (the routed experts'
+  weights) and `nonRouted` (the rest of the decode pass, lookup tables, MTP
+  layers and vision towers left out), both summed from the safetensors headers
+  at the pinned revision, with `routedSplit` saying how. With the Routed
+  experts setting off the GPUs, the page puts `nonRouted` on them and the
+  experts in host RAM. `nonRouted` is not total less routed because card
+  totals are rounded: Mistral Large 4's "1T" sums to 1.05T in its headers;
 - `weights`: the precision it was released in, and the repository size;
 - `scores`: one per variant the index ran (an effort level, a reasoning mode),
   each with the index `id`, its `version`, the `value`, the `asOf` date and

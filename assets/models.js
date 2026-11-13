@@ -31,6 +31,15 @@
 //                    row of an untied input embedding, so ceilings take it out of
 //                    the bytes and FLOPs per token; a tied one is read in full as
 //                    the output head, so it stays in
+//   moe              experts per MoE layer, how many the router picks per
+//                    token, and shared experts (always run). `layers` is how
+//                    many layers hold routed experts and `routed` their weights,
+//                    summed from the safetensors headers (`split`): what an
+//                    engine can move to host RAM for the CPU to compute. A
+//                    token reads expertsPerToken / experts of each layer's
+//                    routed weights. `sharedParams` is the shared experts'
+//                    weights from the same headers: they stay on the GPU and
+//                    can run while the CPU works on the routed ones
 //   layerTypes       full_attention / sliding_attention / linear_attention /
 //                    ffn_only -- how many of each; they sum to `layers`
 //   heads, kvHeads, headDim
@@ -123,7 +132,11 @@ export const MODELS = {
     moe: {
       experts: 512,
       expertsPerToken: 10,
-      shared: 1
+      shared: 1,
+      layers: 48,
+      routed: 120795955200,
+      sharedParams: 236052480,
+      split: "safetensors headers of Qwen/Qwen3.8-Flash-Next at de4b8e4d43b9: tensors under .experts. in the decoder layers; shared experts counted apart (sharedParams); quantization scales left out"
     },
     maxPositions: 262144,
     note: "The 12 layers the config calls full attention are block-sparse (Qwen Sparse Attention): an indexer picks at most 2,048 positions per step, so decode reads that many while the cache still holds every position; the indexer's own compressed keys, which it scans across every position, are not counted. The count excludes the n-gram embedding (51.2B in BF16, params.lookup), which the program that measures this model keeps in host RAM, and the MTP head. The card's \"4B MTP\" is more than the 2.61B of mtp.* tensors in the checkpoint, an MoE layer with all 512 experts; this page guesses the card also counts the input embedding and output head the head shares (2 x 0.64B), which would make 3.88B. Two KV heads: a 4-way tensor-parallel split must replicate them."
@@ -227,7 +240,11 @@ export const MODELS = {
     moe: {
       experts: 256,
       expertsPerToken: 8,
-      shared: 1
+      shared: 1,
+      layers: 40,
+      routed: 32212254720,
+      sharedParams: 125911040,
+      split: "safetensors headers of Qwen/Qwen3.6-35B-A3B at 995ad96eacd9: tensors under .experts. in the decoder layers; shared experts counted apart (sharedParams); quantization scales left out"
     },
     maxPositions: 262144,
     note: "Hybrid MoE: 30 Gated DeltaNet layers to 10 full-attention ones."
@@ -265,7 +282,11 @@ export const MODELS = {
     moe: {
       experts: 256,
       expertsPerToken: 8,
-      shared: 1
+      shared: 1,
+      layers: 40,
+      routed: 32212254720,
+      sharedParams: 125911040,
+      split: "safetensors headers of Qwen/Qwen3.5-35B-A3B at 59d61f3ce65a: tensors under .experts. in the decoder layers; shared experts counted apart (sharedParams); quantization scales left out"
     },
     maxPositions: 262144,
     note: "Hybrid MoE: 30 Gated DeltaNet layers to 10 full-attention ones."
@@ -336,7 +357,11 @@ export const MODELS = {
     moe: {
       experts: 512,
       expertsPerToken: 10,
-      shared: 1
+      shared: 1,
+      layers: 48,
+      routed: 77309411328,
+      sharedParams: 151093248,
+      split: "safetensors headers of Qwen/Qwen3-Next-80B-A3B-Instruct at 9c7f2fbe8446: tensors under .experts. in the decoder layers; shared experts counted apart (sharedParams); quantization scales left out"
     },
     maxPositions: 262144,
     note: "The count excludes the 1.65B MTP head the checkpoint also carries (params.mtp)."
@@ -374,7 +399,11 @@ export const MODELS = {
     moe: {
       experts: 512,
       expertsPerToken: 10,
-      shared: 1
+      shared: 1,
+      layers: 48,
+      routed: 77309411328,
+      sharedParams: 151093248,
+      split: "safetensors headers of Qwen/Qwen3-Coder-Next at a7fbcb5c0e12: tensors under .experts. in the decoder layers; shared experts counted apart (sharedParams); quantization scales left out"
     },
     maxPositions: 262144,
     note: "Published as Qwen/Qwen3-Coder-Next. Identical tensor names and shapes to Qwen3-Next-80B-A3B; only the RoPE base differs, and it ships no MTP head."
@@ -412,7 +441,11 @@ export const MODELS = {
     moe: {
       experts: 128,
       expertsPerToken: 6,
-      shared: 1
+      shared: 1,
+      layers: 23,
+      routed: 29374808064,
+      sharedParams: 458981376,
+      split: "safetensors headers of nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 at bf77c3174f68: tensors under .experts. in the decoder layers; shared experts counted apart (sharedParams); quantization scales left out"
     },
     maxPositions: 262144,
     note: "52 blocks: 23 Mamba-2, 23 MoE-only and 6 attention. Only the 6 hold a KV cache."
@@ -484,7 +517,11 @@ export const MODELS = {
     moe: {
       experts: 128,
       expertsPerToken: 4,
-      shared: 0
+      shared: 0,
+      layers: 36,
+      routed: 114701598720,
+      sharedParams: 0,
+      split: "safetensors headers of openai/gpt-oss-120b at b5c939de8f75: tensors under .experts. in the decoder layers; shared experts counted apart (sharedParams); quantization scales left out, MXFP4 blocks counted at two weights a byte"
     },
     maxPositions: 131072,
     note: "Experts are MXFP4; attention, router, embeddings and output head stay BF16, so a ceiling computed at one width throughout is higher than the true one. Sliding-window (128) and full-attention layers alternate."
@@ -520,7 +557,11 @@ export const MODELS = {
     moe: {
       experts: 64,
       expertsPerToken: 4,
-      shared: 1
+      shared: 1,
+      layers: 46,
+      routed: 27783069696,
+      sharedParams: 434110464,
+      split: "safetensors headers of zai-org/GLM-4.7-Flash at 7dd20894a642: tensors under .experts. in the decoder layers; shared experts counted apart (sharedParams); quantization scales left out"
     },
     maxPositions: 202752,
     note: "Multi-head latent attention: each position caches a 512-wide latent and a 64-wide rotary key, shared by every head. The active count is only the card's nominal \"A3B\". Its MTP layer (layer 47, 1.28B) stores its own copies of the input embedding and output head, 0.63B of the 1.28B; an engine that shares them with the main model holds 0.64B."
@@ -550,7 +591,11 @@ export const MODELS = {
     moe: {
       experts: 128,
       expertsPerToken: 8,
-      shared: 0
+      shared: 0,
+      layers: 48,
+      routed: 28991029248,
+      sharedParams: 0,
+      split: "safetensors headers of Qwen/Qwen3-30B-A3B at ad44e777bcd1: tensors under .experts. in the decoder layers; shared experts counted apart (sharedParams); quantization scales left out"
     },
     maxPositions: 40960
   },
@@ -579,7 +624,11 @@ export const MODELS = {
     moe: {
       experts: 128,
       expertsPerToken: 8,
-      shared: 0
+      shared: 0,
+      layers: 48,
+      routed: 28991029248,
+      sharedParams: 0,
+      split: "safetensors headers of Qwen/Qwen3-Coder-30B-A3B-Instruct at b2cff646eb4b: tensors under .experts. in the decoder layers; shared experts counted apart (sharedParams); quantization scales left out"
     },
     maxPositions: 262144
   },

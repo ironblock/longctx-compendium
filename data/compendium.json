@@ -16554,7 +16554,10 @@
         "active": 104000000000.0,
         "source": "https://huggingface.co/moonshotai/Kimi-K3.1-Pro -- Model Summary: \"Total Parameters\" 2.8T, \"Activated Parameters\" 104B (the introduction calls it \"our most capable 3T-class model to date\")",
         "mtp": 0,
-        "split": "safetensors headers of moonshotai/Kimi-K3.1-Pro at d9e99b0792a5: no MTP tensors, and config.json sets num_nextn_predict_layers to 0"
+        "split": "safetensors headers of moonshotai/Kimi-K3.1-Pro at d9e99b0792a5: no MTP tensors, and config.json sets num_nextn_predict_layers to 0",
+        "routed": 2722740830208,
+        "nonRouted": 56969000000,
+        "routedSplit": "safetensors headers of moonshotai/Kimi-K3.1-Pro at d9e99b0792a5: tensors under .experts. in 92 decoder layers, packed 4-bit storage counted at two weights a byte; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "MXFP4 routed experts, BF16 elsewhere",
@@ -16637,7 +16640,10 @@
         "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash -- the 1017 card states no counts (\"a minor update to DeepSeek-V4.1-Flash\"); its parent's card: \"a multimodal Mixture-of-Experts (MoE) model with 552B backbone parameters\", \"activate only 8B parameters per token during prefill and 16B during decode\", and \"Engram conditional memory (196B parameters, sparsely accessed via token-based lookup)\". The total is backbone plus Engram, summed here.",
         "lookup": 196613849600,
         "lookupBits": 8.25,
-        "split": "safetensors headers of deepseek-ai/DeepSeek-V4.1-Flash-1017 at 1bae0e108899: layers.*.engram.embed.weight, 196,613,849,600 values in FP8 E4M3 with one E8M0 scale per 32 (8.25 bits each, about 203 GB), matching the card's \"Engram conditional memory (196B parameters\". The checkpoint also carries three MTP layers (config num_nextn_predict_layers 3), mostly FP4 experts in an I8 container; their parameter count depends on the packing, which is not settled here, so no MTP size is recorded"
+        "split": "safetensors headers of deepseek-ai/DeepSeek-V4.1-Flash-1017 at 1bae0e108899: layers.*.engram.embed.weight, 196,613,849,600 values in FP8 E4M3 with one E8M0 scale per 32 (8.25 bits each, about 203 GB), matching the card's \"Engram conditional memory (196B parameters\". The checkpoint also carries three MTP layers (config num_nextn_predict_layers 3), mostly FP4 experts in an I8 container; their parameter count depends on the packing, which is not settled here, so no MTP size is recorded",
+        "routed": 543581798400,
+        "nonRouted": 8374000000,
+        "routedSplit": "safetensors headers of deepseek-ai/DeepSeek-V4.1-Flash-1017 at 1bae0e108899: tensors under .experts. in 40 decoder layers, packed 4-bit storage counted at two weights a byte; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers, less the lookup tables."
       },
       "weights": {
         "precision": "FP8 with FP4 routed experts",
@@ -16682,7 +16688,10 @@
       "params": {
         "total": 1600000000000.0,
         "active": 49000000000.0,
-        "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro -- the 0813 card states no counts but \"is built on the DeepSeek-V4-Pro (Preview) model structure\"; the V4-Pro card: \"DeepSeek-V4-Pro with 1.6T parameters (49B activated)\"."
+        "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro -- the 0813 card states no counts but \"is built on the DeepSeek-V4-Pro (Preview) model structure\"; the V4-Pro card: \"DeepSeek-V4-Pro with 1.6T parameters (49B activated)\".",
+        "routed": 1547396186112,
+        "nonRouted": 25604000000,
+        "routedSplit": "safetensors headers of deepseek-ai/DeepSeek-V4-Pro-0813 at 72e1d3230f6c: tensors under .experts. in 61 decoder layers, packed 4-bit storage counted at two weights a byte; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "FP8 with FP4 routed experts",
@@ -16720,7 +16729,10 @@
         "source": "https://huggingface.co/zai-org/GLM-5.2 -- neither card states a count; GLM-5.3 \"uses the same base model as GLM-5.2\", and Hugging Face counts 753,329,940,480 parameters in GLM-5.2's BF16 weights (unpacked, so the count is not distorted by quantization). Hugging Face's figure, not the card's.",
         "mtp": 9953523360,
         "mtpInTotal": true,
-        "split": "safetensors headers of zai-org/GLM-5.3 at ba32f8c19c87: the layer past the last decoder layer, 9.95B in FP8 and BF16; the 753.33B total is the checkpoint's own, so it includes it"
+        "split": "safetensors headers of zai-org/GLM-5.3 at ba32f8c19c87: the layer past the last decoder layer, 9.95B in FP8 and BF16; the 753.33B total is the checkpoint's own, so it includes it",
+        "routed": 724775731200,
+        "nonRouted": 18604000000,
+        "routedSplit": "safetensors headers of zai-org/GLM-5.3 at ba32f8c19c87: tensors under .experts. in 75 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "FP8 (BF16 in a separate repository)",
@@ -16759,7 +16771,10 @@
         "active": 18000000000.0,
         "source": "https://huggingface.co/zai-org/GLM-5.3-Flash -- \"With 320B total parameters and just 18B active parameters\"",
         "mtp": 7433042464,
-        "split": "safetensors headers of zai-org/GLM-5.3-Flash at 46a050bec130: 1 MTP layer, 7.43B; whether the published 320B includes them is not settled by the checkpoint's 321.3B"
+        "split": "safetensors headers of zai-org/GLM-5.3-Flash at 46a050bec130: 1 MTP layer, 7.43B; whether the published 320B includes them is not settled by the checkpoint's 321.3B",
+        "routed": 304405807104,
+        "nonRouted": 8924000000,
+        "routedSplit": "safetensors headers of zai-org/GLM-5.3-Flash at 46a050bec130: tensors under .experts. in 42 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "FP8 (BF16 in a separate repository)",
@@ -16789,7 +16804,10 @@
         "active": 42000000000.0,
         "source": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Pro-RL -- \"Sparse MoE (Mixture of Experts), 1.02T total / 42B activated parameters\"",
         "mtp": 1934801664,
-        "split": "safetensors headers of XiaomiMiMo/MiMo-V2.6-Pro-RL at a066ba005719: its MTP tensors, 1.93B; whether the published 1020B includes them is not settled by the checkpoint's 1024.2B"
+        "split": "safetensors headers of XiaomiMiMo/MiMo-V2.6-Pro-RL at a066ba005719: its MTP tensors, 1.93B; whether the published 1020B includes them is not settled by the checkpoint's 1024.2B",
+        "routed": 1000190509056,
+        "nonRouted": 21079000000,
+        "routedSplit": "safetensors headers of XiaomiMiMo/MiMo-V2.6-Pro-RL at a066ba005719: tensors under .experts. in 69 decoder layers, packed 4-bit storage counted at two weights a byte; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "FP8, stored as MXFP4",
@@ -16819,7 +16837,10 @@
         "active": 15000000000.0,
         "source": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL -- \"Sparse MoE (Mixture of Experts), 309B total / 15B activated parameters\"",
         "mtp": 987868224,
-        "split": "safetensors headers of XiaomiMiMo/MiMo-V2.6-Flash-RL at f657ba2f7d24: 3 MTP layers, 0.99B; whether the published 309B includes them is not settled by the checkpoint's 310.8B"
+        "split": "safetensors headers of XiaomiMiMo/MiMo-V2.6-Flash-RL at f657ba2f7d24: 3 MTP layers, 0.99B; whether the published 309B includes them is not settled by the checkpoint's 310.8B",
+        "routed": 302795194368,
+        "nonRouted": 6005000000,
+        "routedSplit": "safetensors headers of XiaomiMiMo/MiMo-V2.6-Flash-RL at f657ba2f7d24: tensors under .experts. in 47 decoder layers, packed 4-bit storage counted at two weights a byte; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "FP8, stored as MXFP4",
@@ -16849,7 +16870,10 @@
         "active": 25000000000.0,
         "source": "https://huggingface.co/inclusionAI/Ling-3.1-flash-1019 -- \"with 560B total parameters, 25B active parameters per token, and a 1M-token context window\"",
         "mtp": 8174694016,
-        "split": "safetensors headers of inclusionAI/Ling-3.1-flash-1019 at 2109a6863fb1: 1 MTP layer, 8.17B; whether the published 560B includes them is not settled by the checkpoint's 572.1B"
+        "split": "safetensors headers of inclusionAI/Ling-3.1-flash-1019 at 2109a6863fb1: 1 MTP layer, 8.17B; whether the published 560B includes them is not settled by the checkpoint's 572.1B",
+        "routed": 547608330240,
+        "nonRouted": 16342000000,
+        "routedSplit": "safetensors headers of inclusionAI/Ling-3.1-flash-1019 at 2109a6863fb1: tensors under .experts. in 68 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "FP8",
@@ -16879,7 +16903,10 @@
         "active": 23000000000.0,
         "source": "https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash -- \"Parameters: Approximately 428B total; 23B activated per token\"",
         "mtp": 0,
-        "split": "safetensors headers of MiniMaxAI/MiniMax-M3.1-Flash at ce7f4df87d2e: no MTP tensors"
+        "split": "safetensors headers of MiniMaxAI/MiniMax-M3.1-Flash at ce7f4df87d2e: no MTP tensors",
+        "routed": 413122166784,
+        "nonRouted": 13108000000,
+        "routedSplit": "safetensors headers of MiniMaxAI/MiniMax-M3.1-Flash at ce7f4df87d2e: tensors under .experts. in 57 decoder layers, packed 4-bit storage counted at two weights a byte; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "MXFP8, with NVFP4 routed experts",
@@ -16910,7 +16937,10 @@
         "active": 23000000000.0,
         "source": "https://huggingface.co/MiniMaxAI/MiniMax-M3 -- \"It has ~428B parameters and ~23B activated parameters.\"",
         "mtp": 0,
-        "split": "safetensors headers of MiniMaxAI/MiniMax-M3 at d95e30cb912f: no MTP tensors, though config.json declares num_nextn_predict_layers 1"
+        "split": "safetensors headers of MiniMaxAI/MiniMax-M3 at d95e30cb912f: no MTP tensors, though config.json declares num_nextn_predict_layers 1",
+        "routed": 413122166784,
+        "nonRouted": 13098000000,
+        "routedSplit": "safetensors headers of MiniMaxAI/MiniMax-M3 at d95e30cb912f: tensors under .experts. in 57 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "BF16 (MXFP8 in a separate repository)",
@@ -16939,7 +16969,10 @@
         "active": 27000000000.0,
         "source": "https://huggingface.co/stepfun-ai/Step-5-Preview -- \"a sparse Mixture-of-Experts (MoE) model with 600B total parameters and 27B active parameters\"",
         "mtp": 2515858560,
-        "split": "safetensors headers of stepfun-ai/Step-5-Preview at 364b3b03fed2: 3 MTP layers, 2.52B; whether the published 600B includes them is not settled by the checkpoint's 604.3B"
+        "split": "safetensors headers of stepfun-ai/Step-5-Preview at 364b3b03fed2: 3 MTP layers, 2.52B; whether the published 600B includes them is not settled by the checkpoint's 604.3B",
+        "routed": 584652423168,
+        "nonRouted": 14348000000,
+        "routedSplit": "safetensors headers of stepfun-ai/Step-5-Preview at 364b3b03fed2: fused .moe.{gate,up,down}_proj tensors in 88 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "FP8 (BF16 and NVFP4 in separate repositories)",
@@ -16969,7 +17002,10 @@
         "active": 52000000000.0,
         "source": "https://huggingface.co/mistralai/Mistral-Large-4-1T-A52B -- \"a 1 trillion-parameter natively multimodal Mixture-of-Experts model with 49 billion active parameters per token (52 billion including embeddings and output layers)\"; key features: \"~1T total / ~52B active parameters\"",
         "mtp": 2099969024,
-        "split": "safetensors header of mistralai/Mistral-Large-4-1T-A52B at af26e7869af6, consolidated-00054-of-00054: the mtp_dspark module (3 layers, params.json \"mtp\": {\"n_layers\": 3}), 2.10B in BF16; whether the published 1T includes it is not settled"
+        "split": "safetensors header of mistralai/Mistral-Large-4-1T-A52B at af26e7869af6, consolidated-00054-of-00054: the mtp_dspark module (3 layers, params.json \"mtp\": {\"n_layers\": 3}), 2.10B in BF16; whether the published 1T includes it is not settled",
+        "routed": 1029244354560,
+        "nonRouted": 20176000000,
+        "routedSplit": "safetensors headers of mistralai/Mistral-Large-4-1T-A52B at af26e7869af6: tensors under .experts. in 71 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "FP8 (NVFP4 in a separate repository)",
@@ -17094,7 +17130,10 @@
         "active": 23000000000.0,
         "source": "https://huggingface.co/IFM/K2-Horizon-375B-A23B -- \"a sparse Mixture-of-Experts model that stores 375B parameters and runs 23B per token, with a 512K context window\"",
         "mtp": 0,
-        "split": "safetensors headers of IFM/K2-Horizon-375B-A23B at bb3bfb4b5324: no MTP tensors"
+        "split": "safetensors headers of IFM/K2-Horizon-375B-A23B at bb3bfb4b5324: no MTP tensors",
+        "routed": 367823683584,
+        "nonRouted": 11346000000,
+        "routedSplit": "safetensors headers of IFM/K2-Horizon-375B-A23B at bb3bfb4b5324: tensors under .experts. in 58 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "BF16",
@@ -17123,7 +17162,10 @@
         "active": 23400000000.0,
         "source": "https://huggingface.co/reflection/Beam-1.0-501B-A23B -- \"| Total Parameters | 501.3B |\", \"| Active Parameters | 23.4B |\"",
         "mtp": 0,
-        "split": "safetensors headers of reflection/Beam-1.0-501B-A23B at 12950ae640b4: no MTP tensors"
+        "split": "safetensors headers of reflection/Beam-1.0-501B-A23B at 12950ae640b4: no MTP tensors",
+        "routed": 493250150400,
+        "nonRouted": 8020000000,
+        "routedSplit": "safetensors headers of reflection/Beam-1.0-501B-A23B at 12950ae640b4: tensors under .experts. in 49 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "BF16 (FP8 and NVFP4 in separate repositories)",
@@ -17152,7 +17194,10 @@
         "active": 12000000000.0,
         "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16 -- \"It has 120B total parameters and 12B active parameters and supports context lengths up to 1M tokens.\"",
         "mtp": 2942325248,
-        "split": "safetensors headers of nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16 at fb0ee0bc6b3f: its MTP tensors, 2.94B; whether the published 120B includes them is not settled by the checkpoint's 124.5B"
+        "split": "safetensors headers of nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16 at fb0ee0bc6b3f: its MTP tensors, 2.94B; whether the published 120B includes them is not settled by the checkpoint's 124.5B",
+        "routed": 112742891520,
+        "nonRouted": 8117000000,
+        "routedSplit": "safetensors headers of nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16 at fb0ee0bc6b3f: tensors under .experts. in 40 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "BF16 (NVFP4 in a separate repository)",
@@ -17182,7 +17227,10 @@
         "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16 -- \"The model has 55B active parameters and 550B parameters in total.\"",
         "mtp": 11215610368,
         "mtpInTotal": false,
-        "split": "safetensors headers of nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16 at 77df655d5e9f: the MTP layer, 11.22B in BF16; the checkpoint holds 560.5B, and 560.5B less the layer is the card's 550B, so the total leaves it out"
+        "split": "safetensors headers of nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16 at 77df655d5e9f: the MTP layer, 11.22B in BF16; the checkpoint holds 560.5B, and 560.5B less the layer is the card's 550B, so the total leaves it out",
+        "routed": 515396075520,
+        "nonRouted": 33914000000,
+        "routedSplit": "safetensors headers of nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16 at 77df655d5e9f: tensors under .experts. in 48 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "BF16 (NVFP4 in a separate repository)",
@@ -17211,7 +17259,10 @@
         "active": 41000000000.0,
         "source": "https://huggingface.co/thinkingmachines/Inkling -- \"Parameters\" / \"975B total, 41B active\"",
         "mtp": 5260445704,
-        "split": "safetensors headers of thinkingmachines/Inkling at 828496eeae4c: its MTP tensors, 5.26B; whether the published 975B includes them is not settled by the checkpoint's 952.4B"
+        "split": "safetensors headers of thinkingmachines/Inkling at 828496eeae4c: its MTP tensors, 5.26B; whether the published 975B includes them is not settled by the checkpoint's 952.4B",
+        "routed": 927712935936,
+        "nonRouted": 19317000000,
+        "routedSplit": "safetensors headers of thinkingmachines/Inkling at 828496eeae4c: tensors under .experts. in 64 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "BF16 (NVFP4 in a separate repository)",
@@ -17240,7 +17291,10 @@
         "active": 12000000000.0,
         "source": "https://huggingface.co/thinkingmachines/Inkling-Small -- \"Parameters\" / \"276B total, 12B active\"",
         "mtp": 2231912456,
-        "split": "safetensors headers of thinkingmachines/Inkling-Small at 8cc5877b44d3: its MTP tensors, 2.23B; whether the published 276B includes them is not settled by the checkpoint's 266.0B"
+        "split": "safetensors headers of thinkingmachines/Inkling-Small at 8cc5877b44d3: its MTP tensors, 2.23B; whether the published 276B includes them is not settled by the checkpoint's 266.0B",
+        "routed": 257698037760,
+        "nonRouted": 5962000000,
+        "routedSplit": "safetensors headers of thinkingmachines/Inkling-Small at 8cc5877b44d3: tensors under .experts. in 40 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "BF16 (NVFP4 in a separate repository)",
@@ -17269,7 +17323,10 @@
         "active": 37000000000.0,
         "source": "https://huggingface.co/LGAI-EXAONE/K-EXAONE-2.0-750B-A37B -- \"Number of Parameters | 750B\", \"Active Parameters | 37B\"",
         "mtp": 528513280,
-        "split": "safetensors headers of LGAI-EXAONE/K-EXAONE-2.0-750B-A37B at fec0c8dd25fd: 1 MTP layer, 0.53B; whether the published 750B includes them is not settled by the checkpoint's 749.4B"
+        "split": "safetensors headers of LGAI-EXAONE/K-EXAONE-2.0-750B-A37B at fec0c8dd25fd: 1 MTP layer, 0.53B; whether the published 750B includes them is not settled by the checkpoint's 749.4B",
+        "routed": 734439407616,
+        "nonRouted": 14391000000,
+        "routedSplit": "safetensors headers of LGAI-EXAONE/K-EXAONE-2.0-750B-A37B at fec0c8dd25fd: tensors under .experts. in 76 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "BF16 (FP8 and NVFP4 in separate repositories)",
@@ -17298,7 +17355,10 @@
         "active": 25000000000.0,
         "source": "https://huggingface.co/CohereLabs/command-a-plus-05-2026-bf16 -- \"Model Size: 25B active parameters, 218B total parameters\"",
         "mtp": 0,
-        "split": "safetensors headers of CohereLabs/command-a-plus-05-2026-bf16 at 5fb6fde5fd12: no MTP tensors"
+        "split": "safetensors headers of CohereLabs/command-a-plus-05-2026-bf16 at 5fb6fde5fd12: no MTP tensors",
+        "routed": 206158430208,
+        "nonRouted": 12182000000,
+        "routedSplit": "safetensors headers of CohereLabs/command-a-plus-05-2026-bf16 at 5fb6fde5fd12: tensors under .experts. in 32 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "BF16 (FP8 and W4A4 NVFP4 in separate repositories)",
@@ -17328,7 +17388,10 @@
         "active": 3000000000.0,
         "source": "https://huggingface.co/CohereLabs/North-Mini-Code-1.0 -- \"Model Size: 30B total; 3B active\"",
         "mtp": 0,
-        "split": "safetensors headers of CohereLabs/North-Mini-Code-1.0 at d11e61a84261: no MTP tensors"
+        "split": "safetensors headers of CohereLabs/North-Mini-Code-1.0 at d11e61a84261: no MTP tensors",
+        "routed": 28991029248,
+        "nonRouted": 1489000000,
+        "routedSplit": "safetensors headers of CohereLabs/North-Mini-Code-1.0 at d11e61a84261: tensors under .experts. in 48 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "BF16 (FP8 and W4A16 in separate repositories)",
@@ -17357,7 +17420,10 @@
         "active": 3000000000.0,
         "source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16 -- \"| Total Parameters | 30B (3B active) |\"",
         "mtp": 1335325952,
-        "split": "safetensors headers of nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16 at a9904d24bcc1: 1 MTP layer, 1.34B; whether the published 30B includes them is not settled by the checkpoint's 31.6B"
+        "split": "safetensors headers of nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16 at a9904d24bcc1: 1 MTP layer, 1.34B; whether the published 30B includes them is not settled by the checkpoint's 31.6B",
+        "routed": 29374808064,
+        "nonRouted": 2205000000,
+        "routedSplit": "safetensors headers of nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16 at a9904d24bcc1: tensors under .experts. in 23 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "BF16 (NVFP4 in a separate repository)",
@@ -17504,7 +17570,10 @@
         "active": 6500000000.0,
         "source": "https://huggingface.co/mistralai/Mistral-Small-4-119B-2603 -- \"119B parameters, with 6.5B activated per token\" (the title says \"A6B\")",
         "mtp": 0,
-        "split": "safetensors headers of mistralai/Mistral-Small-4-119B-2603 at a11f36bebf70: no MTP tensors"
+        "split": "safetensors headers of mistralai/Mistral-Small-4-119B-2603 at a11f36bebf70: no MTP tensors",
+        "routed": 115964126208,
+        "nonRouted": 3026000000,
+        "routedSplit": "safetensors headers of mistralai/Mistral-Small-4-119B-2603 at a11f36bebf70: tensors under .experts. in 36 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {
         "precision": "FP8, per tensor (NVFP4 in a separate repository)",

@@ -1465,6 +1465,20 @@
             "split": {
               "type": "string",
               "description": "Where lookup and mtp were counted: the card's words, or the checkpoint's safetensors headers at a revision."
+            },
+            "routed": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Parameters in routed experts, summed from the checkpoint's safetensors headers: what an engine can leave in host RAM for the CPU to compute. Shared experts, MTP layers and quantization scales are left out; packed 4-bit values count as weights. Absent: not read (dense, or headers not readable)."
+            },
+            "nonRouted": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Parameters of the decode pass outside the routed experts (attention, shared experts, dense layers, embeddings, output head), summed from the same headers, lookup tables left out: what stays on the GPUs when the routed experts move to host RAM. Taken from the headers rather than total less routed, because card totals are rounded (Mistral Large 4's \"1T\" is 1.05T in its headers)."
+            },
+            "routedSplit": {
+              "type": "string",
+              "description": "Where routed was summed: the headers read, at which revision, and the tensor names counted."
             }
           }
         },

@@ -362,6 +362,16 @@ for (const [id, m] of Object.entries(MODELS)) {
   const p = m.params ?? {};
   if ((p.mtp != null || p.lookup != null) && !p.split) fail(at, 'counts an MTP head or lookup table without saying where (params.split)');
   if (p.lookup && !p.lookupBits) fail(at, 'has a lookup table but no lookupBits, so its host-RAM size is unknown');
+  // Routed experts: what can move to host RAM. They are part of the total, and
+  // a token reads only expertsPerToken / experts of them, within what it reads in all.
+  const e = m.moe;
+  if (e?.routed != null) {
+    if (!e.split) fail(at, 'counts routed experts without saying where (moe.split)');
+    if (!Number.isInteger(e.layers) || e.layers < 1 || e.layers > m.layers) fail(at, `moe.layers ${e.layers} is not between 1 and its ${m.layers} layers`);
+    if (!(e.routed < p.total)) fail(at, `routed experts (${e.routed}) are not less than the total (${p.total})`);
+    if (!(e.expertsPerToken > 0 && e.expertsPerToken <= e.experts)) fail(at, `picks ${e.expertsPerToken} of ${e.experts} experts a token`);
+    else if (e.routed * (e.expertsPerToken / e.experts) > p.active) fail(at, 'reads more routed-expert weights a token than its active count');
+  }
   const r = m.lookupReads;
   if (r) {
     if (!p.lookup) fail(at, 'records how its lookup tables are read (lookupReads) but has no lookup table');
@@ -397,6 +407,14 @@ for (const m of doc.openModels ?? []) {
   if (p.lookupBits != null && !p.lookup) fail(at, 'gives a lookup-table precision but no lookup table');
   if (p.mtpInTotal != null && p.mtp == null) fail(at, 'says whether the total includes the MTP head but not how big it is');
   if ((p.lookup ?? 0) + (p.mtpInTotal ? (p.mtp ?? 0) : 0) >= p.total) fail(at, 'leaves nothing of its total for the GPUs once lookup tables and MTP are taken out');
+  // Routed experts and what stays on the GPUs without them both come from the
+  // headers; a card total far from their sum is worth a look, not a failure.
+  if ((p.routed != null || p.nonRouted != null) && !p.routedSplit) fail(at, 'counts routed experts without saying where (params.routedSplit)');
+  if ((p.routed != null) !== (p.nonRouted != null)) fail(at, 'gives one of routed and nonRouted without the other');
+  if (p.routed != null && p.nonRouted != null) {
+    const sum = p.routed + p.nonRouted + (p.lookup ?? 0);
+    if (Math.abs(sum - p.total) / p.total > 0.05) warn(at, `headers sum to ${(sum / 1e9).toFixed(1)}B against a ${(p.total / 1e9).toFixed(1)}B total`);
+  }
   const seen = new Set();
   (m.scores ?? []).forEach((sc, i) => {
     const st = `${at} scores[${i}]`;

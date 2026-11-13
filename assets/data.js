@@ -47,6 +47,14 @@ export const PCIE = {
 export const carrierHostGBs = k => (k?.hostLink ? ((PCIE[k.hostLink.gen].gts / 8) * k.hostLink.lanes * 2) / k.hostLink.gpusPerUplink : null);
 
 /**
+ * A host's theoretical memory bandwidth in GB/s: channels x MT/s x 8 bytes,
+ * times its sockets. What CPU code actually reads is lower (a measured figure
+ * sits beside it where one was found), which keeps a ceiling built on it an
+ * upper bound. null when the memory is not recorded.
+ */
+export const hostBandwidthGBs = h => (h?.memory?.channels && h.memory.mts ? (h.memory.channels * h.memory.mts * 8 * (h.sockets ?? 1)) / 1000 : null);
+
+/**
  * The open-weight frontier on the current version of the quality index. Each
  * model takes its best score among its variants (effort levels, reasoning
  * modes) on that version; it is on the frontier when no model of its size or
@@ -63,7 +71,7 @@ export function frontierOf(openModels, qi) {
       const lookup = m.params.lookup ?? 0;
       const mtp = m.params.mtp ?? null;
       const gpu = m.params.total - lookup - (m.params.mtpInTotal && mtp ? mtp : 0);
-      return { ...m, best, total: m.params.total, active: m.params.active ?? null, gpu, lookup, lookupBits: m.params.lookupBits ?? null, mtp };
+      return { ...m, best, total: m.params.total, active: m.params.active ?? null, gpu, lookup, lookupBits: m.params.lookupBits ?? null, mtp, routed: m.params.routed ?? null, nonRouted: m.params.nonRouted ?? null };
     })
     .filter(p => p.best);
   for (const p of pts) {
@@ -109,7 +117,8 @@ export function normalize(doc) {
     };
   });
   const unitById = Object.fromEntries(UNITS.map(u => [u.id, u]));
-  const CARRIERS = doc.carriers ?? [];
+  // A system's host memory bandwidth, where its memory is recorded: what its CPUs compute experts at.
+  const CARRIERS = (doc.carriers ?? []).map(k => (k.host?.memory ? { ...k, host: { ...k.host, bandwidthGBs: hostBandwidthGBs(k.host) } } : k));
   const carrierById = Object.fromEntries(CARRIERS.map(k => [k.id, k]));
 
   /**
@@ -199,6 +208,8 @@ export function normalize(doc) {
     FRONTIER,
     // Reference drives for lookup tables read from an SSD.
     DRIVES: doc.drives ?? [],
+    HOSTS: (doc.hosts ?? []).map(h => ({ ...h, bandwidthGBs: hostBandwidthGBs(h) })),
+    hostById: Object.fromEntries((doc.hosts ?? []).map(h => [h.id, { ...h, bandwidthGBs: hostBandwidthGBs(h) }])),
     driveById: Object.fromEntries((doc.drives ?? []).map(d => [d.id, d])),
     KWH: doc.meta?.electricityUsdPerKwh,
     raw: doc,

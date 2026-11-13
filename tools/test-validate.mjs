@@ -279,6 +279,12 @@ const CASES = [
     const m = d.openModels.find(x => x.id === 'deepseek_v4_pro_0813');
     Object.assign(m.params, { lookup: m.params.total, lookupBits: 8, split: 'x' });
   }],
+  ['routed experts counted with no source', 'params.routedSplit', d => {
+    delete d.openModels.find(x => x.id === 'kimi_k31_pro').params.routedSplit;
+  }],
+  ['routed experts without what stays on the GPUs', 'without the other', d => {
+    delete d.openModels.find(x => x.id === 'kimi_k31_pro').params.nonRouted;
+  }],
   ['a drive with no measured QD1 latency', 'latencyUs', d => {
     delete d.drives[0].randomRead.latencyUs;
   }],

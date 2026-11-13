@@ -176,6 +176,75 @@ const q32KvPerPos = 64 * 8 * 128 * 2 * 2;
   same('and the ceiling is left as it is', C.decodeCeiling(bare, unit, { ...args, table: C.tablePlan(bare, { place: 'ssd', drive }) }).tps, free.tps);
 }
 
+// Routed experts in host RAM. A made-up MoE model with round numbers: 100B
+// weights at 8 bits, 10B read a token, 90B of routed experts over 10 layers
+// (9 GB a layer), 5 of 100 experts a token; no cache. One 40 GB card at
+// 1,000 GB/s holds 39 GiB = 41,875,931,136 bytes; the host reads at 100 GB/s.
+{
+  const m = { label: 'test MoE', params: { total: 100e9, active: 10e9 }, layers: 10, layerTypes: { full_attention: 0 }, heads: 1, kvHeads: 1, headDim: 1, moe: { experts: 100, expertsPerToken: 5, layers: 10, routed: 90e9 } };
+  const card = { memoryBandwidthGBs: 1000, memoryGB: 40, formats: {}, compute: { values: {} } };
+  const host = { bandwidthGBs: 100 };
+  const args = { bpw: 8, depth: 0 };
+  const gpuOnly = C.decodeCeiling(m, { ...card, memoryGB: 200 }, args).tps;
+  near('GPU only: 10 GB a token at 1,000 GB/s', gpuOnly, 100);
+
+  const all = { place: 'cpu', host, hostGB: 128 };
+  const fa = C.fit(m, card, { ...args, experts: all });
+  near('all on the CPU: the GPU holds the other 10 GB', fa.need, 10e9);
+  same('and every layer is the CPU\'s', fa.experts.cpuLayers, 10);
+  near('the CPU reads 5/100 of 90 GB = 4.5 GB a token', C.routedReadParams(m), 4.5e9);
+  near('decode: 5.5 GB at 1,000 GB/s + 4.5 GB at 100 GB/s = 50.5 ms', C.decodeCeiling(m, card, { ...args, experts: all }).tps, 1 / (5.5e-3 + 45e-3));
+
+  const over = { place: 'overflow', host, hostGB: 64 };
+  const fo = C.fit(m, card, { ...args, experts: over });
+  same('overflow: 31.9 GB spare holds 3 layers of 9 GB', fo.experts.gpuLayers, 3);
+  near('so the GPU holds 10 + 27 GB', fo.need, 37e9);
+  near('and the host 63 GB of experts', fo.hostRam.experts, 63e9);
+  same('which a 64 GB host does not hold (56 GiB after 8 GiB)', fo.hostRam.holds, false);
+  same('and a 128 GB host does', C.fit(m, card, { ...args, experts: { ...over, hostGB: 128 } }).hostRam.holds, true);
+  // The GPU's three layers of routed experts (1.35 GB a token) can run while the
+  // CPU reads its 3.15 GB, so the ceiling is 5.5 ms + max(1.35, 31.5) ms.
+  const od = C.decodeCeiling(m, card, { ...args, experts: over });
+  near('decode: 5.5 ms on the GPU, then the larger of 1.35 and 31.5 ms', od.tps, 1 / (5.5e-3 + 31.5e-3));
+  near('taking turns: 6.85 GB on the GPU + 3.15 GB on the CPU = 38.35 ms', od.cpu.serialTps, 1 / (6.85e-3 + 31.5e-3));
+  same('overflow with room for everything is the GPU-only ceiling', C.decodeCeiling(m, { ...card, memoryGB: 200 }, { ...args, experts: over }).tps, gpuOnly);
+  same('experts in GPU memory change nothing', C.decodeCeiling(m, { ...card, memoryGB: 200 }, { ...args, experts: { place: 'gpu', host } }).tps, gpuOnly);
+  // A shared expert (1 GB here) overlaps the CPU's routed experts too.
+  const sh = { ...m, moe: { ...m.moe, sharedParams: 1e9 } };
+  near('all on the CPU with a shared expert: 4.5 ms + max(1, 45) ms', C.decodeCeiling(sh, card, { ...args, experts: all }).tps, 1 / (4.5e-3 + 45e-3));
+  const blind = C.decodeCeiling(m, card, { ...args, experts: { place: 'cpu' } });
+  same('no host bandwidth: no ceiling, rather than a guess', blind.tps, null);
+  same('and it says why', blind.cpu.unknown, 'no host memory bandwidth recorded');
+  same('two cards hold two more layers', C.fit(m, card, { ...args, cards: 2, mode: 'tensor', experts: over }).experts.gpuLayers, Math.floor((2 * 39 * 2 ** 30 - 10e9) / 9e9));
+
+  // Prefill: a batch copies the CPU-held experts to the GPU over the host link
+  // (25 GB/s each way here). FP8 at 1,000 TFLOPS over 2 x 10B FLOPs a token
+  // computes 50,000 tokens/sec; copying 90 GB per 4,096 tokens allows 1,137.8.
+  {
+    const fast = { ...card, hostGBs: 25, formats: { fp8: 'native' }, compute: { values: { fp8: 1000 } } };
+    const f8 = C.fit(m, fast, { ...args, experts: all });
+    const p = C.prefillCeiling(m, fast, { formatKey: 'fp8', depth: 0, experts: f8.experts });
+    near('prefill: compute alone allows 50,000', p.cpu.computeTps, 50000);
+    near('prefill: 4,096 x 25 GB/s / 90 GB', p.tps, (4096 * 25e9) / 90e9);
+    near('and 512-token batches, 142', p.cpu.smallCap, (512 * 25e9) / 90e9);
+    near('two cards copy over two links', C.prefillCeiling(m, fast, { cards: 2, formatKey: 'fp8', depth: 0, experts: f8.experts }).cpu.cap, (4096 * 50e9) / 90e9);
+    same('no expert on the CPU: no cap', C.prefillCeiling(m, fast, { formatKey: 'fp8', depth: 0, experts: { ...f8.experts, cpuLayers: 0, hostBytes: 0 } }).cpu, undefined);
+    same('no host link recorded: says so', C.prefillCeiling(m, { ...fast, hostGBs: null }, { formatKey: 'fp8', depth: 0, experts: f8.experts }).cpu.unknown, 'no host link recorded for this card');
+  }
+
+  // Lookup tables in host RAM share the host with the experts.
+  const lk = { ...m, params: { ...m.params, lookup: 10e9, lookupBits: 16 } };
+  const shared = C.fit(lk, card, { ...args, experts: { ...over, hostGB: 64 }, table: C.tablePlan(lk, { place: 'ram' }) });
+  near('the host holds 63 GB of experts + 20 GB of table', shared.hostRam.need, 83e9);
+}
+
+// Qwen3-30B-A3B from its headers: 48 layers x 128 experts x 3 x 2,048 x 768.
+{
+  const m = MODELS.qwen3_30b_a3b;
+  near('Qwen3-30B-A3B: routed experts', m.moe.routed, 48 * 128 * 3 * 2048 * 768);
+  near('Qwen3-30B-A3B: 8 of 128 read a token', C.routedReadParams(m), 48 * 8 * 3 * 2048 * 768);
+}
+
 // Qwen3.8-Flash-Next's sparse full-attention layers store every position but
 // read at most 2,048 of them a step.
 {

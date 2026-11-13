@@ -203,6 +203,38 @@ export function tablePlan(m, { place = 'ram', bits = null, hostGB = null, drive 
   return plan;
 }
 
+// --- Routed experts in host RAM -------------------------------------------------
+//
+// An MoE model's routed experts are most of its weights but a small share of
+// what a token reads, so engines can leave them in host RAM for the CPU to
+// compute (llama.cpp's --cpu-moe and --n-cpu-moe, ik_llama.cpp,
+// KTransformers). A token then runs layer by layer: the GPU does attention, the
+// router and any shared expert, and the CPU reads the routed experts the token
+// picked at the host's memory bandwidth. The two take turns, so their times add.
+
+export const EXPERT_PLACES = [
+  { id: 'gpu', label: 'GPU memory', title: 'Every weight in GPU memory' },
+  {
+    id: 'overflow',
+    label: 'Overflow to CPU',
+    title: "As many layers' routed experts as fit stay in GPU memory; the rest sit in host RAM and the CPU computes them at the host's memory bandwidth, as llama.cpp's --n-cpu-moe does when tuned to the GPUs",
+  },
+  {
+    id: 'cpu',
+    label: 'All on CPU',
+    title: "Every layer's routed experts in host RAM, computed by the CPU, as llama.cpp's --cpu-moe does; GPU memory holds attention, any shared expert and the cache",
+  },
+];
+
+/** Whether a model records the routed-expert weights that can move to host RAM. */
+export const hasRoutedExperts = m => !!(m?.moe?.routed && m.moe.layers && m.moe.experts && m.moe.expertsPerToken);
+
+/** The expert setting when it moves weights for this model, else null. */
+const movedExperts = (m, experts) => (experts && experts.place && experts.place !== 'gpu' && hasRoutedExperts(m) ? experts : null);
+
+/** Routed-expert weights one token reads from `layers` of a model's MoE layers. */
+export const routedReadParams = (m, layers = m.moe.layers) => m.moe.routed * (m.moe.expertsPerToken / m.moe.experts) * (layers / m.moe.layers);
+
 /**
  * Per-card working memory an engine needs beyond weights and cache (runtime
  * context, activations, workspaces). Real engines vary from well under this to
@@ -356,12 +388,33 @@ export function decodeBandwidthGBs(unit, cards, mode) {
  * A layer split runs one card at a time for a single sequence, so it gets one
  * card's bandwidth however many cards hold the model.
  */
-export function decodeCeiling(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK, kvV, streams = 1, basis = 'per-stream', table = null }) {
+export function decodeCeiling(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK, kvV, streams = 1, basis = 'per-stream', table = null, experts = null, draft = null }) {
   const bytes = decodeBytesPerStep(m, { bpw, depth, kvK, kvV, streams });
   const bw = decodeBandwidthGBs(unit, cards, mode);
   if (!bytes || !bw) return null;
-  const step = bytes.total / (bw * 1e9);
   const per = s => (basis === 'aggregate' ? streams / s : 1 / s);
+  // Routed experts in host RAM: the layers the fit leaves on the CPU are read
+  // there, at the host's bandwidth, after the GPU's share of the same token.
+  let ex = movedExperts(m, experts);
+  if (ex && ex.cpuLayers == null) ex = fit(m, unit, { cards, mode, bpw, depth, kvK, kvV, streams, draft, table, experts: ex })?.experts ?? null;
+  let cpu = null;
+  let step = bytes.total / (bw * 1e9);
+  if (ex?.cpuLayers > 0) {
+    const hostBW = ex.host?.bandwidthGBs ?? null;
+    const cpuBytes = (routedReadParams(m, ex.cpuLayers) * bpw) / 8;
+    if (!hostBW) return { tps: null, bytes, bandwidthGBs: bw, ssd: null, cpu: { unknown: 'no host memory bandwidth recorded', layers: ex.cpuLayers, of: m.moe.layers } };
+    const gpuSeconds = (bytes.total - cpuBytes) / (bw * 1e9);
+    const seconds = cpuBytes / (hostBW * 1e9);
+    // The GPU's routed experts and shared experts can run while the CPU works on
+    // the rest of the same layer (KTransformers; llama.cpp's --moe-cache-cpu-share),
+    // when the GPU's share is spread over every layer. Attention and the router
+    // cannot: the CPU needs their output. Taking turns, as llama.cpp does by
+    // default, adds the two; the ceiling takes the overlap.
+    const alongside = ((routedReadParams(m, ex.gpuLayers ?? 0) + (m.moe.sharedParams ?? 0)) * bpw) / 8 / (bw * 1e9);
+    const overlapped = gpuSeconds - alongside + Math.max(alongside, seconds);
+    step = overlapped;
+    cpu = { layers: ex.cpuLayers, of: m.moe.layers, bytes: cpuBytes, seconds, gpuSeconds, alongside, hostGBs: hostBW, serialTps: per(gpuSeconds + seconds), gpuTps: per(bytes.total / (bw * 1e9)) };
+  }
   // Tables on an SSD: rows requested together set the ceiling; one at a time is shown beside it.
   let ssd = null;
   if (table?.place === 'ssd') {
@@ -378,7 +431,8 @@ export function decodeCeiling(m, unit, { cards = 1, mode = 'single', bpw, depth,
         };
   }
   const tps = per(step + (ssd?.stall ?? 0));
-  return { tps, bytes, bandwidthGBs: bw, ssd };
+  if (cpu) cpu.serialTps = per(cpu.gpuSeconds + cpu.seconds + (ssd?.stall ?? 0));
+  return { tps, bytes, bandwidthGBs: bw, ssd, cpu };
 }
 
 // --- Prefill ----------------------------------------------------------------
@@ -471,8 +525,11 @@ export function computePrecision(unit, formatKey) {
  * once (tensor parallel directly, a layer split by pipelining batches), so the
  * bound is every card's throughput -- generous, as an upper bound should be.
  */
-export function prefillCeiling(m, unit, { cards = 1, formatKey, depth, cold = false, table = null }) {
-  const p = computePrefill(m, unit, { cards, formatKey, depth, cold });
+/** Prompt batch sizes the expert-streaming cap is shown at: the ceiling's, and llama.cpp's default n_ubatch. */
+export const EXPERT_BATCHES = [4096, 512];
+
+export function prefillCeiling(m, unit, { cards = 1, formatKey, depth, cold = false, table = null, experts = null }) {
+  const p = withCpuExperts(m, unit, computePrefill(m, unit, { cards, formatKey, depth, cold }), { cards, experts });
   if (table?.place !== 'ssd' || p.tps == null) return p;
   // A prompt's rows are all known up front, so reads overlap compute fully;
   // the drive still has to deliver every row, which caps the rate.
@@ -484,6 +541,30 @@ export function prefillCeiling(m, unit, { cards = 1, formatKey, depth, cold = fa
   const cap = iops / rows;
   const serialCap = 1 / (rows * lat);
   return { ...p, tps: Math.min(p.tps, cap), ssd: { cap, serialCap, computeTps: p.tps, bound: cap < p.tps } };
+}
+
+/**
+ * Prefill with routed experts in host RAM, when the engine copies them to the
+ * GPU for each prompt batch and multiplies there: llama.cpp does this for
+ * batches of 32 tokens or more, copying the experts the batch uses (at 512
+ * tokens, nearly all of them), and KTransformers' layerwise GPU prefill loads
+ * whole layers. The copies cross the host link once a batch, which caps
+ * prefill at batch x link / bytes held on the host; each card copies over its
+ * own link, and the copies are taken to overlap compute perfectly (llama.cpp
+ * queues them on the compute stream, so it pays both). An engine that
+ * computes the CPU's experts on the CPU instead (KTransformers' AMX path,
+ * ik_llama.cpp below its threshold) is not bounded here: no CPU's matrix
+ * throughput is recorded. `experts` is the fit's resolved placement
+ * (cpuLayers and hostBytes).
+ */
+function withCpuExperts(m, unit, p, { cards, experts }) {
+  const ex = movedExperts(m, experts);
+  if (!ex?.cpuLayers || !ex.hostBytes || p.tps == null) return p;
+  const link = unit.hostGBs ? unit.hostGBs * cards : null;
+  if (!link) return { ...p, cpu: { unknown: 'no host link recorded for this card' } };
+  const cap = batch => (batch * link * 1e9) / ex.hostBytes;
+  const [big, small] = EXPERT_BATCHES;
+  return { ...p, tps: Math.min(p.tps, cap(big)), cpu: { batch: big, cap: cap(big), small, smallCap: cap(small), computeTps: p.tps, bound: cap(big) < p.tps, seconds: ex.hostBytes / (link * 1e9), linkGBs: link } };
 }
 
 function computePrefill(m, unit, { cards, formatKey, depth, cold }) {
@@ -528,7 +609,7 @@ export function vectorBound(unit) {
  * mean by "32 GB" of VRAM. Under tensor parallel a model with fewer KV heads
  * than cards has to replicate them, so the cache grows by that factor.
  */
-export function fit(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK = 'f16', kvV = kvK, streams = 1, draft = null, table = null }) {
+export function fit(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK = 'f16', kvV = kvK, streams = 1, draft = null, table = null, experts = null }) {
   if (!m?.params?.total || bpw == null || !unit?.memoryGB) return null;
   const weights = (m.params.total * bpw) / 8;
   // Draft weights at the same bits per weight; a drafter's own cache per stream.
@@ -553,9 +634,26 @@ export function fit(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK = 'f1
   // reported beside the GPU figure (`table`), for host RAM or the SSD.
   const plan = table ?? tablePlan(m);
   const tableGpu = plan?.gpu ?? 0;
-  const need = weights + draftWeights + tableGpu + streams * (kv + recurrentStateBytes(m) + draftKv);
   const have = cards * (unit.memoryGB * GiB - RESERVE_BYTES_PER_CARD);
-  return { need, have, fits: need <= have, weights, kv: kv * streams, replicate, draft: draftWeights + streams * draftKv, table: plan, host: plan && !plan.gpu ? plan.bytes : 0 };
+  // Routed experts in host RAM come off the GPU side, whole layers at a time;
+  // "overflow" brings back as many layers as the remaining memory holds.
+  const ex = movedExperts(m, experts);
+  const routedBytes = ex ? (m.moe.routed * bpw) / 8 : 0;
+  const perLayer = ex ? routedBytes / m.moe.layers : 0;
+  const base = weights - routedBytes + draftWeights + tableGpu + streams * (kv + recurrentStateBytes(m) + draftKv);
+  const gpuLayers = ex?.place === 'overflow' ? Math.max(0, Math.min(m.moe.layers, Math.floor((have - base) / perLayer))) : 0;
+  const need = base + gpuLayers * perLayer;
+  let movedOut = null;
+  let hostRam = null;
+  if (ex) {
+    const cpuLayers = m.moe.layers - gpuLayers;
+    movedOut = { ...ex, gpuLayers, cpuLayers, layers: m.moe.layers, hostBytes: cpuLayers * perLayer };
+    // The host holds the CPU's experts, and the lookup tables too when they sit in host RAM.
+    const tables = plan?.place === 'ram' ? plan.bytes : 0;
+    const hostHave = ex.hostGB != null ? ex.hostGB * GiB - HOST_RESERVE_BYTES : null;
+    hostRam = { experts: movedOut.hostBytes, tables, need: movedOut.hostBytes + tables, have: hostHave, holds: hostHave == null ? null : movedOut.hostBytes + tables <= hostHave };
+  }
+  return { need, have, fits: need <= have, weights: weights - (ex ? (m.moe.layers - gpuLayers) * perLayer : 0), kv: kv * streams, replicate, draft: draftWeights + streams * draftKv, table: plan, host: plan && !plan.gpu ? plan.bytes : 0, experts: movedOut, hostRam };
 }
 
 export const CARD_STEPS = [1, 2, 4, 8];
