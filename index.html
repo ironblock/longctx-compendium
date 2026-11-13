@@ -309,9 +309,10 @@
     </ul>
     Limits of the model:
     <ul>
-      <li>CPU code reaches well below the theoretical bandwidth; a measured figure is shown beside the platform where one was found.</li>
+      <li>Each host platform's channels and rated speed at one DIMM per channel come from the maker's spec page or datasheet. AMD's pages refused every fetch, so its figures come from its datasheets as resellers host them, from server makers and from the press; each platform says which. CPU code reads below the theoretical figure: measured STREAM and similar results run 80–96% of it on parts with many CCDs, and one is shown beside the platform where found.</li>
+      <li>AMD parts with few CCDs cannot use all their channels: each CCD reaches the I/O die over links of limited width (Chips and Cheese measured at most 99.8 GB/s from one Zen 5 server CCD, 62.5 from a desktop one), and in Fujitsu's STREAM tables the 2-CCD EPYC 9115 and 9015 read about 42% of theoretical. A platform's figure is for its full parts.</li>
       <li>The CPU's arithmetic is taken to keep up with its memory. On a CPU with few cores, dequantizing and multiplying can be the slower part.</li>
-      <li>Two sockets are counted as twice one, though an engine that ignores NUMA reaches less.</li>
+      <li>A system's two sockets are counted as twice one, as tensor parallel counts every card. Stock llama.cpp gets much less: Arm measured it drawing 70.8 GB/s across two NUMA nodes against 104.9 from one, and 196.8 with a NUMA-aware patch that was not merged. A report quoted second-hand puts DeepSeek R1's gain from a second EPYC socket at 2%.</li>
       <li>Moving activations across PCIe twice a layer, and the synchronization that comes with it, is not counted.</li>
       <li>Every expert is taken to be equally likely. Routing is uneven in practice, so an engine that keeps the most-used experts on the GPU (llama.cpp's MoE cache) moves more of a token's reads off the CPU than the ceiling assumes, and can beat it.</li>
       <li>Experts in a memory-mapped file are not pinned, and llama.cpp's MoE-cache documentation says only pinned experts upload at the link's full speed.</li>

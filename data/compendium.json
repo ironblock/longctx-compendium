@@ -6580,6 +6580,14 @@
       "host": {
         "cpu": "2× Intel Xeon E5-2698 v4 (20 cores, 2.2 GHz)",
         "memoryGB": 512,
+        "memory": {
+          "type": "DDR4",
+          "channels": 4,
+          "mts": 2400,
+          "sockets": 2,
+          "source": "https://www.intel.com/content/www/us/en/products/sku/91753/intel-xeon-processor-e52698-v4-50m-cache-2-20-ghz/specifications.html -- E5-2698 v4: \"Max # of Memory Channels: 4\", \"Memory Types: DDR4 1600/1866/2133/2400\", \"Max Memory Bandwidth: 76.8 GB/s\"",
+          "note": "Its 16 LRDIMMs are two per channel, which may run below 2,400."
+        },
         "chassis": "3U rack, 866 mm deep, 134 lb (61 kg)",
         "source": "https://docs.nvidia.com/dgx/archives/dgx1-user-guide/introduction-to-dgx1.html -- components: \"Intel® Xeon® E5-2698 v4, 20-core, 2.2GHz, 135W\", \"32 GB DDR4 LRDIMM (512 GB total)\", \"3U Rackmount\", \"Gross Weight 134 lbs (61 kg)\"",
         "note": "Four 1.92 TB SATA SSDs in RAID 0 for data and a 480 GB OS drive; four single-port EDR InfiniBand / 100 GbE cards (ConnectX-4 or -5) and dual 10GBASE-T. The whitepaper sizes host memory at \"four times the GPU memory capacity\" of the 16 GB build."
@@ -6638,6 +6646,13 @@
         "cpu": "1× Intel Xeon E5-2698 v4 (20 cores, 2.2 GHz)",
         "memoryGB": 256,
         "memoryMaxGB": 512,
+        "memory": {
+          "type": "DDR4",
+          "channels": 4,
+          "mts": 2400,
+          "sockets": 1,
+          "source": "https://www.intel.com/content/www/us/en/products/sku/91753/intel-xeon-processor-e52698-v4-50m-cache-2-20-ghz/specifications.html -- E5-2698 v4: \"Max # of Memory Channels: 4\", \"Memory Types: DDR4 1600/1866/2133/2400\", \"Max Memory Bandwidth: 76.8 GB/s\""
+        },
         "chassis": "Deskside tower on casters, 518 × 256 × 639 mm, 88 lb (40 kg), \"< 35 dB\"",
         "source": "https://docs.nvidia.com/dgx/archives/dgx-station-user-guide/index.html -- \"8 32 GB 256 GB ECC Registered RDIMM DDR4 SDRAM. Note: You can replace all eight factory-installed 32-GB DIMMs with 64-GB DIMMs to give a total capacity of 512 GB\"; datasheet: \"Acoustics < 35 dB\", \"System Weight 88 lbs / 40 kg\"",
         "note": "Three 1.92 TB SSDs in RAID 0 for data and a 1.92 TB OS drive; dual 10 Gb LAN; three DisplayPort outputs. It is \"designed as an integrated system and does not support the installation of additional PCIe devices such as GPU cards\" (user guide). How the four GPUs attach to the host is not recorded."
@@ -6698,6 +6713,13 @@
       "host": {
         "cpu": "2× Intel Xeon Platinum 8168 (24 cores)",
         "memoryGB": 1536,
+        "memory": {
+          "type": "DDR4",
+          "channels": 6,
+          "mts": 2666,
+          "sockets": 2,
+          "source": "https://www.intel.com/content/www/us/en/products/sku/120504/intel-xeon-platinum-8168-processor-33m-cache-2-70-ghz/specifications.html -- Platinum 8168: \"Memory Types: DDR4-2666\", \"Max # of Memory Channels: 6\""
+        },
         "chassis": "10U rack, 350 lb",
         "source": "https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9241-all-you-need-to-know-about-programming-nvidia-dgx-2.pdf -- \"Dual 24-core Xeon CPUs\", \"2 Intel Xeon 8168 CPUs\", \"1.5 TB DDR4 DRAM\", \"10U/19-Inch Rack Mount\"; https://docs-old.e-infra.cz/compute/supercomputing/dgx2/introduction/ -- \"350 lbs\"",
         "note": "30 TB of NVMe storage."
@@ -6749,6 +6771,14 @@
       "host": {
         "cpu": "2× Intel Xeon Scalable, 1st or 2nd generation (Skylake or Cascade Lake)",
         "memoryMaxGB": 3072,
+        "memory": {
+          "type": "DDR4",
+          "channels": 6,
+          "mts": 2933,
+          "sockets": 2,
+          "source": "https://www.intel.com/content/www/us/en/products/sku/192478/intel-xeon-platinum-8280-processor-38-5m-cache-2-70-ghz/specifications.html -- Cascade Lake Platinum 8280: \"Memory Types: DDR4-2933\", \"Max # of Memory Channels: 6\"; Skylake parts run DDR4-2666",
+          "note": "Cascade Lake's DDR4-2933; Skylake parts run 2,666."
+        },
         "chassis": "1U rack",
         "source": "https://www.supermicro.com/en/products/system/1U/1029/SYS-1029GQ-TVRT.cfm -- \"1U Dual Processor (Intel) System with 4 NVIDIA V100 GPUs\"; \"12 DIMM slots Up to 3TB 3DS ECC DDR4-2933MHz\"",
         "note": "Four PCIe 3.0 x16 slots for NICs. Sold as a barebone, so host memory depends on the listing."
@@ -6811,6 +6841,14 @@
       "host": {
         "cpu": "2× Intel Xeon Scalable, 1st or 2nd generation (Skylake or Cascade Lake)",
         "memoryMaxGB": 6144,
+        "memory": {
+          "type": "DDR4",
+          "channels": 6,
+          "mts": 2933,
+          "sockets": 2,
+          "source": "https://www.intel.com/content/www/us/en/products/sku/192478/intel-xeon-platinum-8280-processor-38-5m-cache-2-70-ghz/specifications.html -- Cascade Lake Platinum 8280: \"Memory Types: DDR4-2933\", \"Max # of Memory Channels: 6\"; Skylake parts run DDR4-2666",
+          "note": "Cascade Lake's DDR4-2933; Skylake parts run 2,666."
+        },
         "chassis": "4U rack: a 2U GPU tray above a 2U CPU node",
         "source": "https://www.supermicro.com/en/products/system/4U/4029/SYS-4029GP-TVRT.cfm -- \"4U Dual Processor (Intel) System with 8 NVIDIA V100 GPUs\"; \"24 DIMM slots Up to 6TB 3DS ECC DDR4-2933MHz\"; \"2U Pascal node on top, and 2U CPU node on bottom\"",
         "note": "How many GPUs share each uplink is not stated, so no host link per GPU is given. Six PCIe 3.0 x16 low-profile slots plus four in the GPU tray for GPUDirect RDMA."
@@ -6870,6 +6908,14 @@
       "host": {
         "cpu": "2× Intel Xeon Scalable (Skylake or Cascade Lake), up to 150 W each",
         "memoryMaxGB": 1536,
+        "memory": {
+          "type": "DDR4",
+          "channels": 6,
+          "mts": 2933,
+          "sockets": 2,
+          "source": "https://www.intel.com/content/www/us/en/products/sku/192478/intel-xeon-platinum-8280-processor-38-5m-cache-2-70-ghz/specifications.html -- Cascade Lake Platinum 8280: \"Memory Types: DDR4-2933\", \"Max # of Memory Channels: 6\"; Skylake parts run DDR4-2666",
+          "note": "Cascade Lake's DDR4-2933; Skylake parts run 2,666."
+        },
         "chassis": "1U rack, 35 in deep",
         "source": "https://i.dell.com/sites/csdocuments/Product_Docs/en/poweredge-c4140-technical-guide.pdf -- \"2x Intel Purley socket P (Support for up to 2x 150 W processor)\"; \"Up to 24 total DIMMS with max capacity of 1.5 TB\"; \"Height: 1U; Depth: 35 inches\"",
         "note": "Two low-profile PCIe 3.0 x16 slots. How each GPU reaches its CPU is not stated, so no host link per GPU is given; each CPU has \"Up to 48 PCIe lanes\"."
@@ -6921,6 +6967,14 @@
       "host": {
         "cpu": "2× Intel Xeon Scalable (Skylake or Cascade Lake), up to 150 W each",
         "memoryMaxGB": 1536,
+        "memory": {
+          "type": "DDR4",
+          "channels": 6,
+          "mts": 2933,
+          "sockets": 2,
+          "source": "https://www.intel.com/content/www/us/en/products/sku/192478/intel-xeon-platinum-8280-processor-38-5m-cache-2-70-ghz/specifications.html -- Cascade Lake Platinum 8280: \"Memory Types: DDR4-2933\", \"Max # of Memory Channels: 6\"; Skylake parts run DDR4-2666",
+          "note": "Cascade Lake's DDR4-2933; Skylake parts run 2,666."
+        },
         "chassis": "1U rack, 35 in deep",
         "source": "https://i.dell.com/sites/csdocuments/Product_Docs/en/poweredge-c4140-technical-guide.pdf -- \"2x Intel Purley socket P (Support for up to 2x 150 W processor)\"; \"Up to 24 total DIMMS with max capacity of 1.5 TB\"; \"Height: 1U; Depth: 35 inches\"",
         "note": "Two low-profile PCIe 3.0 x16 slots. How each GPU reaches its CPU is not stated, so no host link per GPU is given; each CPU has \"Up to 48 PCIe lanes\"."
@@ -6971,6 +7025,14 @@
       "host": {
         "cpu": "2× IBM POWER9 (ppc64le), up to 40 cores in this model",
         "memoryMaxGB": 1024,
+        "memory": {
+          "type": "DDR4",
+          "channels": 8,
+          "mts": 2666,
+          "sockets": 2,
+          "source": "https://www.redbooks.ibm.com/redpapers/pdfs/redp5472.pdf -- \"Faster DDR4 memory DIMMs at 2666 MHz are connected to two memory controllers through eight channels with a total bandwidth of 120 GBps.\"",
+          "note": "IBM's GTG paper gives 120 GBps a socket (8 × 15 GBps); its later GTH/GTX paper gives 170 GBps for the same DIMMs (8 × 21.25), which the formula agrees with. The formula's 170.6 is used, as an upper bound."
+        },
         "chassis": "2U rack",
         "source": "https://www.redbooks.ibm.com/redpapers/pdfs/redp5472.pdf -- \"Two POWER9 processors with up to 40 cores (8335-GTG)\"; \"a maximum capacity of 16 memory dual inline memory modules (DIMMs) which enables up to 1024 GB of memory\"; \"19-inch rack-mount (2U) chassis\"",
         "note": "The GPUs reach host memory over NVLink rather than PCIe: three bricks, 150 GBps per GPU in this four-GPU model, against 32 GB/s for a PCIe 3.0 x16 (both directions). NVLink here \"connects Tesla V100 GPUs with IBM POWER9 CPUs, enabling direct system memory access\" (p.28). That makes it the one machine here where weights spilled to host memory come back much faster than PCIe. It is stranded by software: per the maintainer (2026-11-08) it is stuck at CUDA 12.8 and an older PyTorch on ppc64le, so running one today is a patch project that someone has to keep up."
@@ -7075,6 +7137,13 @@
       "host": {
         "cpu": "2× Intel Xeon 3rd Gen Scalable (Ice Lake), up to 40 cores and 270 W each",
         "memoryMaxGB": 8192,
+        "memory": {
+          "type": "DDR4",
+          "channels": 8,
+          "mts": 3200,
+          "sockets": 2,
+          "source": "https://www.intel.com/content/www/us/en/products/sku/212287/intel-xeon-platinum-8380-processor-60m-cache-2-30-ghz/specifications.html -- Ice Lake Platinum 8380: \"Memory Types: DDR4-3200\", \"Max # of Memory Channels: 8\""
+        },
         "chassis": "8U rack, 282 lb (128 kg) gross",
         "source": "https://www.supermicro.com/en/products/system/datasheet/SYS-820GH-TNR2 -- \"Dual Intel® Xeon® 3rd Gen Scalable Processors (Ice Lake) TDP up to 270W\"; \"32x DIMM slots, up to 8TB\"; \"8U Rackmount\"; \"Gross Weight: 282 lbs (128 kg)\"",
         "note": "Scale-out over \"6x 400GbE QSFP-DD\", the remaining three ports per module. Each module has \"CPU-GPU Interconnect: PCIe Gen4 x16\"; Intel's reference HLS-Gaudi2 puts them behind \"two Gen 4.0 PCIe switches\", and whether Supermicro does the same is not recorded, so no host link per GPU is given."
@@ -7228,6 +7297,349 @@
       "quote": "IOPS: Random 4KB Random Read/Write Up to 575,000 / 550,000 IOPs; Read /Write Latency <10 µs /< 10 µs; Bandwidth: Sustained Sequential Read/Write Up to 2600 / 2200 MB/s",
       "asOf": "2026-11-11",
       "note": "The low-latency case: 3D XPoint, discontinued, sold used. Intel's product brief, from a reseller's copy, states under 10 µs latency with no queue depth. The QD1 latency used is Legit Reviews' measured low end, on a different site and test PC from the other drives; ssd-tester.com, which measured the others, measured the sibling 900P 280GB at 17.47 µs."
+    }
+  ],
+  "hosts": [
+    {
+      "id": "epyc_9005",
+      "label": "AMD EPYC 9005 (Turin), SP5",
+      "short": "EPYC 9005",
+      "maker": "AMD",
+      "memory": {
+        "type": "DDR5",
+        "channels": 12,
+        "mts": 6400,
+        "maxGB": 6144
+      },
+      "pcie": {
+        "gen": 5,
+        "lanes": 128
+      },
+      "source": "https://www.supermicro.com/en/support/resources/cpu-amd-epyc-9004-7003",
+      "quote": "Max DDR5 MT/s (1DPC) | Per-Socket Theoretical Memory Bandwidth (GB/s) ... 9175F | 16 | 32 | 5 | 4.20 | 5.00 | 320 | 512 | 12/ | 6 TB | 6400 | 614.4 | 160 | 2P/1P",
+      "measured": {
+        "GBs": 478.98,
+        "url": "https://chipsandcheese.com/p/a-look-into-intel-xeon-6s-memory",
+        "quote": "the EPYC 9355P I had access to runs DDR5-5200, and achieved 478.98 GB/s at the largest test size using a unified memory configuration (single NUMA node per socket).",
+        "setup": "Chips and Cheese's own bandwidth test on an EPYC 9355P (8 CCDs), one socket, in a Dell PowerEdge R6715 with 768 GB of DDR5-5200: 96% of that speed's 499.2 GB/s. Published 30 September 2025."
+      },
+      "asOf": "2026-11-13",
+      "note": "DDR5-6400 runs only on validated platforms at one DIMM per channel; AMD's launch datasheet (October 2024, read from a reseller's copy because amd.com refused the fetch) says DDR5-6000, which is the reference spec and what most systems run: 576 GB/s. Two DIMMs per channel run at 4,400 MT/s (Chips and Cheese). Parts with few CCDs read far less: in Fujitsu's two-socket STREAM Triad table the 2-CCD 9115 and 9015 reach 483 GB/s (about 241.5 a socket, 42% of 576), against 970 for the 8-CCD 9575F (CCD counts from Thomas-Krenn). Chips and Cheese measured one Zen 5 server CCD reading at most 99.8 GB/s over its two GMI links."
+    },
+    {
+      "id": "xeon6_6900p_mrdimm",
+      "label": "Intel Xeon 6 6900P (Granite Rapids-AP) with MRDIMM-8800",
+      "short": "Xeon 6 + MRDIMM",
+      "maker": "Intel",
+      "memory": {
+        "type": "MRDIMM",
+        "channels": 12,
+        "mts": 8800,
+        "maxGB": 3072
+      },
+      "pcie": {
+        "gen": 5,
+        "lanes": 96
+      },
+      "source": "https://www.intel.com/content/www/us/en/products/sku/240777/intel-xeon-6980p-processor-504m-cache-2-00-ghz/specifications.html",
+      "quote": "Max Memory Size (dependent on memory type): 3 TB; Memory Types: DDR5(6400MT/s)MRDIMM(8800MT/s); Maximum Memory Speed: 8800 MT/s; Max # of Memory Channels: 12; PCI Express Revision: 5.0; Max # of PCI Express Lanes: 96",
+      "asOf": "2026-11-13",
+      "note": "MRDIMMs are Intel's multiplexed-rank DIMMs (ServeTheHome: really MCR DIMMs, unlikely to work in an AMD system). Intel says they give \"more than 37 percent greater memory bandwidth than RDIMMs\". No measurement on official MRDIMM-8800 or DDR5-6400 was found; Chips and Cheese's 691.62 GB/s is an AWS-custom 6985P-C on DDR5-7200, 100.06% of that speed's theoretical, so it is not used. The DIMMs-per-channel condition for 8,800 MT/s is not stated on the pages read."
+    },
+    {
+      "id": "xeon6_6900p",
+      "label": "Intel Xeon 6 6900P (Granite Rapids-AP) with DDR5-6400",
+      "short": "Xeon 6 6900P",
+      "maker": "Intel",
+      "memory": {
+        "type": "DDR5",
+        "channels": 12,
+        "mts": 6400,
+        "maxGB": 3072
+      },
+      "pcie": {
+        "gen": 5,
+        "lanes": 96
+      },
+      "source": "https://www.intel.com/content/www/us/en/products/sku/240777/intel-xeon-6980p-processor-504m-cache-2-00-ghz/specifications.html",
+      "quote": "Max Memory Size (dependent on memory type): 3 TB; Memory Types: DDR5(6400MT/s)MRDIMM(8800MT/s); Max # of Memory Channels: 12; PCI Express Revision: 5.0; Max # of PCI Express Lanes: 96",
+      "asOf": "2026-11-13",
+      "note": "Chips and Cheese found each Xeon 6 core reaching about 33 GB/s of DRAM bandwidth at best, so the whole socket needs many cores reading at once. No measurement on DDR5-6400 was found."
+    },
+    {
+      "id": "epyc_9004",
+      "label": "AMD EPYC 9004 (Genoa), SP5",
+      "short": "EPYC 9004",
+      "maker": "AMD",
+      "memory": {
+        "type": "DDR5",
+        "channels": 12,
+        "mts": 4800
+      },
+      "pcie": {
+        "gen": 5,
+        "lanes": 128
+      },
+      "source": "https://microway.com/wp-content/uploads/2024/04/AMD-EPYC-9004-Series-Processors-Data-Sheet.pdf",
+      "quote": "The AMD EPYC 9004 Series supports 12 DDR5-4800 memory channels for the most available maximum memory bandwidth of any x86 processor. ... UP TO MAX DDR5 FREQ. (1DPC) ... PER-SOCKET THEORETICAL MEMORY BANDWIDTH (GB/S) ... 9124 16 32 3.00 3.70 3.60 200 64 12 4800 460.8 128 2P/1P",
+      "measured": {
+        "GBs": 384,
+        "url": "https://sp.ts.fujitsu.com/dmsp/Publications/public/wp-performance-report-primergy-rx2450-m2-ww-en.pdf",
+        "quote": "EPYC 9654P 4,800 460.8 96 2.40 1 384",
+        "setup": "Fujitsu PRIMERGY RX2450 M2 performance report v1.7 (1 September 2026): STREAM Triad on one EPYC 9654P with 12 x 32 GB 2Rx8 DDR5-4800 RDIMMs, NPS4. 83% of theoretical."
+      },
+      "asOf": "2026-11-13",
+      "note": "AMD's datasheet, read from Microway's copy (amd.com refused the fetch). Maximum memory per socket is not stated in the pages read; Fujitsu gives 6 TB per 24-DIMM system. Few-CCD parts read less: Fujitsu's two-socket STREAM Triad gives 528 GB/s for the 16-core 9124 and 521 for the 9224 (57% of theoretical) against 797 for the 9174F."
+    },
+    {
+      "id": "tr_pro_9000",
+      "label": "AMD Ryzen Threadripper PRO 9000 WX, WRX90",
+      "short": "TR PRO 9000",
+      "maker": "AMD",
+      "memory": {
+        "type": "DDR5",
+        "channels": 8,
+        "mts": 6400,
+        "maxGB": 2048
+      },
+      "pcie": {
+        "gen": 5,
+        "lanes": 128
+      },
+      "source": "https://www.servethehome.com/amd-reveals-ryzen-threadripper-9000-family-big-zen-5-chips-for-hedt-and-workstations/",
+      "quote": "Threadripper Pro 9000 can run at up to DDR5-6400, versus the more pokey DDR5-5200 speeds supported by the 7000 series chips. ... TR Pro 9995WX: 8 x DDR5-6400; 2 TB, ECC (RDIMM); 5.0 x128 + 4.0 x8 + chipset (x4)",
+      "asOf": "2026-11-13",
+      "note": "From ServeTheHome (amd.com refused the fetch); no measured bandwidth was found. The 9955WX and 9945WX have 2 CCDs and the 9975WX and 9965WX 4 (ServeTheHome); whether Threadripper links each CCD to the I/O die twice, as EPYC does, is not established, so those parts may read far below 409.6 GB/s."
+    },
+    {
+      "id": "tr_pro_7000",
+      "label": "AMD Ryzen Threadripper PRO 7000 WX, WRX90",
+      "short": "TR PRO 7000",
+      "maker": "AMD",
+      "memory": {
+        "type": "DDR5",
+        "channels": 8,
+        "mts": 5200,
+        "maxGB": 2048
+      },
+      "pcie": {
+        "gen": 5,
+        "lanes": 128
+      },
+      "source": "https://www.storagereview.com/news/amd-threadripper-7000-wx-series-cpus-launched",
+      "quote": "supporting 8-channel DDR5 memory with speeds up to DDR-5200. This allows for a peak theoretical bandwidth of 266GB/s, calculated using the formula 8 channels × 8 Bytes × 5.2 GT/s. ... scaling up to 2TB for WRX90",
+      "asOf": "2026-11-13",
+      "note": "StorageReview's own formula gives 332.8 GB/s, not the 266 it prints. No measured bandwidth was found. The 7955WX and 7945WX have 2 CCDs and the 7975WX and 7965WX 4 (ServeTheHome); see the TR PRO 9000 note."
+    },
+    {
+      "id": "xeon_w3500",
+      "label": "Intel Xeon W-3500, W790",
+      "short": "Xeon W-3500",
+      "maker": "Intel",
+      "memory": {
+        "type": "DDR5",
+        "channels": 8,
+        "mts": 4800,
+        "maxGB": 4096
+      },
+      "pcie": {
+        "gen": 5,
+        "lanes": 112
+      },
+      "source": "https://www.intel.com/content/www/us/en/products/sku/240482/intel-xeon-w93595x-processor-112-5m-cache-2-00-ghz/specifications.html",
+      "quote": "Max Memory Size (dependent on memory type): 4 TB; Memory Types: DDR5-4800(MT/s); Maximum Memory Speed: 4800 MT/s; Max # of Memory Channels: 8; PCI Express Revision: 5.0; Max # of PCI Express Lanes: 112",
+      "asOf": "2026-11-13",
+      "note": "Intel's selling guide gives \"a total of up to 140 GB/s bandwidth\" for these eight channels; 8 × 4,800 × 8 B is 307.2 GB/s, and 140 matches the four-channel W-2500 instead, so the guide's figure is taken to be an error. 4,800 MT/s is for one DIMM per channel; 4 TB needs two. No measured bandwidth was found."
+    },
+    {
+      "id": "tr_9000",
+      "label": "AMD Ryzen Threadripper 9000, TRX50",
+      "short": "TR 9000",
+      "maker": "AMD",
+      "memory": {
+        "type": "DDR5",
+        "channels": 4,
+        "mts": 6400,
+        "maxGB": 1024
+      },
+      "pcie": {
+        "gen": 5,
+        "lanes": 48
+      },
+      "source": "https://www.servethehome.com/amd-reveals-ryzen-threadripper-9000-family-big-zen-5-chips-for-hedt-and-workstations/",
+      "quote": "TR 9980X: 4 x DDR5-6400; 1TB, ECC (RDIMM); 5.0 x48 + 4.0 x32 + chipset (x4). ... even this HEDT platform requires RDIMMs",
+      "asOf": "2026-11-13",
+      "note": "From ServeTheHome (amd.com refused the fetch); no measured bandwidth was found. RDIMMs only."
+    },
+    {
+      "id": "epyc_7003",
+      "label": "AMD EPYC 7003 (Milan), SP3",
+      "short": "EPYC 7003",
+      "maker": "AMD",
+      "memory": {
+        "type": "DDR4",
+        "channels": 8,
+        "mts": 3200,
+        "maxGB": 4096
+      },
+      "pcie": {
+        "gen": 4,
+        "lanes": 128
+      },
+      "source": "https://www.primeline-solutions.com/media/products/amd-epyc-milan-zen-3/AMD-EPYC-7003-Series-Datasheet.pdf",
+      "quote": "up to 4 TB of memory across 16 DIMM slots ... UP TO MAX DDR FREQ. (1DPC) | PER-SOCKET THEORETICAL MEMORY BANDWIDTH (GB/S) | PCIE® GEN 4 LANES ... 7763 64 128 2.45 3.50 280 256 8 3200 204.8 128 2P/1P",
+      "measured": {
+        "GBs": 179.5,
+        "url": "https://sp.ts.fujitsu.com/dmsp/Publications/public/wp-performance-report-primergy-rx2450-m1-ww-en.pdf",
+        "quote": "EPYC 7763 3,200 204.8 64 2.45 2 359",
+        "setup": "Fujitsu PRIMERGY RX2450 M1 performance report v1.5: STREAM Triad on two EPYC 7763 with 32 x 64 GB DDR4-3200 (two DIMMs per channel), NPS4, 359 GB/s for both sockets, halved here. 88% of theoretical."
+      },
+      "asOf": "2026-11-13",
+      "note": "AMD's datasheet, read from a reseller's copy. Common on the used market. Fujitsu's same table lists the 75F3 at 106% of theoretical, which cannot be right."
+    },
+    {
+      "id": "xeon_icelake",
+      "label": "Intel Xeon Scalable 3rd gen (Ice Lake-SP)",
+      "short": "Xeon Ice Lake",
+      "maker": "Intel",
+      "memory": {
+        "type": "DDR4",
+        "channels": 8,
+        "mts": 3200,
+        "maxGB": 6144
+      },
+      "pcie": {
+        "gen": 4,
+        "lanes": 64
+      },
+      "source": "https://www.intel.com/content/www/us/en/products/sku/212287/intel-xeon-platinum-8380-processor-60m-cache-2-30-ghz/specifications.html",
+      "quote": "Max Memory Size (dependent on memory type): 6 TB; Memory Types: DDR4-3200; Maximum Memory Speed: 3200 MHz; Max # of Memory Channels: 8; PCI Express Revision: 4.0; Max # of PCI Express Lanes: 64",
+      "measured": {
+        "GBs": 165,
+        "url": "https://sp.ts.fujitsu.com/dmsp/Publications/public/wp-performance-report-primergy-rx2540-m6-ww-en.pdf",
+        "quote": "Xeon Gold 6314U 3,200 205 32 2.3 1 165",
+        "setup": "Fujitsu PRIMERGY RX2540 M6 performance report v1.6: STREAM Triad on one Xeon Gold 6314U with DDR4-3200 RDIMMs, SNC2. The two-socket Platinum 8380 row reads 328 GB/s. 80% of theoretical."
+      },
+      "asOf": "2026-11-13",
+      "note": "Figures for the Platinum 8380 (ARK lists MHz where it means MT/s)."
+    },
+    {
+      "id": "xeon_cascadelake",
+      "label": "Intel Xeon Scalable 2nd gen (Cascade Lake)",
+      "short": "Xeon Cascade Lake",
+      "maker": "Intel",
+      "memory": {
+        "type": "DDR4",
+        "channels": 6,
+        "mts": 2933,
+        "maxGB": 1024
+      },
+      "pcie": {
+        "gen": 3,
+        "lanes": 48
+      },
+      "source": "https://www.intel.com/content/www/us/en/products/sku/192478/intel-xeon-platinum-8280-processor-38-5m-cache-2-70-ghz/specifications.html",
+      "quote": "Max Memory Size (dependent on memory type): 1 TB; Memory Types: DDR4-2933; Maximum Memory Speed: 2933 MHz; Max # of Memory Channels: 6; PCI Express Revision: 3.0; Max # of PCI Express Lanes: 48",
+      "measured": {
+        "GBs": 121,
+        "url": "https://sp.ts.fujitsu.com/dmsp/Publications/public/wp-performance-report-primergy-rx2540-m5-ww-en.pdf",
+        "quote": "Xeon Platinum 8280 2,933 140.8 28 2.7 2 242",
+        "setup": "Fujitsu PRIMERGY RX2540 M5 performance report: STREAM Triad on two Platinum 8280 with 24 x 32 GB DDR4-2933 (two DIMMs per channel), sub-NUMA clustering off, 242 GB/s for both sockets, halved here. 86% of theoretical."
+      },
+      "asOf": "2026-11-13",
+      "note": "Figures for the Platinum 8280; M and L parts take more memory. Lower parts run their memory slower."
+    },
+    {
+      "id": "xeon_skylake",
+      "label": "Intel Xeon Scalable 1st gen (Skylake-SP)",
+      "short": "Xeon Skylake",
+      "maker": "Intel",
+      "memory": {
+        "type": "DDR4",
+        "channels": 6,
+        "mts": 2666,
+        "maxGB": 768
+      },
+      "pcie": {
+        "gen": 3,
+        "lanes": 48
+      },
+      "source": "https://www.intel.com/content/www/us/en/products/sku/120504/intel-xeon-platinum-8168-processor-33m-cache-2-70-ghz/specifications.html",
+      "quote": "Max Memory Size (dependent on memory type): 768 GB; Memory Types: DDR4-2666; Maximum Memory Speed: 2666 MHz; Max # of Memory Channels: 6; PCI Express Revision: 3.0; Max # of PCI Express Lanes: 48",
+      "measured": {
+        "GBs": 110.5,
+        "url": "https://sp.ts.fujitsu.com/dmsp/Publications/public/wp-performance-report-primergy-rx2540-m4-ww-en.pdf",
+        "quote": "Xeon Platinum 8168 2666 128.0 24 2.7 2 221",
+        "setup": "Fujitsu PRIMERGY RX2540 M4 performance report v1.3: STREAM Triad on two Platinum 8168 with 24 x 16 GB DDR4-2666 (two DIMMs per channel), sub-NUMA clustering off, 221 GB/s for both sockets, halved here. 86% of theoretical."
+      },
+      "asOf": "2026-11-13",
+      "note": "Figures for the Platinum 8168, the DGX-2's CPU; M parts take more memory."
+    },
+    {
+      "id": "core_ultra_200s",
+      "label": "Intel Core Ultra 200S desktop, LGA1851",
+      "short": "Core Ultra 200S",
+      "maker": "Intel",
+      "memory": {
+        "type": "DDR5",
+        "channels": 2,
+        "mts": 6400,
+        "maxGB": 256
+      },
+      "pcie": {
+        "gen": 5,
+        "lanes": 24
+      },
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241060/intel-core-ultra-9-processor-285k-36m-cache-up-to-5-70-ghz/specifications.html",
+      "quote": "Max Memory Size (dependent on memory type): 256 GB; Memory Types: Up to DDR5 6400 MT/s; Max # of Memory Channels: 2; PCI Express Revision: 5.0 and 4.0; Max # of PCI Express Lanes: 24",
+      "asOf": "2026-11-13",
+      "note": "Figures for the Core Ultra 9 285K. ARK does not say which DIMM type the 6,400 MT/s needs; if it is CUDIMMs only, plain UDIMMs give 89.6 GB/s at 5,600 (not verified). No measured bandwidth was found."
+    },
+    {
+      "id": "ryzen_9000",
+      "label": "AMD Ryzen 9000 desktop, AM5",
+      "short": "Ryzen 9000",
+      "maker": "AMD",
+      "memory": {
+        "type": "DDR5",
+        "channels": 2,
+        "mts": 5600,
+        "maxGB": 192
+      },
+      "pcie": {
+        "gen": 5,
+        "lanes": 24
+      },
+      "source": "https://www.storagereview.com/review/amd-zen5-9950x-and-9900x-flagship-launch-review",
+      "quote": "It also supports DDR5 memory up to 5600MT/s JEDEC ... PCIe Version | PCIe 5.0 | PCIe 5.0 | Memory Type | DDR5-5600 | DDR5-5600 | Max Memory Size | 192 GB | 192 GB",
+      "measured": {
+        "GBs": 78,
+        "url": "https://www.thefpsreview.com/2024/08/14/amd-ryzen-9-9950x-cpu-review-16-core-zen-5-at-649/4",
+        "quote": "Whether it is the Ryzen 7000 series or the new Ryzen 9000 series, we are getting about 78GB/s of read memory bandwidth and about 79GB/s of write memory bandwidth.",
+        "setup": "The FPS Review, 14 August 2024: dual-CCD Ryzen 7000 and 9000 parts on an ASUS ROG Crosshair X670E Hero with \"32GB of DDR5 at 6000MT/s CL30 set to EXPO I\", above the official 5,600. Most likely AIDA64; the paragraph does not name the tool."
+      },
+      "asOf": "2026-11-13",
+      "note": "From StorageReview (amd.com refused the fetch); 256 GB may now be supported, unverified. Chips and Cheese measured one desktop Zen 5 CCD reading at most 62.5 GB/s over its single GMI link, so single-CCD parts (up to 8 cores) should fall well short of 89.6 GB/s."
+    },
+    {
+      "id": "xeon_e5v4",
+      "label": "Intel Xeon E5-2600 v4 (Broadwell-EP)",
+      "short": "Xeon E5 v4",
+      "maker": "Intel",
+      "memory": {
+        "type": "DDR4",
+        "channels": 4,
+        "mts": 2400,
+        "maxGB": 1536
+      },
+      "pcie": {
+        "gen": 3,
+        "lanes": 40
+      },
+      "source": "https://www.intel.com/content/www/us/en/products/sku/91753/intel-xeon-processor-e52698-v4-50m-cache-2-20-ghz/specifications.html",
+      "quote": "Max Memory Size (dependent on memory type): 1.5 TB; Memory Types: DDR4 1600/1866/2133/2400; Max # of Memory Channels: 4; Max Memory Bandwidth: 76.8 GB/s; PCI Express Revision: 3.0; Max # of PCI Express Lanes: 40",
+      "asOf": "2026-11-13",
+      "note": "Figures for the E5-2698 v4, the DGX-1's CPU; the X99 hosts SXM2 adapters often sit in take the desktop Broadwell-E parts, also four channels. No usable measurement was found."
     }
   ],
   "lines": [

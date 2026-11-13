@@ -39,7 +39,7 @@ export const expertSettings = (model, s, { host = null, hostGB = s.ram ?? null }
 });
 
 /** "12 channels of DDR5-6400: 614 GB/s", the theoretical peak (channels x MT/s x 8 bytes). */
-export const hostFigures = h => `${h.sockets > 1 ? `${h.sockets} sockets × ` : ''}${h.memory.channels} channels of ${h.memory.type}-${h.memory.mts}: ${n0(h.bandwidthGBs)} GB/s`;
+export const hostFigures = h => `${h.memory.sockets > 1 ? `${h.memory.sockets} sockets × ` : ''}${h.memory.channels} channels of ${h.memory.type}-${h.memory.mts}: ${sig(h.bandwidthGBs)} GB/s`;
 
 /** "EPYC 9005 at 614 GB/s". */
 const hostWords = h => `${esc(h?.short ?? h?.label ?? 'the host')}${h?.bandwidthGBs ? ` at ${n0(h.bandwidthGBs)} GB/s` : ''}`;
@@ -59,7 +59,9 @@ export function expertLine(f, { hostWord = 'a host', hostGB = null } = {}) {
 function cpuDecodeSub(cpu) {
   if (!cpu) return '';
   if (cpu.unknown) return `CPU experts: ${esc(cpu.unknown)}`;
-  return `CPU experts: ${us(cpu.seconds)} a token; taking turns: ${sig(cpu.serialTps)}`;
+  // Taking turns differs from the overlapped ceiling only when the GPU has experts of its own to run alongside.
+  const turns = cpu.serialTps < cpu.gpuTps && cpu.alongside > 0.01 * cpu.seconds ? `; taking turns: ${sig(cpu.serialTps)}` : '';
+  return `CPU experts: ${us(cpu.seconds)} a token${turns}`;
 }
 
 const us = sec => (sec >= 1e-3 ? `${(sec * 1e3).toFixed(sec >= 1e-2 ? 0 : 1)} ms` : `${Math.round(sec * 1e6)} µs`);
@@ -373,6 +375,9 @@ export function renderCeilingTable(model, state, units) {
     `Decode: tokens/sec for one stream, one token per pass, at ${fmtDepth(state.depth)} deep. ` +
     `Prefill: tokens/sec appended at that depth, at the precision shown (hover for the kernel finding; "assumed" means no grounded finding, FP16 used; "unofficial" means the rate is not the vendor's own figure for that card). ` +
     `Weights at ${w.label}${w.bpw ? ` ≈ ${w.bpw} bits per weight` : ''}; ${state.cards === 'auto' ? 'cards: the fewest of 1, 2, 4 or 8 that fit' : `${state.cards} card${state.cards === '1' ? '' : 's'} each`}. ` +
+    (es.place !== 'gpu'
+      ? `Routed experts: ${es.place === 'cpu' ? 'all' : 'what does not fit'} in host RAM, computed by ${es.host ? `the ${hostWords(es.host)}` : 'a host with no bandwidth recorded'}; the GPU's own experts are taken to run alongside the CPU's, and taking turns, as llama.cpp does by default, is shown beside it. ${m.moe?.routed ? '' : `${m.label} records no routed-expert weights, so they stay on the GPUs. `}`
+      : '') +
     `Price is the cards alone at their dated street price — no host, bridge or board.`;
 }
 
@@ -739,10 +744,10 @@ export function renderFrontierTable(model, state) {
         : tableGB != null
           ? `<span class="sub">${onGpu ? 'incl.' : '+'} ${Math.round(tableGB).toLocaleString()} GB of lookup tables (${fmtParams(p.lookup)}) ${how}, ${where}</span>`
           : `<span class="sub">+ ${fmtParams(p.lookup)} of lookup tables, precision not recorded${ts.place === 'gpu' ? ', not counted here' : ''}</span>`;
-      const expertSub = es.place === 'gpu' || !p.active || p.active === p.total
+      const expertSub = es.place === 'gpu'
         ? ''
         : !moved
-          ? '<span class="sub">routed experts not recorded: counted on the GPUs</span>'
+          ? p.active && p.active < p.total ? '<span class="sub">routed experts not recorded: counted on the GPUs</span>' : ''
           : `<span class="sub">+ ${Math.round(hostExperts).toLocaleString()} GB of routed experts (${fmtParams(p.routed)}) in host RAM${spare && hostExperts ? `, after the rig takes back ${Math.round(Math.min(spare, routedGB)).toLocaleString()} GB` : !hostExperts ? ': the rig holds them all' : ''}</span>`;
       const mtpSub = !withMtp
         ? ''

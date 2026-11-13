@@ -589,6 +589,58 @@ async function decodeAt(modelId, tokens) {
   check('turning draft weights off restores the plain fit', (await text('#ceilTable tbody')) === before);
 }
 
+// --- 2c. Routed experts on the CPU ---------------------------------------------
+{
+  await openTab('ceilings');
+  await page.selectOption('#modelSelect', 'qwen38_flash_next');
+  await setCards(1);
+  await settle();
+  const gpuOnly = await text('#ceilTable tbody');
+  check('the shared settings offer expert placement and every host platform', (await count('#expertChips button')) === 3 && (await count('#platChips button')) === model.HOSTS.length && model.HOSTS.length > 0);
+  check('the model card says what can move to host RAM', /routed experts: 120\.8B over 48 layers, 2\.36B read a token/.test(await text('#modelCard')));
+  check('the default host platform shows its figures', /12 channels of DDR5-6400: 614 GB\/s/.test(await text('#platNote')) && /479 GB\/s measured/.test(await text('#platNote')));
+  await page.click('#expertChips button:has-text("Overflow to CPU")');
+  await settle();
+  const over = await text('#ceilTable tbody');
+  check('overflow moves the layers that do not fit to host RAM', /GiB of experts \(\d+ of 48 layers\) in host RAM/.test(over) && /ex=overflow/.test(page.url()));
+  check('and the CPU\'s time shows under decode, with taking turns beside it', /CPU experts: [\d.]+ ms a token; taking turns: [\d,.]+/.test(over));
+  check('and the copy cap shows under prefill', /expert copies at 4K-token batches (cap it|allow)/.test(over) && /512-token batches: [\d,]+/.test(over));
+  check('a card that holds everything keeps every expert', /experts: all fit in GPU memory/.test(over));
+  await page.click('#expertChips button:has-text("All on CPU")');
+  await page.click('#ramChips button:has-text("256 GB")');
+  await settle();
+  const all = await text('#ceilTable tbody');
+  check('all on the CPU moves every layer and checks the host, tables included', /68 GiB of experts \(all 48 layers\) in host RAM, with the 95 GiB table: fits in a 256 GB host/.test(all) && /ex=cpu/.test(page.url()));
+  await page.click('#ramChips button:has-text("128 GB")');
+  await settle();
+  check('a host too small for experts and tables says so', /in host RAM, with the 95 GiB table: more than a 128 GB host/.test(await text('#ceilTable tbody')));
+  await page.click('#platChips button:has-text("EPYC 7003")');
+  await settle();
+  const milan = await text('#ceilTable tbody');
+  check('another platform changes the ceiling and is kept in the address', /8 channels of DDR4-3200: 205 GB\/s/.test(await text('#platNote')) && /plat=epyc_7003/.test(page.url()) && milan !== all);
+  check('experts on the CPU render no NaN/undefined/null', !BROKEN.test(milan), brokenAt(milan));
+  await openTab('rigs');
+  const rigs = await text('#candTable tbody');
+  check('board rigs compute experts on the chosen platform, systems on their own CPUs', /computed by EPYC 7003 at 205 GB\/s/.test(rigs) && /computed by its CPUs at 154 GB\/s/.test(rigs));
+  await openTab('frontier');
+  const fr = await text('#frontierTable tbody');
+  check('the frontier puts routed experts in host RAM', /\+ [\d,]+ GB of routed experts \(2\.72T\) in host RAM/.test(fr) && /holds the experts|is smaller than the experts/.test(fr));
+  check('and says where a model\'s experts were not read', /routed experts not recorded: counted on the GPUs/.test(fr));
+  check('the frontier renders no NaN/undefined/null with experts moved', !BROKEN.test(fr), brokenAt(fr));
+  await openTab('ceilings');
+  await page.click('#platChips button:has-text("EPYC 9005")');
+  await page.click('#expertChips button:has-text("GPU memory")');
+  await page.click('#ramChips button:has-text("Not chosen")');
+  await setCards('auto');
+  await settle();
+  await setCards(1);
+  await settle();
+  check('the expert settings return to their defaults', (await text('#ceilTable tbody')) === gpuOnly && !/ex=|plat=/.test(page.url()));
+  await setCards('auto');
+  await page.selectOption('#modelSelect', 'qwen38_27b');
+  await settle();
+}
+
 // --- 3. Observations -------------------------------------------------------
 await openTab('observations');
 check('one group per serving line', (await count('#obsTable tr.line-head')) === model.LINES.length, `got ${await count('#obsTable tr.line-head')} of ${model.LINES.length}`);

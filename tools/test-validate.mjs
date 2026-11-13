@@ -285,6 +285,18 @@ const CASES = [
   ['routed experts without what stays on the GPUs', 'without the other', d => {
     delete d.openModels.find(x => x.id === 'kimi_k31_pro').params.nonRouted;
   }],
+  ['a host platform measured above its theoretical bandwidth', 'is above its theoretical', d => {
+    d.hosts.find(h => h.id === 'epyc_7003').measured.GBs = 250;
+  }],
+  ['a host platform with no quote', 'quote', d => {
+    delete d.hosts[0].quote;
+  }],
+  ['two host platforms with one id', 'duplicate id', d => {
+    d.hosts[1].id = d.hosts[0].id;
+  }],
+  ['host memory on a board carrier', 'not a system', d => {
+    carrier(d, 'aom_sxmv').host = { cpu: 'x', chassis: 'x', source: 'x', memory: { type: 'DDR4', channels: 8, mts: 3200, sockets: 1, source: 'x' } };
+  }],
   ['a drive with no measured QD1 latency', 'latencyUs', d => {
     delete d.drives[0].randomRead.latencyUs;
   }],

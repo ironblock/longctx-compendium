@@ -15,7 +15,7 @@ node tools/check-ceilings.mjs  # no reading above its own ceiling
 node tools/coverage.mjs        # what the catalog is still missing
 ```
 
-## The seven collections
+## The eight collections
 
 | collection | what it is | changes when |
 |---|---|---|
@@ -23,6 +23,7 @@ node tools/coverage.mjs        # what the catalog is still missing
 | `units` | a purchasable card or machine — what a datasheet describes | a price moves, a spec is corrected |
 | `carriers` | a board modules mount on, or a whole system built around one: its wiring, host link, host, price, and what fits in it | a board or system is found, priced or tested with a module |
 | `drives` | reference SSDs, for lookup tables read from disk: measured queue-depth-1 latency, the maker's peak IOPS and sequential read | a drive is measured or added |
+| `hosts` | reference host platforms, for routed experts computed on the CPU: memory channels and rated speed, with a measured bandwidth where one was found | a platform is released, measured or corrected |
 | `lines` | the ledger: every reading, inside the serving line that produced it | someone measures something |
 | `candidates` | rigs under consideration that have no measured line yet | a rig is proposed or measured |
 | `openModels` | open-weight models scored on one quality index, for the size frontier | a model is released or rescored |
@@ -445,6 +446,34 @@ from one site with one method (ssd-tester.com, CrystalDiskMark RND4K Q1T1 on
 Windows); the Optane 905P's comes from Legit Reviews, a different site and test
 PC. The first drive listed is the setting's default. The validator rejects a
 peak below what one read at a time would give.
+
+## Host platforms
+
+Each host platform records what CPU-computed experts are read at: `memory`
+gives the `type`, `channels` per socket, `mts` (the highest officially
+supported transfer rate at one DIMM per channel) and `maxGB` per socket;
+`pcie` the CPU's lane count; `source` and `quote` the document they came from,
+with spec-page fields written as `label: value`. The page derives the
+theoretical bandwidth, channels × MT/s × 8 bytes, and never stores it.
+`measured`, where one was found, is a review's or server maker's result for one
+socket (`GBs`, `url`, `quote`, `setup`); a two-socket STREAM result is halved,
+and `setup` says so. The validator rejects a measurement above the theoretical
+figure.
+
+AMD's own pages refused every fetch, so its figures come from its datasheets
+as resellers host them (EPYC 9004, 9005, 7003), from Supermicro, and from the
+press (Threadripper, Ryzen); each record says which. Where sources disagree
+the record says so: EPYC 9005 runs DDR5-6400 only on validated platforms (the
+platform uses 6,400, as an upper bound; 6,000 is AMD's reference), and Intel's
+W-3500 selling guide prints 140 GB/s for eight channels of DDR5-4800 that come
+to 307.2. A platform's figure is for its full parts: AMD parts with few CCDs
+read far less (Fujitsu's STREAM tables put the 2-CCD EPYC 9115 at about 42% of
+theoretical), and each AMD record's note gives what is known. The first
+platform listed is the setting's default.
+
+A system's host records its CPUs' `memory` too, with `sockets`; the page
+counts every socket, as it counts every card under tensor parallel, and the
+method notes how far stock llama.cpp falls short of that.
 
 ## The open-weight frontier
 

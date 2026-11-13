@@ -48,11 +48,11 @@ export const carrierHostGBs = k => (k?.hostLink ? ((PCIE[k.hostLink.gen].gts / 8
 
 /**
  * A host's theoretical memory bandwidth in GB/s: channels x MT/s x 8 bytes,
- * times its sockets. What CPU code actually reads is lower (a measured figure
+ * times its sockets (a system's host records them; a reference platform is one). What CPU code actually reads is lower (a measured figure
  * sits beside it where one was found), which keeps a ceiling built on it an
  * upper bound. null when the memory is not recorded.
  */
-export const hostBandwidthGBs = h => (h?.memory?.channels && h.memory.mts ? (h.memory.channels * h.memory.mts * 8 * (h.sockets ?? 1)) / 1000 : null);
+export const hostBandwidthGBs = h => (h?.memory?.channels && h.memory.mts ? (h.memory.channels * h.memory.mts * 8 * (h.memory.sockets ?? 1)) / 1000 : null);
 
 /**
  * The open-weight frontier on the current version of the quality index. Each

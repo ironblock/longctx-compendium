@@ -121,7 +121,7 @@ check(doc, schema, '');
 // turn a number into folklore.
 
 const seenIds = new Map();
-for (const rec of [...(doc.architectures ?? []), ...(doc.units ?? []), ...(doc.carriers ?? []), ...(doc.drives ?? []), ...(doc.lines ?? []), ...(doc.candidates ?? []), ...(doc.openModels ?? [])]) {
+for (const rec of [...(doc.architectures ?? []), ...(doc.units ?? []), ...(doc.carriers ?? []), ...(doc.drives ?? []), ...(doc.hosts ?? []), ...(doc.lines ?? []), ...(doc.candidates ?? []), ...(doc.openModels ?? [])]) {
   if (seenIds.has(rec.id)) fail(`id "${rec.id}"`, 'duplicate id');
   seenIds.set(rec.id, rec);
 }
@@ -356,6 +356,18 @@ for (const d of doc.drives ?? []) {
   if (r.makerLatencyUs && r.latencyUs < r.makerLatencyUs) warn(at, `measured latency ${r.latencyUs} µs is below the maker's ${r.makerLatencyUs} µs bound`);
 }
 
+// --- Host platforms: what CPU-computed experts are read at
+for (const h of doc.hosts ?? []) {
+  const at = `host platform "${h.id}"`;
+  const theory = (h.memory.channels * h.memory.mts * 8) / 1000;
+  // No measurement can beat channels x rate x 8 bytes; one that does was mis-recorded or mis-run.
+  if (h.measured && h.measured.GBs > theory) fail(at, `measured ${h.measured.GBs} GB/s is above its theoretical ${theory.toFixed(1)} GB/s`);
+  if (h.measured?.url && h.measured.url === h.source) warn(at, 'gives the same document for the specification and the measurement');
+}
+for (const k of doc.carriers ?? []) {
+  if (k.host?.memory && k.kind !== 'system') fail(`carrier "${k.id}"`, 'records host memory but is not a system');
+}
+
 // --- Model shapes: the parts counted apart from the total
 for (const [id, m] of Object.entries(MODELS)) {
   const at = `model "${id}"`;
@@ -443,5 +455,5 @@ const points = (doc.lines ?? []).reduce((n, l) => n + (l.results?.length ?? 0), 
 for (const w of warnings) console.warn(`  ! ${w}`);
 console.log(
   `✓ ${rel} — ${(doc.architectures ?? []).length} chip generations, ${(doc.units ?? []).length} catalog units, ` +
-    `${(doc.carriers ?? []).filter(k => k.kind !== 'system').length} carriers, ${(doc.carriers ?? []).filter(k => k.kind === 'system').length} systems, ${(doc.drives ?? []).length} drives, ${(doc.lines ?? []).length} serving lines with ${points} readings, ${(doc.candidates ?? []).length} candidates, ${(doc.openModels ?? []).length} open models`
+    `${(doc.carriers ?? []).filter(k => k.kind !== 'system').length} carriers, ${(doc.carriers ?? []).filter(k => k.kind === 'system').length} systems, ${(doc.drives ?? []).length} drives, ${(doc.hosts ?? []).length} host platforms, ${(doc.lines ?? []).length} serving lines with ${points} readings, ${(doc.candidates ?? []).length} candidates, ${(doc.openModels ?? []).length} open models`
 );

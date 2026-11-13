@@ -42,6 +42,13 @@
         "$ref": "#/definitions/drive"
       }
     },
+    "hosts": {
+      "type": "array",
+      "description": "Reference host platforms whose memory bandwidth CPU-computed routed experts are read at. The first listed is the default.",
+      "items": {
+        "$ref": "#/definitions/hostPlatform"
+      }
+    },
     "lines": {
       "description": "The observation ledger: every measured number on the page, each inside the serving line that produced it. Nothing interpolated, extrapolated or modeled belongs here.",
       "type": "array",
@@ -1368,6 +1375,44 @@
               "exclusiveMinimum": 0,
               "description": "The most host memory the maker says it takes."
             },
+            "memory": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "channels",
+                "mts",
+                "sockets",
+                "source"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "DDR4, DDR5, MRDIMM ..."
+                },
+                "channels": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Memory channels per socket."
+                },
+                "mts": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "description": "The highest officially supported transfer rate, MT/s, at one DIMM per channel."
+                },
+                "sockets": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "source": {
+                  "type": "string"
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "description": "The host CPUs' memory channels and rated speed, for experts computed there; bandwidth is derived (channels x MT/s x 8 bytes x sockets)."
+            },
             "chassis": {
               "type": "string",
               "description": "Rack units or tower, and anything about size, weight or noise that decides where it can live."
@@ -1756,6 +1801,130 @@
         "asOf": {
           "type": "string",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "hostPlatform": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A host platform CPU-computed experts can run on. Its theoretical bandwidth (channels x MT/s x 8 bytes) is derived, never stored.",
+      "required": [
+        "id",
+        "label",
+        "short",
+        "maker",
+        "memory",
+        "source",
+        "quote",
+        "asOf"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "label": {
+          "type": "string"
+        },
+        "short": {
+          "type": "string",
+          "description": "The label on the setting's chip."
+        },
+        "maker": {
+          "type": "string"
+        },
+        "memory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "channels",
+            "mts"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "DDR4, DDR5, MRDIMM ..."
+            },
+            "channels": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Memory channels per socket."
+            },
+            "mts": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "The highest officially supported transfer rate, MT/s, at one DIMM per channel."
+            },
+            "maxGB": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "The most memory a socket takes, GB."
+            }
+          }
+        },
+        "pcie": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "gen",
+            "lanes"
+          ],
+          "properties": {
+            "gen": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 6
+            },
+            "lanes": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "CPU lanes per socket."
+            }
+          }
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "quote": {
+          "type": "string",
+          "description": "The source's words for the figures. Spec-page fields are given as label: value."
+        },
+        "measured": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "GBs",
+            "url",
+            "quote",
+            "setup"
+          ],
+          "properties": {
+            "GBs": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Measured memory bandwidth for one socket, GB/s. A two-socket result is halved, and setup says so."
+            },
+            "url": {
+              "type": "string",
+              "pattern": "^https://"
+            },
+            "quote": {
+              "type": "string"
+            },
+            "setup": {
+              "type": "string",
+              "description": "SKU, memory, tool and date, and anything that makes the figure not this platform's at its rated speed."
+            }
+          }
+        },
+        "asOf": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
         },
         "note": {
           "type": "string"
