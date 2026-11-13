@@ -194,7 +194,13 @@ qwen3_32b: {
   recurrent-state shape of linear-attention layers.
 - `params.total` excludes vision towers and MTP heads; `params.active` is what a
   decoded token reads. Without `params`, a model can be named in a line but has
-  no ceiling.
+  no ceiling. For an MoE model both come from the safetensors headers, with
+  `params.counted` saying so and giving the card's figures: active is
+  everything outside the routed experts plus `expertsPerToken / experts` of
+  them, which the validator holds it to. Card figures are rounded and often
+  leave out embeddings, the output head or other weights a token reads:
+  Qwen3-Next's "3B activated" is 3.87B in its headers, Flash-Next's "6B" 7.31B,
+  and gpt-oss-120b's "5.1B" excludes its input embedding.
 - `params.lookup` / `params.lookupBits` size an n-gram or Engram table, and
   `lookupReads` says how a token reads it: per table, the layer that reads it
   (1-based, as configs number them) and the rows it gathers, with the config

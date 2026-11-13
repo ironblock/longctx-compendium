@@ -383,6 +383,10 @@ for (const [id, m] of Object.entries(MODELS)) {
     if (!(e.routed < p.total)) fail(at, `routed experts (${e.routed}) are not less than the total (${p.total})`);
     if (!(e.expertsPerToken > 0 && e.expertsPerToken <= e.experts)) fail(at, `picks ${e.expertsPerToken} of ${e.experts} experts a token`);
     else if (e.routed * (e.expertsPerToken / e.experts) > p.active) fail(at, 'reads more routed-expert weights a token than its active count');
+    // Header counts make active a derived figure: what is outside the routed
+    // experts, plus the router's share of them. A card's rounded figure fails here.
+    if (!p.counted) fail(at, 'counts routed experts but not where its total and active came from (params.counted)');
+    else if (Math.abs(p.total - e.routed + (e.routed * e.expertsPerToken) / e.experts - p.active) > 1) fail(at, `active ${p.active} is not total less routed plus ${e.expertsPerToken}/${e.experts} of routed (${p.total - e.routed + (e.routed * e.expertsPerToken) / e.experts})`);
   }
   const r = m.lookupReads;
   if (r) {

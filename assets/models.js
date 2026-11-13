@@ -12,6 +12,12 @@
 //                    excluding vision towers, MTP heads and lookup tables, which
 //                    are counted apart (below)
 //   params.active    weights read per decoded token (all of them, for dense)
+//   params.counted   for an MoE model, where total and active were summed: the
+//                    safetensors headers, whose active (everything outside the
+//                    routed experts plus the router's share of them) is what a
+//                    token reads. Model-card figures are rounded, and some
+//                    leave out embeddings or other weights a token does read;
+//                    the card's figures are given beside it
 //   params.mtp       the checkpoint's multi-token-prediction head, summed from
 //                    its safetensors headers (0: the checkpoint carries none).
 //                    Resident only when speculative decoding uses it
@@ -93,10 +99,11 @@ export const MODELS = {
     source: "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/raw/main/config.json",
     revision: "de4b8e4d43b917e7706784d8bb445c9af86a3540",
     params: {
-      total: 125000000000,
-      active: 6000000000,
+      total: 125743653763,
+      active: 7306994563,
       source: "https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/main/README.md",
       quote: "- Number of Parameters: 125B with 6B activated, plus 51B n-gram embedding and 4B MTP",
+      counted: "safetensors headers of Qwen/Qwen3.8-Flash-Next at de4b8e4d43b9: total sums the decode pass's tensors, MTP layers, vision tower and lookup tables left out; active is everything outside the routed experts plus expertsPerToken / experts of them. The card gives 125B total and 6B active",
       inputEmbedding: 635699200,
       tiedEmbeddings: false,
       mtp: 2607150848,
@@ -214,9 +221,10 @@ export const MODELS = {
     revision: "995ad96eacd98c81ed38be0c5b274b04031597b0",
     params: {
       total: 34660610688,
-      active: 3000000000,
+      active: 3454988928,
       source: "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/blob/main/README.md",
       quote: "- Number of Parameters: 35B in total and 3B activated",
+      counted: "safetensors headers of Qwen/Qwen3.6-35B-A3B at 995ad96eacd9: total sums the decode pass's tensors, MTP layers, vision tower and lookup tables left out; active is everything outside the routed experts plus expertsPerToken / experts of them. The card gives the same total and 3B active",
       inputEmbedding: 508559360,
       tiedEmbeddings: false,
       mtp: 844640768,
@@ -256,9 +264,10 @@ export const MODELS = {
     revision: "59d61f3ce65a6d9863b86d2e96597125219dc754",
     params: {
       total: 34660610688,
-      active: 3000000000,
+      active: 3454988928,
       source: "https://huggingface.co/Qwen/Qwen3.5-35B-A3B/blob/main/README.md",
       quote: "- Number of Parameters: 35B in total and 3B activated",
+      counted: "safetensors headers of Qwen/Qwen3.5-35B-A3B at 59d61f3ce65a: total sums the decode pass's tensors, MTP layers, vision tower and lookup tables left out; active is everything outside the routed experts plus expertsPerToken / experts of them. The card gives the same total and 3B active",
       inputEmbedding: 508559360,
       tiedEmbeddings: false,
       mtp: 844640768,
@@ -331,9 +340,10 @@ export const MODELS = {
     revision: "9c7f2fbe84465e40164a94cc16cd30b6999b0cc7",
     params: {
       total: 79674391296,
-      active: 3000000000,
+      active: 3874929408,
       source: "https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct/blob/main/README.md",
       quote: "- Number of Parameters: 80B in total and 3B activated",
+      counted: "safetensors headers of Qwen/Qwen3-Next-80B-A3B-Instruct at 9c7f2fbe8446: total sums the decode pass's tensors, MTP layers, vision tower and lookup tables left out; active is everything outside the routed experts plus expertsPerToken / experts of them. The card gives the same total and 3B active",
       inputEmbedding: 311164928,
       tiedEmbeddings: false,
       mtp: 1650471424,
@@ -373,9 +383,10 @@ export const MODELS = {
     revision: "a7fbcb5c0e12d62a448eaa0e260346bf5dcc0feb",
     params: {
       total: 79674391296,
-      active: 3000000000,
+      active: 3874929408,
       source: "https://huggingface.co/Qwen/Qwen3-Coder-Next/blob/main/README.md",
       quote: "- Number of Parameters: 80B in total and 3B activated",
+      counted: "safetensors headers of Qwen/Qwen3-Coder-Next at a7fbcb5c0e12: total sums the decode pass's tensors, MTP layers, vision tower and lookup tables left out; active is everything outside the routed experts plus expertsPerToken / experts of them. The card gives the same total and 3B active",
       inputEmbedding: 311164928,
       tiedEmbeddings: false,
       mtp: 0,
@@ -415,9 +426,10 @@ export const MODELS = {
     revision: "bf77c3174f68ad409e1c2aa60daeb46e32d1c606",
     params: {
       total: 31577940288,
-      active: 3500000000,
+      active: 3580076352,
       source: "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16/blob/main/README.md",
       quote: "The model has 3.5B active parameters and 30B parameters in total.",
+      counted: "safetensors headers of nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 at bf77c3174f68: total sums the decode pass's tensors, MTP layers, vision tower and lookup tables left out; active is everything outside the routed experts plus expertsPerToken / experts of them. The card gives the same total and 3.5B active",
       inputEmbedding: 352321536,
       tiedEmbeddings: false,
       mtp: 0,
@@ -496,10 +508,11 @@ export const MODELS = {
     source: "https://huggingface.co/openai/gpt-oss-120b/raw/main/config.json",
     revision: "b5c939de8f754692c1647ca79fbf85e8c1e70f8a",
     params: {
-      total: 117000000000,
-      active: 5100000000,
+      total: 116829156672,
+      active: 5711982912,
       source: "https://huggingface.co/openai/gpt-oss-120b/blob/main/README.md",
       quote: "(117B parameters with 5.1B active parameters)",
+      counted: "safetensors headers of openai/gpt-oss-120b at b5c939de8f75: total sums the decode pass's tensors, MTP layers, vision tower and lookup tables left out; active is everything outside the routed experts plus expertsPerToken / experts of them. The card gives 117B total and 5.1B active",
       inputEmbedding: 579133440,
       tiedEmbeddings: false,
       mtp: 0,
@@ -533,9 +546,10 @@ export const MODELS = {
     revision: "7dd20894a642a0aa287e9827cb1a1f7f91386b67",
     params: {
       total: 29943393920,
-      active: 3000000000,
+      active: 3896766080,
       source: "https://huggingface.co/zai-org/GLM-4.7-Flash/blob/main/README.md",
       quote: "GLM-4.7-Flash is a 30B-A3B MoE model.",
+      counted: "safetensors headers of zai-org/GLM-4.7-Flash at 7dd20894a642: total sums the decode pass's tensors, MTP layers, vision tower and lookup tables left out; active is everything outside the routed experts plus expertsPerToken / experts of them. The card gives the same total and 3B active",
       inputEmbedding: 317194240,
       tiedEmbeddings: false,
       mtp: 1278094656,
@@ -572,10 +586,11 @@ export const MODELS = {
     source: "https://huggingface.co/Qwen/Qwen3-30B-A3B/raw/main/config.json",
     revision: "ad44e777bcd18fa416d9da3bd8f70d33ebb85d39",
     params: {
-      total: 30500000000,
-      active: 3300000000,
+      total: 30532122624,
+      active: 3353032704,
       source: "https://huggingface.co/Qwen/Qwen3-30B-A3B/blob/main/README.md",
       quote: "- Number of Parameters: 30.5B in total and 3.3B activated",
+      counted: "safetensors headers of Qwen/Qwen3-30B-A3B at ad44e777bcd1: total sums the decode pass's tensors, MTP layers, vision tower and lookup tables left out; active is everything outside the routed experts plus expertsPerToken / experts of them. The card gives 30.5B total and 3.3B active",
       inputEmbedding: 311164928,
       tiedEmbeddings: false,
       mtp: 0,
@@ -605,10 +620,11 @@ export const MODELS = {
     source: "https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct/raw/main/config.json",
     revision: "b2cff646eb4bb1d68355c01b18ae02e7cf42d120",
     params: {
-      total: 30500000000,
-      active: 3300000000,
+      total: 30532122624,
+      active: 3353032704,
       source: "https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct/blob/main/README.md",
       quote: "- Number of Parameters: 30.5B in total and 3.3B activated",
+      counted: "safetensors headers of Qwen/Qwen3-Coder-30B-A3B-Instruct at b2cff646eb4b: total sums the decode pass's tensors, MTP layers, vision tower and lookup tables left out; active is everything outside the routed experts plus expertsPerToken / experts of them. The card gives 30.5B total and 3.3B active",
       inputEmbedding: 311164928,
       tiedEmbeddings: false,
       mtp: 0,

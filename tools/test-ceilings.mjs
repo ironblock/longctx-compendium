@@ -129,7 +129,18 @@ const q32KvPerPos = 64 * 8 * 128 * 2 * 2;
   const f = MODELS.qwen38_flash_next;
   const ff = C.fit(f, { memoryGB: 96 }, { ...args, depth: 4096 });
   near('Flash-Next: n-gram table goes to host RAM, in BF16', ff.host, (51200245792 * 16) / 8);
-  near('Flash-Next: and stays out of GPU memory', ff.weights, (125e9 * 4.83) / 8);
+  // 125,743,653,763: the decode pass's tensors in the headers (the card rounds to 125B).
+  near('Flash-Next: and stays out of GPU memory', ff.weights, (125743653763 * 4.83) / 8);
+}
+
+// Active from the headers: what is outside the routed experts plus the
+// router's share of them. gpt-oss-120b: 116,829,156,672 in all, 114,701,598,720
+// routed, 4 of 128 a token. Less the 579M-parameter input embedding that is
+// 5.13B, OpenAI's "5.1B active"; the page used to take the embedding off twice.
+{
+  const g = MODELS.gpt_oss_120b;
+  near('gpt-oss-120b: active from the headers', g.params.active, 116829156672 - 114701598720 + (114701598720 * 4) / 128);
+  near('gpt-oss-120b: read a token, less the input embedding', C.readParams(g), 116829156672 - 114701598720 + (114701598720 * 4) / 128 - g.params.inputEmbedding);
 }
 
 // Lookup-table placement. Host RAM costs decode and prefill nothing; GPU
