@@ -7758,7 +7758,7 @@
           }
         ],
         "host": {
-          "name": "linux-pc",
+          "name": "RTX 3090 host",
           "ramGB": 32,
           "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
         },
@@ -7909,7 +7909,7 @@
           }
         ],
         "host": {
-          "name": "linux-pc",
+          "name": "RTX 3090 host",
           "ramGB": 32,
           "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
         },
@@ -8042,7 +8042,7 @@
           }
         ],
         "host": {
-          "name": "linux-pc",
+          "name": "RTX 3090 host",
           "ramGB": 32,
           "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
         },
@@ -8161,7 +8161,7 @@
         "digest": "sha256:432e9394a4cdb3148cfa4de67cfc02b68d13cace5b8a5bdde3eb03bedcd7f644",
         "note": "Measured by the inference seat in windows the maintainer approved; every receipt is pinned by SHA256SUMS."
       },
-      "note": "The line the maintainer ratified as linux-pc's baseline, pending admission (LADDER.md, #393), is this quant served through TabbyAPI with a vision tower; this row is the in-process bench of the same weights.",
+      "note": "The line the maintainer ratified as this host's baseline, pending admission (LADDER.md, #393), is this quant served through TabbyAPI with a vision tower; this row is the in-process bench of the same weights.",
       "observed": "2026-10-04",
       "recorded": "2026-10-05"
     },
@@ -8177,7 +8177,7 @@
           }
         ],
         "host": {
-          "name": "linux-pc",
+          "name": "RTX 3090 host",
           "ramGB": 32,
           "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
         },
@@ -8282,7 +8282,7 @@
           }
         ],
         "host": {
-          "name": "linux-pc",
+          "name": "RTX 3090 host",
           "ramGB": 32,
           "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
         },
@@ -8388,7 +8388,7 @@
           }
         ],
         "host": {
-          "name": "linux-pc",
+          "name": "RTX 3090 host",
           "ramGB": 32,
           "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
         },
@@ -8408,7 +8408,7 @@
           "code": 0.1226,
           "prose": 0.1697,
           "reference": "Q8_0 of the same model, #334 harness",
-          "source": "ironblock/discipline substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/we/logs/kld-SC_2.20bpw_H3.log"
+          "source": "ironblock/discipline@a6ccbdbb85e4 substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/ (the KLD log of the 2.20 bpw H3 quant)"
         },
         "key": "exl3"
       },
@@ -8490,7 +8490,7 @@
           }
         ],
         "host": {
-          "name": "rtx6000ada-host"
+          "name": "RTX 6000 Ada host"
         }
       },
       "engine": {
@@ -8607,7 +8607,7 @@
         "attestation": "witnessed",
         "source": "ironblock/discipline@6b0381e992 substrates/measurements/2026-10-03-characterization/README.md",
         "digest": "sha256:addeb2e36613bea09871192f4c20517e12e6afa57367671a42d2320f12cb9daf",
-        "note": "A/B windows on rtx6000ada-host, 2026-10-03. Decode is reps 1-2 only; ranges are across those reps."
+        "note": "A/B windows on the RTX 6000 Ada host, 2026-10-03. Decode is reps 1-2 only; ranges are across those reps."
       },
       "note": "The top rung's previous engine, kept for rollback.",
       "observed": "2026-10-03",
@@ -8625,7 +8625,7 @@
           }
         ],
         "host": {
-          "name": "rtx6000ada-host"
+          "name": "RTX 6000 Ada host"
         }
       },
       "engine": {
@@ -8744,7 +8744,7 @@
         "attestation": "witnessed",
         "source": "ironblock/discipline@6b0381e992 substrates/measurements/2026-10-03-characterization/README.md",
         "digest": "sha256:addeb2e36613bea09871192f4c20517e12e6afa57367671a42d2320f12cb9daf",
-        "note": "A/B windows on rtx6000ada-host, 2026-10-03. Decode is reps 1-2 only; ranges are across those reps."
+        "note": "A/B windows on the RTX 6000 Ada host, 2026-10-03. Decode is reps 1-2 only; ranges are across those reps."
       },
       "note": "Discipline's top rung. Unadmitted: no admission cell has run on it (#396).",
       "observed": "2026-10-03",
