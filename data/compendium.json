@@ -7270,7 +7270,7 @@
       },
       "power": {
         "input": "not recorded",
-        "note": "Measured while serving Qwen3.8-Flash-Next: 857 W idle, about 1.3 kW loaded (the maintainer's report, 2026-11-15; where it was read is not recorded). The supply rating and maximum draw are not recorded."
+        "note": "Measured while serving Qwen3.8-Flash-Next: 857 W idle, about 1.3 kW loaded (read from the BMC; the maintainer's report, 2026-11-15). The supply rating and maximum draw are not recorded."
       },
       "cooling": {
         "included": true,
@@ -7762,7 +7762,7 @@
           }
         ],
         "host": {
-          "name": "linux-pc",
+          "name": "RTX 3090 host",
           "ramGB": 32,
           "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
         },
@@ -7913,7 +7913,7 @@
           }
         ],
         "host": {
-          "name": "linux-pc",
+          "name": "RTX 3090 host",
           "ramGB": 32,
           "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
         },
@@ -8046,7 +8046,7 @@
           }
         ],
         "host": {
-          "name": "linux-pc",
+          "name": "RTX 3090 host",
           "ramGB": 32,
           "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
         },
@@ -8165,7 +8165,7 @@
         "digest": "sha256:432e9394a4cdb3148cfa4de67cfc02b68d13cace5b8a5bdde3eb03bedcd7f644",
         "note": "Measured by the inference seat in windows the maintainer approved; every receipt is pinned by SHA256SUMS."
       },
-      "note": "The line the maintainer ratified as linux-pc's baseline, pending admission (LADDER.md, #393), is this quant served through TabbyAPI with a vision tower; this row is the in-process bench of the same weights.",
+      "note": "The line the maintainer ratified as this host's baseline, pending admission (LADDER.md, #393), is this quant served through TabbyAPI with a vision tower; this row is the in-process bench of the same weights.",
       "observed": "2026-10-04",
       "recorded": "2026-10-05"
     },
@@ -8181,7 +8181,7 @@
           }
         ],
         "host": {
-          "name": "linux-pc",
+          "name": "RTX 3090 host",
           "ramGB": 32,
           "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
         },
@@ -8286,7 +8286,7 @@
           }
         ],
         "host": {
-          "name": "linux-pc",
+          "name": "RTX 3090 host",
           "ramGB": 32,
           "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
         },
@@ -8392,7 +8392,7 @@
           }
         ],
         "host": {
-          "name": "linux-pc",
+          "name": "RTX 3090 host",
           "ramGB": 32,
           "note": "4 x 8 GiB DDR4-2666, dual channel (registry)"
         },
@@ -8412,7 +8412,7 @@
           "code": 0.1226,
           "prose": 0.1697,
           "reference": "Q8_0 of the same model, #334 harness",
-          "source": "ironblock/discipline substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/we/logs/kld-SC_2.20bpw_H3.log"
+          "source": "ironblock/discipline@a6ccbdbb85e4 substrates/measurements/2026-10-04-qwen38-27b-dflash2-exl3/ (the KLD log of the 2.20 bpw H3 quant)"
         },
         "key": "exl3"
       },
@@ -8494,7 +8494,7 @@
           }
         ],
         "host": {
-          "name": "rtx6000ada-host"
+          "name": "RTX 6000 Ada host"
         }
       },
       "engine": {
@@ -8611,7 +8611,7 @@
         "attestation": "witnessed",
         "source": "ironblock/discipline@6b0381e992 substrates/measurements/2026-10-03-characterization/README.md",
         "digest": "sha256:addeb2e36613bea09871192f4c20517e12e6afa57367671a42d2320f12cb9daf",
-        "note": "A/B windows on rtx6000ada-host, 2026-10-03. Decode is reps 1-2 only; ranges are across those reps."
+        "note": "A/B windows on the RTX 6000 Ada host, 2026-10-03. Decode is reps 1-2 only; ranges are across those reps."
       },
       "note": "The top rung's previous engine, kept for rollback.",
       "observed": "2026-10-03",
@@ -8629,7 +8629,7 @@
           }
         ],
         "host": {
-          "name": "rtx6000ada-host"
+          "name": "RTX 6000 Ada host"
         }
       },
       "engine": {
@@ -8748,7 +8748,7 @@
         "attestation": "witnessed",
         "source": "ironblock/discipline@6b0381e992 substrates/measurements/2026-10-03-characterization/README.md",
         "digest": "sha256:addeb2e36613bea09871192f4c20517e12e6afa57367671a42d2320f12cb9daf",
-        "note": "A/B windows on rtx6000ada-host, 2026-10-03. Decode is reps 1-2 only; ranges are across those reps."
+        "note": "A/B windows on the RTX 6000 Ada host, 2026-10-03. Decode is reps 1-2 only; ranges are across those reps."
       },
       "note": "Discipline's top rung. Unadmitted: no admission cell has run on it (#396).",
       "observed": "2026-10-03",
@@ -16841,7 +16841,7 @@
             115
           ],
           "confidence": "m",
-          "depthNote": "The report gives no depth for this figure.",
+          "depthNote": "The report gives no depth for this figure. More exact measurements, running to 524,288 tokens with YaRN, are to follow.",
           "note": "Greedy decoding."
         },
         {
@@ -16854,7 +16854,7 @@
             104
           ],
           "confidence": "m",
-          "depthNote": "The report gives no depth for this figure.",
+          "depthNote": "The report gives no depth for this figure. More exact measurements, running to 524,288 tokens with YaRN, are to follow.",
           "note": "Sampled decoding on realistic prompts."
         },
         {
@@ -16876,7 +16876,7 @@
             77
           ],
           "confidence": "m",
-          "depthNote": "The report gives no depth for this figure.",
+          "depthNote": "The report gives no depth for this figure. More exact measurements, running to 524,288 tokens with YaRN, are to follow.",
           "note": "Each of four streams."
         },
         {
@@ -16889,7 +16889,7 @@
             308
           ],
           "confidence": "m",
-          "depthNote": "The report gives no depth for this figure.",
+          "depthNote": "The report gives no depth for this figure. More exact measurements, running to 524,288 tokens with YaRN, are to follow.",
           "note": "Four streams combined."
         },
         {
@@ -16928,9 +16928,9 @@
       ],
       "provenance": {
         "kind": "first-party",
-        "attestation": "reported",
+        "attestation": "witnessed",
         "source": "The maintainer's tuning report for one DRIVE Constellation Simulator, 2026-11-15 (not published).",
-        "note": "Runs from 13 to 15 November 2026, under the maintainer's own measurement program. Attestation is recorded as reported until the maintainer declares otherwise. Standing configuration: Intel W4A16 with RadixArk's FP8 n-gram table pinned in host memory, decode context parallel 1, MTP n=3, 524,288-token context with YaRN; needle retrieval passes at every depth tested (10 of 10 to 400K on the build before; all at 131K-262K on this one)."
+        "note": "Runs from 13 to 15 November 2026, under the maintainer's own measurement program. Standing configuration: Intel W4A16 with RadixArk's FP8 n-gram table pinned in host memory, decode context parallel 1, MTP n=3, 524,288-token context with YaRN; needle retrieval passes at every depth tested (10 of 10 to 400K on the build before; all at 131K-262K on this one)."
       },
       "note": "From the first working bring-up on this machine: cold 32K prefill 992 to about 3,450 tok/s, decode about 60 to about 112 tok/s.",
       "recorded": "2026-11-15"

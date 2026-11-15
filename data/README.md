@@ -293,7 +293,7 @@ a set of weights, a cache and the flags it ran with.
   "id": "l_some_rig_27b",
   "label": "Qwen3.8 27B · IQ3_S · llama.cpp · MTP n=2",
   "model": "qwen38_27b",
-  "rig": { "units": [{ "unit": "rtx_3090", "count": 1 }], "host": { "name": "linux-pc", "ramGB": 32 } },
+  "rig": { "units": [{ "unit": "rtx_3090", "count": 1 }], "host": { "name": "RTX 3090 host", "ramGB": 32 } },
   "engine": { "name": "llama.cpp", "version": "…", "commit": "4ceb171…", "lineage": "upstream" },
   "quant": { "format": "GSQ-RCO IQ3_S", "key": "iq", "bpw": 3.4981, "sizeGB": 12.12,
              "kld": { "code": 0.0542, "prose": 0.0860, "reference": "Q8_0 of the same model" } },
