@@ -12,7 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MODELS, DRAFTERS } from '../assets/models.js';
-import { WEIGHT_FORMATS } from '../assets/ceiling.js';
+import { WEIGHT_FORMATS, readParams } from '../assets/ceiling.js';
 import { FORMATS } from '../assets/data.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -298,6 +298,13 @@ for (const l of doc.lines ?? []) {
   }
   checkRig(l.rig, at);
   if (l.quant.key && !WEIGHT_FORMATS[l.quant.key]) fail(at, `quant.key "${l.quant.key}" is not in WEIGHT_FORMATS (assets/ceiling.js)`);
+  // Bytes a step reads must come to between 1 and 32 bits for each weight a token reads.
+  const rpt = l.quant.readPerToken;
+  const shape = MODELS[l.model];
+  if (rpt && shape?.params?.active) {
+    const bits = (rpt.bytes * 8) / readParams(shape);
+    if (bits < 1 || bits > 32) fail(at, `reads ${(rpt.bytes / 1e9).toFixed(2)} GB a step, ${bits.toFixed(1)} bits for each of the ${(readParams(shape) / 1e9).toFixed(2)}B weights a token reads`);
+  }
   const cards = (l.rig.units ?? []).reduce((n, u) => n + u.count, 0);
   if (cards > 1 && !l.parallel) warn(at, `runs on ${cards} cards without saying how the model was split (parallel), so it has no ceiling`);
   if (l.parallel && cards === 1) fail(at, 'states a parallel split on a single card');

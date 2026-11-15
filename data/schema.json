@@ -778,6 +778,25 @@
               "type": "number",
               "exclusiveMinimum": 0
             },
+            "readPerToken": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "bytes",
+                "source"
+              ],
+              "description": "Bytes of weights one decode step reads, summed from the checkpoint's safetensors headers: every tensor of the decode pass in full, routed experts at expertsPerToken / experts, the input embedding, MTP head, vision tower and lookup tables left out. For a checkpoint that mixes widths (4-bit experts, 16-bit everything else) no single bpw states this; when present, the decode ceiling uses it instead of bpw.",
+              "properties": {
+                "bytes": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "source": {
+                  "type": "string",
+                  "description": "The repository and revision whose headers were summed, and what the sum covers."
+                }
+              }
+            },
             "sizeGB": {
               "type": "number",
               "exclusiveMinimum": 0

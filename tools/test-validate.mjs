@@ -285,6 +285,12 @@ const CASES = [
   ['routed experts without what stays on the GPUs', 'without the other', d => {
     delete d.openModels.find(x => x.id === 'kimi_k31_pro').params.nonRouted;
   }],
+  ['bytes read a step that come to under one bit a weight', 'bits for each of the', d => {
+    line(d, 'l_dcs_flashnext_1cat_t1_mtp3').quant.readPerToken.bytes = 1e8;
+  }],
+  ['bytes read a step with no source', 'source', d => {
+    delete line(d, 'l_dcs_flashnext_1cat_t1_mtp3').quant.readPerToken.source;
+  }],
   ['a host platform measured above its theoretical bandwidth', 'is above its theoretical', d => {
     d.hosts.find(h => h.id === 'epyc_7003').measured.GBs = 250;
   }],

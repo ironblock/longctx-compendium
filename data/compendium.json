@@ -7268,6 +7268,10 @@
         "source": "Inventory of one NVIDIA DRIVE Constellation Simulator (nvidia-smi, lspci, lscpu, /proc/meminfo), supplied by the maintainer, 2026-11-13 -- \"2× Intel Xeon Gold 6148 (Skylake-SP), 20C/40T each\"; \"Total RAM 394,852,356 kB = 376.6 GiB\"; system product \"DRIVE Constellation Simulator, version v1.0\", board \"DCS\"",
         "note": "376.6 GiB is visible to the OS; 384 GiB installed is inferred. Two NUMA nodes of about 188 GiB, distance 21 between them. Two Quadro P4000s (Pascal, 8 GB) drive displays from a separate, x8 PCIe chain and are not counted here. Large pinned allocations are limited by MemFree, not MemAvailable: with ~190-290 GiB of page cache holding model files, pinning failed once MemFree neared 1 GiB though MemAvailable read 186-209 GiB."
       },
+      "power": {
+        "input": "not recorded",
+        "note": "Measured while serving Qwen3.8-Flash-Next: 857 W idle, about 1.3 kW loaded (the maintainer's report, 2026-11-15; where it was read is not recorded). The supply rating and maximum draw are not recorded."
+      },
       "cooling": {
         "included": true,
         "note": "Chassis fans; the GPUs are passive."
@@ -15987,8 +15991,12 @@
       },
       "quant": {
         "format": "NVFP4 experts, BF16 dense (RadixArk/Qwen3.8-Flash-Next-NVFP4)",
+        "readPerToken": {
+          "bytes": 9885434880,
+          "source": "safetensors headers of RadixArk/Qwen3.8-Flash-Next-NVFP4 at 7b719225242a, the revision current on 2026-11-15 (the lines do not pin one): routed experts 67.95 GB (NVFP4 with its scales, 4.50 bits a weight), a token reading 10/512 of them, plus 8.56 GB of everything else in BF16; the input embedding, MTP head, vision tower and n-gram table left out"
+        },
         "key": "nvfp4",
-        "note": "From the checkpoint's files: the routed experts take 67.99 GB (4.50 bits per weight over their 120.8B parameters), the other weights 16.01 GB of BF16 (including the MTP head), and the PLE table 51.20 GB of FP8, kept in host memory. By the safetensors headers, 4.31B of the 6.67B weights a token reads (its input-embedding row aside) are BF16, so a decode step moves about 9.95 GB where the ceiling assumes 3.75 GB at 4.5 bits: the ceiling is generous by about 2.7 times."
+        "note": "From the checkpoint's files: the routed experts take 67.99 GB (4.50 bits per weight over their 120.8B parameters), the other weights 16.01 GB of BF16 (including the MTP head), and the PLE table 51.20 GB of FP8, kept in host memory. Everything but the routed experts is BF16, so a decode step reads 9.89 GB (readPerToken) where 4.5 bits throughout would be 3.75 GB; the ceiling uses the 9.89."
       },
       "kvCache": {
         "k": "f16",
@@ -16088,8 +16096,12 @@
       },
       "quant": {
         "format": "NVFP4 experts, BF16 dense (RadixArk/Qwen3.8-Flash-Next-NVFP4)",
+        "readPerToken": {
+          "bytes": 9885434880,
+          "source": "safetensors headers of RadixArk/Qwen3.8-Flash-Next-NVFP4 at 7b719225242a, the revision current on 2026-11-15 (the lines do not pin one): routed experts 67.95 GB (NVFP4 with its scales, 4.50 bits a weight), a token reading 10/512 of them, plus 8.56 GB of everything else in BF16; the input embedding, MTP head, vision tower and n-gram table left out"
+        },
         "key": "nvfp4",
-        "note": "From the checkpoint's files: the routed experts take 67.99 GB (4.50 bits per weight over their 120.8B parameters), the other weights 16.01 GB of BF16 (including the MTP head), and the PLE table 51.20 GB of FP8, kept in host memory. By the safetensors headers, 4.31B of the 6.67B weights a token reads (its input-embedding row aside) are BF16, so a decode step moves about 9.95 GB where the ceiling assumes 3.75 GB at 4.5 bits: the ceiling is generous by about 2.7 times."
+        "note": "From the checkpoint's files: the routed experts take 67.99 GB (4.50 bits per weight over their 120.8B parameters), the other weights 16.01 GB of BF16 (including the MTP head), and the PLE table 51.20 GB of FP8, kept in host memory. Everything but the routed experts is BF16, so a decode step reads 9.89 GB (readPerToken) where 4.5 bits throughout would be 3.75 GB; the ceiling uses the 9.89."
       },
       "kvCache": {
         "k": "f16",
@@ -16182,7 +16194,12 @@
       },
       "quant": {
         "format": "AWQ W4A16 g32 (leoncca/Qwen3.8-Flash-Next-AWQ-g32) with an FP8 MTP draft",
-        "note": "No width recorded, so no ceiling."
+        "key": "w4a16",
+        "readPerToken": {
+          "bytes": 9922287456,
+          "source": "safetensors headers of leoncca/Qwen3.8-Flash-Next-AWQ-g32 at c6d84ec54771, the revision current on 2026-11-15 (the line does not pin one): routed experts 69.84 GB (INT4, group 32, with scales and zero points, 4.63 bits a weight), a token reading 10/512 of them, plus 8.56 GB of everything else in 16-bit; the input embedding, MTP head, vision tower and n-gram table left out"
+        },
+        "note": "Everything but the routed experts stays 16-bit, so a decode step reads 9.92 GB; the ceiling uses that rather than a single width."
       },
       "kvCache": {
         "k": "fp8",
@@ -16764,6 +16781,159 @@
         "source": "https://github.com/1CatAI/1Cat-vLLM/issues/1202 (AiRC-ai, \"[Community benchmark] 2× V100 PCIe 32GB TP2: QUASAR NVFP4 DFlash2 q7, 4K–256K\"): \"Cold single-client generation: 103.9 tok/s at 4K, 68.0 tok/s at 128K, and 57.3 tok/s at 256K capacity.\" Cold C1 TG 4K-256K \"103.9 / 94.5 / 90.2 / 83.7 / 81.3 / 68.0 / 57.3\"; computed PP \"1,724 / 1,623 / 1,635 / 1,554 / 1,404 / 1,161 / 862\"; cold C1 TTFT \"2.38 / 5.07 / 10.05 / 21.13 / 46.77 / 113.11 / 304.00\" s"
       },
       "note": "Two clients at 8K-32K reached 132.8-136.6 tok/s aggregate and four reached 163-204; four cold 256K clients took 1,209.48 s in all."
+    },
+    {
+      "id": "l_dcs_flashnext_1cat_t1_mtp3",
+      "label": "Flash-Next · Intel W4A16 AutoRound + FP8 n-gram table · 1Cat-vLLM sm_75 Triton build · TP8/EP8 · MTP n=3",
+      "model": "qwen38_flash_next",
+      "rig": {
+        "units": [
+          {
+            "unit": "tu102_pg150_210",
+            "count": 8
+          }
+        ],
+        "carrier": "nvidia_dcs"
+      },
+      "engine": {
+        "name": "1Cat-vLLM",
+        "lineage": "fork of 1Cat-vLLM (itself a vLLM fork for SM70), patched for sm_75",
+        "note": "The sparse-attention (QSA) kernels retuned for sm_75 (2.1-2.7x on that kernel), a tuned MoE config for the draft, and an sm7x Triton build (\"T1\") that gives Triton kernels Turing tensor-core MMA: +15% decode at one stream, +41% at four, +40-49% prefill and 2x decode at 262K over the build before it. The build commit is not given in the report. Rejected along the way: an FP16 dense-GEMV route (its native kernel is Volta-only), the DCP page4 route (no gain), FP8 KV (MTP refuses uncalibrated scales), a host-staged collective transport (slower than NCCL here), and forcing NCCL's LL protocol (already the default)."
+      },
+      "quant": {
+        "format": "Intel W4A16 AutoRound (Intel/Qwen3.8-Flash-Next-W4A16-AutoRound): INT4 group-128 routed experts, BF16 elsewhere, with RadixArk's FP8 n-gram table",
+        "key": "w4a16",
+        "readPerToken": {
+          "bytes": 9784047360,
+          "source": "safetensors headers of Intel/Qwen3.8-Flash-Next-W4A16-AutoRound at 4c67bf686b7f: routed experts 62.76 GB (INT4, group 128, with scales, 4.16 bits a weight), a token reading 10/512 of them, plus 8.56 GB of everything else in BF16; the input embedding, MTP head, vision tower and n-gram table left out"
+        },
+        "note": "The config's extra_config keeps linear attention, full attention, the shared expert, router gates, hyper-connections and the indexer in BF16, so 8.56 of the 9.78 GB a step reads are BF16. Against the RadixArk NVFP4 checkpoint this line started on: code NLL -13% and prose NLL -14% at the same speed, measured on the maintainer's own text windows; this build's numerics move NLL +0.7%."
+      },
+      "kvCache": {
+        "k": "f16",
+        "v": "f16",
+        "note": "About 620K tokens of KV fit on the GPUs, two resident 262K sessions. Decode context parallel 2 holds 1.02M tokens at about -10% decode. KV offloaded to host RAM and NVMe brings an evicted 131K session back in 6.3 s against 41 s recomputed, correct in 25 of 25 checks, with room for about 190 such sessions and no decode cost measured."
+      },
+      "spec": {
+        "method": "mtp",
+        "draftN": 3,
+        "note": "On an earlier build, acceptance varied from 0.64 to 0.80 between identical runs, moving single-stream decode between 92 and 106 tok/s."
+      },
+      "parallel": {
+        "mode": "tensor",
+        "degree": 8,
+        "note": "Tensor parallel 8 with expert parallel 8 for the routed experts, over PCIe through four switch pairs and two sockets. By the maintainer's profile about a third of prefill time and a quarter of decode time is all-reduce."
+      },
+      "status": "measured",
+      "hazards": [
+        "Prefill blocks other sessions: while one session prefills, the others decode at about 10 tok/s (measured on the build before this one, not on it), and prefills run one at a time.",
+        "Most figures are single runs; decode figures are from six repeats.",
+        "The Triton library in this build has not been reviewed."
+      ],
+      "results": [
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            111,
+            115
+          ],
+          "confidence": "m",
+          "depthNote": "The report gives no depth for this figure.",
+          "note": "Greedy decoding."
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            87,
+            104
+          ],
+          "confidence": "m",
+          "depthNote": "The report gives no depth for this figure.",
+          "note": "Sampled decoding on realistic prompts."
+        },
+        {
+          "metric": "decode",
+          "depth": 262144,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 85,
+          "confidence": "m",
+          "note": "\"~85 tok/s at 262K depth\"."
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 4,
+          "basis": "per-stream",
+          "range": [
+            69,
+            77
+          ],
+          "confidence": "m",
+          "depthNote": "The report gives no depth for this figure.",
+          "note": "Each of four streams."
+        },
+        {
+          "metric": "decode",
+          "depth": null,
+          "streams": 4,
+          "basis": "aggregate",
+          "range": [
+            275,
+            308
+          ],
+          "confidence": "m",
+          "depthNote": "The report gives no depth for this figure.",
+          "note": "Four streams combined."
+        },
+        {
+          "metric": "prefill",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "range": [
+            3400,
+            3500
+          ],
+          "confidence": "m",
+          "prefillBasis": "cold",
+          "note": "\"32K in ~9.5 s\", 2,048-token chunks."
+        },
+        {
+          "metric": "prefill",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 3228,
+          "confidence": "m",
+          "prefillBasis": "cold",
+          "note": "\"131K in 40.6 s\": 131,072 / 40.6. Earlier 131K figures in the report's history were partly cached and are not used."
+        },
+        {
+          "metric": "prefill",
+          "depth": 240000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 2927,
+          "confidence": "m",
+          "prefillBasis": "cold",
+          "note": "\"240K in 82 s\": 240,000 / 82, taking 240K as 240,000 tokens; at 245,760 it would be 2,997."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "attestation": "reported",
+        "source": "The maintainer's tuning report for one DRIVE Constellation Simulator, 2026-11-15 (not published).",
+        "note": "Runs from 13 to 15 November 2026, under the maintainer's own measurement program. Attestation is recorded as reported until the maintainer declares otherwise. Standing configuration: Intel W4A16 with RadixArk's FP8 n-gram table pinned in host memory, decode context parallel 1, MTP n=3, 524,288-token context with YaRN; needle retrieval passes at every depth tested (10 of 10 to 400K on the build before; all at 131K-262K on this one)."
+      },
+      "note": "From the first working bring-up on this machine: cold 32K prefill 992 to about 3,450 tok/s, decode about 60 to about 112 tok/s.",
+      "recorded": "2026-11-15"
     }
   ],
   "candidates": [
@@ -17072,7 +17242,7 @@
         "qwen38_27b"
       ],
       "status": "preregistered",
-      "note": "Software, from runs on one unit (no throughput recorded yet): a 1Cat-vLLM build for sm_75 serves Qwen3.8-Flash-Next at TP8 with EP8, FP16 compute and cache, NVFP4 experts through weight-only Marlin kernels, to 262,144 tokens and, with a YaRN override, 524,288; MTP works once CUDA-graph capture sizes cover the verified tokens ([4, 8, 12, 16]); torch.compile does not. The n-gram table sits pinned in host memory, 5.96 GiB per rank. Stock vLLM v0.32 runs Turing but refuses Flash-Next, whose sparse attention needs BF16 (a static reading of the source, not a run). Weights took 10.5 GiB a GPU at TP8. Q4-class weights fit in four GPUs, so a socket's four (two switch pairs, no UPI hop) can hold one replica each."
+      "note": "Software, from runs on one unit (throughput is in the serving line l_dcs_flashnext_1cat_t1_mtp3): a 1Cat-vLLM build for sm_75 serves Qwen3.8-Flash-Next at TP8 with EP8, FP16 compute and cache, NVFP4 experts through weight-only Marlin kernels, to 262,144 tokens and, with a YaRN override, 524,288; MTP works once CUDA-graph capture sizes cover the verified tokens ([4, 8, 12, 16]); torch.compile does not. The n-gram table sits pinned in host memory, 5.96 GiB per rank. Stock vLLM v0.32 runs Turing but refuses Flash-Next, whose sparse attention needs BF16 (a static reading of the source, not a run). Weights took 10.5 GiB a GPU at TP8. Q4-class weights fit in four GPUs, so a socket's four (two switch pairs, no UPI hop) can hold one replica each."
     }
   ],
   "openModels": [

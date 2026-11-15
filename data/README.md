@@ -233,7 +233,13 @@ formula against what first-party lines actually allocated.
   window of every sliding layer, the budget of a sparse layer, and the
   recurrent state of every linear layer. Under a layer split a single stream
   runs one card at a time and gets one card's bandwidth; under tensor parallel
-  it gets all of them.
+  it gets all of them. A line whose checkpoint mixes widths records
+  `quant.readPerToken` instead: the bytes a step reads, summed from the
+  checkpoint's own headers (every decode-pass tensor in full, the routed
+  experts at the router's share), and its decode ceiling uses that. All three
+  public Flash-Next 4-bit checkpoints (RadixArk NVFP4, leoncca AWQ, Intel
+  AutoRound) keep everything but the experts in BF16, so a step reads about
+  9.8-9.9 GB where 4.5 bits throughout would be 3.75 GB.
 - **Prefill** = rated dense matrix throughput at the precision the engine
   actually multiplies in ÷ FLOPs per token (2 per active weight plus attention
   over the positions attended). The precision comes from `assets/dequant-map.js`,

@@ -256,6 +256,22 @@ const q32KvPerPos = 64 * 8 * 128 * 2 * 2;
   near('Qwen3-30B-A3B: 8 of 128 read a token', C.routedReadParams(m), 48 * 8 * 3 * 2048 * 768);
 }
 
+// A checkpoint that mixes widths records the bytes a step reads, and the
+// decode ceiling uses them instead of one width: 9.89 GB of weights on four
+// V100s (3,600 GB/s) at an empty context, plus Flash-Next's recurrent state.
+{
+  const m = MODELS.qwen38_flash_next;
+  const v100 = unit(900, { memoryGB: 32 });
+  const state = C.recurrentStateBytes(m);
+  near('mixed checkpoint: bytes per step set the ceiling', C.decodeCeiling(m, v100, { cards: 4, mode: 'tensor', bpw: 4.5, depth: 0, weightBytes: 9885434880 }).tps, 3600e9 / (9885434880 + state));
+  const line = { model: 'qwen38_flash_next', rig: { units: [{ unit: 'v', count: 4 }] }, parallel: { mode: 'tensor' }, quant: { format: 'x', key: 'w4a16', readPerToken: { bytes: 9885434880, source: 'x' } } };
+  const c = C.ceilingFor(line, { metric: 'decode', depth: 0, streams: 1, basis: 'per-stream' }, { v: v100 });
+  near('a line with bytes per step and no width still gets a ceiling', c.tps, 3600e9 / (9885434880 + state));
+  // On a card with FP16 matrix units and no BF16 ones (Turing), that is FP16.
+  const turing = unit(624, { formats: { fp16: 'native', bf16: 'absent' }, compute: { values: { fp16: 119.4 } } });
+  same('W4A16 multiplies in 16-bit: FP16 on Turing', C.prefillCeiling(m, turing, { formatKey: 'w4a16', depth: 0 }).precision.precision, 'fp16');
+}
+
 // Qwen3.8-Flash-Next's sparse full-attention layers store every position but
 // read at most 2,048 of them a step.
 {

@@ -397,7 +397,7 @@ function lineHead(model, l) {
   const m = modelById(l.model);
   const q = l.quant;
   const { bpw } = bpwOf(q.key, q.bpw);
-  const weights = [esc(q.format), bpw ? `${sig(bpw)} bpw${q.bpw ? '' : ' (typical)'}` : '', q.kld ? `KLD ${q.kld.code} code / ${q.kld.prose} prose` : '']
+  const weights = [esc(q.format), bpw ? `${sig(bpw)} bpw${q.bpw ? '' : ' (typical)'}` : '', q.readPerToken ? `${(q.readPerToken.bytes / 1e9).toFixed(2)} GB read a step` : '', q.kld ? `KLD ${q.kld.code} code / ${q.kld.prose} prose` : '']
     .filter(Boolean)
     .join(' · ');
   const kv = l.kvCache ? `${esc(l.kvCache.k)}/${esc(l.kvCache.v)}` : 'not recorded';

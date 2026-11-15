@@ -75,6 +75,11 @@ export const WEIGHT_FORMATS = {
   mxfp4: { label: 'MXFP4', bpw: 4.25, confidence: 'm', family: 'mxfp4', note: 'ggml block_mxfp4: 17 B per 32 weights' },
   nvfp4: { label: 'NVFP4', bpw: 4.5, confidence: 'm', family: 'nvfp4', note: 'ggml block_nvfp4: 36 B per 64 weights' },
   mlx4: { label: 'MLX 4-bit', bpw: 4.5, confidence: 'e', family: 'mlx', note: 'MLX default: group size 64 with an fp16 scale and bias per group' },
+  // GPTQ, AWQ and AutoRound INT4 checkpoints served by vLLM-style engines:
+  // weight-only, dequantized and multiplied in 16-bit, so the bf16 family's
+  // precision rule applies. Group size and which layers stay 16-bit vary, so
+  // the line records its own width or bytes per step.
+  w4a16: { label: 'W4A16 (INT4 weights, 16-bit math)', bpw: null, confidence: 'i', family: 'bf16', note: 'GPTQ / AWQ / AutoRound INT4, weight-only; width varies with group size and with what stays 16-bit' },
   exl3: { label: 'EXL3', bpw: null, confidence: 'i', family: 'exl3', note: 'ExLlamaV3 trellis quant; the line records its own bpw' },
   fp8: { label: 'FP8 checkpoint', bpw: 8, confidence: 'm', family: 'fp8', note: 'one byte per weight, as served from safetensors by vLLM and similar' },
   bf16: { label: 'BF16 / FP16', bpw: 16, confidence: 'm', family: 'bf16', note: 'unquantized' },
@@ -368,9 +373,12 @@ export const splitsEvenly = (m, cards) => cards === 1 || m.heads % cards === 0;
  * Weights are read once per step whatever the stream count; cache and state
  * are per sequence.
  */
-export function decodeBytesPerStep(m, { bpw, depth, kvK = 'f16', kvV = kvK, streams = 1 }) {
-  if (!m?.params?.active || bpw == null) return null;
-  const weights = (readParams(m) * bpw) / 8;
+export function decodeBytesPerStep(m, { bpw, depth, kvK = 'f16', kvV = kvK, streams = 1, weightBytes = null }) {
+  if (!m?.params?.active || (bpw == null && weightBytes == null)) return null;
+  // A checkpoint that mixes widths (4-bit experts, 16-bit everything else)
+  // records what a step reads, summed from its own headers; one width would
+  // misstate it either way.
+  const weights = weightBytes ?? (readParams(m) * bpw) / 8;
   const kv = kvReadBytesAt(m, depth, kvK, kvV);
   if (kv == null) return null;
   const state = recurrentStateBytes(m);
@@ -388,8 +396,8 @@ export function decodeBandwidthGBs(unit, cards, mode) {
  * A layer split runs one card at a time for a single sequence, so it gets one
  * card's bandwidth however many cards hold the model.
  */
-export function decodeCeiling(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK, kvV, streams = 1, basis = 'per-stream', table = null, experts = null, draft = null }) {
-  const bytes = decodeBytesPerStep(m, { bpw, depth, kvK, kvV, streams });
+export function decodeCeiling(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK, kvV, streams = 1, basis = 'per-stream', table = null, experts = null, draft = null, weightBytes = null }) {
+  const bytes = decodeBytesPerStep(m, { bpw, depth, kvK, kvV, streams, weightBytes });
   const bw = decodeBandwidthGBs(unit, cards, mode);
   if (!bytes || !bw) return null;
   const per = s => (basis === 'aggregate' ? streams / s : 1 / s);
@@ -704,12 +712,14 @@ export function ceilingFor(line, point, unitById) {
   if (!mode) return { why: `${cards} cards, but the split (tensor or layer) was not recorded` };
 
   const { bpw } = bpwOf(line.quant.key, line.quant.bpw);
-  if (bpw == null) return { why: `bits per weight not recorded for ${line.quant.format}` };
+  // Bytes a step reads, where the line records them, stand in for a single width.
+  const weightBytes = line.quant.readPerToken?.bytes ?? null;
+  if (bpw == null && weightBytes == null) return { why: `bits per weight not recorded for ${line.quant.format}` };
 
   if (point.metric === 'decode') {
     const kvK = line.kvCache?.k ?? 'f16';
     const kvV = line.kvCache?.v ?? kvK;
-    const c = decodeCeiling(m, unit, { cards, mode, bpw, depth: point.depth, kvK, kvV, streams: point.streams, basis: point.basis });
+    const c = decodeCeiling(m, unit, { cards, mode, bpw, depth: point.depth, kvK, kvV, streams: point.streams, basis: point.basis, weightBytes });
     if (!c) return { why: 'no bandwidth or cache figure to compute from' };
     const specOn = !!line.spec && line.spec.method !== 'none' && point.spec !== 'off';
     return {
