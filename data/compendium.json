@@ -17474,10 +17474,10 @@
         "total": 320000000000.0,
         "active": 18000000000.0,
         "source": "https://huggingface.co/zai-org/GLM-5.3-Flash -- \"With 320B total parameters and just 18B active parameters\"",
-        "mtp": 7433042464,
+        "mtp": 7432592416,
         "split": "safetensors headers of zai-org/GLM-5.3-Flash at 46a050bec130: 1 MTP layer, 7.43B; whether the published 320B includes them is not settled by the checkpoint's 321.3B",
         "routed": 304405807104,
-        "nonRouted": 8924000000,
+        "nonRouted": 8921004592,
         "routedSplit": "safetensors headers of zai-org/GLM-5.3-Flash at 46a050bec130: tensors under .experts. in 42 decoder layers; shared experts, MTP layers, vision towers and quantization scales left out. nonRouted is the rest of the decode pass in the same headers."
       },
       "weights": {

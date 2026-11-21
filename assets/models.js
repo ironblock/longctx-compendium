@@ -539,6 +539,58 @@ export const MODELS = {
     maxPositions: 131072,
     note: "Experts are MXFP4; attention, router, embeddings and output head stay BF16, so a ceiling computed at one width throughout is higher than the true one. Sliding-window (128) and full-attention layers alternate."
   },
+  glm53_flash: {
+    label: "GLM-5.3-Flash",
+    repo: "zai-org/GLM-5.3-Flash",
+    source: "https://huggingface.co/zai-org/GLM-5.3-Flash/raw/main/config.json",
+    revision: "46a050bec13002ad29ee795c16e61cf4fa3c4a9c",
+    params: {
+      total: 313326811696,
+      active: 17376721456,
+      source: "https://huggingface.co/zai-org/GLM-5.3-Flash",
+      quote: "With 320B total parameters and just 18B active parameters",
+      counted: "safetensors headers of zai-org/GLM-5.3-Flash at 46a050bec130: total sums the decode pass's tensors, MTP layers, vision tower and lookup tables left out; active is everything outside the routed experts plus expertsPerToken / experts of them. The card gives 320B total and 18B active",
+      inputEmbedding: 634388480,
+      tiedEmbeddings: false,
+      mtp: 7432592416,
+      split: "safetensors headers of zai-org/GLM-5.3-Flash at 46a050bec130: tensors under mtp.* (or past the last decoder layer) and n-gram tables, summed shape by shape"
+    },
+    layers: 45,
+    layerTypes: {
+      full_attention: 11,
+      linear_attention: 34
+    },
+    heads: 64,
+    kvHeads: 64,
+    headDim: 256,
+    mla: {
+      kvLoraRank: 512,
+      ropeDim: 0,
+      qkNopeDim: 256,
+      vHeadDim: 256
+    },
+    sparse: {
+      budget: 2048
+    },
+    linear: {
+      kind: "kda",
+      valueHeads: 64,
+      keyHeads: 64,
+      keyHeadDim: 128,
+      valueHeadDim: 128
+    },
+    moe: {
+      experts: 288,
+      expertsPerToken: 8,
+      shared: 1,
+      layers: 42,
+      routed: 304405807104,
+      sharedParams: 1056964608,
+      split: "safetensors headers of zai-org/GLM-5.3-Flash at 46a050bec130: tensors under .experts. in the decoder layers; shared experts counted apart (sharedParams); quantization scales left out"
+    },
+    maxPositions: 1048576,
+    note: "Kimi Delta Attention (linear, recurrent) on 34 layers; the config's other 11 (every fourth from layer 4, 1-based) are DeepSeek sparse attention: multi-head latent attention whose indexer picks at most 2,048 positions per step, so decode reads that many while the cache still holds every position. The latent has no rotary part (qk_rope_head_dim 0, mla_use_nope true), so a position caches 512 values shared by every head, and tensor parallel copies that cache to every card; the indexer's own keys (index_head_dim 128, index_kpool 4), which it scans across every position, are not counted. The first 3 layers have a dense MLP; the other 42 route each token to 8 of 288 experts plus 1 shared. Hyper-connections (mhc, hc_mult 4) carry four residual streams, mixed at every layer with Sinkhorn normalisation: their weights are in the count, their activations are not. The decode pass is 307.0B FP8 E4M3 (128 x 128 blocks) and 6.3B BF16. The count excludes the 0.56B vision tower and the 7.43B MTP layer (params.mtp), which carries no embedding or output head of its own. The card's 320B is closest to the decode pass plus that MTP layer (320.76B; 313.33B without it); its 18B active is above the 17.38B counted here, perhaps by the MTP layer's active share."
+  },
   glm47_flash: {
     label: "GLM-4.7-Flash",
     repo: "zai-org/GLM-4.7-Flash",
