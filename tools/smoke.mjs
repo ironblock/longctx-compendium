@@ -724,10 +724,14 @@ await openTab('rigs');
 check('one row per candidate rig, each with its notes beneath', (await count('#candTable tbody tr.cand-main')) === model.CANDIDATES.length && (await count('#candTable tbody tr.cand-notes')) === model.CANDIDATES.length);
 {
   const t = await text('#candTable tbody');
-  check('the MI100 rig totals its cards and bridge as a range', /\$4,250–\$4,800/.test(t), 'expected 4 x $900 + $650-$1,200');
+  // Card prices come from the data, so a price update does not break these sums.
+  const usdOf = v => `$${v.toLocaleString('en-US')}`;
+  const mi100 = model.unitById.mi100.street;
+  const pg199 = model.unitById.pg199_card.street;
+  check('the MI100 rig totals its cards and bridge as a range', t.includes(`${usdOf(4 * mi100 + 650)}–${usdOf(4 * mi100 + 1200)}`), `expected 4 x ${usdOf(mi100)} + $650-$1,200`);
   check('the Max pair totals cards plus a $0-$70 bridge', /\$4,000–\$4,070/.test(t), 'expected 2 x $2,000 + $0-$70');
   check('the V100 rig totals cards and its carrier', /\$3,960\s*cards \+ carrier/.test(t), 'expected 4 x $790 + $800 for the 1CATai board');
-  check('rigs on one carrier share its price: board plus host cables', /\$4,500–\$4,575/.test(t) && /\$7,340–\$7,415/.test(t), 'expected 4 x $790 or 4 x $1,500, plus $1,300 and $40-$115');
+  check('rigs on one carrier share its price: board plus host cables', /\$4,500–\$4,575/.test(t) && t.includes(`${usdOf(4 * pg199 + 1340)}–${usdOf(4 * pg199 + 1415)}`), `expected 4 x $790 or 4 x ${usdOf(pg199)}, plus $1,300 and $40-$115`);
   check('a module without NVLink meets its peers over PCIe, by the carrier\'s switches', /PCIe peers meet inside a switch in groups of 2, through the host between groups/.test(t) && /PCIe peer path not recorded/.test(t));
   check('each rig on a carrier shows the fit of its modules', /PG199 \/ DRIVE A100: untested on this carrier/.test(t) && /PG199 \/ DRIVE A100: verified on this carrier/.test(t));
   check('carrier rigs link to their carrier', (await count('#candTable tbody a[href^="#carrier-"]')) === model.CANDIDATES.filter(c => c.rig.carrier).length);

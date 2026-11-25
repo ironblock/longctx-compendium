@@ -3228,10 +3228,10 @@
       "memoryGB": 24,
       "pricing": {
         "street": {
-          "usd": 1500,
-          "asOf": "2026-10",
-          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
-          "note": "Asking. The last sold-price sample, 374 listings on resaleprices.com (2026-08-03), had a fair range of $1,202-$1,296 once parts-only \"No Core, No VRAM\" boards from the memory-transplant trade were left out; unfiltered averages ran an estimated $300-$500 low because of them."
+          "usd": 1600,
+          "asOf": "2026-11",
+          "source": "Asking prices, collected by the maintainer (2026-11-25)",
+          "note": "Asking. eBay asking prices were about $1,500 on 2026-10-22. The last sold-price sample, 374 listings on resaleprices.com (2026-08-03), had a fair range of $1,202-$1,296 once parts-only \"No Core, No VRAM\" boards from the memory-transplant trade were left out; unfiltered averages ran an estimated $300-$500 low because of them."
         }
       },
       "power": {
@@ -4616,9 +4616,10 @@
       "memoryBandwidthGBs": 960,
       "pricing": {
         "street": {
-          "usd": 700,
-          "asOf": "2026-08",
-          "note": "Used $600-$800."
+          "usd": 1200,
+          "asOf": "2026-11",
+          "source": "Asking prices, collected by the maintainer (2026-11-25)",
+          "note": "Asking, used. In August the page recorded used cards at $600-$800 ($700)."
         }
       },
       "sources": [
@@ -5324,9 +5325,10 @@
       "process": "TSMC 7nm FinFET",
       "pricing": {
         "street": {
-          "usd": 900,
-          "asOf": "2026-10",
-          "note": "The maintainer's observation of used listings, Oct 2026; not independently sourced."
+          "usd": 1300,
+          "asOf": "2026-11",
+          "source": "Asking prices, collected by the maintainer (2026-11-25)",
+          "note": "Asking, used. The maintainer saw about $900 in October 2026."
         }
       },
       "sources": [
@@ -5933,10 +5935,10 @@
       "process": "TSMC N7",
       "pricing": {
         "street": {
-          "usd": 2650,
-          "asOf": "2026-10",
-          "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
-          "note": "Asking, for the 8 GB card, the one that unlocks to 64 GB; the 10 GB card, which reaches 40 GB, asked $1,350 the same day. In September bytwork reported stock cards settling at $1,095 (\"on eBay in the US from $150 to $1400\"), and tested or x16-modded 64 GB boards asked about $2,706 (traictory, 2026-09-20). The card launched around $4,300 in 2021 (press reports; NVIDIA never listed it)."
+          "usd": 5200,
+          "asOf": "2026-11",
+          "source": "Asking prices, collected by the maintainer (2026-11-25)",
+          "note": "The cheapest listing, for a card modded to PCIe 2.0 x16 with capacitors added; the maintainer doubts anyone pays it. Stock cards appear to have been bought up by modders (the maintainer's reading). Which card it is, the 8 GB that unlocks to 64 GB or the 10 GB that reaches 40 GB, was not recorded; it is filed here. On 2026-10-22 the 8 GB card asked $2,650 and the 10 GB card $1,350 on eBay. In September bytwork reported stock cards settling at $1,095 (\"on eBay in the US from $150 to $1400\"), and tested or x16-modded 64 GB boards asked about $2,706 (traictory, 2026-09-20). The card launched around $4,300 in 2021 (press reports; NVIDIA never listed it)."
         }
       },
       "sources": [
@@ -6005,7 +6007,7 @@
           "usd": 1350,
           "asOf": "2026-10",
           "source": "eBay asking prices, collected by the maintainer (2026-10-22)",
-          "note": "Asking, for the 10 GB card, the one that unlocks to 40 GB."
+          "note": "Asking, for the 10 GB card, the one that unlocks to 40 GB. By 2026-11-25 stock cards appeared to have been bought up by modders, and the cheapest listing the maintainer found, a card modded to PCIe 2.0 x16, asked $5,200 (see the 64 GB entry), so this price is probably stale."
         }
       },
       "sources": [
