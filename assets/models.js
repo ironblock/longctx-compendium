@@ -55,6 +55,14 @@
 //                    position instead of per-head keys and values
 //   sparse.budget    positions a block-sparse "full" layer reads per step
 //   linear           recurrent-state shape of the linear-attention layers
+//   loop             a span of layers a token runs through more than once with
+//                    the same weights (Inkling 2 Mini): `start` and `end` as
+//                    the config gives them (0-based, end exclusive), `passes`,
+//                    the span's own layer types and MoE layers, and `active`,
+//                    the weights one pass through it reads (from the headers).
+//                    Each pass keeps its own cache, so the cache, the attention
+//                    work and the weights read count every pass; the weights
+//                    are stored once
 //
 // assets/ceiling.js turns these into bytes and FLOPs; tools/test-kv.mjs holds
 // the cache arithmetic against what first-party lines actually measured.
@@ -538,6 +546,58 @@ export const MODELS = {
     },
     maxPositions: 131072,
     note: "Experts are MXFP4; attention, router, embeddings and output head stay BF16, so a ceiling computed at one width throughout is higher than the true one. Sliding-window (128) and full-attention layers alternate."
+  },
+  inkling2_mini: {
+    label: "Inkling 2 Mini",
+    repo: "thinkingmachines/Inkling-2-Mini",
+    source: "https://huggingface.co/thinkingmachines/Inkling-2-Mini/raw/main/config.json",
+    revision: "c9d028302cd0f035fdf8e7e91f089a4ce94d2195",
+    params: {
+      total: 26070385152,
+      active: 3138028032,
+      source: "https://huggingface.co/thinkingmachines/Inkling-2-Mini",
+      quote: "26.4B, 3.4B active ... Since the model runs with three passes, there are 5.4B effective active parameters per token.",
+      counted: "safetensors headers of thinkingmachines/Inkling-2-Mini at c9d028302cd0: total sums the text model's tensors, the vision tower (0.32B) and mtp.safetensors left out; active is everything outside the routed experts plus expertsPerToken / experts of them, for one pass through the weights. The card gives 26.4B total and 3.4B active (5.4B with the loop; 5.38B counted here: active plus two more passes of loop.active)",
+      inputEmbedding: 463159296,
+      tiedEmbeddings: false,
+      mtp: 317897872,
+      split: "safetensors headers of thinkingmachines/Inkling-2-Mini at c9d028302cd0: mtp.safetensors (three draft layers and a Markov head over the vocabulary), summed shape by shape"
+    },
+    layers: 24,
+    layerTypes: {
+      full_attention: 4,
+      sliding_attention: 20
+    },
+    slidingWindow: 1024,
+    heads: 24,
+    kvHeads: 8,
+    headDim: 128,
+    loop: {
+      start: 6,
+      end: 18,
+      passes: 3,
+      layerTypes: {
+        full_attention: 2,
+        sliding_attention: 10
+      },
+      moeLayers: 12,
+      active: 1119888384,
+      source: "https://huggingface.co/thinkingmachines/Inkling-2-Mini/raw/main/config.json",
+      quote: "\"loop_config\": {\"core_start\": 6, \"core_end\": 18, \"num_passes\": 3, \"gate_rank\": 64, \"is_varloop\": false}",
+      counted: "safetensors headers at c9d028302cd0: tensors under model.llm.layers.6-17, routed experts at 8/128 of them",
+      note: "Layers 6 to 17 (0-based; core_end is exclusive) run three times with the same weights, 48 layer passes in all. Each pass keeps its own keys, values and convolution state (transformers 5.24.1, modeling_inkling2_loop.py: \"Each pass uses its own copies of the loop cache layers\"), so 8 full-attention and 40 sliding passes hold cache."
+    },
+    moe: {
+      experts: 128,
+      expertsPerToken: 8,
+      shared: 0,
+      layers: 24,
+      routed: 24461180928,
+      sharedParams: 0,
+      split: "safetensors headers of thinkingmachines/Inkling-2-Mini at c9d028302cd0: tensors under .experts. in the decoder layers; quantization scales and NVFP4 amax figures left out, NVFP4 bytes counted at two weights a byte"
+    },
+    maxPositions: 1048576,
+    note: "A looped transformer: layers 6-17 run three times a token (loop), so a step reads those weights three times and keeps three caches for them. Layers 5, 11, 17 and 23 attend over the whole context; the rest use a 1,024-token window. All attention has 8 KV heads of 128, with short convolutions (kernel 4) on keys and values. The checkpoint stores the routed experts of layers 0-19 in NVFP4 and of layers 20-23 in MXFP8, and the rest in BF16."
   },
   glm53_flash: {
     label: "GLM-5.3-Flash",

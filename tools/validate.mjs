@@ -395,6 +395,13 @@ for (const [id, m] of Object.entries(MODELS)) {
     if (!p.counted) fail(at, 'counts routed experts but not where its total and active came from (params.counted)');
     else if (Math.abs(p.total - e.routed + (e.routed * e.expertsPerToken) / e.experts - p.active) > 1) fail(at, `active ${p.active} is not total less routed plus ${e.expertsPerToken}/${e.experts} of routed (${p.total - e.routed + (e.routed * e.expertsPerToken) / e.experts})`);
   }
+  // A looped span (Inkling 2 Mini) changes what a token reads and caches, so
+  // it is held to the config it came from and to the headers it was summed from.
+  const lp = m.loop;
+  if (lp) {
+    if (!lp.source || !lp.quote) fail(at, 'loop needs a source and the quoted config fields');
+    if (!lp.counted) fail(at, 'loop.active does not say where it was counted (loop.counted)');
+  }
   const r = m.lookupReads;
   if (r) {
     if (!p.lookup) fail(at, 'records how its lookup tables are read (lookupReads) but has no lookup table');

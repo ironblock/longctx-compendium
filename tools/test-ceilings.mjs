@@ -256,6 +256,26 @@ const q32KvPerPos = 64 * 8 * 128 * 2 * 2;
   near('Qwen3-30B-A3B: 8 of 128 read a token', C.routedReadParams(m), 48 * 8 * 3 * 2048 * 768);
 }
 
+// Inkling 2 Mini runs layers 6-17 three times a token. Its 24 layers of weights
+// make 48 layer passes: 4 + 2 x 2 = 8 full-attention passes and 20 + 2 x 10 = 40
+// sliding ones, each holding its own cache of 8 KV heads x 128 (K and V). The
+// weights are stored once but read on every pass: 3,138,028,032 active for one
+// pass, plus two more passes of the loop's 1,119,888,384, less the 463,159,296
+// input embedding. Routed experts are 128 x 3 x 2,304 x 1,152 a layer, 8 of 128
+// read on each of 48 passes.
+{
+  const m = MODELS.inkling2_mini;
+  near('Inkling 2 Mini: KV per token, 8 full passes', C.kvBytesPerToken(m), 8 * 8 * 128 * 2 * 2);
+  near('Inkling 2 Mini: KV held at 128K', C.kvBytesAt(m, 131072), 8 * 4096 * 131072 + 40 * 4096 * 1024);
+  near('Inkling 2 Mini: weights a token reads', C.readParams(m), 3138028032 + 2 * 1119888384 - 463159296);
+  near('Inkling 2 Mini: routed experts', m.moe.routed, 24 * 128 * 3 * 2304 * 1152);
+  near('Inkling 2 Mini: routed weights a token reads, 48 passes', C.routedReadParams(m), 48 * 8 * 3 * 2304 * 1152);
+  near('Inkling 2 Mini: FLOPs per token at an empty context', C.prefillFlopsPerToken(m, 0), 2 * (3138028032 + 2 * 1119888384 - 463159296));
+  // Stored once: the fit counts 26.07B weights, not three copies of the loop.
+  const f = C.fit(m, { memoryGB: 24 }, { bpw: 8, depth: 0 });
+  near('Inkling 2 Mini: weights held once', f.weights, 26070385152);
+}
+
 // A checkpoint that mixes widths records the bytes a step reads, and the
 // decode ceiling uses them instead of one width: 9.89 GB of weights on four
 // V100s (3,600 GB/s) at an empty context, plus Flash-Next's recurrent state.

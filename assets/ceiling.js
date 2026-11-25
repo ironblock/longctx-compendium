@@ -237,8 +237,15 @@ export const hasRoutedExperts = m => !!(m?.moe?.routed && m.moe.layers && m.moe.
 /** The expert setting when it moves weights for this model, else null. */
 const movedExperts = (m, experts) => (experts && experts.place && experts.place !== 'gpu' && hasRoutedExperts(m) ? experts : null);
 
+/**
+ * Times a token reads each MoE layer's routed experts, on average. A looped
+ * span's layers are read once per pass. Which layers an engine moves to host
+ * RAM is not modelled, so the extra passes are spread evenly over all of them.
+ */
+export const routedPasses = m => (m.loop ? (m.moe.layers + (m.loop.passes - 1) * m.loop.moeLayers) / m.moe.layers : 1);
+
 /** Routed-expert weights one token reads from `layers` of a model's MoE layers. */
-export const routedReadParams = (m, layers = m.moe.layers) => m.moe.routed * (m.moe.expertsPerToken / m.moe.experts) * (layers / m.moe.layers);
+export const routedReadParams = (m, layers = m.moe.layers) => m.moe.routed * (m.moe.expertsPerToken / m.moe.experts) * (layers / m.moe.layers) * routedPasses(m);
 
 /**
  * Per-card working memory an engine needs beyond weights and cache (runtime
@@ -253,6 +260,19 @@ const GiB = 2 ** 30;
 // --- Model shape ------------------------------------------------------------
 
 export const modelById = id => MODELS[id] ?? null;
+
+/**
+ * Layers a token passes through, by type. A looped model (Inkling 2 Mini)
+ * runs a span of its layers several times with the same weights. Each pass
+ * keeps its own keys, values and convolution state, so the cache and the
+ * attention work count every pass. The weights are stored once.
+ */
+export function appliedLayerTypes(m) {
+  if (!m.loop) return m.layerTypes;
+  const out = { ...m.layerTypes };
+  for (const [type, n] of Object.entries(m.loop.layerTypes)) out[type] = (out[type] ?? 0) + (m.loop.passes - 1) * n;
+  return out;
+}
 
 /** full | sliding | linear -- what decides how a model's decode cost grows with depth. */
 export function attentionLayout(m) {
@@ -318,7 +338,8 @@ export function kvBytesAt(m, depth, k = 'f16', v = k) {
   const full = kvBytesPerPosition(m, 'full', k, v);
   const slide = kvBytesPerPosition(m, 'sliding', k, v);
   if (full == null) return null;
-  return (m.layerTypes.full_attention ?? 0) * full * depth + (m.layerTypes.sliding_attention ?? 0) * slide * Math.min(depth, m.slidingWindow ?? depth);
+  const t = appliedLayerTypes(m);
+  return (t.full_attention ?? 0) * full * depth + (t.sliding_attention ?? 0) * slide * Math.min(depth, m.slidingWindow ?? depth);
 }
 
 /** KV bytes one decode step has to read at a depth -- what bandwidth pays for. */
@@ -326,13 +347,14 @@ export function kvReadBytesAt(m, depth, k = 'f16', v = k) {
   const full = kvBytesPerPosition(m, 'full', k, v);
   const slide = kvBytesPerPosition(m, 'sliding', k, v);
   if (full == null) return null;
-  return (m.layerTypes.full_attention ?? 0) * full * attended(m, 'full', depth) + (m.layerTypes.sliding_attention ?? 0) * slide * attended(m, 'sliding', depth);
+  const t = appliedLayerTypes(m);
+  return (t.full_attention ?? 0) * full * attended(m, 'full', depth) + (t.sliding_attention ?? 0) * slide * attended(m, 'sliding', depth);
 }
 
 /** KV bytes per token of context on the full-attention layers -- the slope of the cache. */
 export function kvBytesPerToken(m, k = 'f16', v = k) {
   const full = kvBytesPerPosition(m, 'full', k, v);
-  return full == null ? null : (m.layerTypes.full_attention ?? 0) * full;
+  return full == null ? null : (appliedLayerTypes(m).full_attention ?? 0) * full;
 }
 
 /**
@@ -342,9 +364,10 @@ export function kvBytesPerToken(m, k = 'f16', v = k) {
  * default), short convolution state left out.
  */
 export function recurrentStateBytes(m, bytesPerElement = 4) {
-  if (!m.linear || !m.layerTypes.linear_attention) return 0;
+  const layers = appliedLayerTypes(m).linear_attention;
+  if (!m.linear || !layers) return 0;
   const { valueHeads, keyHeadDim, valueHeadDim } = m.linear;
-  return m.layerTypes.linear_attention * valueHeads * keyHeadDim * valueHeadDim * bytesPerElement;
+  return layers * valueHeads * keyHeadDim * valueHeadDim * bytesPerElement;
 }
 
 /** Bits per weight for a weight-format key, or a line's own recorded figure. */
@@ -359,9 +382,11 @@ export function bpwOf(formatKey, recordedBpw) {
  * Parameters a token actually has to touch. A decode step reads one row of an
  * untied input embedding, not the table, so the table comes out; a tied one is
  * also the output head and is read in full. Taking it out even where a model
- * card's "active" count may already exclude it can only loosen the bound.
+ * card's "active" count may already exclude it can only loosen the bound. A
+ * looped span is read again on every pass after the first.
  */
-export const readParams = m => m.params.active - (m.params.tiedEmbeddings ? 0 : (m.params.inputEmbedding ?? 0));
+export const readParams = m =>
+  m.params.active + (m.loop ? (m.loop.passes - 1) * m.loop.active : 0) - (m.params.tiedEmbeddings ? 0 : (m.params.inputEmbedding ?? 0));
 
 /** Most engines need the attention heads to divide evenly across tensor-parallel cards. */
 export const splitsEvenly = (m, cards) => cards === 1 || m.heads % cards === 0;
@@ -464,7 +489,7 @@ function meanAttended(promptTokens, window = Infinity) {
  */
 export function prefillFlopsPerToken(m, depth, { cold = false } = {}) {
   if (!m?.params?.active) return null;
-  const t = m.layerTypes;
+  const t = appliedLayerTypes(m);
   // Mean positions a token attends over: half the prompt for a cold one (within
   // a window or budget), all of them for one appended at depth.
   const span = (type, cap) => (cold ? meanAttended(depth, cap) : attended(m, type, depth));
@@ -570,9 +595,11 @@ function withCpuExperts(m, unit, p, { cards, experts }) {
   if (!ex?.cpuLayers || !ex.hostBytes || p.tps == null) return p;
   const link = unit.hostGBs ? unit.hostGBs * cards : null;
   if (!link) return { ...p, cpu: { unknown: 'no host link recorded for this card' } };
-  const cap = batch => (batch * link * 1e9) / ex.hostBytes;
+  // A looped span's experts are needed again on every pass, so they cross again.
+  const copied = ex.hostBytes * routedPasses(m);
+  const cap = batch => (batch * link * 1e9) / copied;
   const [big, small] = EXPERT_BATCHES;
-  return { ...p, tps: Math.min(p.tps, cap(big)), cpu: { batch: big, cap: cap(big), small, smallCap: cap(small), computeTps: p.tps, bound: cap(big) < p.tps, seconds: ex.hostBytes / (link * 1e9), linkGBs: link } };
+  return { ...p, tps: Math.min(p.tps, cap(big)), cpu: { batch: big, cap: cap(big), small, smallCap: cap(small), computeTps: p.tps, bound: cap(big) < p.tps, seconds: copied / (link * 1e9), linkGBs: link } };
 }
 
 function computePrefill(m, unit, { cards, formatKey, depth, cold }) {
@@ -634,10 +661,11 @@ export function fit(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK = 'f1
     if (type === 'full' && m.mla) return cards;
     return Math.max(1, cards / attnShape(m, type).kvHeads);
   };
-  const fullKv = (m.layerTypes.full_attention ?? 0) * full * depth;
-  const slideKv = (m.layerTypes.sliding_attention ?? 0) * slide * Math.min(depth, m.slidingWindow ?? depth);
+  const t = appliedLayerTypes(m);
+  const fullKv = (t.full_attention ?? 0) * full * depth;
+  const slideKv = (t.sliding_attention ?? 0) * slide * Math.min(depth, m.slidingWindow ?? depth);
   const kv = fullKv * copies('full') + slideKv * copies('sliding');
-  const replicate = Math.max(copies('full'), (m.layerTypes.sliding_attention ? copies('sliding') : 1));
+  const replicate = Math.max(copies('full'), (t.sliding_attention ? copies('sliding') : 1));
   // Lookup tables count here only when placed in GPU memory; otherwise they are
   // reported beside the GPU figure (`table`), for host RAM or the SSD.
   const plan = table ?? tablePlan(m);

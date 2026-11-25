@@ -33,6 +33,18 @@ for (const [id, a] of Object.entries(MODELS)) {
   if (linear) check(`${id}: linear layers carry their head shape`, !!a.linear?.valueHeads && !!a.linear?.keyHeadDim && !!a.linear?.valueHeadDim);
   check(`${id}: heads and head size are recorded`, a.heads > 0 && a.kvHeads > 0 && a.headDim > 0);
   if (a.params) check(`${id}: active parameters do not exceed the total`, a.params.active <= a.params.total, `${a.params.active} vs ${a.params.total}`);
+  // A looped span sits inside the model and is made of the model's own layers.
+  const lp = a.loop;
+  if (lp) {
+    const span = lp.end - lp.start;
+    const types = Object.entries(lp.layerTypes ?? {});
+    check(`${id}: loop runs at least twice`, Number.isInteger(lp.passes) && lp.passes >= 2, `${lp.passes}`);
+    check(`${id}: loop span is inside the model`, Number.isInteger(lp.start) && Number.isInteger(lp.end) && lp.start >= 0 && span > 0 && lp.end <= a.layers, `${lp.start}-${lp.end} of ${a.layers}`);
+    check(`${id}: loop layer types account for the span`, types.reduce((n, [, k]) => n + k, 0) === span, `${types.map(([t, k]) => `${k} ${t}`).join(' + ')} vs ${span}`);
+    check(`${id}: loop layer types are the model's own`, types.every(([t, k]) => k <= (a.layerTypes[t] ?? 0)));
+    if (a.moe) check(`${id}: loop MoE layers fit the span and the model`, Number.isInteger(lp.moeLayers) && lp.moeLayers <= span && lp.moeLayers <= a.moe.layers, `${lp.moeLayers}`);
+    if (a.params) check(`${id}: one pass through the loop reads no more than the model`, lp.active > 0 && lp.active <= a.params.active, `${lp.active} vs ${a.params.active}`);
+  }
   // A sliding layer stops growing at its window; the cache must stop with it.
   if (sliding) {
     const w = a.slidingWindow;

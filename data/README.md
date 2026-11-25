@@ -201,6 +201,16 @@ qwen3_32b: {
   leave out embeddings, the output head or other weights a token reads:
   Qwen3-Next's "3B activated" is 3.87B in its headers, Flash-Next's "6B" 7.31B,
   and gpt-oss-120b's "5.1B" excludes its input embedding.
+- `loop` records a span of layers a token runs through more than once with
+  the same weights. Inkling 2 Mini runs its layers 6-17 three times: 48 layer
+  passes from 24 layers of weights. Give `start` and `end` as the config does
+  (0-based, end exclusive), `passes`, the span's own `layerTypes` and
+  `moeLayers`, and `active`, the weights one pass through the span reads,
+  summed from the headers (`counted`), with the config fields quoted. Each pass
+  keeps its own cache, so the cache, the attention work and the weights a token
+  reads count every pass; the fit holds the weights once. Where an engine moves
+  routed experts to host RAM, the extra passes are spread evenly over the moved
+  layers, since which layers move is not modelled.
 - `params.lookup` / `params.lookupBits` size an n-gram or Engram table, and
   `lookupReads` says how a token reads it: per table, the layer that reads it
   (1-based, as configs number them) and the rows it gathers, with the config

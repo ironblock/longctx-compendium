@@ -8483,6 +8483,433 @@
       "recorded": "2026-10-05"
     },
     {
+      "id": "l_3090_ink2mini_udq4kxl_fork",
+      "label": "Inkling 2 Mini · UD-Q4_K_XL · llama.cpp (unsloth fork) · -ub 512",
+      "model": "inkling2_mini",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "host": {
+          "name": "RTX 3090 host",
+          "ramGB": 32,
+          "note": "4 x 8 GiB DDR4-2666, dual channel (registry, as recorded in October; the result does not restate it)"
+        },
+        "note": "Custom water-cooled card that does not throttle under sustained decode. Absolute rates are NOT portable to a stock air-cooled 3090; only within-machine comparisons hold (registry, cooling_matters_because). The third pass ran with the desktop off, so no display shared the card."
+      },
+      "engine": {
+        "name": "llama.cpp (unsloth fork)",
+        "version": "b12675",
+        "commit": "add07b3938c221f2edf0a95e11c2b8e5d9e4831c",
+        "lineage": "fork",
+        "note": "Built from source inside a container; not mainline llama.cpp. -ub 512, compute buffer 380.84 MiB, vision projector on the GPU."
+      },
+      "quant": {
+        "format": "unsloth UD-Q4_K_XL GGUF (Inkling-2-Mini-UD-Q4_K_XL.gguf)",
+        "key": "q4_k_xl",
+        "bpw": 5.406,
+        "sizeGB": 17.63,
+        "readPerToken": {
+          "bytes": 4124500736,
+          "source": "GGUF header of unsloth/Inkling-2-Mini-GGUF Inkling-2-Mini-UD-Q4_K_XL.gguf at 8078d149286e, the file the result ran (sha256 e64276656f07...3cd3): every tensor of the decode pass in full, the routed experts at 8/128, the tensors of layers 6-17 three times for the loop; the input embedding left out (the GGUF holds no MTP head or vision tower)"
+        },
+        "note": "sha256 e64276656f072e9b2197a61723667cbdb71da66a716ffd966e572c21088f3cd3. The routed experts take 15.80 GB: layers 0-19 at 4.50 bits a weight (ggml type 40, the size of NVFP4, as the checkpoint ships them), layers 20-23 at Q8_0. Everything else is Q8_0, with norms and other small tensors in F32 or BF16. A step reads 4.12 GB with the loop, where one width throughout would misstate it. bpw is the file's tensors over its 26.07B weights. KL divergence against UD-Q8_K_XL 0.003024 +/- 0.000139, top-1 agreement 97.78%, at 2,048 tokens of context; mainline llama.cpp scored 0.002876 on the same check in the second pass, within one combined standard error, so the fork computes the same model."
+      },
+      "freeAtPeakMiB": 3398,
+      "status": "measured",
+      "hazards": [
+        "Changing the tools array re-prefills the whole prompt with nothing cached: adding one tool at turn 2 took 127.2 s here. Tools declared from turn 1 and held constant were not tested.",
+        "Prompt reuse was tested on an exact extension only: 0.77 s to the first token on 19 new tokens. A changed question also rolled back cheaply.",
+        "A fork, not mainline llama.cpp."
+      ],
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 79.8,
+          "confidence": "m",
+          "reps": 1,
+          "note": "llama-bench."
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 69.5,
+          "confidence": "m",
+          "reps": 1,
+          "note": "llama-bench; the result writes 32k."
+        },
+        {
+          "metric": "decode",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 49.8,
+          "confidence": "m",
+          "reps": 1,
+          "note": "llama-bench; the result writes 131k."
+        },
+        {
+          "metric": "decode",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 43.6,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Server timer, after the cold 155k prefill."
+        },
+        {
+          "metric": "prefill",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1250,
+          "confidence": "m",
+          "prefillBasis": "cold",
+          "reps": 1,
+          "note": "124.0 s for the 155k prompt."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "attestation": "witnessed",
+        "source": "RESULT-3.md, the third pass on the maintainer's 3090 (2026-11-24), supplied by the maintainer; its own check compared every cell with the run records",
+        "digest": "sha256:20f85ae86d25d08d2e3d60aa6067c30783df5304187f3d43e6c113f2ae8a4cf5",
+        "note": "Single runs. Decode at 0, 32k and 131k comes from llama-bench on the fork and from the server's timer on Strata and under DSpark, so fork and Strata decode are not paired. The result writes 32k and 131k; the depths here read them as 32,768 and 131,072. Its 155k prompt is about 155,000 tokens (124.0 s at 1,250 tok/s)."
+      },
+      "note": "The result's winner: the lowest peak memory of the seven arms it compared (20,654 MiB at 155k, 3,398 MiB free) and the best decode at 131k (llama-bench, so not paired with Strata's server timer). Tool calls and image input both passed. The result does not state the KV cache type or context size, so the page assumes f16.",
+      "observed": "2026-11-24",
+      "recorded": "2026-11-25"
+    },
+    {
+      "id": "l_3090_ink2mini_udq4kxl_fork_dspark",
+      "label": "Inkling 2 Mini · UD-Q4_K_XL · llama.cpp (unsloth fork) · DSpark",
+      "model": "inkling2_mini",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "host": {
+          "name": "RTX 3090 host",
+          "ramGB": 32,
+          "note": "4 x 8 GiB DDR4-2666, dual channel (registry, as recorded in October; the result does not restate it)"
+        },
+        "note": "Custom water-cooled card that does not throttle under sustained decode. Absolute rates are NOT portable to a stock air-cooled 3090; only within-machine comparisons hold (registry, cooling_matters_because). The third pass ran with the desktop off, so no display shared the card."
+      },
+      "engine": {
+        "name": "llama.cpp (unsloth fork)",
+        "version": "b12675",
+        "commit": "add07b3938c221f2edf0a95e11c2b8e5d9e4831c",
+        "lineage": "fork",
+        "note": "Built from source inside a container; not mainline llama.cpp. -ub 512, vision projector on the GPU, the DSpark drafter loaded."
+      },
+      "quant": {
+        "format": "unsloth UD-Q4_K_XL GGUF (Inkling-2-Mini-UD-Q4_K_XL.gguf)",
+        "key": "q4_k_xl",
+        "bpw": 5.406,
+        "sizeGB": 17.63,
+        "readPerToken": {
+          "bytes": 4124500736,
+          "source": "GGUF header of unsloth/Inkling-2-Mini-GGUF Inkling-2-Mini-UD-Q4_K_XL.gguf at 8078d149286e, the file the result ran (sha256 e64276656f07...3cd3): every tensor of the decode pass in full, the routed experts at 8/128, the tensors of layers 6-17 three times for the loop; the input embedding left out (the GGUF holds no MTP head or vision tower)"
+        },
+        "note": "sha256 e64276656f072e9b2197a61723667cbdb71da66a716ffd966e572c21088f3cd3. The routed experts take 15.80 GB: layers 0-19 at 4.50 bits a weight (ggml type 40, the size of NVFP4, as the checkpoint ships them), layers 20-23 at Q8_0. Everything else is Q8_0, with norms and other small tensors in F32 or BF16. A step reads 4.12 GB with the loop, where one width throughout would misstate it. bpw is the file's tensors over its 26.07B weights."
+      },
+      "spec": {
+        "method": "dspark",
+        "drafter": "unsloth DSpark GGUF for Inkling 2 Mini (which of the repository's DSpark files is not recorded in the result)",
+        "note": "Temperature 1, the model's default sampling. Acceptance not recorded."
+      },
+      "freeAtPeakMiB": 1376,
+      "status": "measured",
+      "hazards": [
+        "DSpark slows decode at an empty context (-22%) and at 131k (-17%), speeds it at 32k (+32%), and holds 2,026 MiB more at peak than the same engine without it. One request per cell.",
+        "Changing the tools array re-prefills the whole prompt with nothing cached: adding one tool at turn 2 took 127.2 s here. Tools declared from turn 1 and held constant were not tested."
+      ],
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 55.2,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Server timer."
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 83.4,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Server timer; the result writes 32k."
+        },
+        {
+          "metric": "decode",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 38.5,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Server timer; the result writes 131k."
+        },
+        {
+          "metric": "decode",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 36.3,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Server timer, after the cold 155k prefill."
+        },
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 70.4,
+          "confidence": "m",
+          "reps": 1,
+          "spec": "off",
+          "note": "Server timer, no drafter."
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 63,
+          "confidence": "m",
+          "reps": 1,
+          "spec": "off",
+          "note": "Server timer, no drafter."
+        },
+        {
+          "metric": "decode",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 46.3,
+          "confidence": "m",
+          "reps": 1,
+          "spec": "off",
+          "note": "Server timer, no drafter."
+        },
+        {
+          "metric": "prefill",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1225,
+          "confidence": "m",
+          "prefillBasis": "cold",
+          "reps": 1,
+          "note": "126.6 s for the 155k prompt."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "attestation": "witnessed",
+        "source": "RESULT-3.md, the third pass on the maintainer's 3090 (2026-11-24), supplied by the maintainer; its own check compared every cell with the run records",
+        "digest": "sha256:20f85ae86d25d08d2e3d60aa6067c30783df5304187f3d43e6c113f2ae8a4cf5",
+        "note": "Single runs. Decode at 0, 32k and 131k comes from llama-bench on the fork and from the server's timer on Strata and under DSpark, so fork and Strata decode are not paired. The result writes 32k and 131k; the depths here read them as 32,768 and 131,072. Its 155k prompt is about 155,000 tokens (124.0 s at 1,250 tok/s)."
+      },
+      "note": "The result's verdict on DSpark is no. Tool calls and image input both passed. The result does not state the KV cache type or context size, so the page assumes f16.",
+      "observed": "2026-11-24",
+      "recorded": "2026-11-25"
+    },
+    {
+      "id": "l_3090_ink2mini_udq4kxl_fork_ub4096",
+      "label": "Inkling 2 Mini · UD-Q4_K_XL · llama.cpp (unsloth fork) · -ub 4096, projector on CPU",
+      "model": "inkling2_mini",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "host": {
+          "name": "RTX 3090 host",
+          "ramGB": 32,
+          "note": "4 x 8 GiB DDR4-2666, dual channel (registry, as recorded in October; the result does not restate it)"
+        },
+        "note": "Custom water-cooled card that does not throttle under sustained decode. Absolute rates are NOT portable to a stock air-cooled 3090; only within-machine comparisons hold (registry, cooling_matters_because). The third pass ran with the desktop off, so no display shared the card."
+      },
+      "engine": {
+        "name": "llama.cpp (unsloth fork)",
+        "version": "b12675",
+        "commit": "add07b3938c221f2edf0a95e11c2b8e5d9e4831c",
+        "lineage": "fork",
+        "note": "Built from source inside a container; not mainline llama.cpp. -ub 4096, compute buffer 3,069.77 MiB, vision projector on the CPU."
+      },
+      "quant": {
+        "format": "unsloth UD-Q4_K_XL GGUF (Inkling-2-Mini-UD-Q4_K_XL.gguf)",
+        "key": "q4_k_xl",
+        "bpw": 5.406,
+        "sizeGB": 17.63,
+        "readPerToken": {
+          "bytes": 4124500736,
+          "source": "GGUF header of unsloth/Inkling-2-Mini-GGUF Inkling-2-Mini-UD-Q4_K_XL.gguf at 8078d149286e, the file the result ran (sha256 e64276656f07...3cd3): every tensor of the decode pass in full, the routed experts at 8/128, the tensors of layers 6-17 three times for the loop; the input embedding left out (the GGUF holds no MTP head or vision tower)"
+        },
+        "note": "sha256 e64276656f072e9b2197a61723667cbdb71da66a716ffd966e572c21088f3cd3. The routed experts take 15.80 GB: layers 0-19 at 4.50 bits a weight (ggml type 40, the size of NVFP4, as the checkpoint ships them), layers 20-23 at Q8_0. Everything else is Q8_0, with norms and other small tensors in F32 or BF16. A step reads 4.12 GB with the loop, where one width throughout would misstate it. bpw is the file's tensors over its 26.07B weights."
+      },
+      "freeAtPeakMiB": 1058,
+      "status": "measured",
+      "hazards": [
+        "Cuts the cold prefill by 17% against -ub 512 for 2,342 MiB more memory at peak. The gain comes from -ub: no run kept the projector on the GPU at -ub 4096, so the CPU placement's own effect is not measured. -ub 5120 was 1% faster still and left 174 MiB free.",
+        "Changing the tools array re-prefills the whole prompt with nothing cached: adding one tool at turn 2 took 127.2 s here. Tools declared from turn 1 and held constant were not tested."
+      ],
+      "results": [
+        {
+          "metric": "prefill",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1500,
+          "confidence": "m",
+          "prefillBasis": "cold",
+          "reps": 1,
+          "note": "103.3 s for the 155k prompt."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "attestation": "witnessed",
+        "source": "RESULT-3.md, the third pass on the maintainer's 3090 (2026-11-24), supplied by the maintainer; its own check compared every cell with the run records",
+        "digest": "sha256:20f85ae86d25d08d2e3d60aa6067c30783df5304187f3d43e6c113f2ae8a4cf5",
+        "note": "Single runs. Decode at 0, 32k and 131k comes from llama-bench on the fork and from the server's timer on Strata and under DSpark, so fork and Strata decode are not paired. The result writes 32k and 131k; the depths here read them as 32,768 and 131,072. Its 155k prompt is about 155,000 tokens (124.0 s at 1,250 tok/s)."
+      },
+      "note": "Decode not measured. Tool calls and image input both passed. The result does not state the KV cache type or context size, so the page assumes f16.",
+      "observed": "2026-11-24",
+      "recorded": "2026-11-25"
+    },
+    {
+      "id": "l_3090_ink2mini_udq4kxl_strata",
+      "label": "Inkling 2 Mini · UD-Q4_K_XL · Strata 0.2.21 · fp8 KV",
+      "model": "inkling2_mini",
+      "rig": {
+        "units": [
+          {
+            "unit": "rtx_3090",
+            "count": 1
+          }
+        ],
+        "host": {
+          "name": "RTX 3090 host",
+          "ramGB": 32,
+          "note": "4 x 8 GiB DDR4-2666, dual channel (registry, as recorded in October; the result does not restate it)"
+        },
+        "note": "Custom water-cooled card that does not throttle under sustained decode. Absolute rates are NOT portable to a stock air-cooled 3090; only within-machine comparisons hold (registry, cooling_matters_because). The third pass ran with the desktop off, so no display shared the card."
+      },
+      "engine": {
+        "name": "Strata",
+        "version": "0.2.21",
+        "note": "Built from the v0.2.21 source with strata-vision. Chunked prefill at 1,024 tokens."
+      },
+      "quant": {
+        "format": "unsloth UD-Q4_K_XL GGUF (Inkling-2-Mini-UD-Q4_K_XL.gguf)",
+        "key": "q4_k_xl",
+        "bpw": 5.406,
+        "sizeGB": 17.63,
+        "readPerToken": {
+          "bytes": 4124500736,
+          "source": "GGUF header of unsloth/Inkling-2-Mini-GGUF Inkling-2-Mini-UD-Q4_K_XL.gguf at 8078d149286e, the file the result ran (sha256 e64276656f07...3cd3): every tensor of the decode pass in full, the routed experts at 8/128, the tensors of layers 6-17 three times for the loop; the input embedding left out (the GGUF holds no MTP head or vision tower)"
+        },
+        "note": "sha256 e64276656f072e9b2197a61723667cbdb71da66a716ffd966e572c21088f3cd3. The routed experts take 15.80 GB: layers 0-19 at 4.50 bits a weight (ggml type 40, the size of NVFP4, as the checkpoint ships them), layers 20-23 at Q8_0. Everything else is Q8_0, with norms and other small tensors in F32 or BF16. A step reads 4.12 GB with the loop, where one width throughout would misstate it. bpw is the file's tensors over its 26.07B weights. The same GGUF file as the llama.cpp lines."
+      },
+      "kvCache": {
+        "k": "fp8",
+        "v": "fp8",
+        "note": "--kv fp8: the default fp16 cache ran out of memory at 144,896 tokens of the 155k prompt. Its effect on quality was not measured."
+      },
+      "freeAtPeakMiB": 2610,
+      "status": "measured",
+      "hazards": [
+        "The fp8 cache is not what the llama.cpp lines ran, and no KL divergence was measured for this engine.",
+        "A young engine with open issues the maintainer's research notes cite: #7034 (stalls above about 65k) and #6609 (out of memory). Neither appeared in these runs.",
+        "Changing the tools array re-prefills the whole prompt with nothing cached: adding one tool at turn 2 took 127.2 s here. Tools declared from turn 1 and held constant were not tested."
+      ],
+      "results": [
+        {
+          "metric": "decode",
+          "depth": 0,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 94.5,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Server timer."
+        },
+        {
+          "metric": "decode",
+          "depth": 32768,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 73.4,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Server timer; the result writes 32k."
+        },
+        {
+          "metric": "decode",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 48.1,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Server timer; the result writes 131k."
+        },
+        {
+          "metric": "decode",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 44.2,
+          "confidence": "m",
+          "reps": 1,
+          "note": "Server timer, after the cold 155k prefill."
+        },
+        {
+          "metric": "prefill",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 1107,
+          "confidence": "m",
+          "prefillBasis": "cold",
+          "reps": 1,
+          "note": "140.1 s for the 155k prompt."
+        }
+      ],
+      "provenance": {
+        "kind": "first-party",
+        "attestation": "witnessed",
+        "source": "RESULT-3.md, the third pass on the maintainer's 3090 (2026-11-24), supplied by the maintainer; its own check compared every cell with the run records",
+        "digest": "sha256:20f85ae86d25d08d2e3d60aa6067c30783df5304187f3d43e6c113f2ae8a4cf5",
+        "note": "Single runs. Decode at 0, 32k and 131k comes from llama-bench on the fork and from the server's timer on Strata and under DSpark, so fork and Strata decode are not paired. The result writes 32k and 131k; the depths here read them as 32,768 and 131,072. Its 155k prompt is about 155,000 tokens (124.0 s at 1,250 tok/s)."
+      },
+      "note": "The result's runner-up: the fastest decode without a drafter at 0 and 32k, and 0.52 s to the first token on an extended prompt, but the slowest cold prefill of the third pass. Tool calls and image input both passed.",
+      "observed": "2026-11-24",
+      "recorded": "2026-11-25"
+    },
+    {
       "id": "l_ada48_flash_llamacpp_q2_0_mtp3",
       "label": "Flash-Next · Q2_0 · llama.cpp fork · MTP n=3",
       "model": "qwen38_flash_next",

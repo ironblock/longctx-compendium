@@ -368,6 +368,9 @@ try {
   // ---- 2. Ceilings
   const modelIds = Object.keys(MODELS).filter(id => MODELS[id].params?.active);
 
+  // A small cache (Inkling 2 Mini: 32 MiB per 1K tokens) reads as 0.0 GiB, so it is given in MiB.
+  const perThousand = b => (b == null ? '—' : b < 0.1 * 2 ** 30 ? `${Math.round(b / 2 ** 20)} MiB` : fmtGiB(b));
+
   function renderModelCard() {
     const m = MODELS[state.model];
     const t = m.layerTypes;
@@ -403,10 +406,13 @@ try {
           ].filter(Boolean).join(' · ')}</div>`
         : '') +
       `<div style="margin-top:4px">${m.layers} layers: ${esc(layers)}</div>` +
+      (m.loop
+        ? `<div title="${esc(m.loop.note ?? '')}">layers ${m.loop.start}-${m.loop.end - 1} run ${m.loop.passes} times a token: ${m.layers + (m.loop.passes - 1) * (m.loop.end - m.loop.start)} layer passes, each holding its own cache; ${((m.params.active + (m.loop.passes - 1) * m.loop.active) / 1e9).toFixed(1)}B active with the loop</div>`
+        : '') +
       `<div>${m.heads} attention heads, ${m.kvHeads} KV heads × ${m.headDim}</div>` +
       `<div style="margin-top:4px"><a href="${esc(m.source)}">config</a>${m.params.source ? ` · <a href="${esc(m.params.source)}">parameter count</a>` : ''}</div></div>` +
       `<div><div class="k">Attention layout</div><div class="big" style="color:${LAYOUT_COLOR()[layout]}">${esc(LAYOUT_LABEL[layout])}</div>` +
-      `<div>KV cache grows ${fmtGiB(kvBytesPerToken(m, state.kv) * 1024)} per 1K tokens at ${esc(state.kv)}` +
+      `<div>KV cache grows ${perThousand(kvBytesPerToken(m, state.kv) * 1024)} per 1K tokens at ${esc(state.kv)}` +
       `${t.sliding_attention ? `, plus a fixed ${fmtGiB(kvBytesAt(m, m.slidingWindow, state.kv) - kvBytesPerToken(m, state.kv) * m.slidingWindow)} for the sliding layers once past their ${m.slidingWindow.toLocaleString()}-token window` : ''}` +
       `${m.sparse ? `; each step reads at most ${m.sparse.budget.toLocaleString()} positions of it` : ''}` +
       `${recurrentStateBytes(m) ? `; ${fmtGiB(recurrentStateBytes(m))} of fixed recurrent state` : ''}.</div>` +
