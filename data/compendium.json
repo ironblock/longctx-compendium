@@ -18,6 +18,57 @@
   },
   "architectures": [
     {
+      "id": "pascal",
+      "vendor": "NVIDIA",
+      "label": "Pascal / GP100 (compute capability 6.0)",
+      "matrixUnits": "None. Tensor Cores arrived with Volta. GP100 runs FP16 as paired operations on its CUDA cores, at twice its FP32 rate, and has no DP4A (that needs compute capability 6.1, which GP102 and GP104 have).",
+      "formats": {
+        "tf32": "absent",
+        "bf16": "absent",
+        "fp16": "absent",
+        "fp8": "absent",
+        "fp6": "absent",
+        "fp4": "absent",
+        "int8": "absent",
+        "int4": "absent"
+      },
+      "sources": [
+        {
+          "url": "https://images.nvidia.com/aem-dam/en-zz/Solutions/data-center/nvidia-ampere-architecture-whitepaper.pdf",
+          "quote": "In addition to FP16 precision introduced on the Volta Tensor Core, and the INT8, INT4 and binary 1-bit precisions added in the Turing Tensor Core, the A100 Tensor Core adds support for TF32, BF16 and FP64 formats.",
+          "locator": "A100 whitepaper, 'A100 Tensor Cores Support All DL Data Types', p.26. Tensor Cores begin with Volta, so the generation before has no matrix unit for any format.",
+          "supports": [
+            "tf32:absent",
+            "bf16:absent",
+            "fp16:absent",
+            "fp8:absent",
+            "fp6:absent",
+            "fp4:absent",
+            "int8:absent",
+            "int4:absent"
+          ]
+        },
+        {
+          "url": "https://images.nvidia.com/content/pdf/tesla/whitepaper/pascal-architecture-whitepaper.pdf",
+          "quote": "Note: In GP100, two FP16 operations can be performed using a single paired-operation instruction.",
+          "locator": "Pascal whitepaper WP-08019-001_v01.1, 'Support for FP16 Arithmetic Speeds Up Deep Learning', p.14; 'Compute Capability', p.16: \"The GP100 GPU supports the new Compute Capability 6.0.\"",
+          "supports": [
+            "note:FP16 runs as paired operations on the CUDA cores, not on a matrix unit"
+          ]
+        },
+        {
+          "url": "https://docs.nvidia.com/cuda/parallel-thread-execution/index.html",
+          "quote": "dp4a Four-way byte dot product-accumulate. ... Target ISA Notes Requires sm_61 or higher.",
+          "locator": "PTX ISA, 9.7.1.24 Integer Arithmetic Instructions: dp4a. GP100 is compute capability 6.0, so it has no DP4A either.",
+          "supports": [
+            "note:no DP4A on compute capability 6.0",
+            "int8:absent"
+          ]
+        }
+      ],
+      "note": "Covers GP100, the Tesla P100 (SXM2 and PCIe). With no matrix units and no DP4A, its fastest path for any weight format is packed FP16 on the CUDA cores, which bounds prefill here. CUDA 13.0 removed \"offline compilation and library support\" for Maxwell, Pascal and Volta (CUDA 13.0 release notes, 2.6.2; see the Volta entry), so it needs a CUDA 12.x stack. Upstream vLLM needs compute capability 7.5 and the SM70 forks need 7.0, so neither runs on it."
+    },
+    {
       "id": "volta",
       "vendor": "NVIDIA",
       "label": "Volta",
@@ -2816,6 +2867,114 @@
         "lanes": 16,
         "source": "https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2026-03/datasheet-b70-gpu.pdf -- \"PCIe® Support | Gen 5 x16 Native | ... Form Factor | Varies by Partner\""
       }
+    },
+    {
+      "id": "p100_sxm2_16",
+      "label": "Tesla P100 SXM2 16GB",
+      "vendor": "NVIDIA",
+      "arch": "pascal",
+      "released": "2016-04",
+      "memoryGB": 16,
+      "memoryBandwidthGBs": 732,
+      "tdpW": 300,
+      "process": "16nm FinFET",
+      "pricing": {
+        "street": {
+          "usd": 90,
+          "asOf": "2026-11",
+          "source": "eBay asking prices, collected by the maintainer (2026-11-25)",
+          "note": "Asking, used SXM2 16GB from a US seller: $89.99 with free delivery or best offer, $80.99 with the seller's coupon (listed \"No Screws\"). A US lot of four asks $394.99, $355.49 with a coupon: about $99 ($89) a module."
+        }
+      },
+      "sources": [
+        "https://images.nvidia.com/content/tesla/pdf/nvidia-tesla-p100-datasheet.pdf -- \"Double-Precision 5.3 TeraFLOPS | Single-Precision 10.6 TeraFLOPS | Half-Precision 21.2 TeraFLOPS | GPU Memory 16 GB CoWoS HBM2 | Memory Bandwidth 732 GB/s | Interconnect NVIDIA NVLink | Max Power Consumption 300 W | ... Thermal Solution Passive | Form Factor SXM2\"",
+        "https://images.nvidia.com/content/pdf/tesla/whitepaper/pascal-architecture-whitepaper.pdf -- \"16-nm FinFET\" (Table 1, p.11)",
+        "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla -- \"P100 GPU accelerator (mezzanine) | April 5, 2016 | 1× GP100-890-A1 | ... | 6.0 | 300 | SXM card\""
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://images.nvidia.com/content/tesla/pdf/nvidia-tesla-p100-datasheet.pdf",
+        "values": {
+          "fp64": 5.3,
+          "fp32": 10.6,
+          "fp16:vector": 21.2
+        },
+        "note": "All vector, with GPU Boost: no Tensor Cores, and no INT8 rate since compute capability 6.0 has no DP4A."
+      },
+      "peerLink": {
+        "maxCards": 8,
+        "options": [
+          2,
+          4
+        ],
+        "fabric": "NVLink 1 on an SXM2 baseboard (DGX-1 with P100)",
+        "topology": "DGX-1, 8 GPUs: hybrid cube-mesh of two fully connected quads joined by four more links; four 40 GB/s links per GPU (160 GB/s bidirectional)",
+        "source": "https://images.nvidia.com/content/pdf/tesla/whitepaper/pascal-architecture-whitepaper.pdf -- \"Tesla P100 features NVIDIA's new high-speed interface, NVLink, that provides GPU-to-GPU data transfers at up to 160 Gigabytes/second of bidirectional bandwidth—5x the bandwidth of PCIe Gen 3 x16.\" (p.7); \"peers can communicate at 40 GB/sec bidirectionally (80GB/sec bidirectional bandwidth for the double links)\" (p.22); \"The 8-GPU configuration features two NVLink fully-connected P100 GPU quads that are tied together by four additional NVLinks in a Hybrid Cube Mesh topology\" (p.31)",
+        "note": "NVLink 1 with four links, where the V100 SXM2 has six NVLink 2 links. Whether the V100 SXM2 adapter and quad boards on this page accept a P100, and with what NVLink, is not recorded: ask the board's seller before buying for one. One owner says Supermicro's AOM-SXMV quad board \"only supports V100 SXM2 card\" (see the V100 SXM2 entry)."
+      },
+      "formFactor": {
+        "name": "SXM2",
+        "cooling": "passive",
+        "source": "https://images.nvidia.com/content/tesla/pdf/nvidia-tesla-p100-datasheet.pdf -- \"Thermal Solution Passive | Form Factor SXM2\"",
+        "note": "Needs an SXM2 baseboard or adapter, like the V100 SXM2."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "https://images.nvidia.com/content/pdf/tesla/whitepaper/pascal-architecture-whitepaper.pdf -- \"up to 160 Gigabytes/second of bidirectional bandwidth—5x the bandwidth of PCIe Gen 3 x16\" (p.7); in DGX-1 \"Every GPU in a quad is also directly connected via PCIe to a PCIe switch that connects to a CPU.\""
+      },
+      "note": "GP100 with 16 GB of HBM2 at 732 GB/s. No Tensor Cores and no DP4A (see the Pascal entry), so prefill rests on packed FP16 on the CUDA cores. CUDA 13.0 removed \"offline compilation and library support\" for Maxwell, Pascal and Volta (CUDA 13.0 release notes, 2.6.2; see the Volta entry), so it needs a CUDA 12.x stack. Upstream vLLM needs compute capability 7.5 and the SM70 forks need 7.0, so neither runs on it. The cheapest memory bandwidth per dollar on this page at its November 2026 asking price."
+    },
+    {
+      "id": "p100_pcie_16",
+      "label": "Tesla P100 PCIe 16GB",
+      "vendor": "NVIDIA",
+      "arch": "pascal",
+      "released": "2016-06",
+      "memoryGB": 16,
+      "memoryBandwidthGBs": 732,
+      "tdpW": 250,
+      "process": "16nm FinFET",
+      "pricing": {
+        "street": {
+          "usd": 228,
+          "asOf": "2026-11",
+          "source": "eBay asking prices, collected by the maintainer (2026-11-25)",
+          "note": "Asking, used, delivered: $198 plus $30 delivery from China, import fees included (160 sold). A US seller asks $279 with free delivery or best offer for tested Dell DSS8440 pulls (part 699-2H400-0201)."
+        }
+      },
+      "sources": [
+        "https://images.nvidia.com/content/tesla/pdf/nvidia-tesla-p100-PCIe-datasheet.pdf -- \"Double-Precision 4.7 TeraFLOPS | Single-Precision 9.3 TeraFLOPS | Half-Precision 18.7 TeraFLOPS | GPU Memory 16GB CoWoS HBM2 at 732 GB/s or 12GB CoWoS HBM2 at 549 GB/s | System Interface PCIe Gen3 | Max Power Consumption 250 W | ... Thermal Solution Passive | Form Factor PCIe Full Height/Length\"",
+        "https://images.nvidia.com/content/pdf/tesla/whitepaper/pascal-architecture-whitepaper.pdf -- \"16-nm FinFET\" (Table 1, p.11)",
+        "https://en.wikipedia.org/wiki/Template:Nvidia_Tesla -- \"P100 GPU accelerator (16 GB card) | June 20, 2016 | ... | 250 | PCIe card\""
+      ],
+      "compute": {
+        "unit": "Tops",
+        "source": "https://images.nvidia.com/content/tesla/pdf/nvidia-tesla-p100-PCIe-datasheet.pdf",
+        "values": {
+          "fp64": 4.7,
+          "fp32": 9.3,
+          "fp16:vector": 18.7
+        },
+        "note": "All vector, with GPU Boost: lower clocks than the SXM2 module (1,303 against 1,480 MHz boost in NVIDIA's Tesla table), same memory."
+      },
+      "peerLink": {
+        "maxCards": 0,
+        "source": "https://images.nvidia.com/content/tesla/pdf/nvidia-tesla-p100-PCIe-datasheet.pdf -- \"System Interface PCIe Gen3\"",
+        "note": "Inferred from absence: the PCIe datasheet lists no NVLink, where the SXM2 datasheet lists \"Interconnect NVIDIA NVLink\"."
+      },
+      "formFactor": {
+        "name": "PCIe",
+        "cooling": "passive",
+        "source": "https://images.nvidia.com/content/tesla/pdf/nvidia-tesla-p100-PCIe-datasheet.pdf -- \"Thermal Solution Passive | Form Factor PCIe Full Height/Length\"",
+        "note": "Passive: it needs server airflow. The 12 GB card (549 GB/s) shares the board."
+      },
+      "hostLink": {
+        "gen": 3,
+        "lanes": 16,
+        "source": "https://images.nvidia.com/content/tesla/pdf/nvidia-tesla-p100-PCIe-datasheet.pdf -- \"System Interface PCIe Gen3\"; lane count from the Pascal whitepaper's comparison with \"PCIe Gen 3 x16\" (p.7)"
+      },
+      "note": "GP100 with 16 GB of HBM2 at 732 GB/s. No Tensor Cores and no DP4A (see the Pascal entry), so prefill rests on packed FP16 on the CUDA cores. CUDA 13.0 removed \"offline compilation and library support\" for Maxwell, Pascal and Volta (CUDA 13.0 release notes, 2.6.2; see the Volta entry), so it needs a CUDA 12.x stack. Upstream vLLM needs compute capability 7.5 and the SM70 forks need 7.0, so neither runs on it. It asks more than the SXM2 module despite lower clocks, probably because it is a complete card that fits any server slot where the module needs a baseboard (this page's reading, not a seller's)."
     },
     {
       "id": "v100_sxm2",
