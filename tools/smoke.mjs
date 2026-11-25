@@ -467,6 +467,25 @@ await settle();
   check('ceiling table renders no NaN/undefined/null', !BROKEN.test(t), brokenAt(t));
 }
 
+// A turn: more new tokens make the first token wait longer, and the choice
+// travels in the address.
+{
+  const firstToken = async () => {
+    const cell = page.locator('#ceilTable tbody tr', { hasText: 'RTX PRO 6000' }).first().locator('td').nth(5);
+    const m = /first token ([\d.]+) (ms|s|min)/.exec(await cell.textContent());
+    return m ? Number(m[1]) * { ms: 1e-3, s: 1, min: 60 }[m[2]] : null;
+  };
+  check('fitting rows show a turn time', /first token [\d.]+ (ms|s|min)writing/.test(await text('#ceilTable tbody')));
+  const small = await firstToken();
+  await page.click('#turnInChips button:has-text("64K")');
+  await settle();
+  const big = await firstToken();
+  check('a bigger turn waits longer for its first token', small != null && big > small * 10, `${small} -> ${big}`);
+  check('the turn size is in the address', /tin=65536/.test(await page.evaluate(() => location.hash)));
+  await page.click('#turnInChips button:has-text("4K")');
+  await settle();
+}
+
 // The physics, through the UI: going from 4K to 256K costs a full-attention
 // dense model far more decode ceiling than a hybrid with a quarter of its
 // layers on full attention.
@@ -665,6 +684,12 @@ check('one row per reading', (await count('#obsTable tr.pt')) === totalPoints, `
   await settle();
   check('the metric filter leaves only prefill readings', (await page.locator('#obsTable tr.pt td:first-child').allTextContents()).every(t => t.startsWith('Prefill')));
   await page.selectOption('#obsDevice', '');
+  await page.click('#obsMetricChips button:has-text("First token")');
+  await settle();
+  const ttft = await page.locator('#obsTable tr.pt td:first-child').allTextContents();
+  const wantTtft = model.LINES.reduce((n, l) => n + l.points.filter(p => p.metric === 'ttft').length, 0);
+  check('the first-token filter leaves only first-token readings', ttft.length === wantTtft && wantTtft > 0 && ttft.every(t => t.startsWith('First token')), `${ttft.length} of ${wantTtft}`);
+  check('a line that records its cache reuse says so', /cache reuse: extending/.test(await text('#obsTable tbody')));
   await page.click('#obsMetricChips button:has-text("All")');
   await settle();
 }

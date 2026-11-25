@@ -186,6 +186,12 @@ export function normalize(doc) {
     rigTotals: rigTotals(l.rig),
     points: (l.results ?? []).map(r => {
       const c = ceilingFor(l, r, unitById);
+      // Time to a first token is better when lower: its share is the floor over
+      // the reading, so above 100% still means faster than the hardware allows.
+      if (r.metric === 'ttft') {
+        const best = r.value ?? (r.range ? r.range[0] : null);
+        return { ...r, ceiling: c, ratio: c.seconds && best ? c.seconds / best : null };
+      }
       const value = r.value ?? (r.range ? r.range[1] : null);
       return { ...r, ceiling: c, ratio: c.tps ? ratioOf(value, c.tps) : null };
     }),

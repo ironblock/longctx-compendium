@@ -6,6 +6,7 @@ import {
   WEIGHT_FORMATS,
   decodeCeiling,
   prefillCeiling,
+  turnCeiling,
   fit,
   cardsToFit,
   splitsEvenly,
@@ -118,6 +119,10 @@ const DASH = '<span class="dash">—</span>';
 const usd = v => (v == null ? null : `$${Math.round(v).toLocaleString()}`);
 const n0 = v => (v == null ? null : Math.round(v).toLocaleString());
 const sig = v => (v == null ? null : v >= 100 ? Math.round(v).toLocaleString() : v >= 10 ? v.toFixed(1) : v.toFixed(2));
+/** Seconds as a person reads them: 0.42 s, 3.1 s, 47 s, 2.5 min. */
+const secs = v =>
+  v == null ? null : v >= 120 ? `${(v / 60).toFixed(1)} min` : v >= 10 ? `${Math.round(v)} s` : v >= 1 ? `${v.toFixed(1)} s` : v >= 0.01 ? `${v.toFixed(2)} s` : `${(v * 1000).toFixed(1)} ms`;
+const tokWord = n => (n >= 1024 && n % 512 === 0 ? `${n / 1024}K` : n.toLocaleString());
 
 /** 2236 -> 2.2K, 98000 -> 98K, 131072 -> 128K. */
 export const fmtDepth = n => {
@@ -292,9 +297,10 @@ export function ceilingRow(m, u, s) {
   const f = fit(m, u, { cards: n, mode, bpw, depth: s.depth, ...kv });
   const d = decodeCeiling(m, u, { cards: n, mode, bpw, depth: s.depth, ...kv });
   const p = prefillCeiling(m, u, { cards: n, formatKey: s.weights, depth: s.depth, table, experts: f?.experts ?? null });
+  const turn = turnCeiling(m, u, { cards: n, mode, bpw, depth: s.depth, ...kv, experts: f?.experts ?? null, newTokens: s.turnIn, outTokens: s.turnOut, formatKey: s.weights });
   // GPUs on a multi-GPU board are bought a board at a time.
   const cost = u.street != null ? u.street * Math.ceil(n / u.gpus) : null;
-  return { u, n, mode, fit: f, draft, ts: s.ts, es: s.es, decode: d?.tps ?? null, ssd: d?.ssd ?? null, cpu: d?.cpu ?? null, prefill: p, cost, perK: d?.tps && cost ? d.tps / (cost / 1000) : null };
+  return { u, n, mode, fit: f, draft, ts: s.ts, es: s.es, decode: d?.tps ?? null, ssd: d?.ssd ?? null, cpu: d?.cpu ?? null, prefill: p, turn, cost, perK: d?.tps && cost ? d.tps / (cost / 1000) : null };
 }
 
 /** What copying CPU-held experts to the GPU for each prompt batch does to prefill, as sub-lines. */
@@ -321,7 +327,7 @@ export function renderCeilingTable(model, state, units) {
   const m = modelById(state.model);
   const tb = el('ceilTable').querySelector('tbody');
   if (!m?.params?.active) {
-    tb.innerHTML = `<tr><td class="lbl" colspan="7">No parameter count recorded for this model.</td></tr>`;
+    tb.innerHTML = `<tr><td class="lbl" colspan="8">No parameter count recorded for this model.</td></tr>`;
     return;
   }
   const ts = tableSettings(model, state);
@@ -337,7 +343,7 @@ export function renderCeilingTable(model, state, units) {
     const u = r.u;
     if (r.n == null) {
       return `<tr><td class="lbl">${esc(u.label)}<span class="sub">${esc(u.archLabel ?? '')}</span></td><td class="num">${DASH}</td>` +
-        `<td class="lbl t-bad" colspan="5">Does not fit in 8 cards at this depth.</td></tr>`;
+        `<td class="lbl t-bad" colspan="6">Does not fit in 8 cards at this depth.</td></tr>`;
     }
     const f = r.fit;
     const mem = f
@@ -347,6 +353,10 @@ export function renderCeilingTable(model, state, units) {
     const pre = r.prefill.tps == null
       ? `<td class="lbl">${DASH}<span class="sub">no rated ${prec.precision.toUpperCase()} figure</span></td>`
       : `<td class="lbl"><span class="num">${n0(r.prefill.tps)}</span><span class="sub" title="${esc(prec.note)}">${prec.precision.toUpperCase()}${prec.vector ? ' vector' : ''}${prec.grounded ? '' : ' · assumed'}${prec.unofficial ? ' · unofficial' : ''}</span>${cpuPrefillSub(r.prefill.cpu)}${ssdPrefillSub(r.prefill.ssd)}</td>`;
+    const t = r.turn;
+    const turnCell = t
+      ? `<td class="lbl"><span class="num">${secs(t.seconds)}</span><span class="sub">first token ${secs(t.ttft)}</span><span class="sub">writing ${secs(t.write)}</span></td>`
+      : `<td class="lbl">${DASH}</td>`;
     const modeWord = r.n === 1 ? '' : r.mode === 'tensor' ? (splitsEvenly(m, r.n) ? 'tensor parallel' : `tensor parallel · ${m.heads} heads don't split ${r.n} ways`) : 'layer split';
     const boards = Math.ceil(r.n / u.gpus);
     const boardWord = u.gpus > 1 ? `GPU${r.n > 1 ? 's' : ''} on ${boards} board${boards > 1 ? 's' : ''}` : '';
@@ -357,6 +367,7 @@ export function renderCeilingTable(model, state, units) {
       mem +
       barCell(r.decode, max, [cpuDecodeSub(r.cpu), ...ssdDecodeSubs(r.ssd)].filter(Boolean).map(x => `<span class="sub">${x}</span>`).join('')) +
       pre +
+      turnCell +
       `<td class="num">${usd(r.cost) ?? DASH}</td>` +
       `<td class="num">${r.perK != null ? sig(r.perK) : DASH}</td>` +
       '</tr>'
@@ -364,7 +375,7 @@ export function renderCeilingTable(model, state, units) {
   };
   tb.innerHTML =
     [...fitting.sort(byDecode), ...tight.sort(byDecode), ...none].map(row).join('') ||
-    `<tr><td class="lbl" colspan="7" style="color:var(--muted);padding:16px">No unit in scope has a bandwidth figure.</td></tr>`;
+    `<tr><td class="lbl" colspan="8" style="color:var(--muted);padding:16px">No unit in scope has a bandwidth figure.</td></tr>`;
 
   const w = WEIGHT_FORMATS[state.weights];
   const beyond = m.maxPositions && state.depth > m.maxPositions
@@ -373,7 +384,8 @@ export function renderCeilingTable(model, state, units) {
   el('ceilNote').textContent =
     beyond +
     `Decode: tokens/sec for one stream, one token per pass, at ${fmtDepth(state.depth)} deep. ` +
-    `Prefill: tokens/sec appended at that depth, at the precision shown (hover for the kernel finding; "assumed" means no grounded finding, FP16 used; "unofficial" means the rate is not the vendor's own figure for that card). ` +
+    `Prefill: tokens/sec appended to a cached conversation at that depth, at the precision shown (hover for the kernel finding; "assumed" means no grounded finding, FP16 used; "unofficial" means the rate is not the vendor's own figure for that card). ` +
+    `Turn: the fastest a turn can go at that depth, ${tokWord(state.turnIn)} new tokens appended (the first token waits on these) and ${tokWord(state.turnOut)} written back; fixed costs such as scheduling are left out, so real turns take longer. A cold prompt, prefilled from nothing, happens only when the cache is missed. ` +
     `Weights at ${w.label}${w.bpw ? ` ≈ ${w.bpw} bits per weight` : ''}; ${state.cards === 'auto' ? 'cards: the fewest of 1, 2, 4 or 8 that fit' : `${state.cards} card${state.cards === '1' ? '' : 's'} each`}. ` +
     (es.place !== 'gpu'
       ? `Routed experts: ${es.place === 'cpu' ? 'all' : 'what does not fit'} in host RAM, computed by ${es.host ? `the ${hostWords(es.host)}` : 'a host with no bandwidth recorded'}; the GPU's own experts are taken to run alongside the CPU's, and taking turns, as llama.cpp does by default, is shown beside it. ${m.moe?.routed ? '' : `${m.label} records no routed-expert weights, so they stay on the GPUs. `}`
@@ -390,6 +402,18 @@ const PROV_TITLE = {
 const provChips = p =>
   `<span class="prov" title="${esc(p.source)}">${esc(p.kind)}${p.reproduced === false ? ' · unreproduced' : p.reproduced ? ' · reproduced' : ''}</span>` +
   `<span class="prov ${p.attestation}" title="${esc(PROV_TITLE[p.attestation] + (p.note ? ` ${p.note}` : ''))}">${p.attestation}</span>`;
+
+/** A line's tested cache reuse in a few words: what was reused, recomputed and not tried. */
+function reuseWords(r) {
+  const cases = { extension: 'extending', rollback: 'rolling back', toolsChange: 'changing tools' };
+  const by = state => Object.keys(cases).filter(k => r[k] === state).map(k => cases[k]);
+  return [
+    by('reused').length ? `${by('reused').join(', ')} reused` : '',
+    by('recomputed').length ? `${by('recomputed').join(', ')} recomputed` : '',
+    r.offload === 'none' ? 'no offload' : r.offload !== 'untested' ? `evicted to ${r.offload}` : '',
+    by('untested').length || r.offload === 'untested' ? `${[...by('untested'), ...(r.offload === 'untested' ? ['offload'] : [])].join(', ')} untested` : '',
+  ].filter(Boolean).join(' · ');
+}
 
 const rigLabel = (model, rig) => rig.units.map(c => `${c.count}× ${model.unitById[c.unit]?.label ?? c.unit}`).join(' + ');
 
@@ -420,6 +444,7 @@ function lineHead(model, l) {
     `<span>${engine}</span>` +
     `<span>weights ${weights}</span>` +
     `<span>KV ${kv}</span>` +
+    (l.reuse ? `<span title="${esc(l.reuse.note ?? '')}">cache reuse: ${reuseWords(l.reuse)}</span>` : '') +
     (l.spec ? `<span>spec ${esc(l.spec.method)}${l.spec.draftN ? ` n=${l.spec.draftN}` : ''}</span>` : '') +
     `<span>${when}</span>` +
     `<span>${provChips(l.provenance)}</span>` +
@@ -430,11 +455,16 @@ function lineHead(model, l) {
 }
 
 function pointRow(l, r) {
-  const what = r.metric === 'decode' ? 'Decode' : `Prefill${r.prefillBasis === 'cold' ? ', cold' : ', new tokens'}`;
+  const what =
+    r.metric === 'decode'
+      ? 'Decode'
+      : r.metric === 'ttft'
+        ? `First token, ${r.cache === 'hit' ? 'cache hit' : r.cache === 'miss' ? 'cache missed' : 'session restored'}${r.newTokens != null ? `, ${r.newTokens.toLocaleString()} new token${r.newTokens === 1 ? '' : 's'}` : ''}`
+        : `Prefill${r.prefillBasis === 'cold' ? ', cold' : ', new tokens'}`;
   const at = r.depth == null ? 'depth not recorded' : `at ${fmtDepth(r.depth)}`;
   const streams = r.streams > 1 ? ` · ${r.streams} streams, ${r.basis === 'aggregate' ? 'total' : 'each'}` : '';
   const spec = r.spec === 'off' ? ' · spec off' : '';
-  const value = r.range ? `${r.range[0]}–${r.range[1]}` : sig(r.value);
+  const value = r.metric === 'ttft' ? (r.range ? `${secs(r.range[0])}–${secs(r.range[1])}` : secs(r.value)) : r.range ? `${r.range[0]}–${r.range[1]}` : sig(r.value);
   const c = r.ceiling;
   const specOn = c.speculative;
   const offload = c.offload;
@@ -451,6 +481,8 @@ function pointRow(l, r) {
   const notes = [
     r.confidence === 'm~' ? 'secondary or anecdotal source' : '',
     r.depthNote ?? '',
+    r.newTokensNote ?? '',
+    r.metric === 'ttft' && r.ratio != null ? 'share: the floor over the reading, since lower is better; on a short turn it is mostly fixed costs' : '',
     c.assumedKv && r.metric === 'decode' ? 'KV format not recorded: 16-bit assumed' : '',
     c.weightsOnly ? 'ceiling from the labelled size alone, weights only' : '',
     r.acceptance != null ? `draft acceptance ${r.acceptance}` : '',
@@ -460,7 +492,7 @@ function pointRow(l, r) {
     `<tr class="pt">` +
     `<td class="lbl">${what} ${at}${streams}${spec}</td>` +
     `<td class="num">${value}</td>` +
-    `<td class="num">${c.tps ? sig(c.tps) : DASH}${c.precision ? `<span class="sub">${c.precision.precision.toUpperCase()}${c.precision.vector ? ' vector' : ''}${c.precision.grounded ? '' : ' assumed'}${c.precision.unofficial ? ' unofficial' : ''}</span>` : ''}</td>` +
+    `<td class="num">${c.seconds ? `≥ ${secs(c.seconds)}` : c.tps ? sig(c.tps) : DASH}${c.precision ? `<span class="sub">${c.precision.precision.toUpperCase()}${c.precision.vector ? ' vector' : ''}${c.precision.grounded ? '' : ' assumed'}${c.precision.unofficial ? ' unofficial' : ''}</span>` : ''}</td>` +
     share +
     `<td class="lbl wrap" style="min-width:220px;max-width:380px;font-size:11.5px;color:var(--muted)">${notes.map(esc).join('<br>')}</td>` +
     `</tr>`

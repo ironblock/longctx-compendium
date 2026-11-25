@@ -607,7 +607,7 @@
       }
     },
     "linePoint": {
-      "description": "One number from one line. Depth, stream count and per-stream-versus-aggregate are always stated, because a bare tok/s means three different things without them.",
+      "description": "One number from one line. Depth, stream count and per-stream-versus-aggregate are always stated, because a bare tok/s means three different things without them. Decode and prefill are rates in tokens/sec; ttft is a time in seconds.",
       "type": "object",
       "required": [
         "metric",
@@ -621,8 +621,10 @@
         "metric": {
           "enum": [
             "decode",
-            "prefill"
-          ]
+            "prefill",
+            "ttft"
+          ],
+          "description": "decode and prefill: tokens/sec. ttft: seconds from a turn's request to its first output token, with newTokens and cache saying what had to be prefilled."
         },
         "depth": {
           "oneOf": [
@@ -634,7 +636,7 @@
               "type": "null"
             }
           ],
-          "description": "Context tokens per stream when the point was taken (for a cold prefill, the prompt length). null only when the source did not say, and then depthNote says what it did say."
+          "description": "Context tokens per stream when the point was taken (for a cold prefill, the prompt length; for ttft, the conversation's length before the turn's new tokens). null only when the source did not say, and then depthNote says what it did say."
         },
         "streams": {
           "type": "integer",
@@ -681,6 +683,29 @@
             "new-tokens"
           ],
           "description": "Prefill only. cold = the whole prompt was evaluated; new-tokens = the rate over only the tokens not already cached."
+        },
+        "newTokens": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "ttft only. Tokens the turn had to prefill: the new message on a cache hit, the whole conversation on a miss. null only when the source did not say, and then newTokensNote says what it did say."
+        },
+        "newTokensNote": {
+          "type": "string"
+        },
+        "cache": {
+          "enum": [
+            "hit",
+            "miss",
+            "restored"
+          ],
+          "description": "ttft only. hit = the conversation's cache was reused and only the new tokens prefilled; miss = it was recomputed; restored = it was brought back from host RAM or disk."
         },
         "acceptance": {
           "type": "number",
@@ -851,6 +876,56 @@
               "type": "number",
               "exclusiveMinimum": 0,
               "description": "Measured KV cost per token on this engine. The config-derived figure is a lower bound on it (see tools/test-kv.mjs)."
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "reuse": {
+          "description": "How the engine reused a conversation's cache on this line, as tested. A single user's turns add a few thousand tokens to a long conversation, so whether the cache survives decides whether a turn costs its new tokens or the whole conversation.",
+          "type": "object",
+          "required": [
+            "extension",
+            "rollback",
+            "toolsChange",
+            "offload"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "extension": {
+              "enum": [
+                "reused",
+                "recomputed",
+                "untested"
+              ],
+              "description": "A new message appended to the conversation."
+            },
+            "rollback": {
+              "enum": [
+                "reused",
+                "recomputed",
+                "untested"
+              ],
+              "description": "A changed last message: the shared prefix kept and the rest recomputed. Sliding-window and recurrent layers can only roll back where the engine saved their state."
+            },
+            "toolsChange": {
+              "enum": [
+                "reused",
+                "recomputed",
+                "untested"
+              ],
+              "description": "The tools array changed between turns."
+            },
+            "offload": {
+              "enum": [
+                "none",
+                "host RAM",
+                "disk",
+                "host RAM and disk",
+                "untested"
+              ],
+              "description": "Where a session evicted from GPU memory goes, to come back without recomputing."
             },
             "note": {
               "type": "string"

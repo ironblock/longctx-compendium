@@ -337,11 +337,21 @@ for (const l of doc.lines ?? []) {
       fail(pt, 'a prefill rate must say whether it is cold or over new tokens only (prefillBasis)');
     }
     if (r.metric !== 'prefill' && r.prefillBasis) fail(pt, 'prefillBasis only applies to prefill points');
-    if (r.metric === 'prefill' && r.spec) fail(pt, 'spec only applies to decode points');
+    if (r.metric !== 'decode' && r.spec) fail(pt, 'spec only applies to decode points');
+    // A time to first token means nothing without what had to be prefilled:
+    // a few new tokens on a warm cache, or the whole conversation on a cold one.
+    if (r.metric === 'ttft') {
+      if (!r.cache) fail(pt, 'a time to first token must say whether the cache was hit, missed or restored (cache)');
+      if (r.newTokens === undefined) fail(pt, 'a time to first token must say how many tokens were prefilled (newTokens, or null with newTokensNote)');
+      if (r.newTokens === null && !r.newTokensNote) fail(pt, 'has no newTokens and no newTokensNote saying what the source did say');
+      if (r.cache === 'miss' && r.newTokens != null && r.depth != null && r.newTokens < r.depth) fail(pt, `a cache miss prefills the whole conversation, but newTokens ${r.newTokens} is less than its depth ${r.depth}`);
+    } else if (r.cache || r.newTokens !== undefined || r.newTokensNote) {
+      fail(pt, 'cache, newTokens and newTokensNote only apply to ttft points');
+    }
     if (l.pool?.tokens && r.depth != null && r.depth * r.streams > l.pool.tokens) {
       warn(pt, `${r.streams} stream(s) at depth ${r.depth} is more than the ${l.pool.tokens}-token pool`);
     }
-    const key = [r.metric, r.depth ?? '?', r.streams, r.basis, r.spec ?? '-', r.prefillBasis ?? '-'].join('|');
+    const key = [r.metric, r.depth ?? '?', r.streams, r.basis, r.spec ?? '-', r.prefillBasis ?? '-', r.cache ?? '-', r.newTokens ?? '-'].join('|');
     if (seenPoints.has(key) && r.depth != null) fail(pt, 'repeats an earlier point at the same metric, depth, streams, basis and spec');
     seenPoints.add(key);
   });

@@ -276,6 +276,20 @@ const q32KvPerPos = 64 * 8 * 128 * 2 * 2;
   near('Inkling 2 Mini: weights held once', f.weights, 26070385152);
 }
 
+// A turn on a made-up full-attention model: 10B weights read a token at 8 bits,
+// 10 layers of 10 heads x 100 (K and V), 1,000 GB/s and 100 FP16 TFLOPS. 2,000
+// new tokens on a 100,000-token cache prefill at their mean depth of 101,000:
+// 2 x 10e9 + 10 x 4 x 10 x 100 x 101,000 = 24.04 GFLOPs a token, 0.4808 s in
+// all. 1,000 output tokens decode at their mean depth of 102,500: 10 GB of
+// weights + 10 x 2 x 10 x 100 x 2 bytes x 102,500 = 4.1 GB of cache, 14.1 s.
+{
+  const m = { label: 'test dense', params: { total: 10e9, active: 10e9 }, layers: 10, layerTypes: { full_attention: 10 }, heads: 10, kvHeads: 10, headDim: 100 };
+  const t = C.turnCeiling(m, unit(1000), { bpw: 8, depth: 100000, newTokens: 2000, outTokens: 1000, formatKey: 'bf16' });
+  near('turn: first token at the mean depth of the new tokens', t.ttft, 2000 / (100e12 / (2e10 + 40000 * 101000)));
+  near('turn: output at the mean depth of the output', t.write, 1000 * (14.1e9 / 1000e9));
+  near('turn: the two together', t.seconds, t.ttft + t.write);
+}
+
 // A checkpoint that mixes widths records the bytes a step reads, and the
 // decode ceiling uses them instead of one width: 9.89 GB of weights on four
 // V100s (3,600 GB/s) at an empty context, plus Flash-Next's recurrent state.
@@ -318,6 +332,20 @@ const q32KvPerPos = 64 * 8 * 128 * 2 * 2;
   const ok = run.status === 1 && /x_5090_qwen3_32b_llamacpp decode@32768/.test(run.stderr);
   if (!ok) failed++;
   console.log(`${ok ? '✓' : '✗'} check-ceilings fails on an impossible reading${ok ? '' : ` -- exit ${run.status}: ${run.stderr.slice(0, 200)}`}`);
+}
+
+// A first token sooner than the new tokens could be prefilled is as impossible:
+// 19 tokens on a 3090 at 155K take at least about a millisecond.
+{
+  const doc = JSON.parse(fs.readFileSync(path.join(root, 'data/compendium.json'), 'utf8'));
+  const l = doc.lines.find(x => x.id === 'l_3090_ink2mini_udq4kxl_fork');
+  l.results.find(r => r.metric === 'ttft' && r.cache === 'hit').value = 0.0001;
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'ceilings-')), 'ttft.json');
+  fs.writeFileSync(file, JSON.stringify(doc));
+  const run = spawnSync('node', [path.join(root, 'tools/check-ceilings.mjs'), file], { encoding: 'utf8' });
+  const ok = run.status === 1 && /l_3090_ink2mini_udq4kxl_fork ttft@155000: 0.0001 is \d+% of a [\d.]+ s floor/.test(run.stderr);
+  if (!ok) failed++;
+  console.log(`${ok ? '✓' : '✗'} check-ceilings fails on a first token faster than its floor${ok ? '' : ` -- exit ${run.status}: ${run.stderr.slice(0, 200)}`}`);
 }
 
 // ...but not on one whose line offloaded that metric beyond what the ceiling

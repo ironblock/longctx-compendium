@@ -149,6 +149,27 @@ const CASES = [
   ['prefill that does not say cold or new-tokens', 'prefillBasis', d => {
     delete line(d, L).results.find(r => r.metric === 'prefill').prefillBasis;
   }],
+  ['a time to first token with no cache state', 'cache was hit, missed or restored', d => {
+    line(d, L).results.push({ metric: 'ttft', depth: 100000, streams: 1, basis: 'per-stream', value: 0.8, confidence: 'm', newTokens: 20 });
+  }],
+  ['a time to first token with no new-token count', 'how many tokens were prefilled', d => {
+    line(d, L).results.push({ metric: 'ttft', depth: 100000, streams: 1, basis: 'per-stream', value: 0.8, confidence: 'm', cache: 'hit' });
+  }],
+  ['an unknown new-token count with nothing said', 'no newTokensNote', d => {
+    line(d, L).results.push({ metric: 'ttft', depth: 100000, streams: 1, basis: 'per-stream', value: 0.8, confidence: 'm', cache: 'hit', newTokens: null });
+  }],
+  ['a cache miss that prefilled less than the conversation', 'a cache miss prefills the whole conversation', d => {
+    line(d, L).results.push({ metric: 'ttft', depth: 100000, streams: 1, basis: 'per-stream', value: 30, confidence: 'm', cache: 'miss', newTokens: 20 });
+  }],
+  ['a cache state on a decode point', 'only apply to ttft points', d => {
+    line(d, L).results[0].cache = 'hit';
+  }],
+  ['a cache state the schema does not know', 'must be one of', d => {
+    line(d, L).results.push({ metric: 'ttft', depth: 100000, streams: 1, basis: 'per-stream', value: 0.8, confidence: 'm', cache: 'warm', newTokens: 20 });
+  }],
+  ['a reuse record missing a case', 'missing required property "offload"', d => {
+    line(d, L).reuse = { extension: 'reused', rollback: 'untested', toolsChange: 'recomputed' };
+  }],
   ['the same point twice', 'repeats an earlier point', d => {
     line(d, L).results.push(JSON.parse(JSON.stringify(line(d, L).results[0])));
   }],
@@ -359,6 +380,13 @@ const CASES = [
 // obstructive as one that lets bad data through, and these are the cases most
 // likely to get over-tightened by accident.
 const ACCEPTED = [
+  ['a warm and a cold first token on one line', null, d => {
+    line(d, L).results.push(
+      { metric: 'ttft', depth: 100000, streams: 1, basis: 'per-stream', value: 0.8, confidence: 'm', cache: 'hit', newTokens: 20 },
+      { metric: 'ttft', depth: 100000, streams: 1, basis: 'per-stream', value: 60, confidence: 'm', cache: 'miss', newTokens: null, newTokensNote: 'the whole conversation, about 100k tokens' },
+    );
+    line(d, L).reuse = { extension: 'reused', rollback: 'untested', toolsChange: 'recomputed', offload: 'untested' };
+  }],
   ['a reference unit nothing uses', null, d => {
     d.units.push({ ...clone().units.find(u => u.id === 'a100_80'), id: 'reference_card' });
   }],

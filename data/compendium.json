@@ -8678,6 +8678,13 @@
         "note": "sha256 e64276656f072e9b2197a61723667cbdb71da66a716ffd966e572c21088f3cd3. The routed experts take 15.80 GB: layers 0-19 at 4.50 bits a weight (ggml type 40, the size of NVFP4, as the checkpoint ships them), layers 20-23 at Q8_0. Everything else is Q8_0, with norms and other small tensors in F32 or BF16. A step reads 4.12 GB with the loop, where one width throughout would misstate it. bpw is the file's tensors over its 26.07B weights. KL divergence against UD-Q8_K_XL 0.003024 +/- 0.000139, top-1 agreement 97.78%, at 2,048 tokens of context; mainline llama.cpp scored 0.002876 on the same check in the second pass, within one combined standard error, so the fork computes the same model."
       },
       "freeAtPeakMiB": 3398,
+      "reuse": {
+        "extension": "reused",
+        "rollback": "reused",
+        "toolsChange": "recomputed",
+        "offload": "untested",
+        "note": "A changed question rolled back cheaply, so the engine keeps the sliding-window layers' state where the prompts diverge. Engine-side save or restore to disk was not tested."
+      },
       "status": "measured",
       "hazards": [
         "Changing the tools array re-prefills the whole prompt with nothing cached: adding one tool at turn 2 took 127.2 s here. Tools declared from turn 1 and held constant were not tested.",
@@ -8735,6 +8742,31 @@
           "prefillBasis": "cold",
           "reps": 1,
           "note": "124.0 s for the 155k prompt."
+        },
+        {
+          "metric": "ttft",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 0.77,
+          "confidence": "m",
+          "reps": 1,
+          "cache": "hit",
+          "newTokens": 19,
+          "note": "Turn 2, the conversation extended exactly. The same turn-2 message on every arm; the result gives 19 new tokens for it."
+        },
+        {
+          "metric": "ttft",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 127.2,
+          "confidence": "m",
+          "reps": 1,
+          "cache": "miss",
+          "newTokens": null,
+          "newTokensNote": "The whole conversation, about 155k tokens, with \"0 cached\": adding one tool at turn 2 changed the prompt's start.",
+          "note": "Turn 2 with one tool added."
         }
       ],
       "provenance": {
@@ -8790,6 +8822,13 @@
         "note": "Temperature 1, the model's default sampling. Acceptance not recorded."
       },
       "freeAtPeakMiB": 1376,
+      "reuse": {
+        "extension": "reused",
+        "rollback": "untested",
+        "toolsChange": "recomputed",
+        "offload": "untested",
+        "note": "Rollback was tested on the -ub 512 arm without DSpark only."
+      },
       "status": "measured",
       "hazards": [
         "DSpark slows decode at an empty context (-22%) and at 131k (-17%), speeds it at 32k (+32%), and holds 2,026 MiB more at peak than the same engine without it. One request per cell.",
@@ -8879,6 +8918,31 @@
           "prefillBasis": "cold",
           "reps": 1,
           "note": "126.6 s for the 155k prompt."
+        },
+        {
+          "metric": "ttft",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 0.84,
+          "confidence": "m",
+          "reps": 1,
+          "cache": "hit",
+          "newTokens": 19,
+          "note": "Turn 2, the conversation extended exactly; DSpark loaded. The same turn-2 message on every arm; the result gives 19 new tokens for it."
+        },
+        {
+          "metric": "ttft",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 129.9,
+          "confidence": "m",
+          "reps": 1,
+          "cache": "miss",
+          "newTokens": null,
+          "newTokensNote": "The whole conversation, about 155k tokens, with \"0 cached\": adding one tool at turn 2 changed the prompt's start.",
+          "note": "Turn 2 with one tool added."
         }
       ],
       "provenance": {
@@ -8929,6 +8993,13 @@
         "note": "sha256 e64276656f072e9b2197a61723667cbdb71da66a716ffd966e572c21088f3cd3. The routed experts take 15.80 GB: layers 0-19 at 4.50 bits a weight (ggml type 40, the size of NVFP4, as the checkpoint ships them), layers 20-23 at Q8_0. Everything else is Q8_0, with norms and other small tensors in F32 or BF16. A step reads 4.12 GB with the loop, where one width throughout would misstate it. bpw is the file's tensors over its 26.07B weights."
       },
       "freeAtPeakMiB": 1058,
+      "reuse": {
+        "extension": "reused",
+        "rollback": "untested",
+        "toolsChange": "recomputed",
+        "offload": "untested",
+        "note": "Rollback was tested on the -ub 512 arm only."
+      },
       "status": "measured",
       "hazards": [
         "Cuts the cold prefill by 17% against -ub 512 for 2,342 MiB more memory at peak. The gain comes from -ub: no run kept the projector on the GPU at -ub 4096, so the CPU placement's own effect is not measured. -ub 5120 was 1% faster still and left 174 MiB free.",
@@ -8945,6 +9016,31 @@
           "prefillBasis": "cold",
           "reps": 1,
           "note": "103.3 s for the 155k prompt."
+        },
+        {
+          "metric": "ttft",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 0.8,
+          "confidence": "m",
+          "reps": 1,
+          "cache": "hit",
+          "newTokens": 19,
+          "note": "Turn 2, the conversation extended exactly. The same turn-2 message on every arm; the result gives 19 new tokens for it."
+        },
+        {
+          "metric": "ttft",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 106.3,
+          "confidence": "m",
+          "reps": 1,
+          "cache": "miss",
+          "newTokens": null,
+          "newTokensNote": "The whole conversation, about 155k tokens, with \"0 cached\": adding one tool at turn 2 changed the prompt's start.",
+          "note": "Turn 2 with one tool added: the fastest re-prefill of the arms, from its larger -ub."
         }
       ],
       "provenance": {
@@ -8996,6 +9092,13 @@
         "k": "fp8",
         "v": "fp8",
         "note": "--kv fp8: the default fp16 cache ran out of memory at 144,896 tokens of the 155k prompt. Its effect on quality was not measured."
+      },
+      "reuse": {
+        "extension": "reused",
+        "rollback": "untested",
+        "toolsChange": "recomputed",
+        "offload": "untested",
+        "note": "Rollback was not reported for Strata."
       },
       "freeAtPeakMiB": 2610,
       "status": "measured",
@@ -9055,6 +9158,31 @@
           "prefillBasis": "cold",
           "reps": 1,
           "note": "140.1 s for the 155k prompt."
+        },
+        {
+          "metric": "ttft",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 0.52,
+          "confidence": "m",
+          "reps": 1,
+          "cache": "hit",
+          "newTokens": 19,
+          "note": "Turn 2, the conversation extended exactly: with Strata's SQ-20 arm, the fastest first token of the third pass. The same turn-2 message on every arm; the result gives 19 new tokens for it."
+        },
+        {
+          "metric": "ttft",
+          "depth": 155000,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 140.3,
+          "confidence": "m",
+          "reps": 1,
+          "cache": "miss",
+          "newTokens": null,
+          "newTokensNote": "The whole conversation, about 155k tokens, with \"0 cached\": adding one tool at turn 2 changed the prompt's start.",
+          "note": "Turn 2 with one tool added."
         }
       ],
       "provenance": {
@@ -17400,6 +17528,13 @@
         "v": "f16",
         "note": "About 620K tokens of KV fit on the GPUs, two resident 262K sessions. Decode context parallel 2 holds 1.02M tokens at about -10% decode. KV offloaded to host RAM and NVMe brings an evicted 131K session back in 6.3 s against 41 s recomputed, correct in 25 of 25 checks, with room for about 190 such sessions and no decode cost measured."
       },
+      "reuse": {
+        "extension": "reused",
+        "rollback": "untested",
+        "toolsChange": "untested",
+        "offload": "host RAM and disk",
+        "note": "Evicted sessions go to host RAM and NVMe and come back in 6.3 s for 131K tokens, with room for about 190 of them; the 25 of 25 correct checks suggest the model's linear-attention state comes back with them (this page's reading)."
+      },
       "spec": {
         "method": "mtp",
         "draftN": 3,
@@ -17510,6 +17645,18 @@
           "confidence": "m",
           "prefillBasis": "cold",
           "note": "\"240K in 82 s\": 240,000 / 82, taking 240K as 240,000 tokens; at 245,760 it would be 2,997."
+        },
+        {
+          "metric": "ttft",
+          "depth": 131072,
+          "streams": 1,
+          "basis": "per-stream",
+          "value": 6.3,
+          "confidence": "m",
+          "cache": "restored",
+          "newTokens": null,
+          "newTokensNote": "The report gives the time to bring an evicted 131K session back from host RAM and NVMe, not the new tokens of the turn that followed.",
+          "note": "Against 41 s to recompute it, which matches the cold 131K prefill on this line; correct in 25 of 25 checks. The report writes 131K; read as 131,072."
         }
       ],
       "provenance": {

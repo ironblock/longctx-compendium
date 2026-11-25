@@ -91,6 +91,15 @@ export const WEIGHT_CHOICES = ['q4_k_m', 'q8_0', 'mxfp4', 'nvfp4', 'fp8', 'bf16'
 export const DEPTH_CHOICES = [4096, 32768, 131072, 262144];
 
 /**
+ * A turn: the tokens a message adds to a cached conversation, and the tokens
+ * the model writes back. A coding session reaches hundreds of thousands of
+ * tokens a few thousand at a time, so these, not a cold prompt, are what a
+ * single user waits on.
+ */
+export const TURN_IN_CHOICES = [1024, 4096, 16384, 65536];
+export const TURN_OUT_CHOICES = [512, 1536, 4096, 16384];
+
+/**
  * Speculative-decoding weights the fit check can count: none, the model's own
  * MTP head, or a separate drafter recorded for it. Either sits in GPU memory
  * at the weights' bits per weight; a drafter brings its own cache too.
@@ -760,12 +769,47 @@ export function ceilingFor(line, point, unitById) {
       bytes: c.bytes,
     };
   }
+  if (point.metric === 'ttft') return ttftFloor(m, unit, line, point, cards);
   if (point.metric === 'prefill') {
     const p = prefillCeiling(m, unit, { cards, formatKey: line.quant.key, depth: point.depth, cold: point.prefillBasis === 'cold' });
     if (p.tps == null) return { why: `no rated ${p.precision.precision.toUpperCase()} throughput for ${unit.label}` };
     return { tps: p.tps, bound: 'compute', precision: p.precision, offload: line.offload?.metrics.includes('prefill') ? line.offload.to : null };
   }
   return { why: `no ceiling for ${point.metric}` };
+}
+
+/**
+ * The fastest a turn can go at a depth: its new tokens appended to a cached
+ * conversation (prefill at the turn's mean depth, which is exact for the
+ * attention term since it grows linearly), then its output decoded (at the
+ * output's mean depth). Fixed costs (scheduling, sampling, the first kernel
+ * launch) are left out, so it is a floor on the turn's time.
+ */
+export function turnCeiling(m, unit, { cards = 1, mode = 'single', bpw, depth, kvK, kvV, newTokens, outTokens, formatKey, table = null, experts = null, draft = null, weightBytes = null }) {
+  const p = prefillCeiling(m, unit, { cards, formatKey, depth: depth + newTokens / 2, table, experts });
+  const d = decodeCeiling(m, unit, { cards, mode, bpw, depth: depth + newTokens + outTokens / 2, kvK, kvV, table, experts, draft, weightBytes });
+  if (p?.tps == null || d?.tps == null) return null;
+  const ttft = newTokens / p.tps;
+  const write = outTokens / d.tps;
+  return { ttft, write, seconds: ttft + write, prefillTps: p.tps, decodeTps: d.tps };
+}
+
+/**
+ * The shortest time to a first token a reading can claim: its prefilled
+ * tokens at the prefill ceiling. A cache hit appends `newTokens` at the
+ * cached depth; a miss evaluates them all from an empty cache. A session
+ * restored from host RAM or disk is a copy, not compute, and gets no floor.
+ */
+function ttftFloor(m, unit, line, point, cards) {
+  if (point.cache === 'restored') return { why: 'a restored session is a copy from host RAM or disk; no floor is modelled for the copy' };
+  if (point.newTokens == null) return { why: 'new tokens not recorded' };
+  const miss = point.cache === 'miss';
+  if (!miss && point.depth == null) return { why: 'cached depth not recorded' };
+  const p = miss
+    ? prefillCeiling(m, unit, { cards, formatKey: line.quant.key, depth: point.newTokens, cold: true })
+    : prefillCeiling(m, unit, { cards, formatKey: line.quant.key, depth: point.depth + point.newTokens / 2 });
+  if (p.tps == null) return { why: `no rated ${p.precision.precision.toUpperCase()} throughput for ${unit.label}` };
+  return { seconds: point.newTokens / p.tps, bound: 'compute', precision: p.precision, offload: line.offload?.metrics.includes('prefill') ? line.offload.to : null };
 }
 
 /** One-sentence reading of an observed/ceiling ratio. */

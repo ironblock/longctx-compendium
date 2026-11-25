@@ -48,7 +48,8 @@ for (const l of model.LINES) {
     compared++;
     const label = `${l.id} ${p.metric}@${p.depth ?? '?'}${p.streams > 1 ? `×${p.streams}` : ''}${p.spec === 'off' ? ' spec-off' : ''}`;
     if (table) console.log(`${(p.ratio * 100).toFixed(1).padStart(6)}%  ${p.ceiling.speculative ? 'spec ' : p.ceiling.offload ? 'off  ' : '     '}${label}`);
-    if (p.ratio > SLACK && !p.ceiling.speculative && !p.ceiling.offload) over.push(`${label}: ${p.value ?? p.range} is ${(p.ratio * 100).toFixed(0)}% of a ${p.ceiling.tps.toFixed(1)} t/s ceiling`);
+    const bound = p.metric === 'ttft' ? `${p.ceiling.seconds.toFixed(2)} s floor` : `${p.ceiling.tps.toFixed(1)} t/s ceiling`;
+    if (p.ratio > SLACK && !p.ceiling.speculative && !p.ceiling.offload) over.push(`${label}: ${p.value ?? p.range} is ${(p.ratio * 100).toFixed(0)}% of a ${bound}`);
   }
 }
 

@@ -13,6 +13,8 @@ import {
   EXPERT_PLACES,
   TABLE_BITS,
   HOST_RAM_CHOICES,
+  TURN_IN_CHOICES,
+  TURN_OUT_CHOICES,
   CARD_STEPS,
   attentionLayout,
   LAYOUT_LABEL,
@@ -92,6 +94,9 @@ const DEFAULTS = {
   experts: 'gpu',
   plat: null,
   depth: 131072,
+  // A turn: the tokens a message adds to a cached conversation, and those written back.
+  turnIn: 4096,
+  turnOut: 1536,
   cards: 'auto',
   // Context depth runs from 1K to 256K tokens, on a log scale, in 1K steps.
   depthMin: 1024,
@@ -156,19 +161,21 @@ function readState() {
     // Checked against the host platforms once the data has loaded.
     plat: q.get('plat') || null,
     depth: Math.min(DEFAULTS.depthMax, Math.max(DEFAULTS.depthMin, Math.round(d / 1024) * 1024)),
+    turnIn: TURN_IN_CHOICES.includes(num('tin')) ? num('tin') : DEFAULTS.turnIn,
+    turnOut: TURN_OUT_CHOICES.includes(num('tout')) ? num('tout') : DEFAULTS.turnOut,
     cards: str('n', ['auto', '1', '2', '3', '4', '5', '6', '7', '8']),
     split: str('split', ['tensor', 'layer']),
     scope: str('scope', ['filtered', 'all']),
     obsDevice: str('od'),
     obsModel: str('om'),
-    obsMetric: str('omet', ['all', 'decode', 'prefill']),
+    obsMetric: str('omet', ['all', 'decode', 'prefill', 'ttft']),
     obsProv: str('oprov', ['all', 'witnessed', 'reported']),
     obsSpec: str('ospec', ['all', 'on', 'off']),
     tab: str('tab', TABS),
   };
 }
 // The keys DEFAULTS uses under their address names.
-Object.assign(DEFAULTS, { ex: DEFAULTS.experts, tbl: DEFAULTS.tables, ram: null, link: null, linkmax: null, host: null, hostmax: null, ffoff: DEFAULTS.formsOff, bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all', ospec: 'all' });
+Object.assign(DEFAULTS, { ex: DEFAULTS.experts, tbl: DEFAULTS.tables, ram: null, link: null, linkmax: null, host: null, hostmax: null, ffoff: DEFAULTS.formsOff, bw: null, bwmax: null, mem: null, memmax: null, pricemin: null, price: null, sort: DEFAULTS.hwSort, voff: DEFAULTS.vendorsOff, prec: DEFAULTS.scatterPrec, w: DEFAULTS.weights, d: DEFAULTS.depth, tin: DEFAULTS.turnIn, tout: DEFAULTS.turnOut, n: DEFAULTS.cards, od: '', om: '', omet: 'all', oprov: 'all', ospec: 'all' });
 
 function writeState(s) {
   const q = new URLSearchParams();
@@ -202,6 +209,8 @@ function writeState(s) {
   put('ex', s.experts, DEFAULTS.experts);
   put('plat', s.plat, null);
   put('d', s.depth, DEFAULTS.depth);
+  put('tin', s.turnIn, DEFAULTS.turnIn);
+  put('tout', s.turnOut, DEFAULTS.turnOut);
   put('n', s.cards, DEFAULTS.cards);
   put('split', s.split, DEFAULTS.split);
   put('scope', s.scope, DEFAULTS.scope);
@@ -500,6 +509,15 @@ try {
       const h = model.hostById[state.plat] ?? model.HOSTS[0];
       el('platNote').innerHTML = `<a href="${esc(h.source)}" rel="noopener noreferrer">${esc(h.label)}</a>: ${esc(hostFigures(h))}${h.measured ? `; <a href="${esc(h.measured.url)}" rel="noopener noreferrer">${Math.round(h.measured.GBs)} GB/s measured</a>` : ''}`;
     }
+    const tok = n => (n >= 1024 ? `${n / 1024}K` : String(n));
+    chips('turnInChips', TURN_IN_CHOICES.map(n => ({ v: n, label: tok(n), title: `A message that adds ${n.toLocaleString()} tokens to the cached conversation` })), v => state.turnIn === v, v => {
+      state.turnIn = v;
+      update('model');
+    });
+    chips('turnOutChips', TURN_OUT_CHOICES.map(n => ({ v: n, label: tok(n), title: `A reply of ${n.toLocaleString()} tokens, reasoning included` })), v => state.turnOut === v, v => {
+      state.turnOut = v;
+      update('model');
+    });
     sliders.depth.set(state.depth);
     el('cardsAuto').checked = state.cards === 'auto';
     sliders.cards.set(state.cards === 'auto' ? lastCards : Number(state.cards), state.cards === 'auto');
@@ -552,7 +570,7 @@ try {
       state.obsModel = mod.value;
       update('obs');
     };
-    chips('obsMetricChips', [{ v: 'all', label: 'All' }, { v: 'decode', label: 'Decode' }, { v: 'prefill', label: 'Prefill' }], v => state.obsMetric === v, v => {
+    chips('obsMetricChips', [{ v: 'all', label: 'All' }, { v: 'decode', label: 'Decode' }, { v: 'prefill', label: 'Prefill' }, { v: 'ttft', label: 'First token' }], v => state.obsMetric === v, v => {
       state.obsMetric = v;
       update('obs');
     });

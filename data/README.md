@@ -252,7 +252,14 @@ formula against what first-party lines actually allocated.
   9.8-9.9 GB where 4.5 bits throughout would be 3.75 GB.
 - **Prefill** = rated dense matrix throughput at the precision the engine
   actually multiplies in ÷ FLOPs per token (2 per active weight plus attention
-  over the positions attended). The precision comes from `assets/dequant-map.js`,
+  over the positions attended). The ceilings table takes a token appended to a
+  cached conversation at the chosen depth, which attends over all of it; a
+  cold prompt attends over half itself on average.
+- **Turn** = new tokens ÷ the prefill ceiling at the turn's mean depth + output
+  tokens ÷ the decode ceiling at the output's mean depth. A single user's
+  context grows a few thousand tokens a turn on a cached conversation, so this,
+  not a cold prompt, is what they wait on; a cold prompt is the cost of a cache
+  miss. Fixed costs are left out, so it is a floor. The precision comes from `assets/dequant-map.js`,
   which records llama.cpp's own kernel dispatch per quant family and chip
   generation (`docs/roofline-dequant-paths.md`); anything ungrounded falls back
   to FP16 and says so. Datacenter Blackwell (`blackwell_dc`: B200, B300) is
@@ -338,6 +345,16 @@ What the validator holds you to, and why:
   `value` or a `range`, never both.
 - **Prefill says what it covered**: `cold` (the whole prompt) or `new-tokens`
   (only tokens not already cached).
+- **A first token says what it waited on.** `metric: "ttft"` is seconds from
+  a turn's request to its first output token. `depth` is the conversation's
+  length before the turn, `newTokens` the tokens it had to prefill (null with a
+  `newTokensNote` when the source did not say), and `cache` whether the
+  conversation's cache was `hit` (only the new tokens prefilled), `miss` (all
+  of it recomputed, so newTokens is at least the depth) or `restored` from
+  host RAM or disk. A hit and a miss differ by minutes at depth: the 3090's
+  Inkling 2 Mini lines wait 0.77 s on 19 new tokens at about 155K, and 127 s
+  when a changed tools array forces the whole conversation back through. Its
+  share of ceiling is the floor over the reading, since lower is better.
 - **Speculation is stated.** A `spec: "off"` point is the clean reading at depth.
   Speculative decoding (MTP, DFlash, a draft model) belongs here because it is
   lossless: the target model verifies every token, so the output is what it
@@ -370,6 +387,15 @@ What the validator holds you to, and why:
   must say whether anyone reproduced it.
 - **A line that produced invalid numbers is `withdrawn`**, with the reason in
   `hazards`, rather than deleted or left looking measured.
+
+`reuse` records what the engine reused of a conversation's cache when tested:
+`extension` (a message appended), `rollback` (a changed last message, rolled
+back to the shared prefix; sliding-window and recurrent layers allow it only
+where the engine saved their state), `toolsChange` (the tools array changed),
+each `reused`, `recomputed` or `untested`, and `offload`, where an evicted
+session goes (`none`, `host RAM`, `disk`, `host RAM and disk`, `untested`).
+Whether the cache survives decides whether a turn costs its new tokens or the
+whole conversation.
 
 `kld` is the KL divergence of the quant against a stated reference, on code and
 on prose. It is quality, which tok/s is not: compare speed across lines only
